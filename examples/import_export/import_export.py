@@ -30,6 +30,6 @@ edge_gdf.to_file(filename_edges)
 
 # export to edgelist/nodelist
 edge_list = input_output.to_edge_list(heating_network)
-edge_list.to_csv('example_dhn_edgelist.csv')
 node_list = input_output.to_node_list(heating_network)
+edge_list.to_csv('example_dhn_edgelist.csv')
 node_list.to_csv('example_dhn_nodelist.csv')
