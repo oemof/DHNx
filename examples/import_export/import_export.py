@@ -17,9 +17,9 @@ G_proj = projection.project_graph(G, to_crs=to_crs)
 
 node_gdf, edge_gdf = input_output.graph_to_gdfs(G_proj)
 
-place_name_out = 'fictios_dhn'
-nodes_out = r"shapefiles/%s_nodes.shp" % place_name_out
-edges_out = r"shapefiles/%s_edges.shp" % place_name_out
+export_filename = 'example_dhn'
+nodes_out = r"%s_nodes.shp" % export_filename
+edges_out = r"%s_edges.shp" % export_filename
 
 invalid_cols = []
 for col in invalid_cols:
@@ -31,7 +31,7 @@ def to_edge_list(G):
     edge_list = nx.to_pandas_edgelist(G, source='from_node', target='to_node')
     edge_list = edge_list[['from_node', 'to_node', 'lenght_m', 'diameter_mm', 'heat_transfer_coefficient_W/mK', 'roughness_mm']]
     edge_list.index.name = 'pipe_no'
-    
+
     return edge_list
 
 edge_list = to_edge_list(G)
@@ -47,7 +47,7 @@ def to_node_list(G):
     node_list = pd.DataFrame(nodelistdict)
     node_list = node_list.set_index('node_id')
     node_list = node_list[['lat', 'lon', 'node_type']]
-    
+
     return node_list
 
 node_list = to_node_list(G)
