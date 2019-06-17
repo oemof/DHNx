@@ -106,3 +106,23 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     else:
         return to_return[0]
 
+def to_edge_list(G):
+    edge_list = nx.to_pandas_edgelist(G, source='from_node', target='to_node')
+    edge_list = edge_list[['from_node', 'to_node', 'lenght_m', 'diameter_mm', 'heat_transfer_coefficient_W/mK', 'roughness_mm']]
+    edge_list.index.name = 'pipe_no'
+
+    return edge_list
+
+def to_node_list(G):
+    nodelist = G.nodes(data=True)
+    nodes = [n for n, d in nodelist]
+    all_keys = set().union(*(d.keys() for n, d in nodelist))
+    node_attr = {k: [d.get(k, float("nan")) for n, d in nodelist] for k in all_keys}
+    nodelistdict = {'node_id': nodes}
+    nodelistdict.update(node_attr)
+    node_list = pd.DataFrame(nodelistdict)
+    node_list = node_list.set_index('node_id')
+    node_list = node_list[['lat', 'lon', 'node_type']]
+
+    return node_list
+
