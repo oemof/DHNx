@@ -1,10 +1,6 @@
-import networkx as nx
-from math import sqrt
-import matplotlib.pyplot as plt
-import matplotlib.collections as collections
 import pandas as pd
-import numpy as np
-from district_heating_simulation import (input_output, plotting, projection, simulation)
+import networkx as nx
+from district_heating_simulation import (input_output, projection)
 
 edge_list = pd.read_csv('data/edge_list.csv', header=0, index_col='pipe_no')
 node_list = pd.read_csv('data/node_list.csv')
