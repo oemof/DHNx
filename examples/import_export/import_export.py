@@ -9,8 +9,8 @@ heating_network = input_output.create_network(edge_list, node_list)
 heating_network.graph = {'crs': {'init': 'epsg:4326'}, 'name': 'example_dhn'}
 to_crs = {'datum': 'WGS84',
           'ellps': 'WGS84',
-          'proj' : 'utm',
-          'zone' : 35,
+          'proj': 'utm',
+          'zone': 35,
           'units': 'm'}
 
 G_proj = projection.project_graph(heating_network, to_crs=to_crs)
