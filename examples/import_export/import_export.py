@@ -1,5 +1,4 @@
 import pandas as pd
-import networkx as nx
 from district_heating_simulation import (input_output, projection)
 
 edge_list = pd.read_csv('data/edge_list.csv', header=0, index_col='pipe_no')
@@ -21,10 +20,6 @@ node_gdf, edge_gdf = input_output.graph_to_gdfs(G_proj)
 filename_export = 'example_dhn'
 filename_nodes = r"%s_nodes.shp" % filename_export
 filename_edges = r"%s_edges.shp" % filename_export
-
-invalid_cols = []
-for col in invalid_cols:
-    edge_gdf[col] = edge_gdf[col].astype(str)
 node_gdf.to_file(filename_nodes)
 edge_gdf.to_file(filename_edges)
 
