@@ -4,41 +4,41 @@ from district_heating_simulation import (input_output, projection)
 
 edge_list = pd.read_csv('data/edge_list.csv', header=0, index_col='pipe_no')
 node_list = pd.read_csv('data/node_list.csv')
-G = input_output.create_network(edge_list, node_list)
+heating_network = input_output.create_network(edge_list, node_list)
 
-G.graph = {'crs': {'init': 'epsg:4326'}, 'name': 'fictious_dhn'}
+heating_network.graph = {'crs': {'init': 'epsg:4326'}, 'name': 'example_dhn'}
 to_crs = {'datum': 'WGS84',
           'ellps': 'WGS84',
           'proj' : 'utm',
           'zone' : 35,
           'units': 'm'}
 
-G_proj = projection.project_graph(G, to_crs=to_crs)
+G_proj = projection.project_graph(heating_network, to_crs=to_crs)
 
 node_gdf, edge_gdf = input_output.graph_to_gdfs(G_proj)
 
-export_filename = 'example_dhn'
-nodes_out = r"%s_nodes.shp" % export_filename
-edges_out = r"%s_edges.shp" % export_filename
+filename_export = 'example_dhn'
+filename_nodes = r"%s_nodes.shp" % filename_export
+filename_edges = r"%s_edges.shp" % filename_export
 
 invalid_cols = []
 for col in invalid_cols:
     edge_gdf[col] = edge_gdf[col].astype(str)
-node_gdf.to_file(edges_out)
-edge_gdf.to_file(nodes_out)
+node_gdf.to_file(filename_nodes)
+edge_gdf.to_file(filename_edges)
 
-def to_edge_list(G):
-    edge_list = nx.to_pandas_edgelist(G, source='from_node', target='to_node')
+def to_edge_list(network):
+    edge_list = nx.to_pandas_edgelist(network, source='from_node', target='to_node')
     edge_list = edge_list[['from_node', 'to_node', 'lenght_m', 'diameter_mm', 'heat_transfer_coefficient_W/mK', 'roughness_mm']]
     edge_list.index.name = 'pipe_no'
 
     return edge_list
 
-edge_list = to_edge_list(G)
+edge_list = to_edge_list(heating_network)
 edge_list.to_csv('write_edgelist.csv')
 
-def to_node_list(G):
-    nodelist = G.nodes(data=True)
+def to_node_list(network):
+    nodelist = network.nodes(data=True)
     nodes = [n for n, d in nodelist]
     all_keys = set().union(*(d.keys() for n, d in nodelist))
     node_attr = {k: [d.get(k, float("nan")) for n, d in nodelist] for k in all_keys}
@@ -50,5 +50,5 @@ def to_node_list(G):
 
     return node_list
 
-node_list = to_node_list(G)
+node_list = to_node_list(heating_network)
 node_list.to_csv('write_nodelist.csv')
