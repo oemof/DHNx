@@ -4,9 +4,190 @@ import folium as fol
 from folium.features import DivIcon
 import matplotlib.pyplot as plt
 import matplotlib.collections as collections
+from matplotlib.lines import Line2D
 import pandas as pd
 import numpy as np
 from math import sqrt
+
+
+class Network:
+    """
+    Create Network object
+
+    Attributes
+    ----------
+    place : string
+        name of the place/figure
+    point : tuple
+        the center point as coordinates
+    node_data: pandas df
+        the data which will be used as coordinates of nodes
+    edge_data: pandas df
+        the data which will be used as connections of nodes
+
+    """
+    def __init__(self, name, point, node_data, edge_data, **kwargs):
+        self.name = name
+        self.point = point
+        self.node_data = node_data
+        self.edge_data = edge_data
+        self.node_id = node_data['node_id']
+        self.lat = node_data['lat']
+        self.lon = node_data['lon']
+        self.node_type = node_data['node_type']
+        self._add_colors()
+
+
+    def _add_colors(self):
+        color = {'producer': '#ff0000',
+                 'consumer': '#00ff00',
+                 'split': '#000000'}
+        
+        self.node_data = (self.node_data
+                              .assign(node_color=self.node_data['node_type'])
+                              .replace({'node_color': color}))
+
+        return self.node_data['node_color']
+
+
+    def _get_sw(self):
+        sw = {'motorway': 3.0,
+              'trunk': 2.5,
+              'primary': 1.5,
+              'secondary': 1.0,
+              'tertiary': 1.0,
+              'unclassified': 0.75,
+              'residential': 0.75}
+
+        return sw
+
+
+    def _add_points(self, ax):
+        ax.scatter(self.lon.tolist(),
+                   self.lat.tolist(),
+                   c=self.node_data['node_color'].tolist(),
+                   s=500)
+
+
+    def _add_labels(self, ax):
+        for i in range(0, len(self.node_data)):
+            ax.annotate(self.node_data['node_id'][i],
+                        xy=(self.lon[i], self.lat[i]),
+                        color='blue',
+                        size=16,
+                        fontweight=1000)
+
+
+    def _draw_edges(self, ax):
+        for i in range(0, len(self.edge_data)):
+            edge = [(self.lon[self.edge_data['node_id_1'][i]],
+                     self.lat[self.edge_data['node_id_1'][i]]),
+                    (self.lon[self.edge_data['node_id_2'][i]],
+                     self.lat[self.edge_data['node_id_2'][i]])]
+            (edge_lon, edge_lat) = zip(*edge)
+
+            # linewidth settings
+            lw_avg = self.edge_data['value'].mean()
+            lw = self.edge_data['value'][i] / lw_avg
+
+            # add_lines
+            if self.edge_data['edge_type'][i] == 'elec':
+                ax.add_line(Line2D(edge_lon, edge_lat,
+                                   linewidth=lw*3,
+                                   color='blue'))
+            else:
+                ax.add_line(Line2D(edge_lon, edge_lat,
+                   linewidth=lw*3,
+                   color='orange'))
+
+
+    def draw_map(self, distance, dpi):
+        sw = self._get_sw()
+
+        # osmnx config
+        ox.config(use_cache=False, log_console=False)
+
+        # get GeoDataFrame
+        gdf = ox.footprints.footprints_from_point(point=self.point,
+                                                  distance=distance)
+
+        # plot a figure-ground diagram of a street network
+        fig, ax = ox.plot_figure_ground(point=self.point,
+                                        dist=distance,
+                                        street_widths=sw,
+                                        dpi=dpi,
+                                        bgcolor='#333333',
+                                        edge_color='w',
+                                        network_type='drive',  
+                                        default_width=0.75,
+                                        fig_length=20,
+                                        save=False,
+                                        show=False,
+                                        close=False)
+
+        # plot a GeoDataFrame of footprints
+        fig, ax = ox.footprints.plot_footprints(gdf, fig=fig, ax=ax,
+                                                dpi=dpi,
+                                                color='#ABABAB',
+                                                figsize=(20, 20),
+                                                set_bounds=False,
+                                                save=False,
+                                                show=False,
+                                                close=False)
+
+        # add points
+        self._add_points(ax)
+
+        # add labels
+        self._add_labels(ax)
+
+        # draw edges
+        self._draw_edges(ax)
+
+        return plt
+
+
+    def create_interactive_map(self):
+        # create map
+        m = fol.Map(location=[self.lat.mean(), self.lon.mean()],
+                    zoom_start=14)
+
+        for i in range(0, len(self.node_data)):
+            # draw nodes
+            fol.CircleMarker([self.lat[i], self.lon[i]],
+                             # popup=data['node_id'][i],
+                             color=self.node_data['node_color'][i],
+                             fill_color=self.node_data['node_color'][i],
+                             radius=20).add_to(m)
+
+            # draw node ids
+            fol.Marker([self.lat[i], self.lon[i]],
+                       icon=DivIcon(icon_size=(-35, 75),
+                       icon_anchor=(0, 0),
+                       html='<div style="font-size: 16pt">%s</div>'
+                       % self.node_data['node_id'][i])).add_to(m)
+
+        for i in range(0, len(self.edge_data)):
+            # linewidth settings
+            lw_avg = self.edge_data['value'].mean()
+            lw = self.edge_data['value'][i] / lw_avg
+
+            # draw edges
+            if self.edge_data['edge_type'][i] == 'elec':
+                fol.PolyLine(locations=[[self.lat[self.edge_data['node_id_1'][i]],
+                                         self.lon[self.edge_data['node_id_1'][i]]],
+                                        [self.lat[self.edge_data['node_id_2'][i]],
+                                         self.lon[self.edge_data['node_id_2'][i]]]],
+                             color='blue',
+                             weight=lw*3).add_to(m)
+            else:
+                fol.PolyLine(locations=[[self.lat[self.edge_data['node_id_1'][i]],
+                                         self.lon[self.edge_data['node_id_1'][i]]],
+                                        [self.lat[self.edge_data['node_id_2'][i]],
+                                         self.lon[self.edge_data['node_id_2'][i]]]],
+                             color='orange',
+                             weight=lw*3).add_to(m)
+        return m
 
 
 def draw_network(G, node_sizes, node_colors, edge_colors, edge_width, figsize):
@@ -59,109 +240,3 @@ def draw_G(G, fig_width, fig_height, bgcolor='w',
     ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=node_zorder)
 
     plt.show()
-
-
-def make_plot(data, place, point, distance=1000, dpi=300,
-              network_type='drive', bldg_color='#ABABAB',
-              street_widths=None, default_width=0.75):
-    """
-    Create a plot of the given coordinates with buildings & streets
-
-    Parameters
-    ----------
-    data: pandas df
-        the data which will be plotted
-    place : string
-        name of the place/figure
-    point : tuple
-        the center point as coordinates
-    distance : numeric
-        how many meters to extend north, south, east, and west from the center
-        point
-    dpi : int
-        the resolution of the image file
-    network_type : string
-        what type of network to get
-    bldg_color : string
-        the color of the buildings
-    street_widths : dict
-        where keys are street types and values are widths to plot in pixels
-        (https://wiki.openstreetmap.org/wiki/Key:highway)
-    default_width : numeric
-        the default street width in pixels for any street type not found in
-        street_widths dict
-
-    Returns
-    -------
-    None
-    """
-    # osmnx config
-    ox.config(use_cache=False, log_console=True)
-
-    # add color column in data
-    color = {'producer': '#ff0000', 'consumer': '#00ff00', 'split': '#000000'}
-    data = (data.assign(node_color=data['node_type'])
-                .replace({'node_color': color}))
-
-    # get GeoDataFrame
-    gdf = ox.footprints.footprints_from_point(point=point, distance=distance)
-
-    # plot a figure-ground diagram of a street network
-    fig, ax = ox.plot_figure_ground(point=point, dist=distance, dpi=dpi,
-                                    bgcolor='#333333', edge_color='w',
-                                    network_type=network_type,
-                                    street_widths=street_widths,
-                                    default_width=default_width,
-                                    fig_length=20, save=False, show=False,
-                                    close=False)
-
-    # plot a GeoDataFrame of footprints
-    fig, ax = ox.footprints.plot_footprints(gdf, fig=fig, ax=ax, dpi=dpi,
-                                            color=bldg_color, figsize=(20, 20),
-                                            set_bounds=False, save=False,
-                                            show=False, close=False)
-
-    # add points depending on data (x=longitude, y=latitude)
-    ax.scatter(data['lon'].tolist(), data['lat'].tolist(),
-               c=data['node_color'].tolist(), s=500)
-
-    # add labels 
-    for i in range(0, len(data)):
-        ax.annotate(data['node_id'][i], xy=(data['lon'][i], data['lat'][i]),
-                    color='blue', size=16, fontweight=1000)
-
-    # save figure
-    plt.savefig('plot_'+place+'.png', dpi=dpi, facecolor='#333333')
-    print('Figure saved as '+place+'.png')
-
-
-def create_interactive_map(data, map_name):
-    # get average coordinates
-    avg_lat = data['lat'].mean()
-    avg_lon = data['lon'].mean()
-
-    # add color column
-    color = {'producer': '#ff0000', 'consumer': '#00ff00', 'split': '#000000'}
-    data = (data.assign(node_color=data['node_type'])
-                .replace({'node_color': color}))
-
-    # create map
-    m = fol.Map(location=[avg_lat, avg_lon], zoom_start=8)
-
-    for i in range(0, len(data)):
-        # draw colorful circles
-        fol.CircleMarker([data['lat'][i], data['lon'][i]],
-                         radius=20,
-                         # popup=data['node_id'][i],
-                         color=data['node_color'][i],
-                         fill_color=data['node_color'][i]).add_to(m)
-
-        # draw node ids
-        fol.Marker([data['lat'][i], data['lon'][i]],
-                   icon=DivIcon(icon_size=(20, 30),
-                                icon_anchor=(0, 0),
-                                html='<div style="font-size: 16pt">%s</div>'
-                                % data['node_id'][i])).add_to(m)
-
-    # save map
-    m.save(map_name+'.html')

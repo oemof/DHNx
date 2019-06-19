@@ -8,18 +8,26 @@ import pandas as pd
 
 
 # read data
-data = pd.read_csv('berlin_node_list.csv')
+node_data = pd.read_csv('berlin_node_list.csv')
+edge_data = pd.read_csv('berlin_edge_list.csv')
 
 # name of the place
 place = 'berlin'
 
 # coordinates of the place
-point = (52.5163, 13.3788)
+point = (node_data['lat'].mean(), node_data['lon'].mean())
 
-# street widths of the plot
-sw = {'motorway': 3.0, 'trunk': 2.5, 'primary': 1.5, 'secondary': 1.0,
-      'tertiary': 1.0, 'unclassified': 0.75, 'residential': 0.75}
+# create network & plot
+net = plotting.Network(place, point, node_data, edge_data)
+plot = net.draw_map(distance=2500, dpi=300)
 
-# create plot
-plotting.make_plot(data, place, point, distance=2500, dpi=300,
-                   street_widths=sw)
+# save plot
+plot.savefig('plot_'+place+'.png', dpi=300, facecolor='#333333')
+print('Figure saved as '+place+'.png')
+
+# create interactive map
+map = net.create_interactive_map()
+
+# save interactive map
+map.save(place+'.html')
+print('Map saved as '+place+'.html')
