@@ -8,6 +8,7 @@ from matplotlib.lines import Line2D
 import pandas as pd
 import numpy as np
 from math import sqrt
+from collections import namedtuple
 
 
 class Network:
@@ -74,8 +75,8 @@ class Network:
             ax.annotate(self.node_data['node_id'][i],
                         xy=(self.lon[i], self.lat[i]),
                         color='blue',
-                        size=16,
-                        fontweight=1000)
+                        size=30,
+                        fontweight=750)
 
 
     def _draw_edges(self, ax):
@@ -95,17 +96,104 @@ class Network:
                 ax.add_line(Line2D(edge_lon, edge_lat,
                                    linewidth=lw*3,
                                    color='blue'))
+                ax.arrow(edge_lon[0], edge_lat[0],
+                         (edge_lon[1]-edge_lon[0])/2,
+                         (edge_lat[1]-edge_lat[0])/2,
+                         width=0,
+                         head_length=.001, head_width=.001,
+                         color='blue')
             else:
                 ax.add_line(Line2D(edge_lon, edge_lat,
                    linewidth=lw*3,
                    color='orange'))
+                ax.arrow(edge_lon[0], edge_lat[0],
+                         (edge_lon[1]-edge_lon[0])/2,
+                         (edge_lat[1]-edge_lat[0])/2,
+                         width=0,
+                         head_length=.001, head_width=.001,
+                         color='orange')
+
+
+    def _get_bearing(self, p1, p2):
+        '''
+        Returns compass bearing from p1 to p2
+
+        Parameters
+        p1 : namedtuple with lat lon
+        p2 : namedtuple with lat lon
+
+        Return
+        compass bearing of type float
+        '''
+        long_diff = np.radians(p2.lon - p1.lon)
+
+        lat1 = np.radians(p1.lat)
+        lat2 = np.radians(p2.lat)
+
+        x = np.sin(long_diff) * np.cos(lat2)
+        y = (np.cos(lat1) * np.sin(lat2) 
+            - (np.sin(lat1) * np.cos(lat2) 
+            * np.cos(long_diff)))
+
+        bearing = np.degrees(np.arctan2(x, y))
+
+        # adjusting for compass bearing
+        if bearing < 0:
+            return bearing + 360
+
+        return bearing
+
+
+    def _get_arrows(self, locations, color='black', size=8, n_arrows=3):
+        '''
+        Get a list of correctly placed and rotated 
+        arrows/markers to be plotted
+
+        Parameters
+        locations : list of lists of lat lons that represent the 
+                    start and end of the line. 
+                    eg [[41.1132, -96.1993],[41.3810, -95.8021]]
+        color : default is 'black'
+        size : default is 8
+        n_arrows : number of arrows to create.  default is 3
+
+        Return
+        list of arrows/markers
+        '''
+
+        Point = namedtuple('Point', field_names=['lat', 'lon'])
+
+        # creating point from our Point named tuple
+        p1 = Point(locations[0][0], locations[0][1])
+        p2 = Point(locations[1][0], locations[1][1])
+
+        # getting the rotation needed for our marker.  
+        # Subtracting 90 to account for the marker's orientation
+        # of due East(get_bearing returns North)
+        rotation = self._get_bearing(p1, p2) - 90
+
+        # get an evenly space list of lats and lons for our arrows
+        # note that I'm discarding the first and last for aesthetics
+        # as I'm using markers to denote the start and end
+        arrow_lats = np.linspace(p1.lat, p2.lat, n_arrows + 2)[1:n_arrows+1]
+        arrow_lons = np.linspace(p1.lon, p2.lon, n_arrows + 2)[1:n_arrows+1]
+
+        arrows = []
+
+        #creating each "arrow" and appending them to our arrows list
+        for points in zip(arrow_lats, arrow_lons):
+            arrows.append(fol.RegularPolygonMarker(location=points,
+                          color=color, number_of_sides=3,
+                          radius=size, rotation=rotation))
+
+        return arrows
 
 
     def draw_map(self, distance, dpi):
         sw = self._get_sw()
 
         # osmnx config
-        ox.config(use_cache=False, log_console=False)
+        ox.config(use_cache=False, log_console=True)
 
         # get GeoDataFrame
         gdf = ox.footprints.footprints_from_point(point=self.point,
@@ -180,6 +268,17 @@ class Network:
                                          self.lon[self.edge_data['node_id_2'][i]]]],
                              color='blue',
                              weight=lw*3).add_to(m)
+
+                arrows = self._get_arrows(
+                    locations=[[self.lat[self.edge_data['node_id_1'][i]],
+                                self.lon[self.edge_data['node_id_1'][i]]],
+                               [self.lat[self.edge_data['node_id_2'][i]],
+                                self.lon[self.edge_data['node_id_2'][i]]]],
+                    color='blue', n_arrows=3)
+
+                for arrow in arrows:
+                    arrow.add_to(m)
+
             else:
                 fol.PolyLine(locations=[[self.lat[self.edge_data['node_id_1'][i]],
                                          self.lon[self.edge_data['node_id_1'][i]]],
@@ -187,6 +286,17 @@ class Network:
                                          self.lon[self.edge_data['node_id_2'][i]]]],
                              color='orange',
                              weight=lw*3).add_to(m)
+
+                arrows = self._get_arrows(
+                    locations=[[self.lat[self.edge_data['node_id_1'][i]],
+                                self.lon[self.edge_data['node_id_1'][i]]],
+                               [self.lat[self.edge_data['node_id_2'][i]],
+                                self.lon[self.edge_data['node_id_2'][i]]]],
+                    color='orange', n_arrows=3)
+
+                for arrow in arrows:
+                    arrow.add_to(m)
+
         return m
 
 
