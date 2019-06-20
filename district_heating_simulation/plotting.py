@@ -74,7 +74,7 @@ class Network:
         for i in range(0, len(self.node_data)):
             ax.annotate(self.node_data['node_id'][i],
                         xy=(self.lon[i], self.lat[i]),
-                        color='blue',
+                        color='white',
                         size=30,
                         fontweight=750)
 
