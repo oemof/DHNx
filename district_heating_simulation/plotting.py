@@ -184,7 +184,7 @@ class Network:
         for points in zip(arrow_lats, arrow_lons):
             arrows.append(fol.RegularPolygonMarker(location=points,
                           color=color, number_of_sides=3,
-                          radius=size, rotation=rotation))
+                          radius=size, rotation=rotation, fill=True))
 
         return arrows
 
