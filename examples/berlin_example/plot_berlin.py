@@ -19,10 +19,10 @@ point = (node_data['lat'].mean(), node_data['lon'].mean())
 
 # create network & plot
 net = plotting.Network(place, point, node_data, edge_data)
-plot = net.draw_map(distance=2500, dpi=300)
+plot = net.draw_map(distance=2500, dpi=70)
 
 # save plot
-plot.savefig('plot_'+place+'.png', dpi=300, facecolor='#333333')
+plot.savefig('plot_'+place+'.png', dpi=70, facecolor='#333333')
 print('Figure saved as '+place+'.png')
 
 # create interactive map
