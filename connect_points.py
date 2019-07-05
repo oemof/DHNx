@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 General description
 -------------------
@@ -17,9 +18,13 @@ This example requires:
     geopandas
 
 
-04.07.2019 - johannes.roeder@uni-bremen.de
+Copyright (c) 2019 Johannes Röder <johannes.roeder@uni-bremen.de>
 
+SPDX-License-Identifier: GPL-3.0-or-later
 """
+__copyright__ = "Johannes Röder <johannes.roeder@uni-bremen.de>"
+__license__ = "GPLv3"
+
 
 import os
 import numpy as np
