@@ -1,6 +1,42 @@
 import networkx as nx
 import numpy as np
 
+
+class SimulationModel():
+    r"""
+    Simulation model for ThermalNetwork
+    """
+
+    def __init__(self, thermal_network):
+        self.thermal_network = thermal_network
+
+    def set_problem(self):
+
+    def solve(self):
+        results = 0
+        thermal_network.results = results
+        return thermal_network
+
+
+class SimulationModelTespy(SimulationModel):
+    r"""
+    Simulation model for ThermalNetwork using tespy
+    """
+
+    def __init__(self, thermal_network):
+        self.thermal_network = thermal_network
+
+    def set_problem(self):
+
+    def create_tespy_model(self):
+        return tespy_model
+
+    def solve(self):
+        results = 0
+        thermal_network.results = results
+        return thermal_network
+
+
 def hydraulics_known_flows_wo_loops(G, m_node):
     A = nx.incidence_matrix(G, oriented=True).todense()
     m_node[0] = - np.sum(m_node[1:])
