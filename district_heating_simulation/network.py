@@ -1,4 +1,5 @@
 import networkx as nx
+import pandas as pd
 from .input_output import ImportCSV, ExportCSV
 
 
@@ -12,7 +13,7 @@ class ThermalNetwork():
         self.consumers = None
         self.edges = None
         self.results = None
-        self.units = None
+        self.units = {}
         self.graph = None
 
     def load_from_csv(self, dirname):
@@ -34,7 +35,23 @@ class ThermalNetwork():
     def set_units(self):
         return self.units
 
-    def convert_to_nx_graph(self):
+    def get_nx_graph(self):
+        self.graph = nx.MultiDiGraph()
+
+        edge_attr = list(self.edges.columns)
+        edge_attr.remove('from_node')
+        edge_attr.remove('to_node')
+
+        self.graph = nx.from_pandas_edgelist(self.edges,
+                                            'from_node',
+                                            'to_node',
+                                            edge_attr=edge_attr,
+                                            create_using=self.graph)
+
+        nodes = pd.concat([self.producers, self.consumers, self.splits], axis=0)
+        node_attrs = {node_id: dict(data) for node_id, data in nodes.iterrows()}
+        nx.set_node_attributes(self.graph, node_attrs)
+
         return self.graph
 
     def reproject(self, crs):
