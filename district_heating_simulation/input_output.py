@@ -62,6 +62,7 @@ class ExportCSV():
 
 class ExportGDF():
     r"""
+    TODO:
     Exports thermal networks to geopandas.GeoDataFrame.
 
     """
@@ -86,21 +87,7 @@ class ExportGDF():
         edges.to_csv(os.path.join(self.dirname, 'edges.csv'))
         return edges
 
-def create_network(edge_list, node_list):
-    r"""
-    Create DHN from lists decribing edges and nodes
-    """
-    G = nx.MultiDiGraph()
 
-    edge_attr = ['lenght_m', 'diameter_mm', 'heat_transfer_coefficient_W/mK', 'roughness_mm']
-    G = nx.from_pandas_edgelist(edge_list, 'from_node', 'to_node', edge_attr=edge_attr, create_using=G)
-
-    for node in G.nodes:
-        G.add_node(node, lon=node_list.loc[int(node)]['lon'],
-                         lat=node_list.loc[int(node)]['lat'],
-                         node_type=node_list.loc[int(node)]['node_type'])
-
-    return G
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
     r"""
