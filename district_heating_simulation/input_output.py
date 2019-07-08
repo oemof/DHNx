@@ -1,19 +1,30 @@
 import networkx as nx
-from math import sqrt
-import matplotlib.pyplot as plt
-import matplotlib.collections as collections
 import pandas as pd
 import numpy as np
 from shapely.geometry import Point
 from shapely.geometry import LineString
 import time
 import geopandas as gpd
-import math
+
+
+class ImportExportCSV():
+    r"""
+    Imports/Exports thermal networks from csv files.
+    """
+    def __init(self):
+        pass
+
+    def load_from_csv(self, filename):
+        thermal_network = []
+        return thermal_network
+
+    def save_to_csv(self, thermal_network, filename):
+        return filename
+
 
 def create_network(edge_list, node_list):
-    """
+    r"""
     Create DHN from lists decribing edges and nodes
-    
     """
     G = nx.MultiDiGraph()
 
@@ -28,7 +39,7 @@ def create_network(edge_list, node_list):
     return G
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
-    """
+    r"""
     Convert a graph into node and/or edge GeoDataFrames
 
     Parameters
