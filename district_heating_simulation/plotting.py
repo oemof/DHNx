@@ -95,7 +95,9 @@ class GraphPlot():
             ax.add_image(imagery, zoom_level, alpha=1, interpolation='bilinear')
 
         else:
-            fig, ax = plt.subplots(figsize=self.figsize, facecolor=bgcolor)
+            fig, ax = plt.subplots(figsize=self.figsize, facecolor=bgcolor,
+                                   subplot_kw = {'projection': ccrs.PlateCarree()})
+            ax.set_extent(self.extent, crs=ccrs.Geodetic())
 
         lines = []
         for u, v, data in self.graph.edges(data=True):
