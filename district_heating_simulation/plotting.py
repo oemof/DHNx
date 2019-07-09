@@ -90,7 +90,6 @@ class GraphPlot():
             imagery = Stamen(style='toner-lite')
             zoom_level = 15
             fig, ax = plt.subplots(figsize=self.figsize,
-                                   facecolor=bgcolor,
                                    subplot_kw={'projection': imagery.crs})
             ax.set_extent(self.extent, crs=ccrs.Geodetic())
             ax.add_image(imagery, zoom_level, alpha=1, interpolation='bilinear')
