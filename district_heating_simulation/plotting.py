@@ -82,8 +82,8 @@ class GraphPlot():
         return plt
 
     def draw_G(self, bgcolor='w', no_axis=False, background_map=False,
-               use_geom=False, edge_color='b', edge_linewidth=1,
-               edge_alpha=1, node_size=3, node_color='r', node_alpha=1,
+               use_geom=False, edge_color='b', edge_linewidth=2,
+               edge_alpha=1, node_size=40, node_color='r', node_alpha=1,
                node_edgecolor='r', node_zorder=1):
 
         if background_map:
@@ -96,7 +96,7 @@ class GraphPlot():
 
         else:
             fig, ax = plt.subplots(figsize=self.figsize, facecolor=bgcolor,
-                                   subplot_kw = {'projection': ccrs.PlateCarree()})
+                                   subplot_kw = {'projection': ccrs.Mercator()})
             ax.set_extent(self.extent, crs=ccrs.Geodetic())
 
         lines = []
