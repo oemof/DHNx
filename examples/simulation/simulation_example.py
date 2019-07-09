@@ -5,7 +5,12 @@ import matplotlib.pyplot as plt
 thermal_network = dhs.network.ThermalNetwork()
 
 # load data from csv
-thermal_network.load_from_csv('data/')
+thermal_network.load_from_csv('single_loop/')
+
+# plot
+graph_plot = dhs.plotting.GraphPlot(thermal_network)
+graph_plot.draw_G(background_map=False)
+plt.show()
 
 # define problem
 
