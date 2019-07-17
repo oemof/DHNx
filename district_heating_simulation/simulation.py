@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+import pandas as pd
 
 
 class SimulationModel():
@@ -13,9 +14,16 @@ class SimulationModel():
     def set_problem(self):
 
     def solve(self):
-        results = 0
-        thermal_network.results = results
-        return thermal_network
+        results = {}
+        results['mass_flows'] = pd.DataFrame()
+        results['temperatures'] = pd.DataFrame()
+        results['general'] = pd.DataFrame({'snapshot': [0],
+                                           'pump_power': [0],
+                                           'heat_feed_in': [0],
+                                           'heat_consumed': [0],
+                                           'heat_losses': [0]}).set_index('snapshot')
+        self.thermal_network.results = results
+        return self.thermal_network
 
 
 class SimulationModelTespy(SimulationModel):
