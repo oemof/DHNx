@@ -12,6 +12,7 @@ class ThermalNetwork():
         self.splits = None
         self.consumers = None
         self.edges = None
+        self.nodes = None
         self.results = None
         self.units = {}
         self.graph = None
@@ -23,6 +24,9 @@ class ThermalNetwork():
         self.splits = importer.get_splits()
         self.consumers = importer.get_consumers()
         self.edges = importer.get_edges()
+        self.nodes = pd.concat([self.producers,
+                                self.consumers,
+                                self.splits])
 
     def save_to_csv(self, dirname):
         exporter = ExportCSV(dirname)
