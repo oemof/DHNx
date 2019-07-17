@@ -1,2 +1,4 @@
 *.pyc
 *.png
+*.egg-info
+.idea
