@@ -10,20 +10,43 @@ class SimulationModel():
 
     def __init__(self, thermal_network):
         self.thermal_network = thermal_network
+        self.problem = {}
+        self.results = {}
 
-    def set_problem(self):
+    def _has_loops(self):
+        return False # TODO: self.thermal_network.has_loops()
+
+    def _solve_hydraulic(self):
+        mass_flow_edges = pd.DataFrame({'edge_id': [0], 'from_node': [0], 'to_node': [1], 'mass_flow': [2]})
+        self.results['mass_flow_edges'] = mass_flow_edges
+
+    def _solve_thermal(self):
+        temperature = pd.DataFrame({'node_id': [0], 'temperature_inlet': [0], 'temperature_return': [1]})
+        self.results['temperature'] = temperature
+
+    def _create_general_results(self):
+        self.results['general'] = pd.DataFrame({'snapshot': [0],
+                                                'pump_power': [0],
+                                                'heat_feed_in': [0],
+                                                'heat_consumed': [0],
+                                                'heat_losses': [0]}).set_index('snapshot')
+
+    def set_problem(self, mass_flow_cons, temperature_drop_cons):
+        # TODO: if mass_flow_cons.index != temperature_drop_cons.index:
+        # TODO:     raise('Error: Problem has conflicting indices.')
+        self.problem['mass_flow_cons'] = mass_flow_cons
+        self.problem['temperature_drop_cons'] = temperature_drop_cons
 
     def solve(self):
-        results = {}
-        results['mass_flows'] = pd.DataFrame()
-        results['temperatures'] = pd.DataFrame()
-        results['general'] = pd.DataFrame({'snapshot': [0],
-                                           'pump_power': [0],
-                                           'heat_feed_in': [0],
-                                           'heat_consumed': [0],
-                                           'heat_losses': [0]}).set_index('snapshot')
-        self.thermal_network.results = results
-        return self.thermal_network
+        if self._has_loops():
+            pass
+
+        else:
+            self._solve_hydraulic()
+            self._solve_thermal()
+            self._create_general_results()
+
+        return self.results
 
 
 class SimulationModelTespy(SimulationModel):
@@ -35,6 +58,7 @@ class SimulationModelTespy(SimulationModel):
         self.thermal_network = thermal_network
 
     def set_problem(self):
+        pass
 
     def create_tespy_model(self):
         return tespy_model
@@ -44,35 +68,3 @@ class SimulationModelTespy(SimulationModel):
         thermal_network.results = results
         return thermal_network
 
-
-def hydraulics_known_flows_wo_loops(G, m_node):
-    A = nx.incidence_matrix(G, oriented=True).todense()
-    m_node[0] = - np.sum(m_node[1:])
-    print(m_node.shape)
-    print(A.shape)
-    flows = np.linalg.lstsq(A,m_node)[0]
-    return flows
-
-def hydraulics_known_flows_wo_loops_v2(G, m_node):
-    A = nx.incidence_matrix(G, oriented=True).todense()
-    A = A[1:,:]
-    m_node = m_node[1:]
-    flows = np.linalg.solve(A, m_node)
-    return flows
-
-def hydraulics_known_flows_wo_loops_sparse(G, m_node):
-    import scipy
-    A = nx.incidence_matrix(G, oriented=True)
-    A = A[1:,:]
-    m_node = m_node[1:]
-    flows = scipy.sparse.linalg.spsolve(A, m_node)
-    return flows
-
-
-def hydraulics_known_flows_wo_loops_prop_to_edges(G, m_node):
-    A = nx.incidence_matrix(G, oriented=True).todense()
-    A = A[1:,:]
-    m_node = m_node[1:]
-    flows = np.linalg.solve(A, m_node)
-    G = properties_to_edges(G, {'mass_flows': flows})
-    return flows
