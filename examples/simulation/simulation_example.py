@@ -1,21 +1,42 @@
-import district_heating_simulation as dhs
 import matplotlib.pyplot as plt
+import pandas as pd
+import os
 
-# initialize a thermal network
-thermal_network = dhs.network.ThermalNetwork()
+import district_heating_simulation as dhs
 
-# load data from csv
-thermal_network.load_from_csv('single_loop/')
+# Initialize 2 thermal networks
+tree_network = dhs.network.ThermalNetwork()
+looped_network = dhs.network.ThermalNetwork()
 
-# plot
-graph_plot = dhs.plotting.GraphPlot(thermal_network)
-graph_plot.draw_G(background_map=False)
-plt.show()
+# Load data from csv
+tree_network.load_from_csv('tree/')
+looped_network.load_from_csv('single_loop/')
 
-# define problem
+# Plot
+# tree_graph_plot = dhs.plotting.GraphPlot(tree_network)
+# tree_graph_plot.draw_G(background_map=False)
+# looped_graph_plot = dhs.plotting.GraphPlot(looped_network)
+# looped_graph_plot.draw_G(background_map=False)
+# plt.show()
 
-# create simulation model
+# Define problem
+mass_flow = pd.read_csv('problem/mass_flow.csv')
+temperature_drop = pd.read_csv('problem/temperature_drop.csv')
 
-# solve the model
+# Create simulation model
+tree_model = dhs.simulation.SimulationModel(tree_network)
+tree_model.set_problem(mass_flow, temperature_drop)
 
-# plot results
+# Solve the model
+results = tree_model.solve()
+
+if not os.path.exists('results'):
+    os.mkdir('results')
+
+# Plot and save results
+for k, v in results.items():
+    print(k)
+    print('----------------------------------------------------------------')
+    print(v, '\n')
+    print('================================================================')
+    v.to_csv(f'results/{k}.csv')
