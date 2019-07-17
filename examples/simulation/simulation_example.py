@@ -20,8 +20,8 @@ looped_network.load_from_csv('single_loop/')
 # plt.show()
 
 # Define problem
-mass_flow = pd.read_csv('problem/mass_flow.csv')
-temperature_drop = pd.read_csv('problem/temperature_drop.csv')
+mass_flow = pd.read_csv('problem/mass_flow.csv', index_col='snapshot')
+temperature_drop = pd.read_csv('problem/temperature_drop.csv', index_col='snapshot')
 
 # Create simulation model
 tree_model = dhs.simulation.SimulationModel(tree_network)
