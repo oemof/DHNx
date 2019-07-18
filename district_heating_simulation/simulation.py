@@ -31,10 +31,7 @@ class SimulationModel():
         columns = self.thermal_network.edges.index
         mass_flow_edges = pd.DataFrame(mass_flow_edges, columns=columns)
         mass_flow_edges.index.name = 'snapshots'
-
         self.results['mass_flow_edges'] = mass_flow_edges
-        # mass_flow_edges = pd.DataFrame({'edge_id': [0], 'from_node': [0], 'to_node': [1], 'mass_flow': [2]})
-        # self.results['mass_flow_edges'] = mass_flow_edges
 
     def _solve_thermal(self):
         temperature = pd.DataFrame({'node_id': [0], 'temperature_inlet': [0], 'temperature_return': [1]})
