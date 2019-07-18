@@ -23,16 +23,16 @@ class SimulationModel():
         n_nodes = len(graph.nodes)
         mass_flow_edges = np.zeros((len(self.problem['snapshots']), len(graph.edges)))
         for t in self.problem['snapshots']:
-            print(t)
             mass_flow_nodes = self.problem['mass_flow_cons'].loc[t].\
             reindex([str(i) for i in range(n_nodes)], fill_value=0)
             mass_flow_nodes[0] = - np.sum(mass_flow_nodes[1:])
-            print(mass_flow_nodes)
-            mass_flow_edges[t,:] = np.linalg.lstsq(inc_matrix, mass_flow_nodes)[0]
+            mass_flow_edges[t,:] = np.linalg.lstsq(inc_matrix, mass_flow_nodes, rcond=None)[0]
 
-        self.results['mass_flow_edges'] = pd.DataFrame(mass_flow_edges,
-                                                       columns=['a','b','c'])
-        print(graph.edges(data=False))
+        columns = self.thermal_network.edges.index
+        mass_flow_edges = pd.DataFrame(mass_flow_edges, columns=columns)
+        mass_flow_edges.index.name = 'snapshots'
+
+        self.results['mass_flow_edges'] = mass_flow_edges
         # mass_flow_edges = pd.DataFrame({'edge_id': [0], 'from_node': [0], 'to_node': [1], 'mass_flow': [2]})
         # self.results['mass_flow_edges'] = mass_flow_edges
 
