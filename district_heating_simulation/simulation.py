@@ -37,7 +37,19 @@ class SimulationModel():
         temperature = pd.DataFrame({'node_id': [0], 'temperature_inlet': [0], 'temperature_return': [1]})
         self.results['temperature'] = temperature
 
-    def _create_general_results(self):
+    def _calculate_pump_power(self):
+        return 0
+
+    def _calculate_heat_feed_in(self):
+        return 0
+
+    def _calculate_heat_consumed(self):
+        return 0
+
+    def _calculate_heat_losses(self):
+        return 0
+
+    def _collect_summary_results(self):
         self.results['general'] = pd.DataFrame({'snapshot': [0],
                                                 'pump_power': [0],
                                                 'heat_feed_in': [0],
