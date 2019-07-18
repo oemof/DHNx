@@ -70,7 +70,7 @@ class SimulationModel():
         else:
             self._solve_hydraulic()
             self._solve_thermal()
-            self._create_general_results()
+            self._collect_summary_results()
 
         return self.results
 
