@@ -7,7 +7,13 @@ several approaches pending. Use the following version until caching is
 officially supported:
 
 pip install git+https://github.com/uvchik/contextily.git
+
+Copyright (c) 2019 Uwe Krien <krien@uni-bremen.de>
+
+SPDX-License-Identifier: GPL-3.0-or-later
 """
+__copyright__ = "Uwe Krien <krien@uni-bremen.de>"
+__license__ = "GPLv3"
 
 import os
 import geopandas as gpd
@@ -19,6 +25,13 @@ from matplotlib import cm
 
 def add_basemap(ax, zoom, path=None, alpha=1.0,
                 url='https://c.tile.openstreetmap.org'):
+    """
+    This function is based on a geopandas example. Thanks to the geopandas
+    contributors.
+
+    https://github.com/geopandas/geopandas/blob/master/examples
+    /plotting_basemap_background.py
+    """
     url = '/'.join(s.strip('/') for s in [url, '/{z}/{x}/{y}.png'])
     xmin, xmax, ymin, ymax = ax.axis()
     try:
