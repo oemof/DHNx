@@ -16,7 +16,7 @@ class SimulationModel():
     def _has_loops(self):
         return False # TODO: self.thermal_network.has_loops()
 
-    def _solve_hydraulic(self):
+    def _solve_hydraulic_no_loops(self):
         graph = self.thermal_network.get_nx_graph()
         inc_matrix = nx.incidence_matrix(graph,
                                          oriented=True).todense()
@@ -27,6 +27,23 @@ class SimulationModel():
             reindex([str(i) for i in range(n_nodes)], fill_value=0)
             mass_flow_nodes[0] = - np.sum(mass_flow_nodes[1:])
             mass_flow_edges[t,:] = np.linalg.lstsq(inc_matrix, mass_flow_nodes, rcond=None)[0]
+
+        columns = self.thermal_network.edges.index
+        mass_flow_edges = pd.DataFrame(mass_flow_edges, columns=columns)
+        mass_flow_edges.index.name = 'snapshots'
+        self.results['mass_flow_edges'] = mass_flow_edges
+
+    def _solve_hydraulic_loops(self):
+        graph = self.thermal_network.get_nx_graph()
+        inc_matrix = nx.incidence_matrix(graph,
+                                         oriented=True).todense()
+        n_nodes = len(graph.nodes)
+        mass_flow_edges = np.zeros((len(self.problem['snapshots']), len(graph.edges)))
+        for t in self.problem['snapshots']:
+            mass_flow_nodes = self.problem['mass_flow_cons'].loc[t]. \
+                reindex([str(i) for i in range(n_nodes)], fill_value=0)
+            mass_flow_nodes[0] = - np.sum(mass_flow_nodes[1:])
+            mass_flow_edges[t, :] = np.linalg.lstsq(inc_matrix, mass_flow_nodes, rcond=None)[0]
 
         columns = self.thermal_network.edges.index
         mass_flow_edges = pd.DataFrame(mass_flow_edges, columns=columns)
@@ -65,12 +82,12 @@ class SimulationModel():
 
     def solve(self):
         if self._has_loops():
-            pass
-
+            self._solve_hydraulic_loops()
         else:
-            self._solve_hydraulic()
-            self._solve_thermal()
-            self._collect_summary_results()
+            self._solve_hydraulic_no_loops()
+
+        self._solve_thermal()
+        self._collect_summary_results()
 
         return self.results
 
