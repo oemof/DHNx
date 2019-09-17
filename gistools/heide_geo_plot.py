@@ -23,28 +23,6 @@ from matplotlib.lines import Line2D
 from matplotlib import cm
 
 
-def add_basemap(ax, zoom, path=None, alpha=1.0,
-                url='https://c.tile.openstreetmap.org'):
-    """
-    This function is based on a geopandas example. Thanks to the geopandas
-    contributors.
-
-    https://github.com/geopandas/geopandas/blob/master/examples
-    /plotting_basemap_background.py
-    """
-    url = '/'.join(s.strip('/') for s in [url, '/{z}/{x}/{y}.png'])
-    xmin, xmax, ymin, ymax = ax.axis()
-    try:
-        basemap, extent = ctx.bounds2img(xmin, ymin, xmax, ymax, zoom=zoom,
-                                         url=url, cache_dir=path)
-    except TypeError:
-        basemap, extent = ctx.bounds2img(xmin, ymin, xmax, ymax, zoom=zoom,
-                                         url=url)
-    ax.imshow(basemap, extent=extent, interpolation='bilinear', alpha=alpha)
-    # restore original x/y limits
-    ax.axis((xmin, xmax, ymin, ymax))
-
-
 def building_plot(url, zoom, cmap, bg_alpha, plot_streets=False,
                   show_plot=True):
     """
@@ -61,8 +39,12 @@ def building_plot(url, zoom, cmap, bg_alpha, plot_streets=False,
         Alpha value for the background map.
     plot_streets : bool
         Plot the streets as lines. Default=False.
+    show_plot : bool
+        Show plot if True. Default=True
 
     """
+    my_url = '/'.join(s.strip('/') for s in [url, '/{z}/{x}/{y}.png'])
+
     geopath = os.path.join(os.path.dirname(__file__), 'geometries')
 
     ax = plt.figure(figsize=(5, 6)).add_subplot(1, 1, 1)
@@ -82,8 +64,8 @@ def building_plot(url, zoom, cmap, bg_alpha, plot_streets=False,
     ax = buildings.to_crs(epsg=3857).plot(column='Zone', cmap=cmap, ax=ax)
     if plot_streets:
         streets.to_crs(epsg=3857).plot(ax=ax)
-    add_basemap(ax, zoom=zoom, path=cache_path, alpha=bg_alpha,
-                url=url)
+    ctx.tile.memory.store_backend.location = './joblib'
+    ctx.add_basemap(ax, zoom=zoom, url=my_url, alpha=bg_alpha)
     ax.set_axis_off()
 
     v = 0
@@ -125,13 +107,13 @@ if __name__ == "__main__":
 
     # ******** INPUTS
     cache_path = os.path.join(os.path.expanduser('~'), '.basemap_tiles')
-    osm_url = osm_maps['wmflabs OSM BW']
+    osm_url = osm_maps['OSM default']
     color_map = 'tab10'
     map_zoom = 17
-    map_alpha = 0.7
+    map_alpha = 0.8
     heide_streets = False
-    show_plot = True
+    show_my_plot = True
     # ******** INPUTS
 
     building_plot(osm_url, map_zoom, color_map, map_alpha, heide_streets,
-                  show_plot)
+                  show_my_plot)
