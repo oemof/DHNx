@@ -108,3 +108,6 @@ venv.bak/
 
 # pyomo temp
 .lp
+
+# joblib cache
+joblib/
