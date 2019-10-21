@@ -1,30 +1,29 @@
-import pandas as pd
-from district_heating_simulation import (input_output, projection)
+import district_heating_simulation as dhs
+import matplotlib.pyplot as plt
 
-edge_list = pd.read_csv('data/edge_list.csv', header=0, index_col='pipe_no')
-node_list = pd.read_csv('data/node_list.csv')
-heating_network = input_output.create_network(edge_list, node_list)
+# initialize a thermal network
+thermal_network = dhs.network.ThermalNetwork()
 
-# reproject graph
-heating_network.graph = {'crs': {'init': 'epsg:4326'}, 'name': 'example_dhn'}
-to_crs = {'datum': 'WGS84',
-          'ellps': 'WGS84',
-          'proj': 'utm',
-          'zone': 35,
-          'units': 'm'}
+# load data from csv
+thermal_network.load_from_csv('data_csv_input/')
 
-G_proj = projection.project_graph(heating_network, to_crs=to_crs)
-node_gdf, edge_gdf = input_output.graph_to_gdfs(G_proj)
+# save thermal network to csv
+thermal_network.save_to_csv('data_csv_output/')
 
-# export to geodataframe
-filename_export = 'example_dhn'
-filename_nodes = r"%s_nodes.shp" % filename_export
-filename_edges = r"%s_edges.shp" % filename_export
-node_gdf.to_file(filename_nodes)
-edge_gdf.to_file(filename_edges)
+# save thermal network to GeoDataFrame
+# thermal_network.save_to_gdf('data_gdf/')
 
-# export to edgelist/nodelist
-edge_list = input_output.to_edge_list(heating_network)
-node_list = input_output.to_node_list(heating_network)
-edge_list.to_csv('example_dhn_edgelist.csv')
-node_list.to_csv('example_dhn_nodelist.csv')
+# get graph of thermal network
+graph = thermal_network.get_nx_graph()
+
+# plot the graph
+graph_plot = dhs.plotting.GraphPlot(thermal_network)
+# plot_1 = graph_plot.draw()
+plot_2 = graph_plot.draw_G(background_map=False)
+plt.show()
+
+# # plot static map
+# static_map = dhs.plotting.StaticMap(thermal_network)
+#
+# # plot interactive map
+# interactive_map = dhs.plotting.InteractiveMap(thermal_network)

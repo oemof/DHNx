@@ -1,0 +1,4 @@
+[flake8]
+exclude = meta/migrations/
+ignore = E265
+max-line-length = 100

@@ -1,34 +1,96 @@
+import os
 import networkx as nx
-from math import sqrt
-import matplotlib.pyplot as plt
-import matplotlib.collections as collections
 import pandas as pd
 import numpy as np
 from shapely.geometry import Point
 from shapely.geometry import LineString
 import time
 import geopandas as gpd
-import math
 
-def create_network(edge_list, node_list):
+
+class ImportCSV():
+    r"""
+    Imports thermal networks from csv files.
+
     """
-    Create DHN from lists decribing edges and nodes
-    
+    def __init__(self, dirname):
+        self.dirname = dirname
+
+    def get_producers(self):
+        producers = pd.read_csv(os.path.join(self.dirname, 'producers.csv'), index_col='node_id')
+        return producers
+
+    def get_consumers(self):
+        consumers = pd.read_csv(os.path.join(self.dirname, 'consumers.csv'), index_col='node_id')
+        return consumers
+
+    def get_splits(self):
+        splits = pd.read_csv(os.path.join(self.dirname, 'splits.csv'), index_col='node_id')
+        return splits
+
+    def get_edges(self):
+        edges = pd.read_csv(os.path.join(self.dirname, 'edges.csv'), index_col='edge_id')
+        return edges
+
+
+class ExportCSV():
+    r"""
+    Exports thermal networks to csv files.
+
     """
-    G = nx.MultiDiGraph()
+    def __init__(self, dirname):
+        self.dirname = dirname
+        if not os.path.exists(self.dirname):
+            os.mkdir(self.dirname)
 
-    edge_attr = ['lenght_m', 'diameter_mm', 'heat_transfer_coefficient_W/mK', 'roughness_mm']
-    G = nx.from_pandas_edgelist(edge_list, 'from_node', 'to_node', edge_attr=edge_attr, create_using=G)
+    def save_producers(self, producers):
+        producers.to_csv(os.path.join(self.dirname, 'producers.csv'))
+        return producers
 
-    for node in G.nodes:
-        G.add_node(node, lon=node_list.loc[int(node)]['lon'],
-                         lat=node_list.loc[int(node)]['lat'],
-                         node_type=node_list.loc[int(node)]['node_type'])
+    def save_consumers(self, consumers):
+        consumers.to_csv(os.path.join(self.dirname, 'consumers.csv'))
+        return consumers
 
-    return G
+    def save_splits(self, splits):
+        splits.to_csv(os.path.join(self.dirname, 'splits.csv'))
+        return splits
+
+    def save_edges(self, edges):
+        edges.to_csv(os.path.join(self.dirname, 'edges.csv'))
+        return edges
+
+
+class ExportGDF():
+    r"""
+    TODO:
+    Exports thermal networks to geopandas.GeoDataFrame.
+
+    """
+    def __init__(self, dirname):
+        self.dirname = dirname
+        if not os.path.exists(self.dirname):
+            os.mkdir(self.dirname)
+
+    def save_producers(self, producers):
+        producers.to_csv(os.path.join(self.dirname, 'producers.csv'))
+        return producers
+
+    def save_consumers(self, consumers):
+        consumers.to_csv(os.path.join(self.dirname, 'consumers.csv'))
+        return consumers
+
+    def save_splits(self, splits):
+        splits.to_csv(os.path.join(self.dirname, 'splits.csv'))
+        return splits
+
+    def save_edges(self, edges):
+        edges.to_csv(os.path.join(self.dirname, 'edges.csv'))
+        return edges
+
+
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
-    """
+    r"""
     Convert a graph into node and/or edge GeoDataFrames
 
     Parameters
