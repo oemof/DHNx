@@ -1,0 +1,50 @@
+language: python
+
+matrix:
+  include:
+    - python: 3.6
+    - python: 3.7
+      dist: xenial
+
+
+# To install packages which are not on pip
+#before_install:
+#  - sudo apt-get install ...
+#addons:
+#  apt:
+#    update: true
+
+# command to install dependencies
+install:
+  - pip install -r tests/test_requirements.txt
+  - pip install -e .
+
+# commands to run tests 
+script:
+  - flake8
+  - pylint */*.py
+  - pytest
+#jobs:
+#  include:
+#    - stage: "Tests"                # naming the Tests stage
+#      name: "Linting Tests"            # names the first Tests stage job
+#      script: flake8
+#      script: pylint
+# for later stages
+#    - script: ./integration-tests
+#      name: "Integration Tests"     # names the second Tests stage job
+#    - stage: deploy
+#      name: "Deploy to GCP"
+#      script: ./deploy
+
+# blocklist
+#branches:
+#  except:
+#  - branch_name1
+#  - branch_name2
+
+# safelist
+#branches:
+#  only:
+#  - branch_name1
+#  - branch_name2
