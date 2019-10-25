@@ -2,3 +2,4 @@
 *.png
 *.egg-info
 .idea
+results/
