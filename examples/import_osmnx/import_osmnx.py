@@ -23,7 +23,7 @@ if not os.path.exists(f'data/{file_name}.graphml'):
 
     ox.save_load.save_graphml(graph, filename=f'{file_name}.graphml')
 
-if not os.path.exists(f'{file_name}_footprints'):
+if not os.path.exists(f'data/{file_name}_footprints'):
 
     print('Download footprints')
 
@@ -33,14 +33,14 @@ if not os.path.exists(f'{file_name}_footprints'):
 
     footprints_save = footprints.drop(labels='nodes', axis=1)
 
-    footprints_save.to_file(f'{file_name}_footprints')
+    footprints_save.to_file(f'data/{file_name}_footprints')
 
 # load network and footprints from disk
 graph = ox.save_load.load_graphml(f'{file_name}.graphml')
 
 graph = ox.project_graph(graph)
 
-footprints = gpd.read_file(f'{file_name}_footprints')
+footprints = gpd.read_file(f'data/{file_name}_footprints')
 
 footprints = ox.project_gdf(footprints)
 
@@ -127,13 +127,13 @@ producer = points.loc[[323], :]
 consumer = points.drop(323)
 
 # save files
-if not os.path.isdir(file_name):
-    os.makedirs(file_name)
+if not os.path.isdir(os.path.join('data', file_name)):
+    os.makedirs(os.path.join('data', file_name))
 
-producer.to_file(os.path.join(file_name, 'producer.shp'))
-consumer.to_file(os.path.join(file_name, 'consumer.shp'))
-splits.to_file(os.path.join(file_name, 'splits.shp'))
-edges.to_file(os.path.join(file_name, 'edges.shp'))
+producer.to_file(os.path.join('data', file_name, 'producer.shp'))
+consumer.to_file(os.path.join('data', file_name, 'consumer.shp'))
+splits.to_file(os.path.join('data', file_name, 'splits.shp'))
+edges.to_file(os.path.join('data', file_name, 'edges.shp'))
 
 # plot
 fig, ax = plt.subplots()
