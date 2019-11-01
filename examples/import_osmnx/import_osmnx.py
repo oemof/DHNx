@@ -13,15 +13,15 @@ from shapely.geometry import LineString
 # load street network and footprints from osm
 place_name = '52.43034,13.53806'
 distance = 300
-file_name = '_'.join(place_name.split(','))
+file_name = 'Berlin-Adlershof'
 
-if not os.path.exists(f'data/{file_name}.graphml'):
+if not os.path.exists(f'data/{file_name}_street_network.graphml'):
 
     print('Download street network')
 
     graph = ox.graph_from_address(place_name, distance=distance)
 
-    ox.save_load.save_graphml(graph, filename=f'{file_name}.graphml')
+    ox.save_load.save_graphml(graph, filename=f'{file_name}_street_network.graphml')
 
 if not os.path.exists(f'data/{file_name}_footprints'):
 
@@ -36,7 +36,7 @@ if not os.path.exists(f'data/{file_name}_footprints'):
     footprints_save.to_file(f'data/{file_name}_footprints')
 
 # load network and footprints from disk
-graph = ox.save_load.load_graphml(f'{file_name}.graphml')
+graph = ox.save_load.load_graphml(f'{file_name}_street_network.graphml')
 
 graph = ox.project_graph(graph)
 
@@ -127,13 +127,13 @@ producer = points.loc[[323], :]
 consumer = points.drop(323)
 
 # save files
-if not os.path.isdir(os.path.join('data', file_name)):
-    os.makedirs(os.path.join('data', file_name))
+if not os.path.isdir(os.path.join('data', f'{file_name}_potential_dhn')):
+    os.makedirs(os.path.join('data', f'{file_name}_potential_dhn'))
 
-producer.to_file(os.path.join('data', file_name, 'producer.shp'))
-consumer.to_file(os.path.join('data', file_name, 'consumer.shp'))
-splits.to_file(os.path.join('data', file_name, 'splits.shp'))
-edges.to_file(os.path.join('data', file_name, 'edges.shp'))
+producer.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'producer.shp'))
+consumer.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'consumer.shp'))
+splits.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'splits.shp'))
+edges.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'edges.shp'))
 
 # plot
 fig, ax = plt.subplots()
