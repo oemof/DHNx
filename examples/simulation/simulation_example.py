@@ -34,6 +34,7 @@ if not os.path.exists('results'):
     os.mkdir('results')
 
 # Plot and save results
+print('================================================================')
 for k, v in results.items():
     print(k)
     print('----------------------------------------------------------------')
