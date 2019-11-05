@@ -58,3 +58,13 @@ class ExportCSV():
     def save_edges(self, edges):
         edges.to_csv(os.path.join(self.dirname, 'edges.csv'))
         return edges
+
+
+def load_problem(dir):
+    problem = {}
+
+    for filename in os.listdir(dir):
+        name = filename.strip('.csv')
+        problem[name] = pd.read_csv(os.path.join(dir, filename))
+
+    return problem
