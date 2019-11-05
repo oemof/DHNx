@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 thermal_network = dhs.network.ThermalNetwork()
 
 # load data from csv
-thermal_network.load_from_csv('data_csv_input/')
+thermal_network = thermal_network.load_from_csv('data_csv_input/')
 
 # save thermal network to csv
 thermal_network.save_to_csv('data_csv_output/')
