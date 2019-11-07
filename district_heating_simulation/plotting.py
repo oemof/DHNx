@@ -1,30 +1,16 @@
-import networkx as nx
-import osmnx as ox
 import folium as fol
 from folium.features import DivIcon
+from collections import namedtuple
+from cartopy.io.img_tiles import Stamen
+from cartopy import crs as ccrs
 import matplotlib.pyplot as plt
 import matplotlib.collections as collections
-from matplotlib.lines import Line2D
-import pandas as pd
 import numpy as np
-from math import sqrt
-from collections import namedtuple
 
 
-class Network:
-    """
-    Create Network object
+class InteractiveMap():
+    r"""
 
-    Attributes
-    ----------
-    place : string
-        name of the place/figure
-    point : tuple
-        the center point as coordinates
-    node_data: pandas df
-        the data which will be used as coordinates of nodes
-    edge_data: pandas df
-        the data which will be used as connections of nodes
 
     """
     def __init__(self, name, point, node_data, edge_data, **kwargs):
@@ -38,7 +24,6 @@ class Network:
         self.node_type = node_data['node_type']
         self._add_colors()
 
-
     def _add_colors(self):
         color = {'producer': '#ff0000',
                  'consumer': '#00ff00',
@@ -50,7 +35,6 @@ class Network:
 
         return self.node_data['node_color']
 
-
     def _get_sw(self):
         sw = {'motorway': 3.0,
               'trunk': 2.5,
@@ -61,58 +45,6 @@ class Network:
               'residential': 0.75}
 
         return sw
-
-
-    def _add_points(self, ax):
-        ax.scatter(self.lon.tolist(),
-                   self.lat.tolist(),
-                   c=self.node_data['node_color'].tolist(),
-                   s=500)
-
-
-    def _add_labels(self, ax):
-        for i in range(0, len(self.node_data)):
-            ax.annotate(self.node_data['node_id'][i],
-                        xy=(self.lon[i], self.lat[i]),
-                        color='white',
-                        size=30,
-                        fontweight=750)
-
-
-    def _draw_edges(self, ax):
-        for i in range(0, len(self.edge_data)):
-            edge = [(self.lon[self.edge_data['node_id_1'][i]],
-                     self.lat[self.edge_data['node_id_1'][i]]),
-                    (self.lon[self.edge_data['node_id_2'][i]],
-                     self.lat[self.edge_data['node_id_2'][i]])]
-            (edge_lon, edge_lat) = zip(*edge)
-
-            # linewidth settings
-            lw_avg = self.edge_data['value'].mean()
-            lw = self.edge_data['value'][i] / lw_avg
-
-            # add_lines
-            if self.edge_data['edge_type'][i] == 'elec':
-                ax.add_line(Line2D(edge_lon, edge_lat,
-                                   linewidth=lw*3,
-                                   color='blue'))
-                ax.arrow(edge_lon[0], edge_lat[0],
-                         (edge_lon[1]-edge_lon[0])/2,
-                         (edge_lat[1]-edge_lat[0])/2,
-                         width=0,
-                         head_length=.001, head_width=.001,
-                         color='blue')
-            else:
-                ax.add_line(Line2D(edge_lon, edge_lat,
-                   linewidth=lw*3,
-                   color='orange'))
-                ax.arrow(edge_lon[0], edge_lat[0],
-                         (edge_lon[1]-edge_lon[0])/2,
-                         (edge_lat[1]-edge_lat[0])/2,
-                         width=0,
-                         head_length=.001, head_width=.001,
-                         color='orange')
-
 
     def _get_bearing(self, p1, p2):
         '''
@@ -142,7 +74,6 @@ class Network:
             return bearing + 360
 
         return bearing
-
 
     def _get_arrows(self, locations, color='black', size=8, n_arrows=3):
         '''
@@ -189,53 +120,7 @@ class Network:
         return arrows
 
 
-    def draw_map(self, distance, dpi):
-        sw = self._get_sw()
-
-        # osmnx config
-        ox.config(use_cache=False, log_console=True)
-
-        # get GeoDataFrame
-        gdf = ox.footprints.footprints_from_point(point=self.point,
-                                                  distance=distance)
-
-        # plot a figure-ground diagram of a street network
-        fig, ax = ox.plot_figure_ground(point=self.point,
-                                        dist=distance,
-                                        street_widths=sw,
-                                        dpi=dpi,
-                                        bgcolor='#333333',
-                                        edge_color='w',
-                                        network_type='drive',  
-                                        default_width=0.75,
-                                        fig_length=20,
-                                        save=False,
-                                        show=False,
-                                        close=False)
-
-        # plot a GeoDataFrame of footprints
-        fig, ax = ox.footprints.plot_footprints(gdf, fig=fig, ax=ax,
-                                                dpi=dpi,
-                                                color='#ABABAB',
-                                                figsize=(20, 20),
-                                                set_bounds=False,
-                                                save=False,
-                                                show=False,
-                                                close=False)
-
-        # add points
-        self._add_points(ax)
-
-        # add labels
-        self._add_labels(ax)
-
-        # draw edges
-        self._draw_edges(ax)
-
-        return plt
-
-
-    def create_interactive_map(self):
+    def draw(self):
         # create map
         m = fol.Map(location=[self.lat.mean(), self.lon.mean()],
                     zoom_start=14)
@@ -300,53 +185,93 @@ class Network:
         return m
 
 
-def draw_network(G, node_sizes, node_colors, edge_colors, edge_width, figsize):
-    # pos = nx.circular_layout(G)
-    # pos = nx.spring_layout(G)
-    # pos = nx.fruchterman_reingold_layout(G.to_undirected())
-    pos = {node_id: np.array([data['lon'], data['lat']]) for node_id, data in G.nodes(data=True)}
-    fig = plt.figure(figsize=figsize)
-    nodes = nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color=node_colors)
-    labels = nx.draw_networkx_labels(G, pos, font_color='w')
-    edges = nx.draw_networkx_edges(G, pos, node_size=node_sizes, arrowstyle='->',
-                                   arrowsize=10, edge_color=edge_colors,
-                                   edge_cmap=plt.cm.hot, width=edge_width)
+class StaticMap():
+    r"""
 
 
-    ax = plt.gca()
-    ax.set_axis_off()
-    plt.show()
+    """
+    def __init__(self, thermal_network, figsize=(5,5), node_size=3,
+                 edge_width=3, node_color='r', edge_color='g'):
+        self.graph = thermal_network.get_nx_graph()
+        self.figsize = figsize
+        self.node_size = node_size
+        self.edge_width = edge_width
+        self.node_color = node_color
+        self.edge_color = edge_color
+        self.positions = {node_id: np.array([data['lon'], data['lat']])
+                          for node_id, data in self.graph.nodes(data=True)}
+        self.extent = self._get_extent()
+        pass
 
+    def _get_extent(self):
+        lon = [pos[0] for pos in self.positions.values()]
+        lat = [pos[1] for pos in self.positions.values()]
+        extent = np.array([np.min(lon), np.max(lon), np.min(lat), np.max(lat)])
+        delta = [extent[1] - extent[0], extent[3] - extent[2]]
+        extent += 0.1 * np.array([-delta[0], delta[0], -delta[1], delta[1]])
+        return extent
 
-def draw_G(G, fig_width, fig_height, bgcolor='w',
-               use_geom=False, edge_color='b', edge_linewidth=1,
-               edge_alpha=1, node_size=3, node_color='r', node_alpha=1,
+    def draw(self, bgcolor='w', no_axis=False, background_map=False,
+               use_geom=False, edge_color='b', edge_linewidth=2,
+               edge_alpha=1, node_size=40, node_color='r', node_alpha=1,
                node_edgecolor='r', node_zorder=1):
+        """
+        This function has been adapted from osmnx plots.plot_graph() function.
+        """
+        if background_map:
+            imagery = Stamen(style='toner-lite')
+            zoom_level = 15
+            fig, ax = plt.subplots(figsize=self.figsize,
+                                   subplot_kw={'projection': imagery.crs})
+            ax.set_extent(self.extent, crs=ccrs.Geodetic())
+            ax.add_image(imagery, zoom_level, alpha=1, interpolation='bilinear')
 
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
-    lines = []
-    for u, v, data in G.edges(data=True):
-        if 'geometry' in data and use_geom:
-            # if it has a geometry attribute (a list of line segments), add them
-            # to the list of lines to plot
-            xs, ys = data['geometry'].xy
-            lines.append(list(zip(xs, ys)))
         else:
-            # if it doesn't have a geometry attribute, the edge is a straight
-            # line from node to node
-            x1 = G.nodes[u]['lon']
-            y1 = G.nodes[u]['lat']
-            x2 = G.nodes[v]['lon']
-            y2 = G.nodes[v]['lat']
-            line = [(x1, y1), (x2, y2)]
-            lines.append(line)
+            fig, ax = plt.subplots(figsize=self.figsize, facecolor=bgcolor,
+                                   subplot_kw = {'projection': ccrs.Mercator()})
+            ax.set_extent(self.extent, crs=ccrs.Geodetic())
 
-    # add the lines to the axis as a linecollection
-    lc = collections.LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
-    ax.add_collection(lc)
+        lines = []
+        for u, v, data in self.graph.edges(data=True):
+            if 'geometry' in data and use_geom:
+                # if it has a geometry attribute (a list of line segments), add them
+                # to the list of lines to plot
+                xs, ys = data['geometry'].xy
+                lines.append(list(zip(xs, ys)))
+            else:
+                # if it doesn't have a geometry attribute, the edge is a straight
+                # line from node to node
+                x1 = self.graph.nodes[u]['lon']
+                y1 = self.graph.nodes[u]['lat']
+                x2 = self.graph.nodes[v]['lon']
+                y2 = self.graph.nodes[v]['lat']
+                line = [(x1, y1), (x2, y2)]
+                lines.append(line)
 
-    node_Xs = [float(x) for _, x in G.nodes(data='lon')]
-    node_Ys = [float(y) for _, y in G.nodes(data='lat')]
-    ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=node_zorder)
+        # add the lines to the axis as a linecollection
+        lc = collections.LineCollection(lines,
+                                        colors=edge_color,
+                                        linewidths=edge_linewidth,
+                                        alpha=edge_alpha,
+                                        zorder=2,
+                                        transform=ccrs.Geodetic())
+        ax.add_collection(lc)
 
-    plt.show()
+        node_Xs = [float(x) for _, x in self.graph.nodes(data='lon')]
+        node_Ys = [float(y) for _, y in self.graph.nodes(data='lat')]
+
+        ax.scatter(node_Xs,
+                   node_Ys,
+                   s=node_size,
+                   c=node_color,
+                   alpha=node_alpha,
+                   edgecolor=node_edgecolor,
+                   zorder=node_zorder,
+                   transform=ccrs.Geodetic())
+
+        if no_axis:
+            ax = plt.gca()
+            ax.set_axis_off()
+
+        return plt
+

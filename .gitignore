@@ -1,0 +1,5 @@
+*.pyc
+*.png
+*.egg-info
+.idea
+results/
