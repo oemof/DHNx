@@ -1,29 +1,23 @@
 import os
 import sys
 
-import pandas as pd
-
-from district_heating_simulation import plotting
+import district_heating_simulation as dhs
 
 
 currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(os.path.dirname(currentdir))
 sys.path.append(parentdir)
 
-# read data
-node_data = pd.read_csv('berlin_node_list.csv')
-edge_data = pd.read_csv('berlin_edge_list.csv')
+# initialize a thermal network
+thermal_network = dhs.network.ThermalNetwork()
 
-# name of the place
-place = 'berlin'
-
-# coordinates of the place
-point = (node_data['lat'].mean(), node_data['lon'].mean())
+# load data from csv
+thermal_network.load_from_csv('berlin_data')
 
 # create interactive map
-map = plotting.InteractiveMap(place, point, node_data, edge_data)
+map = dhs.plotting.InteractiveMap(thermal_network)
 map = map.draw()
 
 # save interactive map
-map.save(place+'.html')
-print('Map saved as '+place+'.html')
+map.save('berlin.html')
+
