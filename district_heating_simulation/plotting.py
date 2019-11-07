@@ -22,21 +22,8 @@ class StaticMap():
 
 
     """
-    def __init__(self, thermal_network):
-        pass
-
-    def draw(self):
-        pass
-
-
-class GraphPlot():
-    r"""
-
-
-    """
     def __init__(self, thermal_network, figsize=(5,5), node_size=3,
                  edge_width=3, node_color='r', edge_color='g'):
-
         self.graph = thermal_network.get_nx_graph()
         self.figsize = figsize
         self.node_size = node_size
@@ -46,6 +33,7 @@ class GraphPlot():
         self.positions = {node_id: np.array([data['lon'], data['lat']])
                           for node_id, data in self.graph.nodes(data=True)}
         self.extent = self._get_extent()
+        pass
 
     def _get_extent(self):
         lon = [pos[0] for pos in self.positions.values()]
@@ -55,37 +43,13 @@ class GraphPlot():
         extent += 0.1 * np.array([-delta[0], delta[0], -delta[1], delta[1]])
         return extent
 
-    def draw(self, no_axis=False):
-        fig = plt.figure(figsize=self.figsize)
-        nodes = nx.draw_networkx_nodes(self.graph,
-                                       self.positions,
-                                       node_size=self.node_size,
-                                       node_color=self.node_color)
-
-        labels = nx.draw_networkx_labels(self.graph,
-                                         self.positions,
-                                         font_color='w')
-
-        edges = nx.draw_networkx_edges(self.graph,
-                                       self.positions,
-                                       node_size=self.node_size,
-                                       arrowstyle='->',
-                                       arrowsize=10,
-                                       edge_color=self.edge_color,
-                                       edge_cmap=plt.cm.hot,
-                                       width=self.edge_width)
-
-        if no_axis:
-            ax = plt.gca()
-            ax.set_axis_off()
-
-        return plt
-
-    def draw_G(self, bgcolor='w', no_axis=False, background_map=False,
+    def draw(self, bgcolor='w', no_axis=False, background_map=False,
                use_geom=False, edge_color='b', edge_linewidth=2,
                edge_alpha=1, node_size=40, node_color='r', node_alpha=1,
                node_edgecolor='r', node_zorder=1):
-
+        """
+        This function has been adapted from osmnx plots.plot_graph() function.
+        """
         if background_map:
             imagery = Stamen(style='toner-lite')
             zoom_level = 15
