@@ -13,21 +13,8 @@ class InteractiveMap():
 
 
     """
-    # def __init__(self, thermal_network, figsize=(5,5), node_size=3,
-    #              edge_width=3, node_color='r', edge_color='g'):
-    #     self.graph = thermal_network.get_nx_graph()
-    #     self.figsize = figsize
-    #     self.node_size = node_size
-    #     self.edge_width = edge_width
-    #     self.node_color = node_color
-    #     self.edge_color = edge_color
-    #     self.positions = {node_id: np.array([data['lon'], data['lat']])
-    #                       for node_id, data in self.graph.nodes(data=True)}
-    #     self.extent = self._get_extent()
-    #     pass
     def __init__(self, thermal_network, **kwargs):
         self.node_data = thermal_network.nodes
-        print(self.node_data)
         self.edge_data = thermal_network.edges
         self.edge_data['value'] = 1
         self.node_id = self.node_data.index
