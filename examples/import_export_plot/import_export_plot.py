@@ -24,3 +24,5 @@ plt.savefig('static_map_w_background.png')
 
 # plot interactive map
 interactive_map = dhs.plotting.InteractiveMap(thermal_network)
+map = interactive_map.draw()
+map.save('interactive_map.html')
