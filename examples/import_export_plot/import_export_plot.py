@@ -15,8 +15,12 @@ graph = thermal_network.get_nx_graph()
 
 # plot static map
 static_map = dhs.plotting.StaticMap(thermal_network)
+
 static_map.draw(background_map=False)
-plt.savefig('static_map.png')
+plt.savefig('static_map_wo_background.png')
+
+static_map.draw(background_map=True)
+plt.savefig('static_map_w_background.png')
 
 # plot interactive map
 interactive_map = dhs.plotting.InteractiveMap(thermal_network)
