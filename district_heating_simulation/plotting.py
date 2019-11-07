@@ -13,15 +13,27 @@ class InteractiveMap():
 
 
     """
-    def __init__(self, name, point, node_data, edge_data, **kwargs):
-        self.name = name
-        self.point = point
-        self.node_data = node_data
-        self.edge_data = edge_data
-        self.node_id = node_data['node_id']
-        self.lat = node_data['lat']
-        self.lon = node_data['lon']
-        self.node_type = node_data['node_type']
+    # def __init__(self, thermal_network, figsize=(5,5), node_size=3,
+    #              edge_width=3, node_color='r', edge_color='g'):
+    #     self.graph = thermal_network.get_nx_graph()
+    #     self.figsize = figsize
+    #     self.node_size = node_size
+    #     self.edge_width = edge_width
+    #     self.node_color = node_color
+    #     self.edge_color = edge_color
+    #     self.positions = {node_id: np.array([data['lon'], data['lat']])
+    #                       for node_id, data in self.graph.nodes(data=True)}
+    #     self.extent = self._get_extent()
+    #     pass
+    def __init__(self, thermal_network, **kwargs):
+        self.node_data = thermal_network.nodes
+        print(self.node_data)
+        self.edge_data = thermal_network.edges
+        self.edge_data['value'] = 1
+        self.node_id = self.node_data.index
+        self.lat = self.node_data['lat']
+        self.lon = self.node_data['lon']
+        self.node_type = self.node_data['node_type']
         self._add_colors()
 
     def _add_colors(self):
@@ -138,49 +150,29 @@ class InteractiveMap():
                        icon=DivIcon(icon_size=(-35, 75),
                        icon_anchor=(0, 0),
                        html='<div style="font-size: 16pt">%s</div>'
-                       % self.node_data['node_id'][i])).add_to(m)
+                       % self.node_data.index[i])).add_to(m)
 
         for i in range(0, len(self.edge_data)):
             # linewidth settings
             lw_avg = self.edge_data['value'].mean()
             lw = self.edge_data['value'][i] / lw_avg
 
-            # draw edges
-            if self.edge_data['edge_type'][i] == 'elec':
-                fol.PolyLine(locations=[[self.lat[self.edge_data['node_id_1'][i]],
-                                         self.lon[self.edge_data['node_id_1'][i]]],
-                                        [self.lat[self.edge_data['node_id_2'][i]],
-                                         self.lon[self.edge_data['node_id_2'][i]]]],
-                             color='blue',
-                             weight=lw*3).add_to(m)
+            fol.PolyLine(locations=[[self.lat[self.edge_data['from_node'][i]],
+                                     self.lon[self.edge_data['from_node'][i]]],
+                                    [self.lat[self.edge_data['to_node'][i]],
+                                     self.lon[self.edge_data['to_node'][i]]]],
+                         color='orange',
+                         weight=lw*3).add_to(m)
 
-                arrows = self._get_arrows(
-                    locations=[[self.lat[self.edge_data['node_id_1'][i]],
-                                self.lon[self.edge_data['node_id_1'][i]]],
-                               [self.lat[self.edge_data['node_id_2'][i]],
-                                self.lon[self.edge_data['node_id_2'][i]]]],
-                    color='blue', n_arrows=3)
+            arrows = self._get_arrows(
+                locations=[[self.lat[self.edge_data['from_node'][i]],
+                            self.lon[self.edge_data['from_node'][i]]],
+                           [self.lat[self.edge_data['to_node'][i]],
+                            self.lon[self.edge_data['to_node'][i]]]],
+                color='orange', n_arrows=3)
 
-                for arrow in arrows:
-                    arrow.add_to(m)
-
-            else:
-                fol.PolyLine(locations=[[self.lat[self.edge_data['node_id_1'][i]],
-                                         self.lon[self.edge_data['node_id_1'][i]]],
-                                        [self.lat[self.edge_data['node_id_2'][i]],
-                                         self.lon[self.edge_data['node_id_2'][i]]]],
-                             color='orange',
-                             weight=lw*3).add_to(m)
-
-                arrows = self._get_arrows(
-                    locations=[[self.lat[self.edge_data['node_id_1'][i]],
-                                self.lon[self.edge_data['node_id_1'][i]]],
-                               [self.lat[self.edge_data['node_id_2'][i]],
-                                self.lon[self.edge_data['node_id_2'][i]]]],
-                    color='orange', n_arrows=3)
-
-                for arrow in arrows:
-                    arrow.add_to(m)
+            for arrow in arrows:
+                arrow.add_to(m)
 
         return m
 
