@@ -1,6 +1,3 @@
 node_id,lat,lon,node_type
-4,51.3470,12.3894,consumer
-5,51.3390,12.3880,consumer
-
-
-
+4,51.347,12.3894,consumer
+5,51.339,12.388,consumer
