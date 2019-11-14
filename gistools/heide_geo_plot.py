@@ -6,10 +6,10 @@ pip install contextily===v1.0rc2
 
 Copyright (c) 2019 Uwe Krien <krien@uni-bremen.de>
 
-SPDX-License-Identifier: GPL-3.0-or-later
+SPDX-License-Identifier: MIT
 """
 __copyright__ = "Uwe Krien <krien@uni-bremen.de>"
-__license__ = "GPLv3"
+__license__ = "MIT"
 
 import os
 import geopandas as gpd
