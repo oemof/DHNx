@@ -1,12 +1,8 @@
 """
-cmap: https://matplotlib.org/examples/color/colormaps_reference.html
-osm: https://wiki.openstreetmap.org/wiki/Tile_servers
+Version 0.99 of contextily does not support caching until v0.1 is released you
+have to install the release candidate.
 
-The original package of contextily does not support caching but there are
-several approaches pending. Use the following version until caching is
-officially supported:
-
-pip install git+https://github.com/uvchik/contextily.git
+pip install contextily===v1.0rc2
 
 Copyright (c) 2019 Uwe Krien <krien@uni-bremen.de>
 
@@ -34,7 +30,9 @@ def building_plot(url, zoom, cmap, bg_alpha, plot_streets=False,
     zoom : int
         OSM map zoom level.
     cmap : str or matplotlib.colors.Colormap
-        Name of a matplotlib colormap or a colormap instance.
+        Name of a matplotlib colormap or a colormap instance. See the
+        matplotlib documentation for examples:
+        https://matplotlib.org/examples/color/colormaps_reference.html
     bg_alpha : float
         Alpha value for the background map.
     plot_streets : bool
@@ -50,10 +48,6 @@ def building_plot(url, zoom, cmap, bg_alpha, plot_streets=False,
     ax = plt.figure(figsize=(5, 6)).add_subplot(1, 1, 1)
 
     buildings = gpd.read_file(os.path.join(geopath, 'heide_buildings.geojson'))
-    if plot_streets:
-        streets = gpd.read_file(os.path.join(geopath, 'heide_streets.geojson'))
-    else:
-        streets = None
 
     cat_values = sorted(buildings['Zone'].unique())
     cat_number = len(cat_values)
@@ -63,6 +57,7 @@ def building_plot(url, zoom, cmap, bg_alpha, plot_streets=False,
 
     ax = buildings.to_crs(epsg=3857).plot(column='Zone', cmap=cmap, ax=ax)
     if plot_streets:
+        streets = gpd.read_file(os.path.join(geopath, 'heide_streets.geojson'))
         streets.to_crs(epsg=3857).plot(ax=ax)
     ctx.tile.memory.store_backend.location = './joblib'
     ctx.add_basemap(ax, zoom=zoom, url=my_url, alpha=bg_alpha)
