@@ -1,2 +1,2 @@
-node_id,lat,lon,node_type
-0,52.5163,13.3788,producer
+node_id,lat,lon,nominal_value
+0,52.5163,13.3788,44
