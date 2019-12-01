@@ -27,7 +27,7 @@ class InteractiveMap():
         color = {'producer': '#ff0000',
                  'consumer': '#00ff00',
                  'split': '#000000'}
-        
+
         self.node_data = (self.node_data
                               .assign(node_color=self.node_data['node_type'])
                               .replace({'node_color': color}))
@@ -62,9 +62,9 @@ class InteractiveMap():
         lat2 = np.radians(p2.lat)
 
         x = np.sin(long_diff) * np.cos(lat2)
-        y = (np.cos(lat1) * np.sin(lat2) 
-            - (np.sin(lat1) * np.cos(lat2) 
-            * np.cos(long_diff)))
+        y = (
+            np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(long_diff)
+        )
 
         bearing = np.degrees(np.arctan2(x, y))
 
@@ -76,12 +76,12 @@ class InteractiveMap():
 
     def _get_arrows(self, locations, color='black', size=8, n_arrows=3):
         '''
-        Get a list of correctly placed and rotated 
+        Get a list of correctly placed and rotated
         arrows/markers to be plotted
 
         Parameters
-        locations : list of lists of lat lons that represent the 
-                    start and end of the line. 
+        locations : list of lists of lat lons that represent the
+                    start and end of the line.
                     eg [[41.1132, -96.1993],[41.3810, -95.8021]]
         color : default is 'black'
         size : default is 8
@@ -97,7 +97,7 @@ class InteractiveMap():
         p1 = Point(locations[0][0], locations[0][1])
         p2 = Point(locations[1][0], locations[1][1])
 
-        # getting the rotation needed for our marker.  
+        # getting the rotation needed for our marker.
         # Subtracting 90 to account for the marker's orientation
         # of due East(get_bearing returns North)
         rotation = self._get_bearing(p1, p2) - 90
@@ -105,8 +105,8 @@ class InteractiveMap():
         # get an evenly space list of lats and lons for our arrows
         # note that I'm discarding the first and last for aesthetics
         # as I'm using markers to denote the start and end
-        arrow_lats = np.linspace(p1.lat, p2.lat, n_arrows + 2)[1:n_arrows+1]
-        arrow_lons = np.linspace(p1.lon, p2.lon, n_arrows + 2)[1:n_arrows+1]
+        arrow_lats = np.linspace(p1.lat, p2.lat, n_arrows + 2)[1:n_arrows + 1]
+        arrow_lons = np.linspace(p1.lon, p2.lon, n_arrows + 2)[1:n_arrows + 1]
 
         arrows = []
 
@@ -148,7 +148,7 @@ class InteractiveMap():
                                     [self.lat[self.edge_data['to_node'][i]],
                                      self.lon[self.edge_data['to_node'][i]]]],
                          color='orange',
-                         weight=lw*3).add_to(m)
+                         weight=lw * 3).add_to(m)
 
             arrows = self._get_arrows(
                 locations=[[self.lat[self.edge_data['from_node'][i]],
@@ -168,7 +168,7 @@ class StaticMap():
 
 
     """
-    def __init__(self, thermal_network, figsize=(5,5), node_size=3,
+    def __init__(self, thermal_network, figsize=(5, 5), node_size=3,
                  edge_width=3, node_color='r', edge_color='g'):
         self.graph = thermal_network.get_nx_graph()
         self.figsize = figsize
@@ -190,9 +190,9 @@ class StaticMap():
         return extent
 
     def draw(self, bgcolor='w', no_axis=False, background_map=False,
-               use_geom=False, edge_color='b', edge_linewidth=2,
-               edge_alpha=1, node_size=40, node_color='r', node_alpha=1,
-               node_edgecolor='r', node_zorder=1):
+             use_geom=False, edge_color='b', edge_linewidth=2,
+             edge_alpha=1, node_size=40, node_color='r', node_alpha=1,
+             node_edgecolor='r', node_zorder=1):
         """
         This function has been adapted from osmnx plots.plot_graph() function.
         """
@@ -206,7 +206,7 @@ class StaticMap():
 
         else:
             fig, ax = plt.subplots(figsize=self.figsize, facecolor=bgcolor,
-                                   subplot_kw = {'projection': ccrs.Mercator()})
+                                   subplot_kw={'projection': ccrs.Mercator()})
             ax.set_extent(self.extent, crs=ccrs.Geodetic())
 
         lines = []
