@@ -118,6 +118,7 @@ class InteractiveMap():
 
         return arrows
 
+    def draw(self):
         # create map
         m = fol.Map(location=[self.lat.mean(), self.lon.mean()],
                     zoom_start=14)
