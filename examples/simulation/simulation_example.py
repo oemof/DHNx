@@ -12,11 +12,12 @@ tree_network.load_from_csv('tree/')
 looped_network.load_from_csv('single_loop/')
 
 # Plot
-# tree_graph_plot = dhs.plotting.GraphPlot(tree_network)
-# tree_graph_plot.draw_G(background_map=False)
-# looped_graph_plot = dhs.plotting.GraphPlot(looped_network)
-# looped_graph_plot.draw_G(background_map=False)
-# plt.show()
+tree_graph_plot = dhs.plotting.StaticMap(tree_network)
+tree_graph_plot.draw(background_map=False)
+
+looped_graph_plot = dhs.plotting.StaticMap(looped_network)
+looped_graph_plot.draw(background_map=False)
+plt.show()
 
 # Define problem
 mass_flow = pd.read_csv('problem/mass_flow.csv', index_col='snapshot')
