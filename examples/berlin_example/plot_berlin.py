@@ -20,4 +20,3 @@ map = map.draw()
 
 # save interactive map
 map.save('berlin.html')
-

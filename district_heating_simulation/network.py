@@ -46,11 +46,13 @@ class ThermalNetwork():
         edge_attr.remove('from_node')
         edge_attr.remove('to_node')
 
-        self.graph = nx.from_pandas_edgelist(self.edges,
-                                            'from_node',
-                                            'to_node',
-                                            edge_attr=edge_attr,
-                                            create_using=self.graph)
+        self.graph = nx.from_pandas_edgelist(
+            self.edges,
+            'from_node',
+            'to_node',
+            edge_attr=edge_attr,
+            create_using=self.graph
+        )
 
         nodes = pd.concat([self.producers, self.consumers, self.splits], axis=0)
         node_attrs = {node_id: dict(data) for node_id, data in nodes.iterrows()}
@@ -60,4 +62,3 @@ class ThermalNetwork():
 
     def reproject(self, crs):
         pass
-

@@ -14,7 +14,7 @@ class SimulationModel():
         self.results = {}
 
     def _has_loops(self):
-        return False # TODO: self.thermal_network.has_loops()
+        return False  # TODO: self.thermal_network.has_loops()
 
     def _solve_hydraulic_no_loops(self):
         graph = self.thermal_network.get_nx_graph()
@@ -24,9 +24,9 @@ class SimulationModel():
         mass_flow_edges = np.zeros((len(self.problem['snapshots']), len(graph.edges)))
         for t in self.problem['snapshots']:
             mass_flow_nodes = self.problem['mass_flow_cons'].loc[t].\
-            reindex([str(i) for i in range(n_nodes)], fill_value=0)
+                reindex([str(i) for i in range(n_nodes)], fill_value=0)
             mass_flow_nodes[0] = - np.sum(mass_flow_nodes[1:])
-            mass_flow_edges[t,:] = np.linalg.lstsq(inc_matrix, mass_flow_nodes, rcond=None)[0]
+            mass_flow_edges[t, :] = np.linalg.lstsq(inc_matrix, mass_flow_nodes, rcond=None)[0]
 
         columns = self.thermal_network.edges.index
         mass_flow_edges = pd.DataFrame(mass_flow_edges, columns=columns)
@@ -51,7 +51,9 @@ class SimulationModel():
         self.results['mass_flow_edges'] = mass_flow_edges
 
     def _solve_thermal(self):
-        temperature = pd.DataFrame({'node_id': [0], 'temperature_inlet': [0], 'temperature_return': [1]})
+        temperature = pd.DataFrame({'node_id': [0],
+                                    'temperature_inlet': [0],
+                                    'temperature_return': [1]})
         self.results['temperature'] = temperature
 
     def _calculate_pump_power(self):
@@ -104,10 +106,7 @@ class SimulationModelTespy(SimulationModel):
         pass
 
     def create_tespy_model(self):
-        return tespy_model
+        pass
 
     def solve(self):
-        results = 0
-        thermal_network.results = results
-        return thermal_network
-
+        pass
