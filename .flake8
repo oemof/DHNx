@@ -2,3 +2,5 @@
 exclude = meta/migrations/
 ignore = E265
 max-line-length = 100
+per-file-ignores =
+    __init__.py : F401

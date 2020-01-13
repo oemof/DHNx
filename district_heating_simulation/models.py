@@ -1,5 +1,4 @@
 import os
-import oemof
 import pandas as pd
 
 
