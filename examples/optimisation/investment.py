@@ -4,9 +4,9 @@ import district_heating_simulation as dhs
 
 # Initialize thermal network
 network = dhs.network.ThermalNetwork()
-network = network.load_from_csv('investment_network')
+network = network.load_from_csv('investment_input')
 
 # Draw network
-network_plot = dhs.plotting.GraphPlot(network)
-network_plot.draw_G(background_map=False)
+static_map = dhs.plotting.StaticMap(network)
+static_map.draw(background_map=False)
 plt.show()
