@@ -269,8 +269,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     ('index', 'oemof.DHNx', u'oemof.DHNx documentation',
-     u'Author', 'oemof developer group', 'An open toolbox for district heating ' +
-     'and cooling network optimization and simulation models.',
+     u'Author', 'oemof developer group', 'An open toolbox for district heating '
+     + 'and cooling network optimization and simulation models.',
      ''),
 ]
 
