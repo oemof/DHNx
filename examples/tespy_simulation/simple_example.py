@@ -127,6 +127,7 @@ for comp in nw.comps.index:
             not isinstance(comp, pipe)):
         heat_consumer.add_comps({'c': comp})
 
+nw.add_busses(heat_losses, heat_consumer)
 
 for comp in nw.comps.index:
     comp.char_warnings=False
