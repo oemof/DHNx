@@ -5,6 +5,13 @@ from tespy.networks import network
 from sub_consumer import lin_consum_closed, fork as fo
 
 
+# This is a test of a minimal example of a district heating network
+# TODO: Provide the right amount of variables and solve the network
+# TODO: Check if solution is correct
+# TODO: Create the same network using functions
+# TODO: Try solving a network with loops
+# TODO: Setup tespy-facades and a builder
+
 nw = network(
     fluids=['water'], T_unit='C', p_unit='bar', h_unit='kJ / kg', m_unit='kg / s'
 )
