@@ -1,5 +1,5 @@
-from tespy.components import source, sink, pipe
-from tespy.connections import connection
+from tespy.components import source, sink, pipe, heat_exchanger_simple
+from tespy.connections import connection, bus
 from tespy.networks import network
 
 from sub_consumer import lin_consum_closed, lin_consum_open, fork as fo
@@ -27,6 +27,8 @@ consumer_1 = lin_consum_closed('consumer_1', 5)
 consumer_1.comps['consumer_0'].set_attr(Q=-5e4, pr=0.99)
 consumer_1.comps['consumer_1'].set_attr(Q=-5e4, pr=0.99)
 consumer_1.comps['return_0'].set_attr(ks=7e-5, L=150, D=0.15, offdesign=['kA'])
+
+nw.add_subsys(consumer_0, consumer_1)
 
 # pipings
 
@@ -110,9 +112,23 @@ cons = [
     con_11,
 ]
 
+heat_losses = bus('network losses')
+heat_consumer = bus('network consumer')
+
 nw.add_conns(*cons)
+nw.check_network()
 
 # set attributes
+for comp in nw.comps.index:
+    if isinstance(comp, pipe):
+        comp.set_attr(Tamb=0)
+
+        heat_losses.add_comps({'c': comp})
+
+    if (isinstance(comp, heat_exchanger_simple) and
+            not isinstance(comp, pipe)):
+        heat_consumer.add_comps({'c': comp})
+
 
 nw.solve('design')
 
