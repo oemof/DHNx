@@ -128,6 +128,9 @@ for comp in nw.comps.index:
         heat_consumer.add_comps({'c': comp})
 
 
+for comp in nw.comps.index:
+    comp.char_warnings=False
+
 nw.solve('design')
 
 nw.print_results()
