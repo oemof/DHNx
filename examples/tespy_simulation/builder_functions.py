@@ -1,20 +1,17 @@
 from tespy.components import (
-    subsystem,
-    splitter,
-    merge,
+    source,
+    sink,
     pipe,
-    valve,
-    heat_exchanger_simple,
 )
+from tespy.connections import connection, bus
 
 from sub_consumer import lin_consum_closed, fork
-
-from tespy.connections import connection
 
 
 def add_producer():
     so = source('source')
     si = sink('sink')
+    new_producer = [so, si]
     return new_producer
 
 
@@ -41,7 +38,7 @@ def add_pipe(network, label, source, target):
     con_inlet_target = connection(new_pipe, 'out1', target, 'in1', T=90, p=15, fluid={'water': 1})
 
     con_target_return = connection(target, 'out1', new_pipe, 'in1', T=90, p=15, fluid={'water': 1})
-    con_return_source= connection(new_pipe, 'out1', target, 'in1', T=90, p=15, fluid={'water': 1})
+    con_return_source = connection(new_pipe, 'out1', target, 'in1', T=90, p=15, fluid={'water': 1})
     network.add(con_source_inlet, con_inlet_target, con_target_return, con_return_source)
 
     return network
