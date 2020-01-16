@@ -1,3 +1,5 @@
+import logging
+
 from tespy.components import (
     subsystem,
     splitter,
