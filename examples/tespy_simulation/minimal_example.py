@@ -31,7 +31,7 @@ consumer_0.comps['heat_exchanger'].set_attr(Q=-5e4, pr=0.99)
 consumer_0.comps['valve'].set_attr(pr=1)
 
 # piping
-pipe_0 = DistrictHeatingPipe('pipe_0', nw, heat_producer, consumer_0)
+pipe_0 = DistrictHeatingPipe('pipe_0', heat_producer, consumer_0)
 
 nw.add_subsys(heat_producer, consumer_0, pipe_0)
 

@@ -49,7 +49,9 @@ class HeatProducer(Facade):
         self.conns['cycle_closer_heat_exchanger'] = connection(
             self.comps['cycle_closer'], 'out1', self.comps['heat_exchanger'], 'in1')
         self.conns['heat_exchanger_pump'] = connection(
-            self.comps['heat_exchanger'], 'out1', self.comps['pump'], 'in1', T=90, p=15, fluid={'water': 1})
+            self.comps['heat_exchanger'], 'out1', self.comps['pump'], 'in1',
+            T=90, p=15, fluid={'water': 1}
+        )
 
 
 class HeatConsumer(Facade):
@@ -94,7 +96,7 @@ class DistrictHeatingPipe(Facade):
     r"""
     A subsystem for a district heating pipe, comprising a feed and return pipe.
     """
-    def __init__(self, label, nw, start, end):
+    def __init__(self, label, start, end):
         if not isinstance(label, str):
             msg = 'Subsystem label must be of type str!'
             logging.error(msg)
@@ -110,13 +112,13 @@ class DistrictHeatingPipe(Facade):
         self.comps = {}
         self.conns = {}
         self.create_comps()
-        self.create_conns(nw, start, end)
+        self.create_conns(start, end)
 
     def create_comps(self):
         self.comps['feed'] = pipe(self.label + '_inlet', ks=7e-5, L=50, D=0.15, kA=10)
         self.comps['return'] = pipe(self.label + '_return', ks=7e-5, L=50, D=0.15, kA=10)
 
-    def create_conns(self, nw, start, end):
+    def create_conns(self, start, end):
         self.conns['inlet_in'] = connection(start.output, 'out1', self.comps['feed'], 'in1')
         self.conns['inlet_out'] = connection(self.comps['feed'], 'out1', end.input, 'in1')
         self.conns['return_in'] = connection(end.output, 'out1', self.comps['return'], 'in1')
