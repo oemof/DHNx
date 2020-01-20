@@ -1,8 +1,12 @@
-from tespy.components import source, sink, pipe, heat_exchanger_simple
-from tespy.connections import connection, bus
+from tespy.components import pipe, heat_exchanger_simple
+from tespy.connections import bus
 from tespy.networks import network
 
-from tespy_facades import HeatConsumer
+from tespy_facades import (
+    HeatProducer,
+    HeatConsumer,
+    DistrictHeatingPipe,
+)
 
 
 # This is a test of a minimal example of a district heating network
@@ -17,8 +21,7 @@ nw = network(
 
 # producer
 # hint might be replaced by: cyclecloser
-so = source('heat source feed-in')
-si = sink('heat source return')
+heat_producer = HeatProducer('heat_producer')
 
 # consumer (housing area 4)
 consumer_0 = HeatConsumer('consumer_0')
@@ -28,26 +31,12 @@ consumer_0.comps['valve'].set_attr(pr=1)
 nw.add_subsys(consumer_0)
 
 # piping
-pipe_0_i = pipe('pipe0_inlet', ks=7e-5, L=50, D=0.15, kA=10)
-pipe_0_r = pipe('pipe0_return', ks=7e-5, L=50, D=0.15, kA=10)
-
-con_0 = connection(so, 'out1', pipe_0_i, 'in1', T=90, p=15, fluid={'water': 1})
-con_1 = connection(pipe_0_i, 'out1', consumer_0.comps['heat_exchanger'], 'in1')
-
-con_2 = connection(consumer_0.comps['valve'], 'out1', pipe_0_r, 'in1')
-con_3 = connection(pipe_0_r, 'out1', si, 'in1')
-
-cons = [
-    con_0,
-    con_1,
-    con_2,
-    con_3,
-]
+pipe_0 = DistrictHeatingPipe('pipe_0', nw, heat_producer, consumer_0)
 
 heat_losses = bus('network losses')
 heat_consumer = bus('network consumer')
 
-nw.add_conns(*cons)
+# nw.add_conns(*cons)
 nw.check_network()
 
 # set attributes
