@@ -38,19 +38,37 @@ class HeatProducer(Facade):
     r"""
     A subsystem for a heat producer, comprising a source and a sink.
     """
-    def create_comps(self):
+    def __init__(self, label, temp_inlet, p_inlet, eta_s, pr=0.99):
+        if not isinstance(label, str):
+            msg = 'Subsystem label must be of type str!'
+            logging.error(msg)
+            raise ValueError(msg)
+
+        elif len([x for x in [';', ', ', '.'] if x in label]) > 0:
+            msg = 'Can\'t use ' + str([';', ', ', '.']) + ' in label.'
+            logging.error(msg)
+            raise ValueError(msg)
+        else:
+            self.label = label
+
+        self.comps = {}
+        self.conns = {}
+        self.create_comps(pr, eta_s)
+        self.create_conns(temp_inlet, p_inlet)
+
+    def create_comps(self, pr, eta_s):
         self.comps['cycle_closer'] = cycle_closer(self.label + '_cycle_closer')
-        self.comps['heat_exchanger'] = heat_exchanger_simple(self.label + '_heat_exchanger')
-        self.comps['pump'] = pump(self.label + '_pump')
+        self.comps['heat_exchanger'] = heat_exchanger_simple(self.label + '_heat_exchanger', pr=pr)
+        self.comps['pump'] = pump(self.label + '_pump', eta_s=eta_s)
         self.output = self.comps['pump']
         self.input = self.comps['cycle_closer']
 
-    def create_conns(self):
+    def create_conns(self, temp_inlet, p_inlet):
         self.conns['cycle_closer_heat_exchanger'] = connection(
             self.comps['cycle_closer'], 'out1', self.comps['heat_exchanger'], 'in1')
         self.conns['heat_exchanger_pump'] = connection(
             self.comps['heat_exchanger'], 'out1', self.comps['pump'], 'in1',
-            T=90, p=15, fluid={'water': 1}
+            T=temp_inlet, p=p_inlet, fluid={'water': 1}
         )
 
 
@@ -60,9 +78,29 @@ class HeatConsumer(Facade):
 
     TODO: Pass Q, T_return and pressure loss
     """
-    def create_comps(self):
-        self.comps['heat_exchanger'] = heat_exchanger_simple(self.label + '_consumer')
-        self.comps['valve'] = valve(self.label + '_valve')
+    def __init__(self, label, Q, pr_valve, pr_heat_exchanger):
+        if not isinstance(label, str):
+            msg = 'Subsystem label must be of type str!'
+            logging.error(msg)
+            raise ValueError(msg)
+
+        elif len([x for x in [';', ', ', '.'] if x in label]) > 0:
+            msg = 'Can\'t use ' + str([';', ', ', '.']) + ' in label.'
+            logging.error(msg)
+            raise ValueError(msg)
+        else:
+            self.label = label
+
+        self.comps = {}
+        self.conns = {}
+        self.create_comps(Q, pr_valve, pr_heat_exchanger)
+        self.create_conns()
+
+    def create_comps(self, Q, pr_valve, pr_heat_exchanger):
+        self.comps['heat_exchanger'] = heat_exchanger_simple(
+            self.label + '_consumer', Q=Q, pr=pr_heat_exchanger
+        )
+        self.comps['valve'] = valve(self.label + '_valve', pr=pr_valve)
         self.output = self.comps['valve']
         self.input = self.comps['heat_exchanger']
 
@@ -96,7 +134,7 @@ class DistrictHeatingPipe(Facade):
     r"""
     A subsystem for a district heating pipe, comprising a feed and return pipe.
     """
-    def __init__(self, label, start, end):
+    def __init__(self, label, start, end, temp_env):
         if not isinstance(label, str):
             msg = 'Subsystem label must be of type str!'
             logging.error(msg)
@@ -111,12 +149,16 @@ class DistrictHeatingPipe(Facade):
 
         self.comps = {}
         self.conns = {}
-        self.create_comps()
+        self.create_comps(temp_env)
         self.create_conns(start, end)
 
-    def create_comps(self):
-        self.comps['feed'] = pipe(self.label + '_inlet', ks=7e-5, L=50, D=0.15, kA=10)
-        self.comps['return'] = pipe(self.label + '_return', ks=7e-5, L=50, D=0.15, kA=10)
+    def create_comps(self, temp_env):
+        self.comps['feed'] = pipe(
+            self.label + '_inlet', ks=7e-5, L=50, D=0.15, kA=10, Tamb=temp_env
+        )
+        self.comps['return'] = pipe(
+            self.label + '_return', ks=7e-5, L=50, D=0.15, kA=10, Tamb=temp_env
+        )
 
     def create_conns(self, start, end):
         self.conns['inlet_in'] = connection(start.output, 'out1', self.comps['feed'], 'in1')

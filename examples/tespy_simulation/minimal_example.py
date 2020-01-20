@@ -8,6 +8,21 @@ from tespy_facades import (
     DistrictHeatingPipe,
 )
 
+# assumptions
+# # producer
+temp_inlet = 90
+p_inlet = 15
+pump_efficiency = 0.8
+pr_producer = 0.99
+
+# # consumer
+heat_demand = 5e4
+pr_heat_exchanger = 0.99
+pr_valve = 1
+
+# # piping
+temp_env = 0
+
 
 # This is a minimal example of a district heating network
 # TODO: Check if solution is correct
@@ -20,17 +35,28 @@ nw = network(
 )
 
 # producer
-heat_producer = HeatProducer('heat_producer')
-heat_producer.comps['heat_exchanger'].set_attr(pr=0.99)
-heat_producer.comps['pump'].set_attr(eta_s=0.8)
+heat_producer = HeatProducer(
+    'heat_producer',
+    temp_inlet=temp_inlet,
+    p_inlet=p_inlet,
+    eta_s=pump_efficiency
+)
 
 # consumer
-consumer_0 = HeatConsumer('consumer_0')
-consumer_0.comps['heat_exchanger'].set_attr(Q=-5e4, pr=0.99)
-consumer_0.comps['valve'].set_attr(pr=1)
+consumer_0 = HeatConsumer(
+    'consumer_0',
+    Q=-heat_demand,
+    pr_heat_exchanger=pr_heat_exchanger,
+    pr_valve=pr_valve
+)
 
 # piping
-pipe_0 = DistrictHeatingPipe('pipe_0', heat_producer, consumer_0)
+pipe_0 = DistrictHeatingPipe(
+    'pipe_0',
+    heat_producer,
+    consumer_0,
+    temp_env=temp_env
+)
 
 nw.add_subsys(heat_producer, consumer_0, pipe_0)
 
@@ -42,9 +68,6 @@ nw.check_network()
 
 for comp in nw.comps.index:
     if isinstance(comp, pipe):
-
-        comp.set_attr(Tamb=0)
-
         heat_losses.add_comps({'c': comp})
 
     if (isinstance(comp, heat_exchanger_simple) and not isinstance(comp, pipe)):
