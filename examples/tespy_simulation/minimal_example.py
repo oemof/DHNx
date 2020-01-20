@@ -95,11 +95,9 @@ overview_results = {
     'Mass flow at producer': heat_producer.conns['heat_exchanger_pump'].m.val,
     'Temperature diff. at producer': round(
         heat_producer.conns['heat_exchanger_pump'].T.val
-        - heat_producer.conns['cycle_closer_heat_exchanger'].T.val, 2
+        - pipe_0.conns['return_out'].T.val, 2
     ),
-    'Pressure pump_pipe': pipe_0.conns['inlet_in'].p.val,
-    'Pressure cycle_closer_heat_exch.':
-        heat_producer.conns['cycle_closer_heat_exchanger'].p.val,
+    'Pressure pump_pipe': heat_producer.conns['pump_cycle_closer'].p.val,
     'Pressure heat_exchanger_pump': heat_producer.conns['heat_exchanger_pump'].p.val,
     'Pressure ratio': heat_producer.comps['pump'].pr.val,
     'Pump power': heat_producer.comps['pump'].P.val,

@@ -60,15 +60,17 @@ class HeatProducer(Facade):
         self.comps['cycle_closer'] = cycle_closer(self.label + '_cycle_closer')
         self.comps['heat_exchanger'] = heat_exchanger_simple(self.label + '_heat_exchanger', pr=pr)
         self.comps['pump'] = pump(self.label + '_pump', eta_s=eta_s)
-        self.output = self.comps['pump']
-        self.input = self.comps['cycle_closer']
+        self.output = self.comps['cycle_closer']
+        self.input = self.comps['heat_exchanger']
 
     def create_conns(self, temp_inlet, p_inlet):
-        self.conns['cycle_closer_heat_exchanger'] = connection(
-            self.comps['cycle_closer'], 'out1', self.comps['heat_exchanger'], 'in1')
         self.conns['heat_exchanger_pump'] = connection(
             self.comps['heat_exchanger'], 'out1', self.comps['pump'], 'in1',
-            T=temp_inlet, p=p_inlet, fluid={'water': 1}
+            T=temp_inlet, fluid={'water': 1}
+        )
+        self.conns['pump_cycle_closer'] = connection(
+            self.comps['pump'], 'out1', self.comps['cycle_closer'], 'in1',
+            p=p_inlet
         )
 
 
