@@ -72,7 +72,7 @@ for comp in nw.comps.index:
     if isinstance(comp, pipe):
         heat_losses.add_comps({'c': comp})
 
-    if (isinstance(comp, heat_exchanger_simple) and not isinstance(comp, pipe)):
+    if (isinstance(comp, heat_exchanger_simple) and '_consumer' in comp.label):
         heat_consumer.add_comps({'c': comp})
 
 nw.add_busses(heat_losses, heat_consumer)
@@ -85,5 +85,31 @@ for comp in nw.comps.index:
 nw.solve('design')
 nw.save('minimal_example')
 
-print('Heat demand consumer:', heat_consumer.P.val)
-print('network losses at 0 °C outside temperature (design):', heat_losses.P.val)
+overview_results = {
+    'Heat demand consumer': heat_consumer.P.val,
+    'Heat feedin producer': heat_producer.comps['heat_exchanger'].Q.val,
+    f'Network losses': heat_losses.P.val,
+    f'Relative network losses': round(
+        heat_losses.P.val / heat_producer.comps['heat_exchanger'].Q.val, 4
+    ),
+    'Mass flow at producer': heat_producer.conns['heat_exchanger_pump'].m.val,
+    'Temperature diff. at producer': round(
+        heat_producer.conns['heat_exchanger_pump'].T.val
+        - heat_producer.conns['cycle_closer_heat_exchanger'].T.val, 2
+    ),
+    'Pressure pump_pipe': pipe_0.conns['inlet_in'].p.val,
+    'Pressure cycle_closer_heat_exch.':
+        heat_producer.conns['cycle_closer_heat_exchanger'].p.val,
+    'Pressure heat_exchanger_pump': heat_producer.conns['heat_exchanger_pump'].p.val,
+    'Pressure ratio': heat_producer.comps['pump'].pr.val,
+    'Pump power': heat_producer.comps['pump'].P.val,
+}
+
+dash = '-' * 50
+
+print(dash)
+print('{:>32s}{:>15s}'.format('Parameter name', 'Value'))
+print(dash)
+
+for key, value in overview_results.items():
+    print('{:>32s}{:>15.5f}'.format(key, value))
