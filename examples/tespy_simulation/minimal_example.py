@@ -16,7 +16,8 @@ pump_efficiency = 0.8
 pr_producer = 0.99
 
 # # consumer
-heat_demand = 5e4
+heat_demand = 50000
+temp_return_heat_exchanger = 60
 pr_heat_exchanger = 0.99
 pr_valve = 1
 
@@ -46,6 +47,7 @@ heat_producer = HeatProducer(
 consumer_0 = HeatConsumer(
     'consumer_0',
     Q=-heat_demand,
+    temp_return_heat_exchanger=temp_return_heat_exchanger,
     pr_heat_exchanger=pr_heat_exchanger,
     pr_valve=pr_valve
 )

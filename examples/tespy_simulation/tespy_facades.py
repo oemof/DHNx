@@ -78,7 +78,7 @@ class HeatConsumer(Facade):
 
     TODO: Pass Q, T_return and pressure loss
     """
-    def __init__(self, label, Q, pr_valve, pr_heat_exchanger):
+    def __init__(self, label, Q, temp_return_heat_exchanger, pr_valve, pr_heat_exchanger):
         if not isinstance(label, str):
             msg = 'Subsystem label must be of type str!'
             logging.error(msg)
@@ -94,7 +94,7 @@ class HeatConsumer(Facade):
         self.comps = {}
         self.conns = {}
         self.create_comps(Q, pr_valve, pr_heat_exchanger)
-        self.create_conns()
+        self.create_conns(temp_return_heat_exchanger)
 
     def create_comps(self, Q, pr_valve, pr_heat_exchanger):
         self.comps['heat_exchanger'] = heat_exchanger_simple(
@@ -104,9 +104,10 @@ class HeatConsumer(Facade):
         self.output = self.comps['valve']
         self.input = self.comps['heat_exchanger']
 
-    def create_conns(self):
+    def create_conns(self, temp_return_heat_exchanger):
         self.conns['heat_exchanger_valve'] = connection(
-            self.comps['heat_exchanger'], 'out1', self.comps['valve'], 'in1', T=60,
+            self.comps['heat_exchanger'], 'out1', self.comps['valve'], 'in1',
+            T=temp_return_heat_exchanger,
         )
 
 
