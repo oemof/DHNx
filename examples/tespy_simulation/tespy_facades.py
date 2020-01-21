@@ -137,7 +137,7 @@ class DistrictHeatingPipe(Facade):
     r"""
     A subsystem for a district heating pipe, comprising a feed and return pipe.
     """
-    def __init__(self, label, start, end, temp_env):
+    def __init__(self, label, start, end, length, diameter, ks, kA, temp_env):
         if not isinstance(label, str):
             msg = 'Subsystem label must be of type str!'
             logging.error(msg)
@@ -153,15 +153,15 @@ class DistrictHeatingPipe(Facade):
 
         self.comps = {}
         self.conns = {}
-        self.create_comps(temp_env)
+        self.create_comps(temp_env, length, diameter, ks, kA)
         self.create_conns(start, end)
 
-    def create_comps(self, temp_env):
+    def create_comps(self, temp_env, length, diameter, ks, kA):
         self.comps['feed'] = pipe(
-            self.label + '_inlet', ks=7e-5, L=50, D=0.15, kA=10, Tamb=temp_env
+            self.label + '_inlet', ks=ks, L=length, D=diameter, kA=kA, Tamb=temp_env
         )
         self.comps['return'] = pipe(
-            self.label + '_return', ks=7e-5, L=50, D=0.15, kA=10, Tamb=temp_env
+            self.label + '_return', ks=ks, L=length, D=diameter, kA=kA, Tamb=temp_env
         )
 
     def create_conns(self, start, end):

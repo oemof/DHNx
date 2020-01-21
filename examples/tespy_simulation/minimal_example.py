@@ -57,6 +57,10 @@ pipe_0 = DistrictHeatingPipe(
     'pipe_0',
     heat_producer,
     consumer_0,
+    length=50,
+    diameter=0.15,
+    ks=7e-5,
+    kA=10,
     temp_env=temp_env
 )
 
