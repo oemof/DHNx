@@ -13,7 +13,6 @@ from tespy.connections import connection
 
 class Facade(Subsystem):
     def __init__(self, label):
-
         if not isinstance(label, str):
             msg = 'Subsystem label must be of type str!'
             logging.error(msg)
@@ -23,6 +22,7 @@ class Facade(Subsystem):
             msg = 'Can\'t use ' + str([';', ', ', '.']) + ' in label.'
             logging.error(msg)
             raise ValueError(msg)
+
         else:
             self.label = label
 
@@ -48,6 +48,7 @@ class HeatProducer(Facade):
             msg = 'Can\'t use ' + str([';', ', ', '.']) + ' in label.'
             logging.error(msg)
             raise ValueError(msg)
+
         else:
             self.label = label
 
@@ -77,8 +78,6 @@ class HeatProducer(Facade):
 class HeatConsumer(Facade):
     r"""
     A subsystem for a heat consumer, comprising a heat exchanger and a valve.
-
-    TODO: Pass Q, T_return and pressure loss
     """
     def __init__(self, label, Q, temp_return_heat_exchanger, pr_valve, pr_heat_exchanger):
         if not isinstance(label, str):
@@ -90,6 +89,7 @@ class HeatConsumer(Facade):
             msg = 'Can\'t use ' + str([';', ', ', '.']) + ' in label.'
             logging.error(msg)
             raise ValueError(msg)
+
         else:
             self.label = label
 
@@ -147,6 +147,7 @@ class DistrictHeatingPipe(Facade):
             msg = 'Can\'t use ' + str([';', ', ', '.']) + ' in label.'
             logging.error(msg)
             raise ValueError(msg)
+
         else:
             self.label = label
 
