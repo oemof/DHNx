@@ -1,6 +1,6 @@
 import networkx as nx
 import pandas as pd
-from .input_output import ImportCSV, ExportCSV
+from .input_output import CSVNetworkImporter, CSVNetworkExporter
 
 
 class ThermalNetwork():
@@ -18,7 +18,7 @@ class ThermalNetwork():
         self.graph = None
 
     def load_from_csv(self, dirname):
-        importer = ImportCSV(dirname)
+        importer = CSVNetworkImporter(dirname)
 
         self.producers = importer.get_producers()
         self.splits = importer.get_splits()
@@ -30,7 +30,7 @@ class ThermalNetwork():
         return self
 
     def save_to_csv(self, dirname):
-        exporter = ExportCSV(dirname)
+        exporter = CSVNetworkExporter(dirname)
 
         exporter.save_producers(self.producers)
         exporter.save_splits(self.splits)
