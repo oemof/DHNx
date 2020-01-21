@@ -2,10 +2,25 @@ import os
 import pandas as pd
 
 
-class ImportCSV():
+class NetworkImporter():
     r"""
-    Imports thermal networks from csv files.
+    Generic Importer object for network.ThermalNetwork
+    """
+    def __init__(self):
+        pass
 
+
+class NetworkExporter():
+    r"""
+    Generic Exporter object for network.ThermalNetwork
+    """
+    def __init__(self):
+        pass
+
+
+class CSVNetworkImporter(NetworkImporter):
+    r"""
+    Imports thermal networks from directory with csv-files.
     """
     def __init__(self, dirname):
         self.dirname = dirname
@@ -27,10 +42,9 @@ class ImportCSV():
         return edges
 
 
-class ExportCSV():
+class CSVNetworkExporter(NetworkExporter):
     r"""
-    Exports thermal networks to csv files.
-
+    Exports thermal networks to directory with csv-files.
     """
     def __init__(self, dirname):
         self.dirname = dirname
@@ -54,7 +68,12 @@ class ExportCSV():
         return edges
 
 
-class ExportGDF():
+class OSMNetworkImporter(NetworkImporter):
+    def __init__(self):
+        pass
+
+
+class GDFNetworkExporter(NetworkExporter):
     r"""
     TODO:
     Exports thermal networks to geopandas.GeoDataFrame.
