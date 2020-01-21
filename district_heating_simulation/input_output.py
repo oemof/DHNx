@@ -69,33 +69,26 @@ class CSVNetworkExporter(NetworkExporter):
 
 
 class OSMNetworkImporter(NetworkImporter):
+    r"""
+    Imports thermal networks from OSM data.
+    """
     def __init__(self):
         pass
 
 
 class GDFNetworkExporter(NetworkExporter):
     r"""
-    TODO:
     Exports thermal networks to geopandas.GeoDataFrame.
-
     """
-    def __init__(self, dirname):
-        self.dirname = dirname
-        if not os.path.exists(self.dirname):
-            os.mkdir(self.dirname)
+    def __init__(self):
+        pass
 
-    def save_producers(self, producers):
-        producers.to_csv(os.path.join(self.dirname, 'producers.csv'))
-        return producers
 
-    def save_consumers(self, consumers):
-        consumers.to_csv(os.path.join(self.dirname, 'consumers.csv'))
-        return consumers
+def load_problem(dir):
+    problem = {}
 
-    def save_splits(self, splits):
-        splits.to_csv(os.path.join(self.dirname, 'splits.csv'))
-        return splits
+    for filename in os.listdir(dir):
+        name = filename.strip('.csv')
+        problem[name] = pd.read_csv(os.path.join(dir, filename))
 
-    def save_edges(self, edges):
-        edges.to_csv(os.path.join(self.dirname, 'edges.csv'))
-        return edges
+    return problem
