@@ -36,7 +36,7 @@ class InvestOptimizationModel():
         pass
 
     def solve(self):
-        return None
+        pass
 
 
 class SimulationModel():
@@ -44,4 +44,4 @@ class SimulationModel():
         pass
 
     def solve(self):
-        return None
+        pass

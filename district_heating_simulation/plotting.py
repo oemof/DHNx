@@ -1,8 +1,9 @@
-import folium as fol
-from folium.features import DivIcon
 from collections import namedtuple
+
 from cartopy.io.img_tiles import Stamen
 from cartopy import crs as ccrs
+import folium as fol
+from folium.features import DivIcon
 import matplotlib.pyplot as plt
 import matplotlib.collections as collections
 import numpy as np
@@ -10,10 +11,9 @@ import numpy as np
 
 class InteractiveMap():
     r"""
-
-
+    An interactive map of a network.ThermalNetwork.
     """
-    def __init__(self, thermal_network, **kwargs):
+    def __init__(self, thermal_network):
         self.node_data = thermal_network.nodes
         self.edge_data = thermal_network.edges
         self.edge_data['value'] = 1
@@ -28,9 +28,10 @@ class InteractiveMap():
                  'consumer': '#00ff00',
                  'split': '#000000'}
 
-        self.node_data = (self.node_data
-                              .assign(node_color=self.node_data['node_type'])
-                              .replace({'node_color': color}))
+        self.node_data = (
+            self.node_data
+            .assign(node_color=self.node_data['node_type'])
+            .replace({'node_color': color}))
 
         return self.node_data['node_color']
 
@@ -112,9 +113,11 @@ class InteractiveMap():
 
         #creating each "arrow" and appending them to our arrows list
         for points in zip(arrow_lats, arrow_lons):
-            arrows.append(fol.RegularPolygonMarker(location=points,
-                          color=color, number_of_sides=3,
-                          radius=size, rotation=rotation, fill=True))
+            arrows.append(
+                fol.RegularPolygonMarker(
+                    location=points,
+                    color=color, number_of_sides=3,
+                    radius=size, rotation=rotation, fill=True))
 
         return arrows
 
@@ -132,11 +135,15 @@ class InteractiveMap():
                              radius=20).add_to(m)
 
             # draw node ids
-            fol.Marker([self.lat[i], self.lon[i]],
-                       icon=DivIcon(icon_size=(-35, 75),
-                       icon_anchor=(0, 0),
-                       html='<div style="font-size: 16pt">%s</div>'
-                       % self.node_data.index[i])).add_to(m)
+            fol.Marker(
+                [self.lat[i], self.lon[i]],
+                icon=DivIcon(
+                    icon_size=(-35, 75),
+                    icon_anchor=(0, 0),
+                    html='<div style="font-size: 16pt">%s</div>'
+                    % self.node_data.index[i]
+                )
+            ).add_to(m)
 
         for i in range(0, len(self.edge_data)):
             # linewidth settings
@@ -165,8 +172,7 @@ class InteractiveMap():
 
 class StaticMap():
     r"""
-
-
+    A static map of a network.ThermalNetwork.
     """
     def __init__(self, thermal_network, figsize=(5, 5), node_size=3,
                  edge_width=3, node_color='r', edge_color='g'):
@@ -179,7 +185,6 @@ class StaticMap():
         self.positions = {node_id: np.array([data['lon'], data['lat']])
                           for node_id, data in self.graph.nodes(data=True)}
         self.extent = self._get_extent()
-        pass
 
     def _get_extent(self):
         lon = [pos[0] for pos in self.positions.values()]
@@ -199,8 +204,10 @@ class StaticMap():
         if background_map:
             imagery = Stamen(style='toner-lite')
             zoom_level = 15
-            fig, ax = plt.subplots(figsize=self.figsize,
-                                   subplot_kw={'projection': imagery.crs})
+            fig, ax = plt.subplots(
+                figsize=self.figsize,
+                subplot_kw={'projection': imagery.crs}
+            )
             ax.set_extent(self.extent, crs=ccrs.Geodetic())
             ax.add_image(imagery, zoom_level, alpha=1, interpolation='bilinear')
 
@@ -251,4 +258,4 @@ class StaticMap():
             ax = plt.gca()
             ax.set_axis_off()
 
-        return plt
+        return fig, ax

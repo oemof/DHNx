@@ -6,16 +6,12 @@ class NetworkImporter():
     r"""
     Generic Importer object for network.ThermalNetwork
     """
-    def __init__(self):
-        pass
 
 
 class NetworkExporter():
     r"""
     Generic Exporter object for network.ThermalNetwork
     """
-    def __init__(self):
-        pass
 
 
 class CSVNetworkImporter(NetworkImporter):

@@ -100,6 +100,7 @@ class SimulationModelTespy(SimulationModel):
     """
 
     def __init__(self, thermal_network):
+        super().__init__()
         self.thermal_network = thermal_network
 
     def set_problem(self):

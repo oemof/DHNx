@@ -1,3 +1,5 @@
+import os
+
 import networkx as nx
 import pandas as pd
 from .input_output import CSVNetworkImporter, CSVNetworkExporter
@@ -7,7 +9,7 @@ class ThermalNetwork():
     r"""
     Class representing thermal (heating/cooling) networks.
     """
-    def _init__(self, filename):
+    def __init__(self, dirname=None):
         self.producers = None
         self.splits = None
         self.consumers = None
@@ -16,6 +18,14 @@ class ThermalNetwork():
         self.results = None
         self.units = {}
         self.graph = None
+
+        if dirname is not None:
+            if os.listdir(dirname)[0].endswith('.csv'):
+                self.load_from_csv(dirname)
+            else:
+                ImportError('Failed to import file.')
+        else:
+            pass
 
     def load_from_csv(self, dirname):
         importer = CSVNetworkImporter(dirname)
