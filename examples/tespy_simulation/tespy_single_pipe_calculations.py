@@ -47,7 +47,7 @@ def single_pipe(args):
     consumer_0 = HeatConsumer(
         'consumer_0',
         Q=-Q_cons,
-        temp_return_heat_exchanger=60,
+        temp_return_heat_exchanger=DT_prod_in - 10,
         pr_heat_exchanger=1,
         pr_valve=1
     )
@@ -59,8 +59,8 @@ def single_pipe(args):
         consumer_0,
         length=L,
         diameter=D,
-        ks=7e-5,
-        kA=10,
+        ks=0.0000001,
+        kA=1000,
         temp_env=0
     )
 
@@ -92,14 +92,15 @@ def single_pipe(args):
     Q_prod = heat_producer.comps['heat_exchanger'].Q.val
     DT_cons_in = pipe_0.conns['inlet_out'].T.val
     DT_prod_r = pipe_0.conns['return_out'].T.val
-    v = heat_producer.conns['heat_exchanger_pump'].v.val * 0.25 * np.pi * D**2
-    pressure_loss_bar = 1e-5 * (
+    v = heat_producer.conns['heat_exchanger_pump'].v.val / (0.25 * np.pi * D**2)
+    pressure_loss_bar = (
         heat_producer.conns['pump_cycle_closer'].p.val
         - heat_producer.conns['heat_exchanger_pump'].p.val
     )
+    print(pressure_loss_bar, heat_producer.conns['pump_cycle_closer'].p.unit)
     P_pump_kW = 1e-3 * heat_producer.comps['pump'].P.val
-    Q_loss_MW = 1e-6 * heat_losses.P.val
-    perc_loss = heat_losses.P.val / heat_producer.comps['heat_exchanger'].Q.val
+    Q_loss_MW = - 1e-6 * heat_losses.P.val
+    perc_loss = - 100 * heat_losses.P.val / heat_producer.comps['heat_exchanger'].Q.val
 
     if DT_prod_r > 0:
         return np.array(
@@ -204,7 +205,7 @@ def plot_data():
     fig, axs = plt.subplots(5, 3, figsize=(9, 12))
 
     coords = ['D', 'DT_prod_in', 'k']
-    ylim = [(0, 0.1), (0, 0.002), (3, 30), (0.0, 0.05), (0, 30)]
+    ylim = [(0, 3), (0, 2), (30, 300), (0.1, 0.5), (0, 30)]
     colors = [
         sns.color_palette("hls", len(sam_results[coord])).as_hex() for coord in coords
     ]
