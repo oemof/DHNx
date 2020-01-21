@@ -7,6 +7,14 @@ import numpy as np
 import seaborn as sns
 import xarray as xr
 
+from tespy.components import pipe, heat_exchanger_simple
+from tespy.connections import bus
+from tespy.networks import network
+from tespy_facades import (
+    HeatProducer,
+    HeatConsumer,
+    DistrictHeatingPipe,
+)
 
 lamb_func = (
     lambda eps, D, Re: 1.325 / (np.log(eps / (3.7 * D) + 5.74 / (Re ** 0.9))) ** 2
@@ -23,32 +31,75 @@ def single_pipe(args):
     eta_pump = 0.7
     pressure_loss_cons = 1e6
 
-    # hydraulic part
-    # mass flow is determined by consumer mass flow
-    m = Q_cons * 1 / (c * DT_drop)
+    nw = network(
+        fluids=['water'], T_unit='C', p_unit='bar', h_unit='kJ / kg', m_unit='kg / s'
+    )
 
-    # pressure loss
-    v = 4 * m / (rho * np.pi * D ** 2)
-    Re = D * v * rho / mu
-    lamb = lamb_func(eps, D, Re)
+    # producer
+    heat_producer = HeatProducer(
+        'heat_producer',
+        temp_inlet=DT_prod_in,
+        p_inlet=15,
+        eta_s=eta_pump
+    )
 
-    pressure_loss = lamb * 8 * L * 1 / (rho * np.pi ** 2 * D ** 5) * m ** 2
-    Dp_pump = 2 * pressure_loss + pressure_loss_cons
-    P_pump = Dp_pump * m * 1 / rho
+    # consumer
+    consumer_0 = HeatConsumer(
+        'consumer_0',
+        Q=-Q_cons,
+        temp_return_heat_exchanger=60,
+        pr_heat_exchanger=1,
+        pr_valve=1
+    )
 
-    # heat losses in feedin and return pipe
-    exponent = k * np.pi * L * D * 1 / (c * m)
-    DT_cons_in = DT_prod_in * np.exp(-1 * exponent)
-    DT_prod_r = (DT_cons_in - DT_drop) * np.exp(-1 * exponent)
+    # piping
+    pipe_0 = DistrictHeatingPipe(
+        'pipe_0',
+        heat_producer,
+        consumer_0,
+        length=L,
+        diameter=D,
+        ks=7e-5,
+        kA=10,
+        temp_env=0
+    )
 
-    Q_prod = c * m * (DT_prod_in - DT_prod_r)
-    Q_loss = Q_prod - Q_cons
-    perc_loss = 100 * Q_loss * 1 / Q_prod
+    nw.add_subsys(heat_producer, consumer_0, pipe_0)
 
-    # Change units
-    pressure_loss_bar = 1e-5 * pressure_loss
-    P_pump_kW = 1e-3 * 1 / eta_pump * P_pump
-    Q_loss_MW = 1e-6 * Q_loss
+    # collect lost and consumed heat
+    heat_losses = bus('network losses')
+    heat_consumer = bus('network consumer')
+
+    nw.check_network()
+
+    for comp in nw.comps.index:
+        if isinstance(comp, pipe):
+            heat_losses.add_comps({'c': comp})
+
+        if (isinstance(comp, heat_exchanger_simple) and '_consumer' in comp.label):
+            heat_consumer.add_comps({'c': comp})
+
+    nw.add_busses(heat_losses, heat_consumer)
+
+    # silence warnings
+    for comp in nw.comps.index:
+        comp.char_warnings = False
+
+    # solve
+    nw.solve('design')
+
+    # Collect results
+    Q_prod = heat_producer.comps['heat_exchanger'].Q.val
+    DT_cons_in = pipe_0.conns['inlet_out'].T.val
+    DT_prod_r = pipe_0.conns['return_out'].T.val
+    v = heat_producer.conns['heat_exchanger_pump'].v.val * 0.25 * np.pi * D**2
+    pressure_loss_bar = 1e-5 * (
+        heat_producer.conns['pump_cycle_closer'].p.val
+        - heat_producer.conns['heat_exchanger_pump'].p.val
+    )
+    P_pump_kW = 1e-3 * heat_producer.comps['pump'].P.val
+    Q_loss_MW = 1e-6 * heat_losses.P.val
+    perc_loss = heat_losses.P.val / heat_producer.comps['heat_exchanger'].Q.val
 
     if DT_prod_r > 0:
         return np.array(
@@ -105,6 +156,7 @@ def generic_sampling(input_dict, results_dict, function):
     )
 
     for i in range(len(sampling)):
+        print(f'Calculating {i} of {len(sampling)} results')
         result = function(sampling[i])
         results[tuple(indices[i])] = result
 
@@ -152,7 +204,7 @@ def plot_data():
     fig, axs = plt.subplots(5, 3, figsize=(9, 12))
 
     coords = ['D', 'DT_prod_in', 'k']
-    ylim = [(0, 3), (0, 2), (30, 300), (0.1, 0.5), (0, 30)]
+    ylim = [(0, 0.1), (0, 0.002), (3, 30), (0.0, 0.05), (0, 30)]
     colors = [
         sns.color_palette("hls", len(sam_results[coord])).as_hex() for coord in coords
     ]
@@ -217,16 +269,16 @@ def plot_data():
         )
 
     # plt.tight_layout()
-    fig.savefig('single_pipe_calculations.pdf', bbox_inches="tight")
+    fig.savefig('tespy_single_pipe_calculations.pdf', bbox_inches="tight")
 
 
-if os.path.isfile('single_pipe_calculations.nc'):
+if os.path.isfile('tespy_single_pipe_calculations.nc'):
     print('File exists')
-    sam_results = xr.open_dataarray('single_pipe_calculations.nc')
+    sam_results = xr.open_dataarray('tespy_single_pipe_calculations.nc')
 
 else:
     print('Calculate')
     sam_results = generic_sampling(input_dict, result_dict, single_pipe)[0]
-    sam_results.to_netcdf('single_pipe_calculations.nc')
+    sam_results.to_netcdf('tespy_single_pipe_calculations.nc')
 
 plot_data()
