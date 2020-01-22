@@ -15,4 +15,6 @@ setup(name='district_heating_simulation',
       author_email='jann.launer@rl-institut.de',
       long_description=read('README.rst'),
       packages=['district_heating_simulation'],
-      install_requires=[])
+      install_requires=[
+            'pandas >= 0.18.0'
+      ])
