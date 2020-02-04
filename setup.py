@@ -21,6 +21,7 @@ setup(
         'matplotlib',
         'networkx',
         'cartopy',
+        'pyproj',
         'pillow',
         'geopandas',
         'folium',
