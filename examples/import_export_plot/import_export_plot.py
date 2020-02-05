@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 thermal_network = dhs.network.ThermalNetwork()
 
 # load data from csv
-thermal_network.load_from_csv('data_csv_input')
+thermal_network.from_csv_folder('data_csv_input')
 
 # save thermal network to csv
-thermal_network.save_to_csv('data_csv_output')
+thermal_network.to_csv_folder('data_csv_output')
 
 # get graph of thermal network
 graph = thermal_network.get_nx_graph()

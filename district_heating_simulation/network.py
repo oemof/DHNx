@@ -21,13 +21,13 @@ class ThermalNetwork():
 
         if dirname is not None:
             if os.listdir(dirname)[0].endswith('.csv'):
-                self.load_from_csv(dirname)
+                self.from_csv_folder(dirname)
             else:
                 ImportError('Failed to import file.')
         else:
             pass
 
-    def load_from_csv(self, dirname):
+    def from_csv_folder(self, dirname):
         importer = CSVNetworkImporter(dirname)
 
         self.producers = importer.get_producers()
@@ -39,7 +39,7 @@ class ThermalNetwork():
                                 self.splits])
         return self
 
-    def save_to_csv(self, dirname):
+    def to_csv_folder(self, dirname):
         exporter = CSVNetworkExporter(dirname)
 
         exporter.save_producers(self.producers)

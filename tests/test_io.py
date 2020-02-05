@@ -26,8 +26,8 @@ def test_import_export_csv():
     dir_export = os.path.join(tmpdir, 'network_export')
 
     network = dhs.network.ThermalNetwork()
-    network = network.load_from_csv(dir_import)
+    network = network.from_csv_folder(dir_import)
 
-    network.save_to_csv(dir_export)
+    network.to_csv_folder(dir_export)
 
     helpers.check_if_csv_dirs_equal(dir_import, dir_export)

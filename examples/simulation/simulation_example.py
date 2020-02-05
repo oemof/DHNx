@@ -9,8 +9,8 @@ tree_network = dhs.network.ThermalNetwork()
 looped_network = dhs.network.ThermalNetwork()
 
 # Load data from csv
-tree_network.load_from_csv('tree/')
-looped_network.load_from_csv('single_loop/')
+tree_network.from_csv_folder('tree/')
+looped_network.from_csv_folder('single_loop/')
 
 # Plot
 tree_graph_plot = dhs.plotting.StaticMap(tree_network)
