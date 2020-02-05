@@ -33,7 +33,7 @@ import geopandas as gpd
 from shapely.geometry import Point, LineString, shape
 from shapely.ops import cascaded_union, nearest_points
 from shapely import affinity
-import geometry_operations as go
+from gistools import geometry_operations as go
 
 
 def line_of_point(point, gdf_lines):
@@ -209,90 +209,91 @@ def create_object_connections(points_objects, dist_lines, radius):
     return conn_lines, dist_lines
 
 
-# collect data
-path_to_data = os.path.join(
-    os.path.expanduser("~"),
-    'ownCloud/FhG-owncloud-Quarree-AB3/AB-3.3/oemof_dhs_data/Test_Kamp/')
+if __name__ == "__main__":
+    # collect data
+    path_to_data = os.path.join(
+        os.path.expanduser("~"),
+        'ownCloud/FhG-owncloud-Quarree-AB3/AB-3.3/oemof_dhs_data/Test_Kamp/')
 
-gdf_line_net = gpd.read_file(os.path.join(
-    path_to_data, 'Input/line_street_manual.shp')).to_crs(
-    {'init': 'epsg:31467'})
+    gdf_line_net = gpd.read_file(os.path.join(
+        path_to_data, 'Input/line_street_manual.shp')).to_crs(
+        {'init': 'epsg:31467'})
 
-gdf_point_houses = gpd.read_file(os.path.join(
-    path_to_data, 'Input/buildings_points_export.shp')).to_crs(
-    {'init': 'epsg:31467'})
+    gdf_point_houses = gpd.read_file(os.path.join(
+        path_to_data, 'Input/buildings_points_export.shp')).to_crs(
+        {'init': 'epsg:31467'})
 
-gdf_point_gen = gpd.read_file(os.path.join(
-    path_to_data, 'Input/gen_points.shp')).to_crs({'init': 'epsg:31467'})
+    gdf_point_gen = gpd.read_file(os.path.join(
+        path_to_data, 'Input/gen_points.shp')).to_crs({'init': 'epsg:31467'})
 
-# # plot input
-base = gdf_line_net.plot(color='blue')
-gdf_point_houses.plot(ax=base, color='grey')
-gdf_point_gen.plot(ax=base, color='red')
-base.set_title('Input')
+    # # plot input
+    base = gdf_line_net.plot(color='blue')
+    gdf_point_houses.plot(ax=base, color='grey')
+    gdf_point_gen.plot(ax=base, color='red')
+    base.set_title('Input')
 
-# add a specific house id to each point
-gdf_point_houses['ind'] = gdf_point_houses.index
-gdf_point_houses['id'] = 'H' + gdf_point_houses['ind'].apply(str)
-gdf_point_houses['type'] = 'H'
+    # add a specific house id to each point
+    gdf_point_houses['ind'] = gdf_point_houses.index
+    gdf_point_houses['id'] = 'H' + gdf_point_houses['ind'].apply(str)
+    gdf_point_houses['type'] = 'H'
 
-# add a specific house id to each point
-gdf_point_gen['ind'] = gdf_point_gen.index
-gdf_point_gen['id'] = 'G' + gdf_point_gen['ind'].apply(str)
-gdf_point_gen['type'] = 'G'
+    # add a specific house id to each point
+    gdf_point_gen['ind'] = gdf_point_gen.index
+    gdf_point_gen['id'] = 'G' + gdf_point_gen['ind'].apply(str)
+    gdf_point_gen['type'] = 'G'
 
-# determine size of district
-all_houses = gdf_point_houses['geometry'].unary_union
-all_houses_hull = all_houses.convex_hull
-bounds = all_houses_hull.bounds  # (minx, miny, maxx, maxy)
-delta_x = bounds[2] - bounds[0]  # x Ausdehnung
-delta_y = bounds[3] - bounds[1]  # y Ausdehnung
-rad = np.sqrt(delta_x ** 2 + delta_y ** 2)
+    # determine size of district
+    all_houses = gdf_point_houses['geometry'].unary_union
+    all_houses_hull = all_houses.convex_hull
+    bounds = all_houses_hull.bounds  # (minx, miny, maxx, maxy)
+    delta_x = bounds[2] - bounds[0]  # x Ausdehnung
+    delta_y = bounds[3] - bounds[1]  # y Ausdehnung
+    rad = np.sqrt(delta_x ** 2 + delta_y ** 2)
 
-# create connection to objects and update distribution grid
-gdf_line_houses, gdf_line_net = create_object_connections(
-    gdf_point_houses, gdf_line_net, rad)
+    # create connection to objects and update distribution grid
+    gdf_line_houses, gdf_line_net = create_object_connections(
+        gdf_point_houses, gdf_line_net, rad)
 
-# create connection to objects and update distribution grid
-gdf_line_gen, gdf_line_net = create_object_connections(
-    gdf_point_gen, gdf_line_net, rad)
+    # create connection to objects and update distribution grid
+    gdf_line_gen, gdf_line_net = create_object_connections(
+        gdf_point_gen, gdf_line_net, rad)
 
-# add line identifier
-gdf_line_gen['type'] = 'GL'     # GL for generation line
-gdf_line_net['type'] = 'DL'     # DL for distribution line
-gdf_line_houses['type'] = 'HL'  # HL for house line
+    # add line identifier
+    gdf_line_gen['type'] = 'GL'     # GL for generation line
+    gdf_line_net['type'] = 'DL'     # DL for distribution line
+    gdf_line_houses['type'] = 'HL'  # HL for house line
 
-# add distribution lines and house lines
-gdf_line_all = pd.concat([gdf_line_net, gdf_line_houses, gdf_line_gen],
-                         sort=False)
-gdf_line_all = gdf_line_all.reset_index(drop=True)
+    # add distribution lines and house lines
+    gdf_line_all = pd.concat([gdf_line_net, gdf_line_houses, gdf_line_gen],
+                             sort=False)
+    gdf_line_all = gdf_line_all.reset_index(drop=True)
 
-# generate nodes of distribution lines
-gdf_nodes = go.create_nodes(gdf_line_net)
+    # generate nodes of distribution lines
+    gdf_nodes = go.create_nodes(gdf_line_net)
 
-# select relevant data from input point layer
-gdf_nodes_houses = gdf_point_houses[['geometry', 'id', 'type']]
-gdf_nodes_gen = gdf_point_gen[['geometry', 'id', 'type']]
+    # select relevant data from input point layer
+    gdf_nodes_houses = gdf_point_houses[['geometry', 'id', 'type']]
+    gdf_nodes_gen = gdf_point_gen[['geometry', 'id', 'type']]
 
-# put all data into one Dataframe and reset index
-gdf_points_all = pd.concat([gdf_nodes_houses, gdf_nodes, gdf_nodes_gen],
-                           sort=False)
-gdf_points_all = gdf_points_all.reset_index(drop=True)
+    # put all data into one Dataframe and reset index
+    gdf_points_all = pd.concat([gdf_nodes_houses, gdf_nodes, gdf_nodes_gen],
+                               sort=False)
+    gdf_points_all = gdf_points_all.reset_index(drop=True)
 
-# insert id of starting point and ending point into lines
-gdf_line_all = go.insert_node_ids(gdf_line_all, gdf_points_all)
+    # insert id of starting point and ending point into lines
+    gdf_line_all = go.insert_node_ids(gdf_line_all, gdf_points_all)
 
-# insert length to each line
-gdf_line_all['length'] = gdf_line_all['geometry'].length
+    # insert length to each line
+    gdf_line_all['length'] = gdf_line_all['geometry'].length
 
-# plot result
-base = gdf_line_all.plot(color='blue')
-gdf_points_all.plot(ax=base, color='grey')
-base.set_title('Output')
+    # plot result
+    base = gdf_line_all.plot(color='blue')
+    gdf_points_all.plot(ax=base, color='grey')
+    base.set_title('Output')
 
-# gdf_line_gen.plot(ax=base, color='green')
-# gdf_point_gen.plot(ax=base, color='red')
+    # gdf_line_gen.plot(ax=base, color='green')
+    # gdf_point_gen.plot(ax=base, color='red')
 
-# export results
-gdf_line_all.to_file(os.path.join(path_to_data, 'Output/Lines_all.shp'))
-gdf_points_all.to_file(os.path.join(path_to_data, 'Output/Points_all.shp'))
+    # export results
+    gdf_line_all.to_file(os.path.join(path_to_data, 'Output/Lines_all.shp'))
+    gdf_points_all.to_file(os.path.join(path_to_data, 'Output/Points_all.shp'))
