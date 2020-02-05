@@ -21,10 +21,12 @@ import helpers
 
 tmpdir = helpers.extend_basic_path('tmp')
 
+basedir = os.path.dirname(__file__)
+
+dir_import = os.path.join(basedir, '_files/network_import')
+
 
 def test_import_export_csv():
-    basedir = os.path.dirname(__file__)
-    dir_import = os.path.join(basedir, '_files/network_import')
     dir_export = os.path.join(tmpdir, 'network_export')
 
     network = dhs.network.ThermalNetwork()
@@ -36,9 +38,6 @@ def test_import_export_csv():
 
 
 def test_get_nx_graph():
-    basedir = os.path.dirname(__file__)
-    dir_import = os.path.join(basedir, '_files/network_import')
-
     network = dhs.network.ThermalNetwork(dir_import)
 
     nx_graph = network.to_nx_graph()
@@ -47,8 +46,7 @@ def test_get_nx_graph():
 
 
 def test_static_map():
-    # initialize a thermal network
-    thermal_network = dhs.network.ThermalNetwork('data_csv_input')
+    thermal_network = dhs.network.ThermalNetwork(dir_import)
 
     # plot static map
     dhs.plotting.StaticMap(thermal_network)
@@ -56,7 +54,7 @@ def test_static_map():
 
 def test_interactive_map():
     # initialize a thermal network
-    thermal_network = dhs.network.ThermalNetwork('data_csv_input')
+    thermal_network = dhs.network.ThermalNetwork(dir_import)
 
     # plot interactive map
     interactive_map = dhs.plotting.InteractiveMap(thermal_network)
