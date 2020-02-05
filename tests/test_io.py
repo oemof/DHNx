@@ -20,7 +20,7 @@ import helpers
 tmpdir = helpers.extend_basic_path('tmp')
 
 
-def test_import_export_csv(tmpdir):
+def test_import_export_csv():
     basedir = os.path.dirname(__file__)
     dir_import = os.path.join(basedir, '_files/network_import')
     dir_export = os.path.join(tmpdir, 'network_export')
