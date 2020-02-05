@@ -6,6 +6,7 @@ from folium.features import DivIcon
 import matplotlib.pyplot as plt
 import matplotlib.collections as collections
 import numpy as np
+import pandas as pd
 
 cartopy_installed = True
 
@@ -22,7 +23,9 @@ class InteractiveMap():
     An interactive map of a network.ThermalNetwork.
     """
     def __init__(self, thermal_network):
-        self.node_data = thermal_network.nodes
+        self.node_data = pd.concat([thermal_network.consumers,
+                                    thermal_network.producers,
+                                    thermal_network.forks])
         self.edge_data = thermal_network.edges
         self.edge_data['value'] = 1
         self.node_id = self.node_data.index
