@@ -43,18 +43,8 @@ class InteractiveMap():
 
         return self.node_data['node_color']
 
-    def _get_sw(self):
-        sw = {'motorway': 3.0,
-              'trunk': 2.5,
-              'primary': 1.5,
-              'secondary': 1.0,
-              'tertiary': 1.0,
-              'unclassified': 0.75,
-              'residential': 0.75}
-
-        return sw
-
-    def _get_bearing(self, p1, p2):
+    @staticmethod
+    def _get_bearing(p1, p2):
         '''
         Returns compass bearing from p1 to p2
 
@@ -65,17 +55,10 @@ class InteractiveMap():
         Return
         compass bearing of type float
         '''
-        long_diff = np.radians(p2.lon - p1.lon)
+        y = p2[0] - p1[0]
+        x = p2[1] - p1[1]
 
-        lat1 = np.radians(p1.lat)
-        lat2 = np.radians(p2.lat)
-
-        x = np.sin(long_diff) * np.cos(lat2)
-        y = (
-            np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(long_diff)
-        )
-
-        bearing = np.degrees(np.arctan2(x, y))
+        bearing = np.arctan2(x, y) / np.pi * 180
 
         # adjusting for compass bearing
         if bearing < 0:
