@@ -167,7 +167,7 @@ class StaticMap():
     """
     def __init__(self, thermal_network, figsize=(5, 5), node_size=3,
                  edge_width=3, node_color='r', edge_color='g'):
-        self.graph = thermal_network.get_nx_graph()
+        self.graph = thermal_network.to_nx_graph()
         self.figsize = figsize
         self.node_size = node_size
         self.edge_width = edge_width

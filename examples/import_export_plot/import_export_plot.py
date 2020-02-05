@@ -11,7 +11,7 @@ thermal_network.from_csv_folder('data_csv_input')
 thermal_network.to_csv_folder('data_csv_output')
 
 # get graph of thermal network
-graph = thermal_network.get_nx_graph()
+graph = thermal_network.to_nx_graph()
 
 # plot static map
 static_map = dhs.plotting.StaticMap(thermal_network)
