@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-This is a collection of helper functions which work on their own and can be
-used by various classes. If there are too many helper-functions, they will
-be sorted in different modules.
+These tests test little examples for the use of the library.
 
-This file is part of project oemof (github.com/oemof/oemof). It's copyrighted
+This file is part of project oemof (). It's copyrighted
 by the contributors recorded in the version control history of the file,
 available from its original location oemof/oemof/tools/helpers.py
 
