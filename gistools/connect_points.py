@@ -104,6 +104,8 @@ def cut_line_at_points(line_str, point_list):
     :param point_list: list of points the line is cut with
     :return: list of line pieces
     """
+    if line_str.type == 'MultiLineString':
+        line_str = line_str[0]
 
     # First coords of line (start + end)
     coords = [line_str.coords[0], line_str.coords[-1]]
@@ -150,7 +152,7 @@ def create_object_connections(points_objects, dist_lines, radius):
 
         # rotate to create the radii
         radii = [affinity.rotate(line_rad, i, (house_geo.x, house_geo.y))
-                 for i in range(0, 360, 10)]
+                 for i in range(0, 360, 2)]
 
         # cascaded_union (or shapely:unary_union) to get a MultiLineString
         mergedradii = cascaded_union(radii)
