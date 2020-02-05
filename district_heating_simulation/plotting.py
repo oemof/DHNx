@@ -1,12 +1,20 @@
 from collections import namedtuple
+import logging
 
-from cartopy.io.img_tiles import Stamen
-from cartopy import crs as ccrs
 import folium as fol
 from folium.features import DivIcon
 import matplotlib.pyplot as plt
 import matplotlib.collections as collections
 import numpy as np
+
+cartopy_installed = True
+
+try:
+    from cartopy.io.img_tiles import Stamen
+    from cartopy import crs as ccrs
+
+except ImportError:
+    cartopy_installed = False
 
 
 class InteractiveMap():
@@ -202,14 +210,17 @@ class StaticMap():
         This function has been adapted from osmnx plots.plot_graph() function.
         """
         if background_map:
-            imagery = Stamen(style='toner-lite')
-            zoom_level = 15
-            fig, ax = plt.subplots(
-                figsize=self.figsize,
-                subplot_kw={'projection': imagery.crs}
-            )
-            ax.set_extent(self.extent, crs=ccrs.Geodetic())
-            ax.add_image(imagery, zoom_level, alpha=1, interpolation='bilinear')
+            if not cartopy_installed:
+                logging.Warning('To draw background map, cartopy must be installed.')
+            else:
+                imagery = Stamen(style='toner-lite')
+                zoom_level = 15
+                fig, ax = plt.subplots(
+                    figsize=self.figsize,
+                    subplot_kw={'projection': imagery.crs}
+                )
+                ax.set_extent(self.extent, crs=ccrs.Geodetic())
+                ax.add_image(imagery, zoom_level, alpha=1, interpolation='bilinear')
 
         else:
             fig, ax = plt.subplots(figsize=self.figsize, facecolor=bgcolor,

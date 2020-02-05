@@ -20,10 +20,11 @@ setup(
         'pandas >= 0.18.0',
         'matplotlib',
         'networkx',
-        'cartopy',
-        'pyproj',
         'pillow',
         'geopandas',
         'folium',
-    ]
+    ],
+    extras_require={
+        'cartopy': ['cartopy'],
+    }
 )
