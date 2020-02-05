@@ -35,30 +35,19 @@ class CSVNetworkImporter(NetworkImporter):
     def __init__(self, thermal_network, basedir):
         super().__init__(thermal_network, basedir)
 
-    def get_producers(self):
-        producers = pd.read_csv(os.path.join(self.basedir, 'producers.csv'), index_col='node_id')
-        return producers
+    def load_component_table(self, name, index_col):
+        component_table = pd.read_csv(os.path.join(self.basedir, name), index_col=index_col)
 
-    def get_consumers(self):
-        consumers = pd.read_csv(os.path.join(self.basedir, 'consumers.csv'), index_col='node_id')
-        return consumers
-
-    def get_splits(self):
-        splits = pd.read_csv(os.path.join(self.basedir, 'splits.csv'), index_col='node_id')
-        return splits
-
-    def get_edges(self):
-        edges = pd.read_csv(os.path.join(self.basedir, 'edges.csv'), index_col='edge_id')
-        return edges
+        return component_table
 
     def load(self):
-        self.thermal_network.producers = self.get_producers()
+        self.thermal_network.producers = self.load_component_table('producers.csv', 'node_id')
 
-        self.thermal_network.consumers = self.get_consumers()
+        self.thermal_network.consumers = self.load_component_table('consumers.csv', 'node_id')
 
-        self.thermal_network.forks = self.get_splits()
+        self.thermal_network.forks = self.load_component_table('forks.csv', 'node_id')
 
-        self.thermal_network.edges = self.get_edges()
+        self.thermal_network.edges = self.load_component_table('edges.csv', 'edge_id')
 
         return self.thermal_network
 
@@ -72,24 +61,17 @@ class CSVNetworkExporter(NetworkExporter):
         if not os.path.exists(self.basedir):
             os.mkdir(self.basedir)
 
-    def save_producers(self, producers):
-        producers.to_csv(os.path.join(self.basedir, 'producers.csv'))
-        return producers
-
-    def save_consumers(self, consumers):
-        consumers.to_csv(os.path.join(self.basedir, 'consumers.csv'))
-        return consumers
-
-    def save_splits(self, splits):
-        splits.to_csv(os.path.join(self.basedir, 'splits.csv'))
-        return splits
-
-    def save_edges(self, edges):
-        edges.to_csv(os.path.join(self.basedir, 'edges.csv'))
-        return edges
+    def save_component_table(self, component_table, name):
+        component_table.to_csv(os.path.join(self.basedir, name))
 
     def save(self):
-        pass
+        self.save_component_table(self.thermal_network.producers, 'producers.csv')
+
+        self.save_component_table(self.thermal_network.consumers, 'consumers.csv')
+
+        self.save_component_table(self.thermal_network.forks, 'forks.csv')
+
+        self.save_component_table(self.thermal_network.edges, 'edges.csv')
 
 
 class OSMNetworkImporter(NetworkImporter):
@@ -106,13 +88,3 @@ class GDFNetworkExporter(NetworkExporter):
     """
     def __init__(self):
         pass
-
-
-def load_problem(dir):
-    problem = {}
-
-    for filename in os.listdir(dir):
-        name = filename.strip('.csv')
-        problem[name] = pd.read_csv(os.path.join(dir, filename))
-
-    return problem
