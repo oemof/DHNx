@@ -34,6 +34,10 @@ def create_nodes(lines):
 
     for i, r in lines.iterrows():
         line_str = lines.iloc[i]['geometry']
+
+        if line_str.type == 'MultiLineString':
+            line_str = line_str[0]
+
         p_0 = Point(line_str.coords[0])
         p_1 = Point(line_str.coords[1])
         nodes = nodes.append({'geometry': p_0}, ignore_index=True)
