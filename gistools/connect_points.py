@@ -128,7 +128,7 @@ def cut_line_at_points(line_str, point_list):
     return lines
 
 
-def create_object_connections(points_objects, dist_lines, radius):
+def create_object_connections(points_objects, dist_lines, radius, accuracy):
     # empty geopandas dataframe for house connections
     conn_lines = gpd.GeoDataFrame()
 
@@ -152,7 +152,7 @@ def create_object_connections(points_objects, dist_lines, radius):
 
         # rotate to create the radii
         radii = [affinity.rotate(line_rad, i, (house_geo.x, house_geo.y))
-                 for i in range(0, 360, 2)]
+                 for i in range(0, 360, accuracy)]
 
         # cascaded_union (or shapely:unary_union) to get a MultiLineString
         mergedradii = cascaded_union(radii)
@@ -204,6 +204,83 @@ def create_object_connections(points_objects, dist_lines, radius):
             indices_not_connected.append(index)
 
         print(index+1, ' of ', num_houses, 'connections calculated.')
+
+    print('Number of not-connected objects: ', count_not_connected)
+    print('Indices of not-connected objects: ', indices_not_connected)
+
+    return conn_lines, dist_lines
+
+
+def create_object_connections_2(points_objects, dist_lines):
+
+    # empty geopandas dataframe for house connections
+    conn_lines = gpd.GeoDataFrame()
+
+    # counter for not connected houses
+    count_not_connected = 0
+    indices_not_connected = []
+    num_houses = len(points_objects)
+
+    # iterate over all houses
+    for index, row in points_objects.iterrows():
+        house_geo = row['geometry']
+
+        # the same with the original lines
+        all_lines = dist_lines['geometry']
+        mergedlines = cascaded_union(all_lines)
+
+        # new nearest point method  ############ #########
+        np = nearest_points(mergedlines, house_geo)[0]
+
+        # get index of line which is closest to the house
+        line_index = line_of_point(np, dist_lines)
+
+        # get geometry of supply line
+        supply_line = dist_lines.loc[line_index, 'geometry']
+
+        # caculate lot foot
+        lot_foot = calc_lot_foot(supply_line, house_geo)
+
+        next_line_point = nearest_points(supply_line, lot_foot)[0]
+
+        if next_line_point.distance(lot_foot) > 1e-8:
+            print('Lot außerhalb')
+
+            con_line = LineString([next_line_point, house_geo])
+
+            conn_lines = conn_lines.append(
+                {'geometry': con_line}, ignore_index=True)
+
+        else:   # case that the lot point is on the next supply line
+
+            # create lot => line to house
+            lot = LineString([lot_foot, house_geo])
+
+            # check if lot foot point is on the supply line
+            if supply_line.distance(lot_foot) < 1e-8:
+
+                # divide supply line at lot foot point
+                split_lines = cut_line_at_points(supply_line, [lot_foot])
+
+                # drop original line element
+                # gdf_line_net = gdf_line_net.drop([line_index])
+                dist_lines.drop([line_index], inplace=True)
+
+                # add neu line elements to the geo-dataframe
+                dist_lines = dist_lines.append({'geometry': split_lines[0]},
+                                               ignore_index=True)
+                dist_lines = dist_lines.append({'geometry': split_lines[1]},
+                                               ignore_index=True)
+
+                # add line-to-house to geo-df
+                conn_lines = conn_lines.append(
+                    {'geometry': lot}, ignore_index=True)
+
+            else:
+                count_not_connected += 1
+                indices_not_connected.append(index)
+
+        print(index + 1, ' of ', num_houses, 'connections calculated.')
 
     print('Number of not-connected objects: ', count_not_connected)
     print('Indices of not-connected objects: ', indices_not_connected)
