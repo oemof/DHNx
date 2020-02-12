@@ -30,7 +30,7 @@ class ThermalNetwork():
         if dirname is not None:
             try:
                 self.available_components = available_components
-                self.components = {}
+                self.components = {key: pd.DataFrame() for key in available_components.index}
                 self.from_csv_folder(dirname)
                 self.results = None
                 self.graph = None
@@ -40,7 +40,7 @@ class ThermalNetwork():
 
         else:
             self.available_components = available_components
-            self.components = {}
+            self.components = {key: pd.DataFrame() for key in available_components.list_name}
             self.results = None
             self.graph = None
 
@@ -60,6 +60,49 @@ class ThermalNetwork():
         nx_graph = thermal_network_to_nx_graph(self)
 
         return nx_graph
+
+    def add(self, class_name, id, **kwargs):
+        r"""
+        Adds a row with id to the component DataFrame specified by class_name.
+
+        Parameters
+        ----------
+        class_name
+        id
+        kwargs
+        """
+        assert class_name in available_components.index,\
+            "Component class {} is not within the available components."
+
+        list_name = available_components.loc[class_name].list_name
+
+        assert id not in self.components[list_name].index,\
+            f"There is already a component with the id {id}."
+
+        for key, value in kwargs.items():
+            self.components[list_name].loc[id, key] = value
+
+
+    def remove(self, class_name, id):
+        r"""
+        Removes the row with id from the component DataFrame specified by class_name.
+
+        Parameters
+        ----------
+        class_name : str
+            Name of the component class
+        id : int
+            id of the component to remove
+        """
+        assert class_name in available_components.index,\
+            "Component class '{}' is not within the available_components."
+
+        list_name = available_components.loc[class_name].list_name
+
+        assert id in self.components[list_name].index,\
+            f"There is no component with the id {id}."
+
+        self.components[list_name].drop(id, inplace=True)
 
     def is_consistent(self):
         pass
