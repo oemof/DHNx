@@ -67,8 +67,9 @@ class CSVNetworkExporter(NetworkExporter):
 
     def save(self):
         for component, component_table in self.thermal_network.components.items():
-            filename = component + '.csv'
-            self.save_component_table(component_table, filename)
+            if not component_table.empty:
+                filename = component + '.csv'
+                self.save_component_table(component_table, filename)
 
 
 class OSMNetworkImporter(NetworkImporter):
