@@ -16,23 +16,23 @@ def thermal_network_to_nx_graph(thermal_network):
     """
     nx_graph = nx.MultiDiGraph()  # TODO: Check if this line can be removed.
 
-    edge_attr = list(thermal_network.edges.columns)
+    edge_attr = list(thermal_network.components['edges'].columns)
 
     edge_attr.remove('from_node')
 
     edge_attr.remove('to_node')
 
     nx_graph = nx.from_pandas_edgelist(
-        thermal_network.edges,
+        thermal_network.components['edges'],
         'from_node',
         'to_node',
         edge_attr=edge_attr,
         create_using=thermal_network.graph
     )
 
-    nodes = pd.concat([thermal_network.producers,
-                       thermal_network.consumers,
-                       thermal_network.forks], axis=0)
+    nodes = pd.concat([thermal_network.components['producers'],  # TODO: Introduce a 'node' type
+                       thermal_network.components['consumers'],
+                       thermal_network.components['forks']], axis=0)
 
     node_attrs = {node_id: dict(data) for node_id, data in nodes.iterrows()}
 

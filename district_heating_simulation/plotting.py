@@ -23,10 +23,10 @@ class InteractiveMap():
     An interactive map of a network.ThermalNetwork.
     """
     def __init__(self, thermal_network):
-        self.node_data = pd.concat([thermal_network.consumers,
-                                    thermal_network.producers,
-                                    thermal_network.forks])
-        self.edge_data = thermal_network.edges
+        self.node_data = pd.concat([thermal_network.components['consumers'],
+                                    thermal_network.components['producers'],
+                                    thermal_network.components['forks']])
+        self.edge_data = thermal_network.components['edges']
         self.edge_data['value'] = 1
         self.node_id = self.node_data.index
         self.lat = self.node_data['lat']

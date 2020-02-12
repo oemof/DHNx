@@ -1,7 +1,14 @@
+import os
+
 import pandas as pd
 
 from .input_output import CSVNetworkImporter, CSVNetworkExporter
 from .graph import thermal_network_to_nx_graph
+
+
+dir_name = os.path.dirname(__file__)
+
+available_components = pd.read_csv(os.path.join(dir_name, 'components.csv'), index_col=0)
 
 
 class ThermalNetwork():
@@ -22,21 +29,19 @@ class ThermalNetwork():
 
         if dirname is not None:
             try:
+                self.available_components = available_components
+                self.components = {}
                 self.from_csv_folder(dirname)
                 self.results = None
-                self.units = {}
                 self.graph = None
 
             except ImportError:
                 print('Failed to import file.')
 
         else:
-            self.producers = ProducerTable()
-            self.consumers = ConsumerTable()
-            self.forks = ForkTable()
-            self.edges = EdgeTable()
+            self.available_components = available_components
+            self.components = {}
             self.results = None
-            self.units = {}
             self.graph = None
 
     def from_csv_folder(self, dirname):
@@ -64,28 +69,3 @@ class ThermalNetwork():
 
     def reproject(self, crs):
         pass
-
-
-class NodeTable:
-    def __init__(self):
-        self.df = pd.DataFrame()
-
-
-class EdgeTable:
-    def __init__(self):
-        self.df = pd.DataFrame()
-
-
-class ProducerTable(NodeTable):
-    def __init__(self):
-        super().__init__()
-
-
-class ConsumerTable(NodeTable):
-    def __init__(self):
-        super().__init__()
-
-
-class ForkTable(NodeTable):
-    def __init__(self):
-        super().__init__()

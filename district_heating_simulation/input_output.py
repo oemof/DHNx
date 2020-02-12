@@ -35,19 +35,19 @@ class CSVNetworkImporter(NetworkImporter):
     def __init__(self, thermal_network, basedir):
         super().__init__(thermal_network, basedir)
 
-    def load_component_table(self, name, index_col):
-        component_table = pd.read_csv(os.path.join(self.basedir, name), index_col=index_col)
+    def load_component_table(self, name):
+        component_table = pd.read_csv(os.path.join(self.basedir, name), index_col=0)
 
         return component_table
 
     def load(self):
-        self.thermal_network.producers = self.load_component_table('producers.csv', 'node_id')
+        for table_name in os.listdir(self.basedir):
 
-        self.thermal_network.consumers = self.load_component_table('consumers.csv', 'node_id')
+            list_name = os.path.splitext(table_name)[0]
 
-        self.thermal_network.forks = self.load_component_table('forks.csv', 'node_id')
+            assert list_name in self.thermal_network.available_components.list_name.values
 
-        self.thermal_network.edges = self.load_component_table('edges.csv', 'edge_id')
+            self.thermal_network.components[list_name] = self.load_component_table(table_name)
 
         return self.thermal_network
 
@@ -65,13 +65,9 @@ class CSVNetworkExporter(NetworkExporter):
         component_table.to_csv(os.path.join(self.basedir, name))
 
     def save(self):
-        self.save_component_table(self.thermal_network.producers, 'producers.csv')
-
-        self.save_component_table(self.thermal_network.consumers, 'consumers.csv')
-
-        self.save_component_table(self.thermal_network.forks, 'forks.csv')
-
-        self.save_component_table(self.thermal_network.edges, 'edges.csv')
+        for component, component_table in self.thermal_network.components.items():
+            filename = component + '.csv'
+            self.save_component_table(component_table, filename)
 
 
 class OSMNetworkImporter(NetworkImporter):
