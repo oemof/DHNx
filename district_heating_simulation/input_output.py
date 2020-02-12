@@ -45,7 +45,8 @@ class CSVNetworkImporter(NetworkImporter):
 
             list_name = os.path.splitext(table_name)[0]
 
-            assert list_name in self.thermal_network.available_components.list_name.values
+            if list_name not in self.thermal_network.available_components.list_name.values:
+                raise KeyError(f"Component '{list_name}' is not part of the available components.")
 
             self.thermal_network.components[list_name] = self.load_component_table(table_name)
 
