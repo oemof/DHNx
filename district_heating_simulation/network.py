@@ -61,9 +61,6 @@ class ThermalNetwork():
 
         return nx_graph
 
-    def set_units(self):
-        return self.units
-
     def is_consistent(self):
         pass
 
