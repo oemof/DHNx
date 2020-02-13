@@ -13,7 +13,7 @@ import os
 
 import networkx as nx
 
-import district_heating_simulation as dhs
+import dhnx
 import helpers
 
 
@@ -27,7 +27,7 @@ dir_import = os.path.join(basedir, '_files/network_import')
 def test_import_export_csv():
     dir_export = os.path.join(tmpdir, 'network_export')
 
-    network = dhs.network.ThermalNetwork()
+    network = dhnx.network.ThermalNetwork()
     network = network.from_csv_folder(dir_import)
 
     network.to_csv_folder(dir_export)
@@ -36,7 +36,7 @@ def test_import_export_csv():
 
 
 def test_get_nx_graph():
-    network = dhs.network.ThermalNetwork(dir_import)
+    network = dhnx.network.ThermalNetwork(dir_import)
 
     nx_graph = network.to_nx_graph()
 
@@ -44,16 +44,16 @@ def test_get_nx_graph():
 
 
 def test_static_map():
-    thermal_network = dhs.network.ThermalNetwork(dir_import)
+    thermal_network = dhnx.network.ThermalNetwork(dir_import)
 
     # plot static map
-    dhs.plotting.StaticMap(thermal_network)
+    dhnx.plotting.StaticMap(thermal_network)
 
 
 def test_interactive_map():
     # initialize a thermal network
-    thermal_network = dhs.network.ThermalNetwork(dir_import)
+    thermal_network = dhnx.network.ThermalNetwork(dir_import)
 
     # plot interactive map
-    interactive_map = dhs.plotting.InteractiveMap(thermal_network)
+    interactive_map = dhnx.plotting.InteractiveMap(thermal_network)
     interactive_map.draw()

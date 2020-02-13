@@ -20,7 +20,7 @@ class ThermalNetwork():
 
     Examples
     --------
-    >>> from district_heating_simulation import ThermalNetwork
+    >>> from dhnx import ThermalNetwork
     >>> tnw = ThermalNetwork('csv_folder')
     >>> tnw.is_consistent()
     True

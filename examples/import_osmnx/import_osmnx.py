@@ -4,7 +4,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import osmnx as ox
 
-import district_heating_simulation as dhs
+import dhnx
 
 
 # load street network and footprints from osm
@@ -59,7 +59,7 @@ building_midpoints['x'] = building_midpoints.apply(lambda x: x.geometry.x, 1)
 building_midpoints['y'] = building_midpoints.apply(lambda x: x.geometry.y, 1)
 building_midpoints = building_midpoints[['x', 'y', 'geometry']]
 
-points, splits, edges = dhs.dhn_from_osm.connect_points_to_network(building_midpoints, nodes, edges)
+points, splits, edges = dhnx.dhn_from_osm.connect_points_to_network(building_midpoints, nodes, edges)
 
 producer = points.loc[[323], :]
 consumer = points.drop(323)
