@@ -34,6 +34,15 @@ def extend_basic_path(subfolder):
     return extended_path
 
 
+def get_all_file_paths(dir):
+    file_paths = []
+    for dir_path, dir_names, file_names in os.walk(dir):
+        for file_name in file_names:
+            file_paths.append(os.path.join(dir_path, file_name))
+
+    return file_paths
+
+
 def check_if_csv_files_equal(csv_file_a, csv_file_b):
     df1 = pd.read_csv(csv_file_a)
     df2 = pd.read_csv(csv_file_b)
@@ -42,8 +51,8 @@ def check_if_csv_files_equal(csv_file_a, csv_file_b):
 
 
 def check_if_csv_dirs_equal(dir_a, dir_b):
-    files_a = [os.path.join(dir_a, f) for f in os.listdir(dir_a)]
-    files_b = [os.path.join(dir_b, f) for f in os.listdir(dir_b)]
+    files_a = get_all_file_paths(dir_a)
+    files_b = get_all_file_paths(dir_b)
     files_a.sort()
     files_b.sort()
 

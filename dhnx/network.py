@@ -31,6 +31,7 @@ class ThermalNetwork():
             try:
                 self.available_components = available_components
                 self.components = {key: pd.DataFrame() for key in available_components.index}
+                self.sequences = {}
                 self.from_csv_folder(dirname)
                 self.results = None
                 self.graph = None
@@ -41,6 +42,7 @@ class ThermalNetwork():
         else:
             self.available_components = available_components
             self.components = {key: pd.DataFrame() for key in available_components.list_name}
+            self.sequences = {}
             self.results = None
             self.graph = None
 
@@ -81,7 +83,6 @@ class ThermalNetwork():
 
         for key, value in kwargs.items():
             self.components[list_name].loc[id, key] = value
-
 
     def remove(self, class_name, id):
         r"""
