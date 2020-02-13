@@ -8,6 +8,9 @@ import matplotlib.collections as collections
 import numpy as np
 import pandas as pd
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 cartopy_installed = True
 
 try:
@@ -15,6 +18,7 @@ try:
     from cartopy import crs as ccrs
 
 except ImportError:
+    logging.info("Cartopy is not installed. Background maps will not be drawn.")
     cartopy_installed = False
 
 
@@ -197,8 +201,10 @@ class StaticMap():
         """
         if background_map:
             if not cartopy_installed:
-                logging.Warning('To draw background map, cartopy must be installed.')
-            else:
+                logging.warning('To draw background map, cartopy must be installed.')
+                background_map = False
+
+        if background_map:
                 imagery = Stamen(style='toner-lite')
                 zoom_level = 15
                 fig, ax = plt.subplots(
@@ -209,9 +215,7 @@ class StaticMap():
                 ax.add_image(imagery, zoom_level, alpha=1, interpolation='bilinear')
 
         else:
-            fig, ax = plt.subplots(figsize=self.figsize, facecolor=bgcolor,
-                                   subplot_kw={'projection': ccrs.Mercator()})
-            ax.set_extent(self.extent, crs=ccrs.Geodetic())
+            fig, ax = plt.subplots(figsize=self.figsize, facecolor=bgcolor)
 
         lines = []
         for u, v, data in self.graph.edges(data=True):
@@ -235,8 +239,7 @@ class StaticMap():
                                         colors=edge_color,
                                         linewidths=edge_linewidth,
                                         alpha=edge_alpha,
-                                        zorder=2,
-                                        transform=ccrs.Geodetic())
+                                        zorder=2)
         ax.add_collection(lc)
 
         node_Xs = [float(x) for _, x in self.graph.nodes(data='lon')]
@@ -248,8 +251,7 @@ class StaticMap():
                    c=node_color,
                    alpha=node_alpha,
                    edgecolor=node_edgecolor,
-                   zorder=node_zorder,
-                   transform=ccrs.Geodetic())
+                   zorder=node_zorder)
 
         if no_axis:
             ax = plt.gca()
