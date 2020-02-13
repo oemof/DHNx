@@ -8,7 +8,7 @@ import district_heating_simulation as dhs
 
 
 # load street network and footprints from osm
-place_name = '52.43034,13.53806'
+place_name = (52.43034,13.53806)
 distance = 300
 file_name = 'Berlin-Adlershof'
 
@@ -16,7 +16,7 @@ if not os.path.exists(f'data/{file_name}_street_network.graphml'):
 
     print('Download street network')
 
-    graph = ox.graph_from_address(place_name, distance=distance)
+    graph = ox.graph_from_point(place_name, distance=distance)
 
     ox.save_load.save_graphml(graph, filename=f'{file_name}_street_network.graphml')
 
@@ -24,7 +24,7 @@ if not os.path.exists(f'data/{file_name}_footprints'):
 
     print('Download footprints')
 
-    footprints = ox.footprints.footprints_from_address(place_name, distance=distance)
+    footprints = ox.footprints.footprints_from_point(place_name, distance=distance)
 
     footprints_proj = ox.project_gdf(footprints)
 

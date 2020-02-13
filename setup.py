@@ -23,6 +23,7 @@ setup(
         'pillow',
         'geopandas',
         'folium',
+        'osmnx',
     ],
     extras_require={
         'cartopy': ['cartopy'],
