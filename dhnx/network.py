@@ -23,7 +23,7 @@ class ThermalNetwork():
 
     Examples
     --------
-    >>> from dhnx import ThermalNetwork
+    >>> from dhnx.network import ThermalNetwork
     >>> tnw = ThermalNetwork('csv_folder')
     >>> tnw.is_consistent()
     True
