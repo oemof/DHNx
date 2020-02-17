@@ -79,7 +79,7 @@ class CSVNetworkImporter(NetworkImporter):
 
                     assert sequence_name.endswith('.csv'), f"Inappropriate filetype of '{name}'" \
                                                            f"for csv import."
-                    print(sequence_name)
+
                     list_name, attr_name = tuple(sequence_name.split('-'))
 
                     attr_name = os.path.splitext(attr_name)[0]
@@ -115,7 +115,7 @@ class CSVNetworkExporter(NetworkExporter):
             os.mkdir(sequence_dir)
 
         file_name = '-'.join([list_name, attr_name]) + '.csv'
-        print(file_name)
+
         sequence.to_csv(os.path.join(self.basedir, 'sequences', file_name))
 
 
@@ -126,9 +126,9 @@ class CSVNetworkExporter(NetworkExporter):
                 self.save_component_table(component_table, filename)
 
         for list_name, subdict in self.thermal_network.sequences.items():
-            print(list_name, subdict)
+
             for attr_name, sequence in subdict.items():
-                print(list_name, attr_name)
+
                 self.save_sequence(list_name, attr_name, sequence)
 
 
