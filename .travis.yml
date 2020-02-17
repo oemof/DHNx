@@ -18,12 +18,14 @@ before_install:
 install:
   - pip install -r tests/test_requirements.txt
   - pip install -e .
+  - pip install pytest-cov
+  - pip install coveralls
 
 # commands to run tests 
 script:
   - flake8
   - pylint */*.py
-  - pytest
+  - pytest --cov=dhnx
 #jobs:
 #  include:
 #    - stage: "Tests"                # naming the Tests stage
@@ -48,3 +50,6 @@ script:
 #  only:
 #  - branch_name1
 #  - branch_name2
+
+after_success:
+  - coveralls
