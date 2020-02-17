@@ -9,13 +9,13 @@ def read(fname):
 
 
 setup(
-    name='district_heating_simulation',
+    name='DHNx',
     version='0.0.1',
     description='Simulation of district heating and cooling networks',
     author='Jann Launer',
     author_email='jann.launer@rl-institut.de',
     long_description=read('README.rst'),
-    packages=['district_heating_simulation'],
+    packages=['dhnx'],
     install_requires=[
         'pandas >= 0.18.0',
         'matplotlib',
