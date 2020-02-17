@@ -11,6 +11,7 @@ SPDX-License-Identifier: MIT
 
 import os
 
+import pandas as pd
 import networkx as nx
 
 import dhnx
@@ -33,6 +34,19 @@ def test_import_export_csv():
     network.to_csv_folder(dir_export)
 
     helpers.check_if_csv_dirs_equal(dir_import, dir_export)
+
+
+def test_access_attributes():
+
+    network = dhnx.network.ThermalNetwork(dir_import)
+
+    assert isinstance(network.available_components, pd.DataFrame)
+
+    assert network.component_attrs.consumers.id.type == 'int'
+
+    assert isinstance(network.components.consumers, pd.DataFrame)
+
+    assert isinstance(network.sequences.edges.temperature_return, pd.DataFrame)
 
 
 def test_get_nx_graph():

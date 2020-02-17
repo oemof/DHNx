@@ -1,4 +1,6 @@
 import os
+
+from addict import Dict
 import pandas as pd
 
 
@@ -42,7 +44,7 @@ class CSVNetworkImporter(NetworkImporter):
                            f"part of the available components.")
 
         file_name = list_name + '.csv'
-        component_table = pd.read_csv(os.path.join(self.basedir, file_name) , index_col=0)
+        component_table = pd.read_csv(os.path.join(self.basedir, file_name), index_col=0)
 
         return component_table
 
@@ -84,9 +86,11 @@ class CSVNetworkImporter(NetworkImporter):
 
                     attr_name = os.path.splitext(attr_name)[0]
 
-                    if not list_name in self.thermal_network.sequences:
-                        self.thermal_network.sequences[list_name] = {}
-                    self.thermal_network.sequences[list_name][attr_name] = self.load_sequence(list_name, attr_name)
+                    if list_name not in self.thermal_network.sequences:
+                        self.thermal_network.sequences[list_name] = Dict()
+
+                    self.thermal_network.sequences[list_name][attr_name] =\
+                        self.load_sequence(list_name, attr_name)
 
             else:
                 raise ImportError(f"Inappropriate filetype of '{name}' for csv import.")
@@ -117,7 +121,6 @@ class CSVNetworkExporter(NetworkExporter):
         file_name = '-'.join([list_name, attr_name]) + '.csv'
 
         sequence.to_csv(os.path.join(self.basedir, 'sequences', file_name))
-
 
     def save(self):
         for list_name, component_table in self.thermal_network.components.items():
@@ -156,9 +159,11 @@ def load_component_attrs(dir_name, available_components):
 
         list_name = os.path.splitext(file_name)[0]
 
-        assert list_name in available_components.list_name.values, "Unknown component {list_name}" \
-                                                                   " in component_attrs."
+        assert list_name in available_components.list_name.values, f"Unknown component {list_name}"\
+                                                                   " not in available components."
 
-        component_attrs[list_name] = pd.read_csv(os.path.join(dir_name, file_name), index_col=0)
+        df = pd.read_csv(os.path.join(dir_name, file_name), index_col=0)
 
-    return component_attrs
+        component_attrs[list_name] = df.T.to_dict()
+
+    return Dict(component_attrs)

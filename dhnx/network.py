@@ -1,5 +1,6 @@
 import os
 
+from addict import Dict
 import pandas as pd
 
 from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
@@ -32,8 +33,8 @@ class ThermalNetwork():
 
         self.available_components = available_components
         self.component_attrs = component_attrs
-        self.components = {key: pd.DataFrame() for key in available_components.list_name}
-        self.sequences = {}
+        self.components = Dict({key: pd.DataFrame() for key in available_components.list_name})
+        self.sequences = Dict()
         self.results = None
         self.graph = None
 
