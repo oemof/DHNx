@@ -9,7 +9,7 @@ def read(fname):
 
 
 setup(
-    name='DHNx',
+    name='dhnx',
     version='0.0.1',
     description='Simulation of district heating and cooling networks',
     author='Jann Launer',
