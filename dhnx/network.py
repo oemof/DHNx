@@ -27,24 +27,18 @@ class ThermalNetwork():
     """
     def __init__(self, dirname=None):
 
+        self.available_components = available_components
+        self.components = {key: pd.DataFrame() for key in available_components.list_name}
+        self.sequences = {}
+        self.results = None
+        self.graph = None
+
         if dirname is not None:
             try:
-                self.available_components = available_components
-                self.components = {key: pd.DataFrame() for key in available_components.index}
-                self.sequences = {}
                 self.from_csv_folder(dirname)
-                self.results = None
-                self.graph = None
 
             except ImportError:
                 print('Failed to import file.')
-
-        else:
-            self.available_components = available_components
-            self.components = {key: pd.DataFrame() for key in available_components.list_name}
-            self.sequences = {}
-            self.results = None
-            self.graph = None
 
     def from_csv_folder(self, dirname):
         importer = CSVNetworkImporter(self, dirname)
