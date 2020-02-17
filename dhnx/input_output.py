@@ -1,7 +1,11 @@
+import logging
 import os
 
 from addict import Dict
 import pandas as pd
+
+
+logger = logging.getLogger()
 
 
 class NetworkImporter():
@@ -54,9 +58,9 @@ class CSVNetworkImporter(NetworkImporter):
             raise KeyError(f"Component '{list_name}' is not "
                            f"part of the available components.")
 
-        # if attr_name not in ['']:
-        #     raise KeyError(f"Attribute '{attr_name}' is not "
-        #                    f"part of the component attributes.")
+        if attr_name not in self.thermal_network.component_attrs:
+            logger.info(f"Attribute '{attr_name}' is not "
+                        f"part of the component attributes.")
 
         file_name = '-'.join([list_name, attr_name]) + '.csv'
         sequence = pd.read_csv(os.path.join(self.basedir, 'sequences', file_name), index_col=0)
