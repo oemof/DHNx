@@ -146,3 +146,19 @@ class GDFNetworkExporter(NetworkExporter):
     """
     def __init__(self):
         pass
+
+
+def load_component_attrs(dir_name, available_components):
+
+    component_attrs = {}
+
+    for file_name in os.listdir(dir_name):
+
+        list_name = os.path.splitext(file_name)[0]
+
+        assert list_name in available_components.list_name.values, "Unknown component {list_name}" \
+                                                                   " in component_attrs."
+
+        component_attrs[list_name] = pd.read_csv(os.path.join(dir_name, file_name), index_col=0)
+
+    return component_attrs

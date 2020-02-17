@@ -2,13 +2,16 @@ import os
 
 import pandas as pd
 
-from .input_output import CSVNetworkImporter, CSVNetworkExporter
+from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
 from .graph import thermal_network_to_nx_graph
 
 
 dir_name = os.path.dirname(__file__)
 
 available_components = pd.read_csv(os.path.join(dir_name, 'components.csv'), index_col=0)
+
+component_attrs = load_component_attrs(os.path.join(dir_name, 'component_attrs'),
+                                       available_components)
 
 
 class ThermalNetwork():
@@ -28,6 +31,7 @@ class ThermalNetwork():
     def __init__(self, dirname=None):
 
         self.available_components = available_components
+        self.component_attrs = component_attrs
         self.components = {key: pd.DataFrame() for key in available_components.list_name}
         self.sequences = {}
         self.results = None
