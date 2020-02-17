@@ -20,16 +20,9 @@ looped_graph_plot = dhnx.plotting.StaticMap(looped_network)
 looped_graph_plot.draw(background_map=False)
 plt.show()
 
-# Define problem
-mass_flow = pd.read_csv('problem/mass_flow.csv', index_col='snapshot')
-temperature_drop = pd.read_csv('problem/temperature_drop.csv', index_col='snapshot')
-
 # Create simulation model
-tree_model = dhnx.simulation.SimulationModel(tree_network)
-tree_model.set_problem(mass_flow, temperature_drop)
-
-# Solve the model
-results = tree_model.solve()
+tree_network.simulate()
+looped_network.simulate()
 
 if not os.path.exists('results'):
     os.mkdir('results')
