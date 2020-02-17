@@ -24,6 +24,8 @@ basedir = os.path.dirname(__file__)
 
 dir_import = os.path.join(basedir, '_files/network_import')
 
+thermal_network = dhnx.network.ThermalNetwork(dir_import)
+
 
 def test_import_export_csv():
     dir_export = os.path.join(tmpdir, 'network_export')
@@ -50,24 +52,33 @@ def test_access_attributes():
 
 
 def test_get_nx_graph():
-    network = dhnx.network.ThermalNetwork(dir_import)
 
-    nx_graph = network.to_nx_graph()
+    nx_graph = thermal_network.to_nx_graph()
 
     assert isinstance(nx_graph, nx.Graph)
 
 
 def test_static_map():
-    thermal_network = dhnx.network.ThermalNetwork(dir_import)
-
     # plot static map
     dhnx.plotting.StaticMap(thermal_network)
 
 
 def test_interactive_map():
-    # initialize a thermal network
-    thermal_network = dhnx.network.ThermalNetwork(dir_import)
-
     # plot interactive map
     interactive_map = dhnx.plotting.InteractiveMap(thermal_network)
     interactive_map.draw()
+
+
+def test_setup_operation_optimization():
+
+    thermal_network.optimize_operation()
+
+
+def test_setup_investment_optimization():
+
+    thermal_network.optimize_investment()
+
+
+def test_setup_simulation():
+
+    thermal_network.simulate()

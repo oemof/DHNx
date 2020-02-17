@@ -11,7 +11,7 @@ def read(fname):
 setup(
     name='dhnx',
     version='0.0.1',
-    description='Simulation of district heating and cooling networks',
+    description='Simulation and optimization of district heating and cooling networks',
     author='Jann Launer',
     author_email='jann.launer@rl-institut.de',
     long_description=read('README.rst'),

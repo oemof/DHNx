@@ -5,7 +5,8 @@ import pandas as pd
 
 from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
 from .graph import thermal_network_to_nx_graph
-
+from .optimization import optimize_operation, optimize_investment
+from .simulation import simulate
 
 dir_name = os.path.dirname(__file__)
 
@@ -35,7 +36,7 @@ class ThermalNetwork():
         self.component_attrs = component_attrs
         self.components = Dict({key: pd.DataFrame() for key in available_components.list_name})
         self.sequences = Dict()
-        self.results = None
+        self.results = Dict()
         self.graph = None
 
         if dirname is not None:
@@ -109,3 +110,12 @@ class ThermalNetwork():
 
     def reproject(self, crs):
         pass
+
+    def optimize_operation(self):
+        self.results.operation = optimize_operation(self)
+
+    def optimize_investment(self):
+        self.results.simulation = optimize_investment(self)
+
+    def simulate(self):
+        self.results.simulation = simulate(self)
