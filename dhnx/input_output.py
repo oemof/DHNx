@@ -99,6 +99,8 @@ class CSVNetworkImporter(NetworkImporter):
             else:
                 raise ImportError(f"Inappropriate filetype of '{name}' for csv import.")
 
+        self.thermal_network.is_consistent()
+
         return self.thermal_network
 
 

@@ -106,7 +106,42 @@ class ThermalNetwork():
         self.components[list_name].drop(id, inplace=True)
 
     def is_consistent(self):
-        pass
+        r"""
+        Checks that
+         * edges connect to existing nodes,
+         * edges do not connect a node with itself,
+         * there are no duplicate edges between two nodes.
+        """
+        nodes = {list_name: self.components[list_name].copy() for list_name in [
+            'consumers',
+            'producers',
+            'forks']
+                 }
+
+        for k, v in nodes.items():
+            v.index = [k + '-' + str(id) for id in v.index]
+
+        nodes = pd.concat(nodes.values())
+
+        node_indices = nodes.index
+        print(node_indices)
+        for id, data in self.components.edges.iterrows():
+
+            if not data['from_node'] in node_indices:
+                raise ValueError(f"Node {data['from_node']} not defined.")
+
+            if not data['to_node'] in node_indices:
+                raise ValueError(f"Node {data['to_node']} not defined.")
+
+            assert data['from_node'] != data['to_node'], \
+                f"Edge {id} connects {data['from_node']} to itself"
+
+        if not self.components.edges.empty:
+            assert self.components.edges.groupby(['from_node','to_node']).size().max() == 1, \
+                (f"There is more than edges that connects"
+                 f"{data['from_node']} to {data['to_node']}")
+
+        return True
 
     def reproject(self, crs):
         pass
