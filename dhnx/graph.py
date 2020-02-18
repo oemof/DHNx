@@ -30,9 +30,16 @@ def thermal_network_to_nx_graph(thermal_network):
         create_using=thermal_network.graph
     )
 
-    nodes = pd.concat([thermal_network.components['producers'],  # TODO: Introduce a 'node' type
-                       thermal_network.components['consumers'],
-                       thermal_network.components['forks']], axis=0)
+    nodes = {list_name: thermal_network.components[list_name].copy() for list_name in [
+        'consumers',
+        'producers',
+        'forks']
+    }
+
+    for k, v in nodes.items():
+        v.index = [k + '-' + str(id) for id in v.index]
+
+    nodes = pd.concat(nodes.values())
 
     node_attrs = {node_id: dict(data) for node_id, data in nodes.iterrows()}
 

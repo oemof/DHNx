@@ -1,7 +1,7 @@
-edge_id,from_node,to_node,lenght_m,diameter_mm,heat_transfer_coefficient_W/mK,roughness_mm
-0,0,1,200,125,0.21,0.4
-1,1,2,100,40,0.21,0.4
-2,1,3,100,40,0.21,0.4
-3,2,3,100,40,0.21,0.4
-4,2,4,100,40,0.21,0.4
-5,3,7,100,40,0.21,0.4
+id,from_node,to_node,lenght_m,diameter_mm,heat_transfer_coefficient_W/mK,roughness_mm
+0,producers-0,forks-0,200,125,0.21,0.4
+1,forks-0,forks-1,100,40,0.21,0.4
+2,forks-0,forks-2,100,40,0.21,0.4
+3,forks-1,forks-2,100,40,0.21,0.4
+4,forks-1,consumers-0,100,40,0.21,0.4
+5,forks-2,consumers-3,100,40,0.21,0.4

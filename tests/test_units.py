@@ -32,6 +32,6 @@ def test_add():
 
 
 def test_remove():
-    thermal_network.remove('Consumer', 4)
+    thermal_network.remove('Consumer', 1)
 
     assert 4 not in thermal_network.components['consumers'].index

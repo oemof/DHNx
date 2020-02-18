@@ -27,9 +27,7 @@ class InteractiveMap():
     An interactive map of a network.ThermalNetwork.
     """
     def __init__(self, thermal_network):
-        self.node_data = pd.concat([thermal_network.components['consumers'],
-                                    thermal_network.components['producers'],
-                                    thermal_network.components['forks']])
+        self.node_data = self.collect_node_data(thermal_network)
         self.edge_data = thermal_network.components['edges']
         self.edge_data['value'] = 1
         self.node_id = self.node_data.index
@@ -37,6 +35,19 @@ class InteractiveMap():
         self.lon = self.node_data['lon']
         self.node_type = self.node_data['node_type']
         self._add_colors()
+
+    @staticmethod
+    def collect_node_data(thermal_network):
+        node_data = {list_name: thermal_network.components[list_name].copy() for list_name in [
+                'consumers',
+                'producers',
+                'forks']
+        }
+
+        for k, v in node_data.items():
+            v.index = [k + '-' + str(id) for id in v.index]
+
+        return pd.concat(node_data.values())
 
     def _add_colors(self):
         color = {'producer': '#ff0000',
