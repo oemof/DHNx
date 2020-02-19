@@ -50,9 +50,6 @@ class CSVNetworkImporter(NetworkImporter):
     r"""
     Imports thermal networks from directory with csv-files.
     """
-    def __init__(self, thermal_network, basedir):
-        super().__init__(thermal_network, basedir)
-
     def load_component_table(self, list_name):
 
         if list_name not in self.thermal_network.available_components.list_name.values:
@@ -71,8 +68,8 @@ class CSVNetworkImporter(NetworkImporter):
                            f"part of the available components.")
 
         if attr_name not in self.thermal_network.component_attrs:
-            logger.info(f"Attribute '{attr_name}' is not "
-                        f"part of the component attributes.")
+            logger.info("Attribute '%s' is not "
+                        "part of the component attributes.", attr_name)
 
         file_name = '-'.join([list_name, attr_name]) + '.csv'
         sequence = pd.read_csv(os.path.join(self.basedir, 'sequences', file_name), index_col=0)
@@ -156,17 +153,17 @@ class CSVNetworkExporter(NetworkExporter):
 class OSMNetworkImporter(NetworkImporter):
     r"""
     Imports thermal networks from OSM data.
+
+    Not yet implemented.
     """
-    def __init__(self):
-        pass
 
 
 class GDFNetworkExporter(NetworkExporter):
     r"""
     Exports thermal networks to geopandas.GeoDataFrame.
+
+    Not yet implemented.
     """
-    def __init__(self):
-        pass
 
 
 def load_component_attrs(dir_name, available_components):

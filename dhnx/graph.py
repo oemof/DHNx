@@ -43,10 +43,12 @@ def thermal_network_to_nx_graph(thermal_network):
         create_using=thermal_network.graph
     )
 
-    nodes = {list_name: thermal_network.components[list_name].copy() for list_name in [
-        'consumers',
-        'producers',
-        'forks']
+    nodes = {
+        list_name: thermal_network.components[list_name].copy() for list_name in [
+            'consumers',
+            'producers',
+            'forks'
+        ]
     }
 
     for k, v in nodes.items():

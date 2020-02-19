@@ -35,6 +35,7 @@ def extend_basic_path(subfolder):
 
 
 def get_all_file_paths(dir):
+    # pylint: disable=unused-variable
     file_paths = []
     for dir_path, dir_names, file_names in os.walk(dir):
         for file_name in file_names:

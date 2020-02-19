@@ -50,10 +50,12 @@ class InteractiveMap():
 
     @staticmethod
     def collect_node_data(thermal_network):
-        node_data = {list_name: thermal_network.components[list_name].copy() for list_name in [
-            'consumers',
-            'producers',
-            'forks']
+        node_data = {
+            list_name: thermal_network.components[list_name].copy() for list_name in [
+                'consumers',
+                'producers',
+                'forks'
+            ]
         }
 
         for k, v in node_data.items():

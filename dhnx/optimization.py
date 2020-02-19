@@ -20,6 +20,7 @@ class OemofOperationOptimizationModel(OperationOptimizationModel):
     """
     def __init__(self, thermal_network):
         super().__init__(thermal_network)
+        self.results = {}
 
     def setup(self):
         pass
@@ -28,7 +29,7 @@ class OemofOperationOptimizationModel(OperationOptimizationModel):
         pass
 
     def get_results(self):
-        pass
+        return self.results
 
 
 class OemofInvestOptimizationModel(InvestOptimizationModel):
@@ -37,6 +38,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     """
     def __init__(self, thermal_network):
         super().__init__(thermal_network)
+        self.results = {}
 
     def setup(self):
         pass
@@ -45,7 +47,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         pass
 
     def get_results(self):
-        pass
+        return self.results
 
 
 def optimize_operation(thermal_network):

@@ -20,6 +20,7 @@ class SimulationModelTespy(SimulationModel):
     """
     def __init__(self, thermal_network):
         super().__init__(thermal_network)
+        self.results = {}
 
     def setup(self):
         pass
@@ -28,7 +29,7 @@ class SimulationModelTespy(SimulationModel):
         pass
 
     def get_results(self):
-        pass
+        return self.results
 
 
 def simulate(thermal_network):
