@@ -10,6 +10,7 @@ matrix:
 # To install packages which are not on pip
 before_install:
   - sudo apt-get install proj-bin
+  - sudo apt-get install libspatialindex-dev
 #addons:
 #  apt:
 #    update: true
