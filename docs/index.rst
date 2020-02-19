@@ -18,6 +18,7 @@ Welcome to oemof.DHNx's documentation!
    :maxdepth: 2
    :caption: Usage
 
+   network
    optimization_models
    simulation_models
    analyze_and_plot

@@ -1,0 +1,4 @@
+attribute,type,unit,default,description,status,requirement
+id,int,n/a,n/a,Unique id,Input,required
+lat,float,n/a,0.,Unique id,Input,optional
+lon,float,n/a,0.,Unique id,Input,optional

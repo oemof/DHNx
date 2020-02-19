@@ -8,8 +8,9 @@ matrix:
 
 
 # To install packages which are not on pip
-#before_install:
-#  - sudo apt-get install ...
+before_install:
+  - sudo apt-get install proj-bin
+  - sudo apt-get install libspatialindex-dev
 #addons:
 #  apt:
 #    update: true
@@ -18,12 +19,14 @@ matrix:
 install:
   - pip install -r tests/test_requirements.txt
   - pip install -e .
+  - pip install pytest-cov
+  - pip install coveralls
 
 # commands to run tests 
 script:
   - flake8
   - pylint */*.py
-  - pytest
+  - pytest --cov=dhnx
 #jobs:
 #  include:
 #    - stage: "Tests"                # naming the Tests stage
@@ -48,3 +51,6 @@ script:
 #  only:
 #  - branch_name1
 #  - branch_name2
+
+after_success:
+  - coveralls

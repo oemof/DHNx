@@ -1,3 +1,5 @@
+|badge_travis| |badge_coverage|
+
 ~~~~
 DHNx
 ~~~~
@@ -69,3 +71,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+.. |badge_coverage| image:: https://coveralls.io/repos/github/oemof-heat/DHNx/badge.svg?branch=dev
+    :target: https://coveralls.io/github/oemof-heat/DHNx?branch=dev
+    :alt: Test coverage
+
+.. |badge_travis| image:: https://api.travis-ci.org/oemof-heat/DHNx.svg?branch=dev
+    :target: https://travis-ci.org/oemof-heat/DHNx
+    :alt: Build status
