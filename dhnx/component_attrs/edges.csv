@@ -4,5 +4,5 @@ from_node,int,n/a,n/a,Unique id,Input,required
 to_node,int,n/a,n/a,Unique id,Input,required
 length,float,m,n/a,Length of the Edge,Input,optional
 diameter,float,mm,n/a,Inner diameter of the pipes,Input,optional
-heat_transfer_coeff,float,W/(m*K),Heat transfer coefficient,Input,optional
-roughness,float,mm,Roughness of pipes,Input,optional
+heat_transfer_coeff,float,W/(m*K),n/a,Heat transfer coefficient,Input,optional
+roughness,float,mm,n/a,Roughness of pipes,Input,optional

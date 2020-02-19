@@ -1,6 +1,7 @@
 import os
 
 from addict import Dict
+import numpy as np
 import pandas as pd
 
 from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
@@ -14,6 +15,19 @@ available_components = pd.read_csv(os.path.join(dir_name, 'components.csv'), ind
 
 component_attrs = load_component_attrs(os.path.join(dir_name, 'component_attrs'),
                                        available_components)
+
+required_attrs = {
+    list_name: [
+        attr for attr, specs in attrs.items() if specs.requirement == 'required'
+    ] for list_name, attrs in component_attrs.items()
+}
+
+default_attrs = {
+    list_name: {
+        attr: specs.default for attr, specs in attrs.items()
+        if not np.isnan(specs.default)
+    } for list_name, attrs in component_attrs.items()
+}
 
 
 class ThermalNetwork():
@@ -74,14 +88,29 @@ class ThermalNetwork():
         kwargs
         """
         assert class_name in available_components.index,\
-            "Component class {} is not within the available components."
+            f"Component class {class_name} is not within the available components" \
+            f" {available_components.index}."
 
         list_name = available_components.loc[class_name].list_name
 
         assert id not in self.components[list_name].index,\
             f"There is already a component with the id {id}."
 
-        for key, value in kwargs.items():
+        # check if required parameters are in kwargs
+        missing_required = list(set(required_attrs[list_name]) - kwargs.keys())
+
+        missing_required.remove('id')
+
+        if bool(missing_required):
+            raise ValueError(f"Required attributes {missing_required} are not given")
+
+        # if not defined in kwargs, set default attributes
+        component_data = default_attrs[list_name].copy()
+
+        component_data.update(kwargs)
+
+        # add to component DataFrame
+        for key, value in component_data.items():
             self.components[list_name].loc[id, key] = value
 
     def remove(self, class_name, id):
@@ -124,7 +153,7 @@ class ThermalNetwork():
         nodes = pd.concat(nodes.values())
 
         node_indices = nodes.index
-        print(node_indices)
+
         for id, data in self.components.edges.iterrows():
 
             if not data['from_node'] in node_indices:
