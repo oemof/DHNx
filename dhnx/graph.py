@@ -1,3 +1,16 @@
+# -*- coding: utf-8
+
+"""
+This module is designed to hold functions to convert ThermalNetworks into
+networkx a graph.
+
+This file is part of project dhnx (). It's copyrighted
+by the contributors recorded in the version control history of the file,
+available from its original location:
+
+SPDX-License-Identifier: MIT
+"""
+
 import pandas as pd
 import networkx as nx
 

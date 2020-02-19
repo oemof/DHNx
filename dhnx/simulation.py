@@ -1,3 +1,16 @@
+# -*- coding: utf-8
+
+"""
+This module is designed to hold implementations of simulation models. The
+implementation uses oemof/tespy.
+
+This file is part of project dhnx (). It's copyrighted
+by the contributors recorded in the version control history of the file,
+available from its original location:
+
+SPDX-License-Identifier: MIT
+"""
+
 import networkx as nx
 import numpy as np
 import pandas as pd

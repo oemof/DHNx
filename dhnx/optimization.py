@@ -1,3 +1,16 @@
+# -*- coding: utf-8
+
+"""
+This module is designed to hold optimization model implementations. The
+implementation makes use of oemof-solph.
+
+This file is part of project dhnx (). It's copyrighted
+by the contributors recorded in the version control history of the file,
+available from its original location:
+
+SPDX-License-Identifier: MIT
+"""
+
 from .model import OperationOptimizationModel, InvestOptimizationModel
 
 
