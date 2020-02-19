@@ -1,0 +1,5 @@
+var_name,var_unit,var_value
+pump_power,,
+heat_feed_in,,
+heat_consumption,,
+heat_losses,,
