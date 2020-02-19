@@ -73,7 +73,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-.. |badge_coverage| image:: https://coveralls.io/repos/github/oemof-heat/DHNx/badge.svg?branch=dev
+.. |badge_coverage| image:: https://coveralls.io/repos/github/oemof-heat/DHNx/badge.svg?branch=dev&service=github
     :target: https://coveralls.io/github/oemof-heat/DHNx?branch=dev
     :alt: Test coverage
 
