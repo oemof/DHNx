@@ -77,6 +77,6 @@ SOFTWARE.
     :target: https://coveralls.io/github/oemof-heat/DHNx?branch=dev
     :alt: Test coverage
 
-.. |badge_travis| image:: https://api.travis-ci.org/oemof-heat/DHNx.svg?branch=dev
-    :target: https://travis-ci.org/oemof-heat/DHNx
+.. |badge_travis| image:: https://api.travis-ci.org/oemof/DHNx.svg?branch=dev
+    :target: https://travis-ci.org/oemof/DHNx
     :alt: Build status
