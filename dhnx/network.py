@@ -157,8 +157,8 @@ class ThermalNetwork():
         nodes = {list_name: self.components[list_name].copy() for list_name in [
             'consumers',
             'producers',
-            'forks']
-                 }
+            'forks'
+        ]}
 
         for k, v in nodes.items():
             v.index = [k + '-' + str(id) for id in v.index]
@@ -179,7 +179,7 @@ class ThermalNetwork():
                 f"Edge {id} connects {data['from_node']} to itself"
 
         if not self.components.edges.empty:
-            assert self.components.edges.groupby(['from_node','to_node']).size().max() == 1, \
+            assert self.components.edges.groupby(['from_node', 'to_node']).size().max() == 1, \
                 (f"There is more than edges that connects"
                  f"{data['from_node']} to {data['to_node']}")
 

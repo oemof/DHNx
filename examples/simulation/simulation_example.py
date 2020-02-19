@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import pandas as pd
 import os
 
 import dhnx
@@ -29,7 +28,7 @@ if not os.path.exists('results'):
 
 # Plot and save results
 print('================================================================')
-for k, v in results.items():
+for k, v in tree_network.results.items():
     print(k)
     print('----------------------------------------------------------------')
     print(v, '\n')
