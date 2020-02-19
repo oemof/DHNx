@@ -83,7 +83,7 @@ class ThermalNetwork():
     def to_csv_folder(self, dirname):
         exporter = CSVNetworkExporter(self, dirname)
 
-        self = exporter.save()
+        exporter.save()
 
     def to_nx_graph(self):
         nx_graph = thermal_network_to_nx_graph(self)
@@ -179,9 +179,15 @@ class ThermalNetwork():
                 f"Edge {id} connects {data['from_node']} to itself"
 
         if not self.components.edges.empty:
-            assert self.components.edges.groupby(['from_node', 'to_node']).size().max() == 1, \
-                (f"There is more than edges that connects"
-                 f"{data['from_node']} to {data['to_node']}")
+
+            duplicate_edges = [
+                name for name, group in self.components.edges.groupby(['from_node', 'to_node'])
+                if len(group) > 1
+            ]
+
+            assert not duplicate_edges, (
+                f"There is more than one edge that connects "
+                f"{[edge[0] + ' to ' + edge[1] for edge in duplicate_edges]}")
 
         return True
 
