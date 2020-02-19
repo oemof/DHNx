@@ -49,6 +49,12 @@ class ThermalNetwork():
 
     Parameters
     ----------
+    availalable_components
+    component_attrs
+    components
+    sequences
+    results
+    graph
 
     Examples
     --------

@@ -23,7 +23,8 @@ def connect_points_to_network(points, nodes, edges):
 
     Parameter
     ---------
-    points :
+    points :  geopandas.GeoDataFrame
+        Points to connect to the network
 
     nodes : geopandas.GeoDataFrame
         Nodes of the network
@@ -33,9 +34,14 @@ def connect_points_to_network(points, nodes, edges):
 
     Returns
     -------
-    points :
-    nodes :
-    edges :
+    points : geopandas.GeoDataFrame
+        Points connected to the network
+
+    nodes : geopandas.GeoDataFrame
+        Nodes of the network
+
+    edges :  geopandas.GeoDataFrame
+        Edges of the network.
     """
     edges_united = edges.unary_union
 

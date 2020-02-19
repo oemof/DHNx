@@ -20,7 +20,7 @@ def thermal_network_to_nx_graph(thermal_network):
 
     Parameters
     ----------
-    thermal_network
+    thermal_network : dhnx.network.ThermalNetwork
 
     Returns
     -------
