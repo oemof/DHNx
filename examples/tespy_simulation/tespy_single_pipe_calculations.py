@@ -10,7 +10,7 @@ import xarray as xr
 from tespy.components import pipe, heat_exchanger_simple
 from tespy.connections import bus
 from tespy.networks import network
-from tespy_facades import (
+from dhnx.tespy_facades import (
     HeatProducer,
     HeatConsumer,
     DistrictHeatingPipe,
