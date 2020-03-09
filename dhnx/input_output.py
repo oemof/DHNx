@@ -61,6 +61,23 @@ class CSVNetworkImporter(NetworkImporter):
 
         return component_table
 
+    def load_invest_options(self, path):
+
+        dict = {}
+
+        for name in os.listdir(path):
+
+            dict_sub = {}
+
+            for sub in os.listdir(os.path.join(path, name)):
+                key = sub.split('.csv')[0]
+                val = pd.read_csv(os.path.join(path, name, sub), index_col=0)
+                dict_sub.update([(key, val)])
+
+            dict.update([(name, dict_sub)])
+
+        return dict
+
     def load_sequence(self, list_name, attr_name):
 
         if list_name not in self.thermal_network.available_components.list_name.values:
@@ -84,6 +101,11 @@ class CSVNetworkImporter(NetworkImporter):
                 list_name = os.path.splitext(name)[0]
 
                 self.thermal_network.components[list_name] = self.load_component_table(list_name)
+
+            elif name.endswith('invest_options'):
+
+                path = os.path.join(self.basedir, name)
+                self.thermal_network.invest_options = self.load_invest_options(path)
 
             elif os.path.isdir(os.path.join(self.basedir, name)):
 
