@@ -1,0 +1,9 @@
+id,from_node,to_node,length[m]
+0,producers-0,forks-0,200
+1,producers-0,forks-1,200
+2,producers-0,forks-2,200
+5,forks-0,forks-1,100
+6,forks-0,forks-2,100
+9,forks-1,forks-2,100
+10,forks-1,consumers-0,100
+13,forks-2,consumers-1,100
