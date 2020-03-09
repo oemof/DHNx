@@ -69,6 +69,7 @@ class ThermalNetwork():
         self.component_attrs = component_attrs
         self.components = Dict({key: pd.DataFrame() for key in available_components.list_name})
         self.sequences = Dict()
+        self.invest_options = Dict()
         self.results = Dict()
         self.graph = None
 
