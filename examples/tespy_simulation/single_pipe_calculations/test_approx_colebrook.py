@@ -3,11 +3,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.optimize import root
 
+from tespy.tools.helpers import lamb
+
 eps = 0.01 * 1e-3
 D = 0.25
 print('Ratio e/d=', eps / D)
 
-lam = {'Re': [], 'l0': [], 'l1': [], 'l2': [], 'l3': [], 'l4': []}
+lam = {'Re': [], 'l0': [], 'l1': [], 'l2': [], 'l3': [], 'l4': [], 'l5': []}
 
 for Re in [10000, 20000, 30000, 70000, 100000]:
     lamb0 = 0.07 * Re ** (-0.13) * D ** (-0.14)
@@ -22,17 +24,20 @@ for Re in [10000, 20000, 30000, 70000, 100000]:
 
     lamb4 = root(f, 0.0002)['x'][0]
 
+    lamb_tespy = lamb(Re, eps, D)
+
     lam['Re'].append(Re)
     lam['l0'].append(lamb0)
     lam['l1'].append(lamb1)
     lam['l2'].append(lamb2)
     lam['l3'].append(lamb3)
     lam['l4'].append(lamb4)
+    lam['l5'].append(lamb_tespy)
 
 ll = pd.DataFrame(lam)
 ll = ll.set_index('Re')
-
+print(ll['l5'])
 fig, ax = plt.subplots(figsize=(6, 6))
-ll[['l1', 'l2', 'l4']].plot(marker='.', ax=ax)
+ll[['l0', 'l1', 'l2', 'l3', 'l4', 'l5']].plot(marker='.', ax=ax)
 ax.set_ylabel('$\lambda$')
 fig.savefig('test_approx_colebrook.pdf')
