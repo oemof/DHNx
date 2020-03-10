@@ -157,7 +157,7 @@ def optimize_investment(thermal_network):
     """
     model = OemofInvestOptimizationModel(thermal_network)
 
-    model.solve(solver='gurobi', solve_kw={'tee': True})
+    model.solve(solver='cbc', solve_kw={'tee': True})
 
     results = model.es.results['main']
 
