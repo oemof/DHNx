@@ -21,7 +21,7 @@ def single_pipe(args):
     Q_cons, DT_drop, DT_prod_in, k, L, D, c, rho, eps, mu = args
     Q_cons *= 1e6  # MW to W
     eta_pump = 0.7
-    pressure_loss_cons = 1e6
+    pressure_loss_cons = 1e5
 
     # hydraulic part
     # mass flow is determined by consumer mass flow
@@ -32,8 +32,8 @@ def single_pipe(args):
     Re = D * v * rho / mu
     lamb = lamb_func(eps, D, Re)
 
-    pressure_loss = lamb * 8 * L * 1 / (rho * np.pi ** 2 * D ** 5) * m ** 2
-    Dp_pump = 2 * pressure_loss + pressure_loss_cons
+    pressure_loss_dis = lamb * 8 * L * 1 / (rho * np.pi ** 2 * D ** 5) * m ** 2
+    Dp_pump = 2 * pressure_loss_dis + pressure_loss_cons
     P_pump = Dp_pump * m * 1 / rho
 
     # heat losses in feedin and return pipe
@@ -46,7 +46,7 @@ def single_pipe(args):
     perc_loss = 100 * Q_loss * 1 / Q_prod
 
     # Change units
-    pressure_loss_bar = 1e-5 * pressure_loss
+    Dp_pump_bar = 1e-5 * Dp_pump
     P_pump_kW = 1e-3 * 1 / eta_pump * P_pump
     Q_loss_MW = 1e-6 * Q_loss
 
@@ -57,7 +57,7 @@ def single_pipe(args):
                 DT_cons_in,
                 DT_prod_r,
                 v,
-                pressure_loss_bar,
+                Dp_pump_bar,
                 P_pump_kW,
                 Q_loss_MW,
                 perc_loss,
@@ -152,7 +152,7 @@ def plot_data():
     fig, axs = plt.subplots(5, 3, figsize=(9, 12))
 
     coords = ['D', 'DT_prod_in', 'k']
-    ylim = [(0, 3), (0, 2), (30, 300), (0.1, 0.5), (0, 30)]
+    ylim = [(0, 3), (0, 5), (0, 300), (0.1, 0.5), (0, 30)]
     colors = [
         sns.color_palette("hls", len(sam_results[coord])).as_hex() for coord in coords
     ]
@@ -161,7 +161,7 @@ def plot_data():
     ]
     titles = [
         'Flow velocity',
-        'Pressure loss',
+        'Pressure loss $\Delta P_{pump}$',
         'Pump power',
         'Heat loss',
         'Relative heat loss',

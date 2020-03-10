@@ -29,7 +29,7 @@ def single_pipe(args):
     Q_cons, DT_drop, DT_prod_in, k, L, D, c, rho, eps, mu = args
     Q_cons *= 1e6  # MW to W
     eta_pump = 0.7
-    pressure_loss_cons = 1e6
+    pressure_loss_cons = 1
 
     nw = network(
         fluids=['water'], T_unit='C', p_unit='bar', h_unit='kJ / kg', m_unit='kg / s'
@@ -39,7 +39,7 @@ def single_pipe(args):
     heat_producer = HeatProducer(
         'heat_producer',
         temp_inlet=DT_prod_in,
-        p_inlet=15,
+        p_inlet=15,  # TODO check
         eta_s=eta_pump
     )
 
@@ -48,7 +48,7 @@ def single_pipe(args):
         'consumer_0',
         Q=-Q_cons,
         temp_return_heat_exchanger=DT_prod_in - 10,
-        pr_heat_exchanger=1,
+        pr_heat_exchanger=(15-pressure_loss_cons)/15,
         pr_valve=1
     )
 
@@ -205,7 +205,7 @@ def plot_data():
     fig, axs = plt.subplots(5, 3, figsize=(9, 12))
 
     coords = ['D', 'DT_prod_in', 'k']
-    ylim = [(0, 3), (0, 2), (30, 300), (0.1, 0.5), (0, 30)]
+    ylim = [(0, 3), (0, 5), (0, 300), (0.1, 0.5), (0, 30)]
     colors = [
         sns.color_palette("hls", len(sam_results[coord])).as_hex() for coord in coords
     ]
