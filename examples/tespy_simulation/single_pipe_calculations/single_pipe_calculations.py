@@ -152,7 +152,7 @@ def plot_data():
     fig, axs = plt.subplots(5, 3, figsize=(9, 12))
 
     coords = ['D', 'DT_prod_in', 'k']
-    ylim = [(0, 3), (0, 5), (0, 300), (0.1, 0.5), (0, 30)]
+    ylim = [(0, 3), (0, 5), (0, 100), (0.1, 0.5), (0, 40)]
     colors = [
         sns.color_palette("hls", len(sam_results[coord])).as_hex() for coord in coords
     ]

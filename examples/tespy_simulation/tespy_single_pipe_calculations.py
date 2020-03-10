@@ -52,6 +52,8 @@ def single_pipe(args):
         pr_valve=1
     )
 
+    kA = np.pi * D * L * k
+
     # piping
     pipe_0 = DistrictHeatingPipe(
         'pipe_0',
@@ -60,7 +62,7 @@ def single_pipe(args):
         length=L,
         diameter=D,
         ks=eps,
-        kA=1000,
+        kA=kA,
         temp_env=0
     )
 
@@ -205,7 +207,7 @@ def plot_data():
     fig, axs = plt.subplots(5, 3, figsize=(9, 12))
 
     coords = ['D', 'DT_prod_in', 'k']
-    ylim = [(0, 3), (0, 5), (0, 300), (0.1, 0.5), (0, 30)]
+    ylim = [(0, 3), (0, 5), (0, 100), (0.1, 0.5), (0, 40)]
     colors = [
         sns.color_palette("hls", len(sam_results[coord])).as_hex() for coord in coords
     ]
