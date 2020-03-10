@@ -71,7 +71,7 @@ class CSVNetworkImporter(NetworkImporter):
 
             for sub in os.listdir(os.path.join(path, name)):
                 key = sub.split('.csv')[0]
-                val = pd.read_csv(os.path.join(path, name, sub), index_col=0)
+                val = pd.read_csv(os.path.join(path, name, sub))
                 dict_sub.update([(key, val)])
 
             dict.update([(name, dict_sub)])
