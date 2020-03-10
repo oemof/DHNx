@@ -59,7 +59,7 @@ def single_pipe(args):
         consumer_0,
         length=L,
         diameter=D,
-        ks=0.0000001,
+        ks=eps,
         kA=1000,
         temp_env=0
     )
