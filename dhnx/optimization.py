@@ -12,6 +12,13 @@ SPDX-License-Identifier: MIT
 """
 
 from .model import OperationOptimizationModel, InvestOptimizationModel
+from dhnx.optimization_modules.dhs_nodes import add_nodes_dhs, add_nodes_houses
+
+import logging
+import pandas as pd
+
+import oemof.solph as solph
+import oemof.outputlib as outputlib
 
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
@@ -41,10 +48,73 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.results = {}
 
     def setup(self):
-        pass
 
-    def solve(self):
-        pass
+        self.nodes = []  # list of all nodes
+        self.buses = {}
+
+        # some data -> need to be moved somewhere else
+        num_ts = 2      # number of timesteps
+        time_res = 1    # time resolution: [1/h] (percentage of hour)
+        # => 0.25 is quarter-hour resolution
+        gd = {'num_ts': num_ts,  # number of timesteps
+              'time_res': time_res,
+              'rate': 0.01,
+              'f_invest': num_ts / (8760 / time_res),
+              # just in case annuity is on
+              # 'f_invest': 1,
+              }
+        date_time_index = pd.date_range('1/1/2018', periods=num_ts, freq='H')
+
+        # logger.define_logging()
+        logging.info('Initialize the energy system')
+
+        self.es = solph.EnergySystem(timeindex=date_time_index)
+
+        logging.info('Create oemof objects')
+
+        # qgis_data : ursprünglich dict mit point and line layer
+        # gd_infra : invest optionen heat pipe
+        # data_houses : dict mit excel/csv (buses, transformer, ...) daten von consumer
+        # data_generation : dict mit excel/csv (buses, transformer, ...) daten von generation/producer
+
+        # add heating infrastructure
+        self.nodes, self.buses = add_nodes_dhs(self, gd, self.nodes, self.buses)
+        logging.info('DHS Nodes appended.')
+
+        # # add houses
+        for typ in ['consumers', 'producers']:
+            self.nodes, self.buses = add_nodes_houses(
+                self, gd, self.nodes, self.buses, typ)
+
+        logging.info('Producers, Consumers Nodes appended.')
+
+        # add nodes and flows to energy system
+        self.es.add(*self.nodes)
+
+        logging.info('Energysystem has been created')
+        print("*********************************************************")
+        print("The following objects have been created:")
+        for n in self.es.nodes:
+            oobj = \
+                str(type(n)).replace("<class 'oemof.solph.", "").replace("'>",
+                                                                         "")
+            print(oobj + ':', n.label)
+        print("*********************************************************")
+
+        return
+
+    def solve(self, solver='cbc', solve_kw=None):
+
+        logging.info('Build the operational model')
+        self.om = solph.Model(self.es)
+
+        logging.info('Solve the optimization problem')
+        self.om.solve(solver=solver, solve_kwargs=solve_kw)
+
+        self.es.results['main'] = outputlib.processing.results(self.om)
+        self.es.results['meta'] = outputlib.processing.meta_results(self.om)
+
+        return
 
     def get_results(self):
         return self.results
@@ -87,8 +157,8 @@ def optimize_investment(thermal_network):
     """
     model = OemofInvestOptimizationModel(thermal_network)
 
-    model.solve()
+    model.solve(solver='gurobi', solve_kw={'tee': True})
 
-    results = model.get_results()
+    results = model.es.results['main']
 
     return results
