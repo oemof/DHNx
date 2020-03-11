@@ -18,7 +18,13 @@ district heating/cooling systems.
 Quickstart
 ==========
 
-Install DHNx by cloning DHNx to your computer and running
+Before installation, make sure that libspatialindex is installed. You can install by running
+
+.. code:: bash
+
+    sudo apt-get install libspatialindex-dev
+
+in a terminal. Next, install DHNx by cloning DHNx to your computer and running
 
 .. code:: bash
 
