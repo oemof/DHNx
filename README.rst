@@ -32,13 +32,13 @@ Check out the
 Documentation
 =============
 
-Build the docs using sphinx-build
+The documentation (work in progress) can be found here
+`<https://dhnx.readthedocs.io/en/latest/>`_.
+To build the docs locally using sphinx-build run the following in a terminal.
 
 .. code:: bash
 
     sphinx-build docs <build-dir>
-
-Online docs will come soon.
 
 Contributing
 ============
