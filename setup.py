@@ -27,6 +27,6 @@ setup(
     ],
     extras_require={
         'cartopy': ['cartopy'],
-        'osmnx' : ['osmnx'],
+        'osmnx': ['osmnx'],
     }
 )
