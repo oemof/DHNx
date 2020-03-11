@@ -2,7 +2,11 @@ import os
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import osmnx as ox
+
+try:
+    import osmnx as ox
+except ImportError:
+    print("Need to install osmnx to run this example")
 
 import dhnx
 
