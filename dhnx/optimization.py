@@ -43,7 +43,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     r"""
     Implementation of an invest optimization model using oemof-solph.
     """
-    def __init__(self, thermal_network):
+    def __init__(self, thermal_network, settings):
+        self.settings = settings
         super().__init__(thermal_network)
         self.results = {}
 
@@ -52,18 +53,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.nodes = []  # list of all nodes
         self.buses = {}
 
-        # some data -> need to be moved somewhere else
-        num_ts = 2      # number of timesteps
-        time_res = 1    # time resolution: [1/h] (percentage of hour)
-        # => 0.25 is quarter-hour resolution
-        gd = {'num_ts': num_ts,  # number of timesteps
-              'time_res': time_res,
-              'rate': 0.01,
-              'f_invest': num_ts / (8760 / time_res),
-              # just in case annuity is on
-              # 'f_invest': 1,
-              }
-        date_time_index = pd.date_range('1/1/2018', periods=num_ts, freq='H')
+        date_time_index = pd.date_range(self.settings['start_date'],
+                                        periods=self.settings['time_res'],
+                                        freq=self.settings['frequence'])
 
         # logger.define_logging()
         logging.info('Initialize the energy system')
@@ -78,13 +70,13 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # data_generation : dict mit excel/csv (buses, transformer, ...) daten von generation/producer
 
         # add heating infrastructure
-        self.nodes, self.buses = add_nodes_dhs(self, gd, self.nodes, self.buses)
+        self.nodes, self.buses = add_nodes_dhs(self, self.settings, self.nodes, self.buses)
         logging.info('DHS Nodes appended.')
 
         # # add houses
         for typ in ['consumers', 'producers']:
             self.nodes, self.buses = add_nodes_houses(
-                self, gd, self.nodes, self.buses, typ)
+                self, self.settings, self.nodes, self.buses, typ)
 
         logging.info('Producers, Consumers Nodes appended.')
 
@@ -109,7 +101,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.om = solph.Model(self.es)
 
         logging.info('Solve the optimization problem')
-        self.om.solve(solver=solver, solve_kwargs=solve_kw)
+        self.om.solve(solver=self.settings['solver'],
+                      **self.settings['solve_kw'])
 
         self.es.results['main'] = outputlib.processing.results(self.om)
         self.es.results['meta'] = outputlib.processing.meta_results(self.om)
@@ -142,7 +135,7 @@ def optimize_operation(thermal_network):
     return results
 
 
-def optimize_investment(thermal_network):
+def optimize_investment(thermal_network, settings):
     r"""
     Takes a thermal network and returns the result of
     the investment optimization.
@@ -155,9 +148,9 @@ def optimize_investment(thermal_network):
     -------
     results : dict
     """
-    model = OemofInvestOptimizationModel(thermal_network)
+    model = OemofInvestOptimizationModel(thermal_network, settings)
 
-    model.solve(solver='cbc', solve_kw={'tee': True})
+    model.solve(solver=settings['solver'], solve_kw=settings['solve_kw'])
 
     results = model.es.results['main']
 

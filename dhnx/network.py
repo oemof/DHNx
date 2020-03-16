@@ -204,8 +204,8 @@ class ThermalNetwork():
     def optimize_operation(self):
         self.results.operation = optimize_operation(self)
 
-    def optimize_investment(self):
-        self.results.optimization = optimize_investment(self)
+    def optimize_investment(self, settings):
+        self.results.optimization = optimize_investment(self, settings)
 
     def simulate(self):
         self.results.simulation = simulate(self)
