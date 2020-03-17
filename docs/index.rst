@@ -16,7 +16,7 @@ Welcome to oemof.DHNx's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Usage
+   :caption: User's guide
 
    network
    optimization_models
