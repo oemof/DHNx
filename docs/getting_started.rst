@@ -34,7 +34,8 @@ Now you can install it your local version of oemof.DHNx using pip:
 Examples
 --------
 
-We provide examples in ./examples.
+Examples are provided `here <https://github.com/oemof/DHNx/blob/dev/examples>`_. Also,
+have a look at the :ref:`examples_label` section for some more explanation.
 
 
 Contributing to oemof.DHNx
