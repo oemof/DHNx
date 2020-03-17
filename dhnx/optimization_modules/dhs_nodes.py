@@ -78,7 +78,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
             d_labels['l_4'] = start + '-' + end
 
             nodes, busd = ac.add_heatpipes(
-                opti_network.network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
                 nodes, busd)
 
         # connection energy generation site
@@ -92,7 +92,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
             d_labels['l_4'] = start + '-' + end
 
             nodes, busd = ac.add_heatpipes(
-                opti_network.network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
                 nodes, busd)
 
         # connection of knots with 2 pipes in each direction since flow
@@ -107,7 +107,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
             d_labels['l_4'] = start + '-' + end
 
             nodes, busd = ac.add_heatpipes(
-                opti_network.network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
                 nodes, busd)
 
             start = q['to_node']
@@ -118,7 +118,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
             d_labels['l_4'] = start + '-' + end
 
             nodes, busd = ac.add_heatpipes(
-                opti_network.network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
                 nodes, busd)
 
     return nodes, busd
@@ -126,7 +126,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 
 def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
 
-    gen_data = opti_network.network.invest_options[label_1]  # genic data for all houses
+    gen_data = opti_network.invest_options[label_1]  # genic data for all houses
     series = opti_network.network.sequences[label_1]        # sequences
     d_labels = {}
 

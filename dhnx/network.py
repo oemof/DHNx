@@ -69,7 +69,6 @@ class ThermalNetwork():
         self.component_attrs = component_attrs
         self.components = Dict({key: pd.DataFrame() for key in available_components.list_name})
         self.sequences = Dict()
-        self.invest_options = Dict()
         self.results = Dict()
         self.graph = None
 
@@ -204,8 +203,8 @@ class ThermalNetwork():
     def optimize_operation(self):
         self.results.operation = optimize_operation(self)
 
-    def optimize_investment(self, settings):
-        self.results.optimization = optimize_investment(self, settings)
+    def optimize_investment(self, settings, invest_options):
+        self.results.optimization = optimize_investment(self, settings, invest_options)
 
     def simulate(self):
         self.results.simulation = simulate(self)

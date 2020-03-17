@@ -4,7 +4,7 @@ import dhnx
 
 # Initialize thermal network
 network = dhnx.network.ThermalNetwork()
-network = network.from_csv_folder('investment_input_2')
+network = network.from_csv_folder('investment_input_2/network')
 
 # general optimisation settings
 num_ts = 2      # number of timesteps
@@ -20,7 +20,9 @@ set = {'num_ts': num_ts,            # number of timesteps
        'solve_kw': {'tee': True},    # solver kwargs
        }
 
-network.optimize_investment(settings=set)
+invest_opt = dhnx.input_output.load_invest_options('investment_input_2/invest_options')
+
+network.optimize_investment(settings=set, invest_options=invest_opt)
 
 # Draw network
 static_map = dhnx.plotting.StaticMap(network)

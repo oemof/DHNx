@@ -43,8 +43,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     r"""
     Implementation of an invest optimization model using oemof-solph.
     """
-    def __init__(self, thermal_network, settings):
+    def __init__(self, thermal_network, settings, investment_options):
         self.settings = settings
+        self.invest_options = investment_options
         super().__init__(thermal_network)
         self.results = {}
 
@@ -135,7 +136,7 @@ def optimize_operation(thermal_network):
     return results
 
 
-def optimize_investment(thermal_network, settings):
+def optimize_investment(thermal_network, settings, invest_options):
     r"""
     Takes a thermal network and returns the result of
     the investment optimization.
@@ -148,7 +149,7 @@ def optimize_investment(thermal_network, settings):
     -------
     results : dict
     """
-    model = OemofInvestOptimizationModel(thermal_network, settings)
+    model = OemofInvestOptimizationModel(thermal_network, settings, invest_options)
 
     model.solve(solver=settings['solver'], solve_kw=settings['solve_kw'])
 
