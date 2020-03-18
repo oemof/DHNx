@@ -1,5 +1,7 @@
 *.pyc
 *.png
+*.pdf
+*.nc
 *.egg-info
 *.html
 .idea
