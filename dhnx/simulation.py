@@ -46,15 +46,6 @@ class SimulationModelTespy(SimulationModel):
         pump_efficiency = 0.8
         pr_producer = 0.99
 
-        # # consumer
-        heat_demand = 50000
-        temp_return_heat_exchanger = 60
-        pr_heat_exchanger = 0.99
-        pr_valve = 1
-
-        # # piping
-        temp_env = 0
-
         # producer
         heat_producer = HeatProducer(
             'heat_producer',
@@ -62,6 +53,12 @@ class SimulationModelTespy(SimulationModel):
             p_inlet=p_inlet,
             eta_s=pump_efficiency
         )
+
+        # # consumer data
+        heat_demand = 50000
+        temp_return_heat_exchanger = 60
+        pr_heat_exchanger = 0.99
+        pr_valve = 1
 
         # consumer
         consumer_0 = HeatConsumer(
@@ -73,18 +70,22 @@ class SimulationModelTespy(SimulationModel):
         )
 
         # piping
-        pipe_0 = DistrictHeatingPipe(
-            'pipe_0',
-            heat_producer,
-            consumer_0,
-            length=50,
-            diameter=0.15,
-            ks=7e-5,
-            kA=10,
-            temp_env=temp_env
-        )
+        pipes = []
+        for edge, data in self.thermal_network.components.edges.iterrows():
+            pipes.append(
+                DistrictHeatingPipe(
+                    'label',
+                    heat_producer,  # TODO
+                    consumer_0,  # TODO
+                    length=data['length'],
+                    diameter=data['diameter'],
+                    ks=7e-5,  # TODO
+                    kA=10,
+                    temp_env=data['temp_env']
+                )
+            )
 
-        tespy_components = [heat_producer, consumer_0, pipe_0]
+        tespy_components = [heat_producer, consumer_0, *pipes]
 
         return tespy_components
 
