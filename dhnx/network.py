@@ -88,9 +88,12 @@ class ThermalNetwork():
         for component, data in self.components.items():
             count = len(data)
             if count > 0:
-                summary += '  ' + str(count) + ' ' + component + '\n'
+                summary += ' * ' + str(count) + ' ' + component + '\n'
 
-        return f"dhnx.network.ThermalNetwork object containing:\n{summary}"
+        if summary == '':
+            return f"empty dhnx.network.ThermalNetwork object containing no components"
+
+        return f"dhnx.network.ThermalNetwork object with these components\n{summary}"
 
     def from_csv_folder(self, dirname):
         importer = CSVNetworkImporter(self, dirname)
