@@ -1,6 +1,6 @@
 import dhnx
 
-import_dir = 'simulation_input'
+import_dir = 'single_pipe_simulation_input'
 
 nw = dhnx.network.ThermalNetwork(import_dir)
 
