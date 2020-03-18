@@ -79,6 +79,19 @@ class ThermalNetwork():
             except ImportError:
                 print('Failed to import file.')
 
+    def __repr__(self):
+        r"""
+        This method defines what is returned if you perform print() or str()
+        on a ThermalNetwork.
+        """
+        summary = ''
+        for component, data in self.components.items():
+            count = len(data)
+            if count > 0:
+                summary += '  ' + str(count) + ' ' + component + '\n'
+
+        return f"dhnx.network.ThermalNetwork object containing:\n{summary}"
+
     def from_csv_folder(self, dirname):
         importer = CSVNetworkImporter(self, dirname)
 
