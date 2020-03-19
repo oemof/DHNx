@@ -19,6 +19,14 @@ Create a thermal network
 
     thermal_network.add('Edge', id=0, from_node='producer-0', to_node='consumer-0')
 
+    print(thermal_network)
+
+    # returns
+    # dhnx.network.ThermalNetwork object with these components
+    #  * 1 producers
+    #  * 1 consumers
+    #  * 1 edges
+
     print(thermal_network.components.edges)
 
     # returns
