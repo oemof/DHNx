@@ -224,9 +224,6 @@ def create_object_connections_2(points_objects, dist_lines):
     # iterate over all houses
     for index, row in points_objects.iterrows():
 
-        if row['id'] == '4.13':
-            print('4.13')
-
         house_geo = row['geometry']
 
         # the same with the original lines
