@@ -34,14 +34,14 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     d_labels['l_3'] = 'bus'
 
     # add heat buses for all nodes
-    for n, o in opti_network.network.components['consumers'].iterrows():
-        d_labels['l_4'] = 'consumers-' + str(n)
-        d_labels['l_1'] = 'consumers'
-        l_bus = oh.Label(d_labels['l_1'], d_labels['l_2'], d_labels['l_3'],
-                         d_labels['l_4'])
-        bus = solph.Bus(label=l_bus)
-        nodes.append(bus)
-        busd[l_bus] = bus
+    # for n, o in opti_network.network.components['consumers'].iterrows():
+    #     d_labels['l_4'] = 'consumers-' + str(n)
+    #     d_labels['l_1'] = 'consumers'
+    #     l_bus = oh.Label(d_labels['l_1'], d_labels['l_2'], d_labels['l_3'],
+    #                      d_labels['l_4'])
+    #     bus = solph.Bus(label=l_bus)
+    #     nodes.append(bus)
+    #     busd[l_bus] = bus
 
     for n, o in opti_network.network.components['forks'].iterrows():
         d_labels['l_4'] = 'forks-' + str(n)
@@ -52,14 +52,14 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
         nodes.append(bus)
         busd[l_bus] = bus
 
-    for n, o in opti_network.network.components['producers'].iterrows():
-        d_labels['l_4'] = 'producers-' + str(n)
-        d_labels['l_1'] = 'producers'
-        l_bus = oh.Label(d_labels['l_1'], d_labels['l_2'], d_labels['l_3'],
-                         d_labels['l_4'])
-        bus = solph.Bus(label=l_bus)
-        nodes.append(bus)
-        busd[l_bus] = bus
+    # for n, o in opti_network.network.components['producers'].iterrows():
+    #     d_labels['l_4'] = 'producers-' + str(n)
+    #     d_labels['l_1'] = 'producers'
+    #     l_bus = oh.Label(d_labels['l_1'], d_labels['l_2'], d_labels['l_3'],
+    #                      d_labels['l_4'])
+    #     bus = solph.Bus(label=l_bus)
+    #     nodes.append(bus)
+    #     busd[l_bus] = bus
 
     # add heatpipes for all lines
     for p, q in opti_network.network.components['edges'].iterrows():
@@ -82,10 +82,10 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 nodes, busd)
 
         # connection energy generation site
-        elif q['from_node'].split('-')[0] == "producers":
+        elif q['to_node'].split('-')[0] == "producers":
 
-            start = q['from_node']
-            end = q['to_node']
+            start = q['to_node']
+            end = q['from_node']
             b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
             b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
 

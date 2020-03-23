@@ -55,7 +55,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.buses = {}
 
         date_time_index = pd.date_range(self.settings['start_date'],
-                                        periods=self.settings['time_res'],
+                                        periods=self.settings['num_ts'],
                                         freq=self.settings['frequence'])
 
         # logger.define_logging()
@@ -70,16 +70,17 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # data_houses : dict mit excel/csv (buses, transformer, ...) daten von consumer
         # data_generation : dict mit excel/csv (buses, transformer, ...) daten von generation/producer
 
-        # add heating infrastructure
-        self.nodes, self.buses = add_nodes_dhs(self, self.settings, self.nodes, self.buses)
-        logging.info('DHS Nodes appended.')
-
-        # # add houses
+        # add houses
         for typ in ['consumers', 'producers']:
             self.nodes, self.buses = add_nodes_houses(
                 self, self.settings, self.nodes, self.buses, typ)
 
         logging.info('Producers, Consumers Nodes appended.')
+
+        # add heating infrastructure
+        self.nodes, self.buses = add_nodes_dhs(self, self.settings, self.nodes,
+                                               self.buses)
+        logging.info('DHS Nodes appended.')
 
         # add nodes and flows to energy system
         self.es.add(*self.nodes)
@@ -103,10 +104,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         logging.info('Solve the optimization problem')
         self.om.solve(solver=self.settings['solver'],
-                      **self.settings['solve_kw'])
+                      solve_kwargs=self.settings['solve_kw'])
 
         self.es.results['main'] = outputlib.processing.results(self.om)
-        self.es.results['meta'] = outputlib.processing.meta_results(self.om)
+        # self.es.results['meta'] = outputlib.processing.meta_results(self.om)
 
         return
 
