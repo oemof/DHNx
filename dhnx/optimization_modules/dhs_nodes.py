@@ -132,30 +132,35 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
 
     for r, c in opti_network.network.components[label_1].iterrows():
 
-        d_labels['l_1'] = label_1
-        d_labels['l_4'] = label_1 + '-' + str(r)
+        if 'active' not in list(c.index):
+            c['active'] = 1
 
-        # add buses first, because other classes need to have them already
-        nodes, busd = ac.add_buses(gen_data['bus'],
-                                   d_labels, nodes, busd)
+        if c['active']:
 
-        for key, item in gen_data.items():
+            d_labels['l_1'] = label_1
+            d_labels['l_4'] = label_1 + '-' + str(r)
 
-            # if key == 'bus':
-            #     nodes, busd = ac.add_buses(item, d_labels, nodes, busd)
+            # add buses first, because other classes need to have them already
+            nodes, busd = ac.add_buses(gen_data['bus'],
+                                       d_labels, nodes, busd)
 
-            if key == 'source':
-                nodes, busd = ac.add_sources(item, d_labels, gd, nodes, busd)
+            for key, item in gen_data.items():
 
-            if key == 'demand':
-                nodes, busd = ac.add_demand(item, d_labels, gd, series, nodes,
-                                            busd)
+                # if key == 'bus':
+                #     nodes, busd = ac.add_buses(item, d_labels, nodes, busd)
 
-            if key == 'transformer':
-                nodes, busd = ac.add_transformer(item, d_labels, gd, nodes,
-                                                 busd)
+                if key == 'source':
+                    nodes, busd = ac.add_sources(item, d_labels, gd, nodes, busd)
 
-            if key == 'storages':
-                nodes, busd = ac.add_storage(item, d_labels, gd, nodes, busd)
+                if key == 'demand':
+                    nodes, busd = ac.add_demand(item, d_labels, gd, series, nodes,
+                                                busd)
+
+                if key == 'transformer':
+                    nodes, busd = ac.add_transformer(item, d_labels, gd, nodes,
+                                                     busd)
+
+                if key == 'storages':
+                    nodes, busd = ac.add_storage(item, d_labels, gd, nodes, busd)
 
     return nodes, busd
