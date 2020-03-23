@@ -240,7 +240,7 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
 
             if t['annuity']:
                 epc_p = float(economics.annuity(
-                    capex=t['capex_pipes'] * q['length'],
+                    capex=t['capex_pipes'] * q['length[m]'],
                     n=t['n_pipes'], wacc=gd['rate'])) * gd['f_invest']
             else:
                 epc_p = t['capex_pipes']
@@ -250,10 +250,10 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
 
                 if t['annuity']:
                     epc_fix = float(economics.annuity(
-                        capex=t['fix_costs'] * q['length'],
+                        capex=t['fix_costs'] * q['length[m]'],
                         n=t['n_pipes'], wacc=gd['rate']) * gd['f_invest'])
                 else:
-                    epc_fix = t['fix_costs'] * q['length']
+                    epc_fix = t['fix_costs'] * q['length[m]']
 
                 nodes.append(oh.HeatPipeline(
                     label=oh.Label(labels['l_1'], labels['l_2'],
@@ -268,7 +268,8 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
                             offset=epc_fix,
                         ))},
                     heat_loss_factor=t['l_factor'],
-                    length=q['length']))
+                    heat_loss_factor_fix=t['l_factor_fix'],
+                    length=q['length[m]']))
 
             else:
 
