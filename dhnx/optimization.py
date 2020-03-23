@@ -111,8 +111,77 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         return
 
-    def get_results(self):
-        return self.results
+    def get_results_edges(self):
+
+        def get_invest_val(lab):
+
+            res = self.es.results['main']
+
+            try:
+                scalar = outputlib.views.node(res, lab)['scalars'][0]
+            except:
+                scalar = 0
+
+            return scalar
+
+        def get_hp_results():
+            """The edge specific investment results of the heatpipelines are
+            put
+            """
+
+            label_base = 'infrastructure_' + 'heat_' + hp + '_'
+
+            # maybe slow approach with lambda function
+            df[hp + '.' + 'dir-1'] = df['from_node'] + '-' + df['to_node']
+            df[hp + '.' + 'size-1'] = df[hp + '.' + 'dir-1'].apply(
+                lambda x: get_invest_val(label_base + x))
+            df[hp + '.' + 'dir-2'] = df['to_node'] + '-' + df['from_node']
+            df[hp + '.' + 'size-2'] = df[hp + '.' + 'dir-2'].apply(
+                lambda x: get_invest_val(label_base + x))
+
+            df[hp + '.' + 'size'] = \
+                df[[hp + '.' + 'size-1', hp + '.' + 'size-2']].max(axis=1)
+
+            return df
+
+        def check_multi_dir_invest():
+
+            df = self.network.components['edges']
+
+            df_double_invest = \
+                df[(df[hp + '.' + 'size-1'] > 0.001) & (df[hp + '.' + 'size-2'] > 0.001)]
+
+            print('***')
+            if df_double_invest.empty:
+                print('There is NO investment in both directions at the'
+                      'following edges for "', hp, '":')
+            else:
+                print('There is an investment in both directions at the'
+                      'following edges for "', hp, '":')
+                print('----------')
+                print(' id | from_node | to_node | size-1 | size-2 ')
+                print('============================================')
+                for r, c in df_double_invest.iterrows():
+                    print(r, ' | ', c['from_node'], ' | ', c['to_node'],
+                          ' | ', c[hp + '.' + 'size-1'], ' | ', c[hp + '.' + 'size-2'], ' | ')
+                print('----------')
+
+            return
+
+        # use edges dataframe as base and add results as new columns to it
+        df = self.network.components['edges']
+
+        # putting the results of the investments in heatpipes to the edges:
+        df_hp = self.invest_options['network']['pipes']
+
+        # list of active heat pipes
+        active_hp = list(df_hp[df_hp['active'] == 1]['label_3'].values)
+
+        for hp in active_hp:
+            get_hp_results()
+            check_multi_dir_invest()
+
+        return df
 
 
 def optimize_operation(thermal_network):
@@ -150,10 +219,14 @@ def optimize_investment(thermal_network, settings, invest_options):
     -------
     results : dict
     """
-    model = OemofInvestOptimizationModel(thermal_network, settings, invest_options)
+    model = OemofInvestOptimizationModel(thermal_network, settings,
+                                         invest_options)
 
     model.solve(solver=settings['solver'], solve_kw=settings['solve_kw'])
 
-    results = model.es.results['main']
+    edges_results = model.get_results_edges()
+
+    results = {'oemof': model.es.results['main'],
+               'components': {'edges': edges_results}}
 
     return results
