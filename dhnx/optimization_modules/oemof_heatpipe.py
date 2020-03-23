@@ -69,6 +69,7 @@ class HeatPipeline(Transformer):
 
         self.length = kwargs.get('length')
         self.heat_loss_factor = sequence(kwargs.get('heat_loss_factor'))
+        self.heat_loss_factor_fix = sequence(kwargs.get('heat_loss_factor_fix'))
 
         self._invest_group = False
 
@@ -265,12 +266,16 @@ class HeatPipelineInvestBlock(SimpleBlock):
 
         # Defining Sets
         self.INVESTHEATPIPES = Set(initialize=[n for n in group])
+        self.CONVEX_INVESTHEATPIPES = Set(initialize=[
+            n for n in group if n.outputs[list(n.outputs.keys())[0]].investment.nonconvex is False])
+        self.NONCONVEX_INVESTHEATPIPES = Set(initialize=[
+            n for n in group if n.outputs[list(n.outputs.keys())[0]].investment.nonconvex is True])
 
         # Defining Variables
         self.heat_loss = Var(self.INVESTHEATPIPES, m.TIMESTEPS,
                              within=NonNegativeReals)
 
-        def _heat_loss_rule(block, n, t):
+        def _heat_loss_rule_convex(block, n, t):
             """Rule definition for constraint to connect the installed capacity
             and the heat loss
             """
@@ -279,8 +284,22 @@ class HeatPipelineInvestBlock(SimpleBlock):
             expr += n.heat_loss_factor[t] * n.length * m.InvestmentFlow.invest[
                 n, list(n.outputs.keys())[0]]
             return expr == 0
-        self.heat_loss_equation = Constraint(self.INVESTHEATPIPES, m.TIMESTEPS,
-                                             rule=_heat_loss_rule)
+        self.heat_loss_equation_convex = Constraint(self.CONVEX_INVESTHEATPIPES, m.TIMESTEPS,
+                                             rule=_heat_loss_rule_convex)
+
+        def _heat_loss_rule_nonconvex(block, n, t):
+            """Rule definition for constraint to connect the installed capacity
+            and the heat loss
+            """
+            expr = 0
+            expr += - block.heat_loss[n, t]
+            expr += n.heat_loss_factor[t] * n.length * m.InvestmentFlow.invest[
+                n, list(n.outputs.keys())[0]]
+            expr += n.heat_loss_factor_fix[t] * n.length * m.InvestmentFlow.invest_status[
+                n, list(n.outputs.keys())[0]]
+            return expr == 0
+        self.heat_loss_equation_nonconvex = Constraint(self.NONCONVEX_INVESTHEATPIPES, m.TIMESTEPS,
+                                             rule=_heat_loss_rule_nonconvex)
 
         def _relation_rule(block, n, t):
             """Link input and output flow and subtract heat loss."""
