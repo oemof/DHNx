@@ -132,17 +132,18 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
 
     for r, c in opti_network.network.components[label_1].iterrows():
 
+        # heat bus is always necessary
+        d_labels['l_1'] = label_1
+        d_labels['l_4'] = label_1 + '-' + str(r)
+
+        # add buses first, because other classes need to have them already
+        nodes, busd = ac.add_buses(gen_data['bus'],
+                                   d_labels, nodes, busd)
+
         if 'active' not in list(c.index):
             c['active'] = 1
 
         if c['active']:
-
-            d_labels['l_1'] = label_1
-            d_labels['l_4'] = label_1 + '-' + str(r)
-
-            # add buses first, because other classes need to have them already
-            nodes, busd = ac.add_buses(gen_data['bus'],
-                                       d_labels, nodes, busd)
 
             for key, item in gen_data.items():
 
