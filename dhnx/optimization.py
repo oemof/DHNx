@@ -49,7 +49,42 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         super().__init__(thermal_network)
         self.results = {}
 
+    def check_input(self):
+
+        for p, q in self.network.components['edges'].iterrows():
+
+            if (q['from_node'].split('-')[0] == "consumers") and (
+                    q['to_node'].split('-')[0] == "consumers"):
+
+                raise ValueError(
+                    ""
+                    "Edge id {} goes from consumer to consumer. This is not "
+                    "allowed!".format(p))
+
+            if (q['from_node'].split('-')[0] == "producers") and (
+                    q['to_node'].split('-')[0] == "producers"):
+
+                raise ValueError(
+                    ""
+                    "Edge id {} goes from producers to producers. "
+                    "This is not allowed!".format(p))
+
+            if ((q['from_node'].split('-')[0] == "producers") and (
+                    q['to_node'].split('-')[0] == "consumers")) or ((
+                    q['from_node'].split('-')[0] == "consumers") and (
+                    q['to_node'].split('-')[0] == "producers")):
+
+                raise ValueError(
+                    ""
+                    "Edge id {} goes from producers directly "
+                    "to consumers, or vice versa. This is not allowed!"
+                    "".format(p))
+
+        return
+
     def setup(self):
+
+        self.check_input()
 
         self.nodes = []  # list of all nodes
         self.buses = {}
@@ -117,9 +152,18 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             res = self.es.results['main']
 
+            outflow = [x for x in res.keys()
+                       if x[1] is not None
+                       if lab == x[0].label.__str__()]
+
+            if len(outflow) > 1:
+                print('Multiple IDs!')
+
             try:
-                scalar = outputlib.views.node(res, lab)['scalars'][0]
+                scalar = res[outflow[0]]['scalars']['invest']
             except:
+                # this is in case there is no bi-directional heatpipe, e.g. at
+                # forks-consumers, producers-forks
                 scalar = 0
 
             return scalar
@@ -154,7 +198,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             print('***')
             if df_double_invest.empty:
                 print('There is NO investment in both directions at the'
-                      'following edges for "', hp, '":')
+                      'following edges for "', hp, '"')
             else:
                 print('There is an investment in both directions at the'
                       'following edges for "', hp, '":')
