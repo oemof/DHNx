@@ -28,3 +28,21 @@ network.optimize_investment(settings=set, invest_options=invest_opt)
 static_map = dhnx.plotting.StaticMap(network)
 static_map.draw(background_map=False)
 plt.show()
+
+# get results
+results_edges = network.results.optimization['components']['edges']
+print('*Results*')
+print(results_edges)
+
+col_size = [x for x in list(results_edges.columns) if '.size' in x]
+col_size = [x for x in col_size if x.split('.')[1] == 'size']
+
+ind_invest_not_zero = results_edges[ results_edges[col_size[0]] > 0.001 ].index
+
+network_result = network
+network_result.components['edges'] = results_edges.loc[ind_invest_not_zero]
+
+# Draw investment results
+static_map = dhnx.plotting.StaticMap(network_result)
+static_map.draw(background_map=False)
+plt.show()
