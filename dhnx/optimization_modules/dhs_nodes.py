@@ -81,11 +81,38 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
                 nodes, busd)
 
+        elif q['from_node'].split('-')[0] == "consumers":
+
+            start = q['to_node']
+            end = q['from_node']
+            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
+            b_out = busd[('consumers', d_labels['l_2'], 'bus', end)]
+
+            d_labels['l_4'] = start + '-' + end
+
+            nodes, busd = ac.add_heatpipes(
+                opti_network.invest_options['network']['pipes'], d_labels, gd,
+                q, b_in, b_out,
+                nodes, busd)
+
         # connection energy generation site
         elif q['to_node'].split('-')[0] == "producers":
 
             start = q['to_node']
             end = q['from_node']
+            b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
+            b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+
+            d_labels['l_4'] = start + '-' + end
+
+            nodes, busd = ac.add_heatpipes(
+                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                nodes, busd)
+
+        elif q['from_node'].split('-')[0] == "producers":
+
+            start = q['from_node']
+            end = q['to_node']
             b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
             b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
 
