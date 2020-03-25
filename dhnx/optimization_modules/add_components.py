@@ -99,7 +99,8 @@ def add_demand(it, labels, gd, series, nodes, busd):
             # set static inflow values
             inflow_args = {'nominal_value': de['scalingfactor'],
                            'fixed': de['fixed'],
-                           'actual_value': series['heat_flow'][labels['l_4'].split('-')[1]].values}
+                           'actual_value': series['heat_flow'][
+                               int(labels['l_4'].split('-')[1])].values}
 
             # create
             nodes.append(
