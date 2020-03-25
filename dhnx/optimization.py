@@ -226,6 +226,15 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             self.network.sequences['consumers']['heat_flow'] = \
                 seq_T.T * self.settings['global_SF']
 
+
+        if self.settings['num_ts'] > \
+                len(self.network.sequences['consumers']['heat_flow'].index):
+
+            raise ValueError(
+                'The length of the heat demand timeseries is not sufficient '
+                'for the given number of {} timesteps.'.format(
+                    self.settings['num_ts']))
+
         # precalculate house connections if wanted
         # precalculates takes always the 'P_heat_max' of each house for
         # dimesioning, without simultaneity factor. The simultaneitgy factor
