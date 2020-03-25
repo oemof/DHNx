@@ -65,8 +65,8 @@ def create_nodes(lines):
     nodes = nodes.reset_index(drop=True)
     nodes['id'] = nodes.index
     nodes['id_full'] = 'forks-' + nodes['id'].apply(str)
-    nodes['lat'] = nodes['geometry'].apply(lambda x: x.x)
-    nodes['lon'] = nodes['geometry'].apply(lambda x: x.y)
+    nodes['lat'] = nodes['geometry'].apply(lambda x: x.y)
+    nodes['lon'] = nodes['geometry'].apply(lambda x: x.x)
     nodes.set_index('id', drop=True, inplace=True)
 
     # print the number of deleted points
