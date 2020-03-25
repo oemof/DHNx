@@ -11,6 +11,7 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
+import os
 from .model import OperationOptimizationModel, InvestOptimizationModel
 from dhnx.optimization_modules.dhs_nodes import add_nodes_dhs, add_nodes_houses
 
@@ -19,7 +20,7 @@ import pandas as pd
 
 import oemof.solph as solph
 import oemof.outputlib as outputlib
-
+from oemof.tools import helpers
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
     r"""
@@ -50,7 +51,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.results = {}
 
     def check_input(self):
+        """This functions checks, if all there are any not-allowed edges. For
+        the oemof optimization model, consumer-consumer, producer-producer, and
+        diret producer-consumer connections are not allowed."""
 
+        # check edges
         for p, q in self.network.components['edges'].iterrows():
 
             if (q['from_node'].split('-')[0] == "consumers") and (
@@ -80,11 +85,62 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     "to consumers, or vice versa. This is not allowed!"
                     "".format(p))
 
+        # check sequences column index datatype
+        # the columns must be integer
+        if self.network.sequences['consumers']['heat_flow'].columns.dtype != 'int64':
+            self.network.sequences['consumers']['heat_flow'].columns = \
+                self.network.sequences['consumers']['heat_flow'].columns.\
+                    astype('int64')
+
         return
 
-    def setup(self):
+    def precalc_consumers_connections(self):
+        """This method pre calculates the house connections and adds the
+        results to the edges as further input for the oemof solph model.
+        This function should be used only, if all consumers should be
+        connected to the dhs grid (not in case of central-decentral
+        comparison).
 
-        self.check_input()
+        Notes:
+
+            - if 'active' is not present in the edges tables, all consumers
+            connections are pre-calculated.
+
+            - as options for dimensioning, the same options for pipes should
+            be used as for the optimization itself
+
+            - as design power, either the max heat value of the consumers table
+            is used (if 'max heat load' is given), or the maximum value of each
+            timeseries is used (depending on the number of timesteps). This
+            max heat value will be written in the consumers table.
+
+            - the results of the precalculation should be written in the
+            edges table, and should exactly look like as if existing pipes are
+            given.
+
+        """
+
+        print('Precalculation Consumers Connection')
+
+        # get max heat load
+        # if ''
+
+
+        for r, c in self.network.components['consumers'].iterrows():
+
+            if 'active' not in list(c.index):
+                c['active'] = 1
+
+            # if c['active']:
+
+
+
+
+
+
+        return
+
+    def setup_oemof_es(self):
 
         self.nodes = []  # list of all nodes
         self.buses = {}
@@ -132,6 +188,58 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         return
 
+    def setup(self):
+
+        # initial check of edges connections
+        self.check_input()
+
+        # prepare heat data, whether global simultanity or timeseries
+        if 'P_heat_max' not in list(
+                self.network.components['consumers'].columns):
+
+            df_max = self.network.sequences['consumers']['heat_flow'].max().\
+                to_frame(name='P_heat_max')
+
+            # df_max.index = pd.Index([int(x) for x in list(df_max.index)])
+
+            self.network.components['consumers'] = \
+                pd.concat([self.network.components['consumers'], df_max],
+                          axis=1, join='inner')
+
+        # check, which optimization type should be performed
+        if self.settings['dhs'] == 'fix':
+
+            # checks for single timestep optimisation
+
+            # just single timestep optimization, overwrite previous!
+            self.settings['num_ts'] = 1
+
+            # heat load is maximum heat load mutiplied with SF
+            seq = self.network.sequences['consumers']['heat_flow']
+            seq.drop(seq.index[1:], inplace=True)
+            seq_T = seq.T
+            # seq_T.index = pd.Index([int(x) for x in list(seq_T.index)])
+            seq_T = pd.concat([seq_T, self.network.components['consumers'][
+                'P_heat_max']], axis=1, join='inner')
+            seq_T[0] = seq_T['P_heat_max']
+            seq_T.drop(['P_heat_max'], axis=1, inplace=True)
+            self.network.sequences['consumers']['heat_flow'] = \
+                seq_T.T * self.settings['global_SF']
+
+        # precalculate house connections if wanted
+        # precalculates takes always the 'P_heat_max' of each house for
+        # dimesioning, without simultaneity factor. The simultaneitgy factor
+        # is applied to the timeseries, which are in case of single-timestep
+        # optimisation inserted and replaced above
+        precalc = False
+        if precalc:
+            self.precalc_consumers_connections()
+
+        # set up oemof energy system
+        self.setup_oemof_es()
+
+        return
+
     def solve(self, solver='cbc', solve_kw=None):
 
         logging.info('Build the operational model')
@@ -160,13 +268,16 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 print('Multiple IDs!')
 
             try:
-                scalar = res[outflow[0]]['scalars']['invest']
+                invest = res[outflow[0]]['scalars']['invest']
             except:
-                # this is in case there is no bi-directional heatpipe, e.g. at
-                # forks-consumers, producers-forks
-                scalar = 0
+                try:
+                    invest = res[outflow[0]]['sequences']['invest'][0]
+                except:
+                    # this is in case there is no bi-directional heatpipe, e.g. at
+                    # forks-consumers, producers-forks
+                    invest = 0
 
-            return scalar
+            return invest
 
         def get_hp_results():
             """The edge specific investment results of the heatpipelines are
