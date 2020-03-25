@@ -67,34 +67,50 @@ class HeatPipeline(Transformer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.length = kwargs.get('length')
-        self.heat_loss_factor = sequence(kwargs.get('heat_loss_factor'))
-        self.heat_loss_factor_fix = sequence(kwargs.get('heat_loss_factor_fix'))
+        self.length = kwargs.get('length', 1)
+        self.heat_loss_factor = sequence(kwargs.get('heat_loss_factor', 0))
+        self.heat_loss_factor_fix = sequence(kwargs.get(
+            'heat_loss_factor_fix', 0))
 
         self._invest_group = False
+        self._nonconvex_group = False
 
         if len(self.inputs) > 1 or len(self.outputs) > 1:
-            raise ValueError("Heatpipe must not have more than \
-                             one input and one output!")
+            raise ValueError("Heatpipe must not have more than"
+                             " one input and one output!")
 
         for f in self.inputs.values():
             if f.nonconvex is not None:
                 raise ValueError(
-                    "Attribute `nonconvex` of component `HeatPipeline`" +
-                    "has not been tested yet.")
+                    "Inputflow must not be of type NonConvexFlow!")
 
         for f in self.outputs.values():
             if f.nonconvex is not None:
+                self._nonconvex_group = True
+
+        self._check_flows_invest()
+
+        if (self._nonconvex_group is True) and (self._invest_group is True):
+            raise ValueError(
+                "Either an investment OR a switchable heatloss can be set"
+                " (NonConvexFlow)."
+                " Remove the NonConvexFlow or drop "
+                "the Investment attribute.")
+
+        if self._invest_group is True:
+            o = list(self.outputs.keys())[0]
+            if (self.heat_loss_factor_fix[0] > 0) \
+                    and (self.outputs[o].investment.nonconvex is False):
                 raise ValueError(
-                    "Attribute `nonconvex` of component `HeatPipeline`" +
-                    "has not been tested yet.")
+                    "In case of a convex Investment (Investment.nonconvex is "
+                    " False), the 'heat_loss_factor_fix' is not considered!"
+                    " Set the heat_loss_factor_fix to 0!")
 
-        self._check_flows()
-
-    def _check_flows(self):
+    def _check_flows_invest(self):
         for flow in self.inputs.values():
             if isinstance(flow.investment, Investment):
-                self._invest_group = True
+                raise ValueError(
+                    "The investment must be defined at the Outputflow!")
 
         for flow in self.outputs.values():
             if isinstance(flow.investment, Investment):
@@ -168,14 +184,16 @@ class HeatPipelineBlock(SimpleBlock):
         m = self.parent_block()
 
         self.HEATPIPES = Set(initialize=[n for n in group])
+        self.CONVEX_HEATPIPES = Set(initialize=[n for n in group if n.outputs[list(n.outputs.keys())[0]].nonconvex is None])
+        self.NONCONVEX_HEATPIPES = Set(initialize=[n for n in group if n.outputs[list(n.outputs.keys())[0]].nonconvex is not None])
 
         # Defining Variables
         self.heat_loss = Var(self.HEATPIPES, m.TIMESTEPS,
                              within=NonNegativeReals)
 
-        def _heat_loss_rule(block, n, t):
-            """Rule definition for constraint to connect the installed capacity
-            and the heat loss
+        def _heat_loss_rule_fix(block, n, t):
+            """Rule definition for the heat loss depending on the nominal
+            capacity for fix fix heat loss.
             """
             o = list(n.outputs.keys())[0]
 
@@ -183,10 +201,26 @@ class HeatPipelineBlock(SimpleBlock):
             expr += - block.heat_loss[n, t]
             expr +=\
                 n.heat_loss_factor[t] * n.length * m.flows[n, o].nominal_value
+            expr += n.heat_loss_factor_fix[t] * n.length
             return expr == 0
 
-        self.heat_loss_equation = Constraint(self.HEATPIPES, m.TIMESTEPS,
-                                             rule=_heat_loss_rule)
+        self.heat_loss_equation_fix = Constraint(
+            self.CONVEX_HEATPIPES, m.TIMESTEPS, rule=_heat_loss_rule_fix)
+
+        def _heat_loss_rule_on_off(block, n, t):
+            """Rule definition for the heat loss depending on the nominal
+            capacity. Here, the losses can be "switched off".
+            """
+            o = list(n.outputs.keys())[0]
+
+            expr = 0
+            expr += - block.heat_loss[n, t]
+            expr += (n.heat_loss_factor[t] * m.flows[n, o].nominal_value +
+                     n.heat_loss_factor_fix[t]) * n.length * m.NonConvexFlow.status[n, o, t]
+            return expr == 0
+
+        self.heat_loss_equation_on_off = Constraint(
+            self.NONCONVEX_HEATPIPES, m.TIMESTEPS, rule=_heat_loss_rule_on_off)
 
         def _relation_rule(block, n, t):
             """Link input and output flow and subtract heat loss."""
