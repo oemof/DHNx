@@ -67,86 +67,150 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
         d_labels['l_1'] = 'infrastructure'
         d_labels['l_2'] = 'heat'
 
-        # connection of houses
-        if q['to_node'].split('-')[0] == "consumers":
+        if q['existing']:
 
-            start = q['from_node']
-            end = q['to_node']
-            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
-            b_out = busd[('consumers', d_labels['l_2'], 'bus', end)]
+            # terminate the first label
+            l_1_in = 'infrastructure'
+            l_1_out = 'infrastructure'
 
-            d_labels['l_4'] = start + '-' + end
+            typ_from = q['from_node'].split('-')[0]
+            typ_to = q['to_node'].split('-')[0]
 
-            nodes, busd = ac.add_heatpipes(
-                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
-                nodes, busd)
+            if (typ_from == 'forks') and (typ_to == 'consumers'):
+                l_1_out = 'consumers'
 
-        elif q['from_node'].split('-')[0] == "consumers":
+                start = q['from_node']
+                end = q['to_node']
+                b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+                b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+                d_labels['l_4'] = start + '-' + end
+                nodes = ac.add_heatpipes_exist(d_labels, gd, q, b_in, b_out,
+                                               nodes)
 
-            start = q['to_node']
-            end = q['from_node']
-            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
-            b_out = busd[('consumers', d_labels['l_2'], 'bus', end)]
+            elif (typ_from == 'consumers') and (typ_to == 'forks'):
+                raise ValueError(
+                    "Edges must not go from 'consumers' to 'forks'!"
+                    " Existing heatpipe id {}".format(p))
 
-            d_labels['l_4'] = start + '-' + end
+            elif (typ_from == 'forks') and (typ_to == 'producers'):
+                raise ValueError(
+                    "Edges must not go from 'forks' to 'producers'!"
+                    " Existing heatpipe id {}".format(p))
 
-            nodes, busd = ac.add_heatpipes(
-                opti_network.invest_options['network']['pipes'], d_labels, gd,
-                q, b_in, b_out,
-                nodes, busd)
+            elif (typ_from == 'producers') and (typ_to == 'forks'):
+                l_1_in = 'producers'
 
-        # connection energy generation site
-        elif q['to_node'].split('-')[0] == "producers":
+                start = q['from_node']
+                end = q['to_node']
+                b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+                b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+                d_labels['l_4'] = start + '-' + end
+                nodes = ac.add_heatpipes_exist(d_labels, gd, q, b_in, b_out,
+                                               nodes)
 
-            start = q['to_node']
-            end = q['from_node']
-            b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
-            b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+            elif (typ_from == 'forks') and (typ_to == 'forks'):
 
-            d_labels['l_4'] = start + '-' + end
+                start = q['from_node']
+                end = q['to_node']
+                b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+                b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+                d_labels['l_4'] = start + '-' + end
+                nodes = ac.add_heatpipes_exist(d_labels, gd, q, b_in, b_out,
+                                               nodes)
 
-            nodes, busd = ac.add_heatpipes(
-                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
-                nodes, busd)
+                # # Should there be a second pipe in the other direction?!
+                # start = q['to_node']
+                # end = q['from_node']
+                # b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+                # b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+                # d_labels['l_4'] = start + '-' + end
+                # nodes = ac.add_heatpipes_exist(d_labels, gd, q, b_in, b_out,
+                #                                nodes)
 
-        elif q['from_node'].split('-')[0] == "producers":
+            else:
+                raise ValueError("Something wrong!")
 
-            start = q['from_node']
-            end = q['to_node']
-            b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
-            b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+        else:   # Investment
+            # connection of houses
+            if q['to_node'].split('-')[0] == "consumers":
 
-            d_labels['l_4'] = start + '-' + end
+                start = q['from_node']
+                end = q['to_node']
+                b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
+                b_out = busd[('consumers', d_labels['l_2'], 'bus', end)]
 
-            nodes, busd = ac.add_heatpipes(
-                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
-                nodes, busd)
+                d_labels['l_4'] = start + '-' + end
 
-        # connection of knots with 2 pipes in each direction since flow
-        # direction is unknown
-        if (q['from_node'].split('-')[0] =='forks') and (q['to_node'].split('-')[0] == 'forks'):
+                nodes, busd = ac.add_heatpipes(
+                    opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                    nodes, busd)
 
-            start = q['from_node']
-            end = q['to_node']
-            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
-            b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+            elif q['from_node'].split('-')[0] == "consumers":
 
-            d_labels['l_4'] = start + '-' + end
+                start = q['to_node']
+                end = q['from_node']
+                b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
+                b_out = busd[('consumers', d_labels['l_2'], 'bus', end)]
 
-            nodes, busd = ac.add_heatpipes(
-                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
-                nodes, busd)
+                d_labels['l_4'] = start + '-' + end
 
-            start = q['to_node']
-            end = q['from_node']
-            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
-            b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+                nodes, busd = ac.add_heatpipes(
+                    opti_network.invest_options['network']['pipes'], d_labels, gd,
+                    q, b_in, b_out,
+                    nodes, busd)
 
-            d_labels['l_4'] = start + '-' + end
+            # connection energy generation site
+            elif q['to_node'].split('-')[0] == "producers":
 
-            nodes, busd = ac.add_heatpipes(
-                opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
-                nodes, busd)
+                start = q['to_node']
+                end = q['from_node']
+                b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
+                b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+
+                d_labels['l_4'] = start + '-' + end
+
+                nodes, busd = ac.add_heatpipes(
+                    opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                    nodes, busd)
+
+            elif q['from_node'].split('-')[0] == "producers":
+
+                start = q['from_node']
+                end = q['to_node']
+                b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
+                b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+
+                d_labels['l_4'] = start + '-' + end
+
+                nodes, busd = ac.add_heatpipes(
+                    opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                    nodes, busd)
+
+            # connection of knots with 2 pipes in each direction since flow
+            # direction is unknown
+            if (q['from_node'].split('-')[0] =='forks') and (q['to_node'].split('-')[0] == 'forks'):
+
+                start = q['from_node']
+                end = q['to_node']
+                b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
+                b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+
+                d_labels['l_4'] = start + '-' + end
+
+                nodes, busd = ac.add_heatpipes(
+                    opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                    nodes, busd)
+
+                start = q['to_node']
+                end = q['from_node']
+                b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
+                b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
+
+                d_labels['l_4'] = start + '-' + end
+
+                nodes, busd = ac.add_heatpipes(
+                    opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
+                    nodes, busd)
 
     return nodes, busd
 

@@ -94,6 +94,52 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         return
 
+    def get_pipe_data_existing(self):
+        """Adds heat loss and investment costs (investment costs just for
+        information) of all existing pipes to the edges table."""
+
+        pipe_types = self.invest_options['network']['pipes'].copy()
+        pipe_types.drop(pipe_types[pipe_types['active'] == 0].index, inplace=True)
+        edges = self.network.components['edges']
+
+        # check if pipe type in pipe invest options
+        hp_list = list(set(
+            [x for x in edges['hp_type'].tolist() if str(x) != 'nan']))
+
+        for hp in hp_list:
+            if hp not in list(pipe_types['label_3']):
+                raise ValueError(
+                    "Existing heatpipe type {} is not in the list of "
+                    "ACTIVE heatpipe investment options!".format(hp))
+
+        def get_heat_loss(typ, capa):
+
+            ind = pipe_types[pipe_types['label_3'] == typ].index
+            heat_loss = pipe_types.loc[ind]['l_factor'].values[0] * capa + \
+                        pipe_types.loc[ind]['l_factor_fix'].values[0]
+
+            return heat_loss
+
+        def get_invest_costs(typ, capa):
+
+            ind = pipe_types[pipe_types['label_3'] == typ].index
+            heat_loss = pipe_types.loc[ind]['capex_pipes'].values[0] * capa + \
+                        pipe_types.loc[ind]['fix_costs'].values[0]
+
+            return heat_loss
+
+        edges['heat_loss[1/m]'] = edges.apply(
+            lambda x: get_heat_loss(x['hp_type'], x['capacity'])
+            if x['existing'] == 1 else None, axis=1)
+
+        edges['invest_costs[€/m]'] = edges.apply(
+            lambda x: get_invest_costs(x['hp_type'], x['capacity'])
+            if x['existing'] == 1 else None, axis=1)
+
+        self.network.components['edges'] = edges
+
+        return
+
     def precalc_consumers_connections(self):
         """This method pre calculates the house connections and adds the
         results to the edges as further input for the oemof solph model.
@@ -226,7 +272,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             self.network.sequences['consumers']['heat_flow'] = \
                 seq_T.T * self.settings['global_SF']
 
-
         if self.settings['num_ts'] > \
                 len(self.network.sequences['consumers']['heat_flow'].index):
 
@@ -234,6 +279,14 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 'The length of the heat demand timeseries is not sufficient '
                 'for the given number of {} timesteps.'.format(
                     self.settings['num_ts']))
+
+        # check whether there are existing pipes in the network
+        if 'existing' in self.network.components['edges'].columns:
+            # if there is the existing attribute, get the information about
+            # the pipe types (like heat_loss)
+            self.get_pipe_data_existing()
+        else:
+            self.network.components['edges']['existing'] = 0
 
         # precalculate house connections if wanted
         # precalculates takes always the 'P_heat_max' of each house for

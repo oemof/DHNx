@@ -289,3 +289,17 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
                     length=q['length[m]']))
 
     return nodes, busd
+
+
+def add_heatpipes_exist(labels, gd, q, b_in, b_out, nodes):
+
+    nodes.append(oh.HeatPipeline(
+        label=oh.Label(labels['l_1'], labels['l_2'],
+                       labels['l_3'], labels['l_4']),
+        inputs={b_in: solph.Flow()},
+        outputs={b_out: solph.Flow(
+            nominal_value=q['capacity'])},
+        heat_loss_factor=q['heat_loss[1/m]'],
+        length=q['length[m]']))
+
+    return nodes
