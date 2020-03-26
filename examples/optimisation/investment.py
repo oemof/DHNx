@@ -7,7 +7,7 @@ network = dhnx.network.ThermalNetwork()
 network = network.from_csv_folder('investment_input_2/network')
 
 # general optimisation settings
-num_ts = 1     # number of timesteps
+num_ts = 3     # number of timesteps
 time_res = 1    # time resolution: [1/h] (percentage of hour) => 0.25 is quarter-hour resolution
 set = {'num_ts': num_ts,            # number of timesteps
        'time_res': time_res,         # time resolution: [1/h] (percentage of hour) => 0.25 is quarter-hour resolution
@@ -19,7 +19,7 @@ set = {'num_ts': num_ts,            # number of timesteps
        'solver': 'cbc',              # solver
        'solve_kw': {'tee': True},    # solver kwargs
        # optimization types
-       'dhs': 'fix',        # parameter which defines type of optimization. ...
+       'dhs': 'optional',        # parameter which defines type of optimization. ...
        # either the heat supply should be via dhs ('fix') (=> all active houses are connected), ...
        # or is part of the optimization ('optional').
        'simultaneity': 'global',   # 'global' or 'timeseries' => a single timestep optimization is performed
@@ -45,12 +45,16 @@ print(results_edges)
 col_size = [x for x in list(results_edges.columns) if '.size' in x]
 col_size = [x for x in col_size if x.split('.')[1] == 'size']
 
-ind_invest_not_zero = results_edges[ results_edges[col_size[0]] > 0.001 ].index
+# get indices which are existing or invested
+ind_invest_not_zero = results_edges[results_edges[col_size[0]] > 0.001].index
+ind_existing_not_zero = results_edges[results_edges['existing'] == 1].index
+ind = ind_invest_not_zero.append(ind_existing_not_zero)
 
+# select xisting or invested edges
 network_result = network
-network_result.components['edges'] = results_edges.loc[ind_invest_not_zero]
+network_result.components['edges'] = results_edges.loc[ind]
 
-# Draw investment results
+# plot results network
 static_map = dhnx.plotting.StaticMap(network_result)
 static_map.draw(background_map=False)
 plt.show()
