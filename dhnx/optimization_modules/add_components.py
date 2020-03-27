@@ -244,11 +244,12 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
                     capex=t['capex_pipes'] * q['length[m]'],
                     n=t['n_pipes'], wacc=gd['rate'])) * gd['f_invest']
             else:
-                epc_p = t['capex_pipes']
+                epc_p = t['capex_pipes'] * q['length[m]']
 
             # Heatpipe with binary variable
             if t['nonconvex']:
-
+                
+                # here, the annity of the fix cost part needs to be added 
                 if t['annuity']:
                     epc_fix = float(economics.annuity(
                         capex=t['fix_costs'] * q['length[m]'],
