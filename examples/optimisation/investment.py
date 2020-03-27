@@ -26,6 +26,7 @@ set = {'num_ts': num_ts,            # number of timesteps
        'global_SF': 0.8,           # global simultaneity factor. is only applied, if simultaneity='global'
        'SF_timeseries': 1,         # scaling factor for heat demand timeseries
        'SF_1_timeseries': 0.8,     # scaling factor for the first element of the timeseries (bei geoordneter JDL)
+       'precalc_consumer_connections': True,
        }
 
 invest_opt = dhnx.input_output.load_invest_options('investment_input_2/invest_options')
@@ -46,9 +47,23 @@ col_size = [x for x in list(results_edges.columns) if '.size' in x]
 col_size = [x for x in col_size if x.split('.')[1] == 'size']
 
 # get indices which are existing or invested
-ind_invest_not_zero = results_edges[results_edges[col_size[0]] > 0.001].index
-ind_existing_not_zero = results_edges[results_edges['existing'] == 1].index
-ind = ind_invest_not_zero.append(ind_existing_not_zero)
+ind = []
+for hp in col_size:
+       if len(list(results_edges[results_edges[hp] > 0.001].index)) > 0:
+              ind = ind + list(results_edges[results_edges[hp] > 0.001].index)
+
+ind_exist = list(results_edges[results_edges['existing'] == 1].index)
+
+# plot existing network
+network_exist = network
+network_exist.components['edges'] = results_edges.loc[ind_exist]
+
+# plot existing network
+static_map = dhnx.plotting.StaticMap(network_exist)
+static_map.draw(background_map=False)
+plt.show()
+
+ind = ind + ind_exist
 
 # select xisting or invested edges
 network_result = network
