@@ -14,7 +14,8 @@ SPDX-License-Identifier: MIT
 
 import oemof.solph as solph
 from dhnx.optimization_modules import oemof_heatpipe as oh, add_components as ac
-
+import pandas as pd
+from oemof import outputlib
 
 # def add_nodes_dhs(geo_data, gd, gd_infra, nodes, busd):
 def add_nodes_dhs(opti_network, gd, nodes, busd):
@@ -256,3 +257,63 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
                     nodes, busd = ac.add_storage(item, d_labels, gd, nodes, busd)
 
     return nodes, busd
+
+
+def calc_consumer_connection(house_connection, P_max, set, pipes_options):
+    
+    idx = pd.date_range('1/1/2017', periods=1, freq='H')
+    esys = solph.EnergySystem(timeindex=idx)
+    # Node.registry = esys
+
+    nodes = []
+    buses = {}
+
+    b_grid = solph.Bus(label='grid')
+    nodes.append(b_grid)
+    b_house = solph.Bus(label='house')
+    nodes.append(b_house)
+    nodes.append(solph.Sink(label='demand', inputs={b_house: solph.Flow(
+        fixed=True, actual_value=[P_max], nominal_value=1)}))
+    nodes.append(solph.Source(label='dhs_source', outputs={
+        b_grid: solph.Flow(variable_costs=0)}))
+
+    # label stuff
+    d_labels = {}
+    d_labels['l_1'] = 'infrastructure'
+    d_labels['l_2'] = 'heat'
+    d_labels['l_3'] = 'placeholder'
+    d_labels['l_4'] = house_connection['from_node'] + '-' + \
+                      house_connection['to_node']
+
+    nodes, buses = ac.add_heatpipes(
+        pipes_options,
+        d_labels, set, house_connection,
+        b_grid, b_house, nodes, buses)
+
+    esys.add(*nodes)
+    model = solph.Model(esys)
+    model.solve(solver=set['solver'])
+    results = outputlib.processing.results(model)
+
+    # filter flows for investflow with investment > 0
+    key_result = 'scalars'
+    hp_investflow = [x for x in results.keys()
+                     if hasattr(results[x]['scalars'], 'invest')]
+
+    if len(hp_investflow) == 0:
+        hp_investflow = [x for x in results.keys()
+                         if hasattr(results[x]['sequences'], 'invest')
+                         if results[x]['sequences']['invest'][0] > 0]
+        key_result = 'sequences'
+
+    # There must be only one investment! Otherwise, it does not make
+    # much sense
+    if len(hp_investflow) != 1:
+        raise ValueError('Something wrong!')
+    
+    capacity = results[hp_investflow[0]][key_result]['invest'][0]
+    hp_typ = hp_investflow[0][0].label[2]
+
+    # model.InvestmentFlow.investment_costs.expr()
+    
+    return capacity, hp_typ

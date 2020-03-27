@@ -13,7 +13,9 @@ SPDX-License-Identifier: MIT
 
 import os
 from .model import OperationOptimizationModel, InvestOptimizationModel
-from dhnx.optimization_modules.dhs_nodes import add_nodes_dhs, add_nodes_houses
+from dhnx.optimization_modules.dhs_nodes import add_nodes_dhs,\
+    add_nodes_houses, calc_consumer_connection
+from dhnx.optimization_modules import oemof_heatpipe as oh, add_components as ac
 
 import logging
 import pandas as pd
@@ -21,6 +23,7 @@ import pandas as pd
 import oemof.solph as solph
 import oemof.outputlib as outputlib
 from oemof.tools import helpers
+from oemof.network import Node
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
     r"""
@@ -94,12 +97,99 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         return
 
+    def precalc_consumers_connections(self):
+        """This method pre calculates the house connections and adds the
+        results to the edges as further input for the oemof solph model.
+        This function should be used only, if all consumers should be
+        connected to the dhs grid (not in case of central-decentral
+        comparison).
+
+        Notes:
+
+            - if 'active' is not present in the edges tables, all consumers
+            connections are pre-calculated.
+
+            - as options for dimensioning, the same options for pipes should
+            be used as for the optimization itself
+
+            - as design power, either the max heat value of the consumers table
+            is used (if 'max heat load' is given), or the maximum value of each
+            timeseries is used (depending on the number of timesteps). This
+            max heat value will be written in the consumers table.
+
+            - the results of the precalculation should be written in the
+            edges table, and should exactly look like as if existing pipes are
+            given.
+
+        """
+        print('Info: Precalculation Consumers Connection')
+
+        # in case the attribute 'active' is not present, it is supposed
+        # that all consumers are active
+        if 'active' not in list(self.network.components['consumers'].index):
+            self.network.components['consumers']['active'] = 1
+
+        edges = self.network.components['edges']
+        count = 0   # counts the number of pre-calculatet house connections
+        count_multiple = 0 # counts the consumers, which have multiple connection options
+        for r, c in self.network.components['consumers'].iterrows():
+
+            def connection_alternatives(self):
+                
+                consumer = 'consumers-' + str(r)
+                
+                n1 = edges['from_node'].str.count(consumer).sum()
+                n2 = edges['to_node'].str.count(consumer).sum()
+                
+                if n1 != 0:
+                    raise ValueError(
+                        '{} must not be a starting node!'.format(consumer))
+                
+                return n2
+
+            con_alternatives = connection_alternatives(self)
+            
+            if con_alternatives > 1:
+                count_multiple += 1
+                
+            # only if there is just one option of connecting a consumer to the
+            # grid, it makes sense to precalculate the house connection
+            if c['active'] and con_alternatives == 1:
+
+                # get edge index
+                edge_id = edges[edges['to_node'] == 'consumers-' + str(r)].index[0]
+                house_connection = edges.T[edge_id]
+
+                # optimize single connection with oemof solph
+                capacity, hp_typ = calc_consumer_connection(
+                    house_connection, c['P_heat_max'], self.settings,
+                    self.invest_options['network']['pipes'])                
+                
+                # put results into existing pipes data
+                edges.at[edge_id, 'existing'] = 1
+                edges.at[edge_id, 'capacity'] = capacity
+                edges.at[edge_id, 'hp_type'] = hp_typ
+                
+                count += 1
+
+        self.network.components['edges'] = edges
+
+        num_active_consumers = \
+            self.network.components['consumers']['active'].sum()
+        
+        print('Info: {} out of {} active consumers connections were precalculated.'
+              ' {} consumers have multiple options for connecting to the grid.'.
+              format(count, num_active_consumers, count_multiple))
+        
+        return
+
     def get_pipe_data_existing(self):
         """Adds heat loss and investment costs (investment costs just for
         information) of all existing pipes to the edges table."""
 
         pipe_types = self.invest_options['network']['pipes'].copy()
-        pipe_types.drop(pipe_types[pipe_types['active'] == 0].index, inplace=True)
+        pipe_types.drop(pipe_types[pipe_types['active'] == 0].index,
+                        inplace=True)
         edges = self.network.components['edges']
 
         # check if pipe type in pipe invest options
@@ -139,53 +229,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.network.components['edges'] = edges
 
         return
-
-    def precalc_consumers_connections(self):
-        """This method pre calculates the house connections and adds the
-        results to the edges as further input for the oemof solph model.
-        This function should be used only, if all consumers should be
-        connected to the dhs grid (not in case of central-decentral
-        comparison).
-
-        Notes:
-
-            - if 'active' is not present in the edges tables, all consumers
-            connections are pre-calculated.
-
-            - as options for dimensioning, the same options for pipes should
-            be used as for the optimization itself
-
-            - as design power, either the max heat value of the consumers table
-            is used (if 'max heat load' is given), or the maximum value of each
-            timeseries is used (depending on the number of timesteps). This
-            max heat value will be written in the consumers table.
-
-            - the results of the precalculation should be written in the
-            edges table, and should exactly look like as if existing pipes are
-            given.
-
-        """
-
-        print('Precalculation Consumers Connection')
-
-        # get max heat load
-        # if ''
-
-
-        for r, c in self.network.components['consumers'].iterrows():
-
-            if 'active' not in list(c.index):
-                c['active'] = 1
-
-            # if c['active']:
-
-
-
-
-
-
-        return
-
+    
     def setup_oemof_es(self):
 
         self.nodes = []  # list of all nodes
@@ -280,12 +324,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 'for the given number of {} timesteps.'.format(
                     self.settings['num_ts']))
 
-        # check whether there are existing pipes in the network
-        if 'existing' in self.network.components['edges'].columns:
-            # if there is the existing attribute, get the information about
-            # the pipe types (like heat_loss)
-            self.get_pipe_data_existing()
-        else:
+        # check whether there the 'existing' attribute is present at the edges
+        if 'existing' not in self.network.components['edges'].columns:
             self.network.components['edges']['existing'] = 0
 
         # precalculate house connections if wanted
@@ -293,9 +333,17 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # dimesioning, without simultaneity factor. The simultaneitgy factor
         # is applied to the timeseries, which are in case of single-timestep
         # optimisation inserted and replaced above
-        precalc = False
-        if precalc:
+        if self.settings['precalc_consumer_connections']:
+            # if self.settings['dhs'] != 'fix':
+            #     raise ValueError(
+            #         'Are you sure, you want to do that?! '
+            #         'If you want to precalculate the consumers connections, '
+            #         'set the optimisation setting option "dhs" to "fix"!')
             self.precalc_consumers_connections()
+
+        # if there is the existing attribute, get the information about
+        # the pipe types (like heat_loss)
+        self.get_pipe_data_existing()
 
         # set up oemof energy system
         self.setup_oemof_es()
@@ -333,6 +381,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 invest = res[outflow[0]]['scalars']['invest']
             except:
                 try:
+                    # that's in case of a one timestep optimisation due to
+                    # an oemof bug in outputlib
                     invest = res[outflow[0]]['sequences']['invest'][0]
                 except:
                     # this is in case there is no bi-directional heatpipe, e.g. at
