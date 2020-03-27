@@ -19,6 +19,7 @@ from dhnx.optimization_modules import oemof_heatpipe as oh, add_components as ac
 
 import logging
 import pandas as pd
+import numpy as np
 
 import oemof.solph as solph
 import oemof.outputlib as outputlib
@@ -282,6 +283,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # initial check of edges connections
         self.check_input()
+
+        # create edges attribute hp_type, if not in the table so far
+        if 'hp_type' not in list(
+                self.network.components['edges'].columns):
+            self.network.components['edges']['hp_type'] = 'nan'
 
         # prepare heat data, whether global simultanity or timeseries
         if 'P_heat_max' not in list(
