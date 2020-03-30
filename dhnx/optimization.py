@@ -135,32 +135,19 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         count_multiple = 0 # counts the consumers, which have multiple connection options
         for r, c in self.network.components['consumers'].iterrows():
 
-            def connection_alternatives(self):
-                
-                consumer = 'consumers-' + str(r)
-                
-                n1 = edges['from_node'].str.count(consumer).sum()
-                n2 = edges['to_node'].str.count(consumer).sum()
-                
-                if n1 != 0:
-                    raise ValueError(
-                        '{} must not be a starting node!'.format(consumer))
-                
-                return n2
+            # get edge index
+            edge_id = edges[edges['to_node'] == 'consumers-' + str(r)].index
 
-            con_alternatives = connection_alternatives(self)
-            
-            if con_alternatives > 1:
+            if len(edge_id) > 1:
                 count_multiple += 1
+                print('consumers-{} has multiple options for connection to the grid.'
+                      ''.format(str(r)))
                 
             # only if there is just one option of connecting a consumer to the
             # grid, it makes sense to precalculate the house connection
-            if c['active'] and con_alternatives == 1:
+            elif c['active'] and len(edge_id) == 1:
 
-                # get edge index
-                edge_id = edges[edges['to_node'] == 'consumers-' + str(r)].index[0]
-                house_connection = edges.T[edge_id]
-
+                house_connection = edges.T[edge_id[0]]
                 # optimize single connection with oemof solph
                 capacity, hp_typ = calc_consumer_connection(
                     house_connection, c['P_heat_max'], self.settings,
@@ -172,6 +159,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 edges.at[edge_id, 'hp_type'] = hp_typ
                 
                 count += 1
+
+            else:
+                raise ValueError('Something wrong!')
 
         self.network.components['edges'] = edges
 
@@ -230,7 +220,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.network.components['edges'] = edges
 
         return
-    
+
     def setup_oemof_es(self):
 
         self.nodes = []  # list of all nodes

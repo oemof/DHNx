@@ -260,60 +260,73 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
 
 
 def calc_consumer_connection(house_connection, P_max, set, pipes_options):
-    
-    idx = pd.date_range('1/1/2017', periods=1, freq='H')
-    esys = solph.EnergySystem(timeindex=idx)
-    # Node.registry = esys
 
-    nodes = []
-    buses = {}
+    if P_max == 0:
+        print('Heat demand of {} is zero.'.format(house_connection['to_node']))
 
-    b_grid = solph.Bus(label='grid')
-    nodes.append(b_grid)
-    b_house = solph.Bus(label='house')
-    nodes.append(b_house)
-    nodes.append(solph.Sink(label='demand', inputs={b_house: solph.Flow(
-        fixed=True, actual_value=[P_max], nominal_value=1)}))
-    nodes.append(solph.Source(label='dhs_source', outputs={
-        b_grid: solph.Flow(variable_costs=0)}))
+        # take first active heatpipe option and set capacity to zero
+        capacity = 0
+        hp_typ = pipes_options.loc[pipes_options[
+            pipes_options['active'] == 1].index[0]]['label_3']
 
-    # label stuff
-    d_labels = {}
-    d_labels['l_1'] = 'infrastructure'
-    d_labels['l_2'] = 'heat'
-    d_labels['l_3'] = 'placeholder'
-    d_labels['l_4'] = house_connection['from_node'] + '-' + \
-                      house_connection['to_node']
+    elif P_max > 0:
+        idx = pd.date_range('1/1/2017', periods=1, freq='H')
+        esys = solph.EnergySystem(timeindex=idx)
+        # Node.registry = esys
 
-    nodes, buses = ac.add_heatpipes(
-        pipes_options,
-        d_labels, set, house_connection,
-        b_grid, b_house, nodes, buses)
+        nodes = []
+        buses = {}
 
-    esys.add(*nodes)
-    model = solph.Model(esys)
-    model.solve(solver=set['solver'])
-    results = outputlib.processing.results(model)
+        b_grid = solph.Bus(label='grid')
+        nodes.append(b_grid)
+        b_house = solph.Bus(label='house')
+        nodes.append(b_house)
+        nodes.append(solph.Sink(label='demand', inputs={b_house: solph.Flow(
+            fixed=True, actual_value=[P_max], nominal_value=1)}))
+        nodes.append(solph.Source(label='dhs_source', outputs={
+            b_grid: solph.Flow(variable_costs=0)}))
 
-    # filter flows for investflow with investment > 0
-    key_result = 'scalars'
-    hp_investflow = [x for x in results.keys()
-                     if hasattr(results[x]['scalars'], 'invest')]
+        # label stuff
+        d_labels = {}
+        d_labels['l_1'] = 'infrastructure'
+        d_labels['l_2'] = 'heat'
+        d_labels['l_3'] = 'placeholder'
+        d_labels['l_4'] = house_connection['from_node'] + '-' + \
+                          house_connection['to_node']
 
-    if len(hp_investflow) == 0:
+        nodes, buses = ac.add_heatpipes(
+            pipes_options,
+            d_labels, set, house_connection,
+            b_grid, b_house, nodes, buses)
+
+        esys.add(*nodes)
+        model = solph.Model(esys)
+        model.solve(solver=set['solver'])
+        results = outputlib.processing.results(model)
+
+        # filter flows for investflow with investment > 0
+        key_result = 'scalars'
         hp_investflow = [x for x in results.keys()
-                         if hasattr(results[x]['sequences'], 'invest')
-                         if results[x]['sequences']['invest'][0] > 0]
-        key_result = 'sequences'
+                         if hasattr(results[x]['scalars'], 'invest')]
 
-    # There must be only one investment! Otherwise, it does not make
-    # much sense
-    if len(hp_investflow) != 1:
-        raise ValueError('Something wrong!')
-    
-    capacity = results[hp_investflow[0]][key_result]['invest'][0]
-    hp_typ = hp_investflow[0][0].label[2]
+        if len(hp_investflow) == 0:
+            hp_investflow = [x for x in results.keys()
+                             if hasattr(results[x]['sequences'], 'invest')
+                             if results[x]['sequences']['invest'][0] > 0]
+            key_result = 'sequences'
 
+        # There must be only one investment! Otherwise, it does not make
+        # much sense
+        if len(hp_investflow) != 1:
+            raise ValueError('Something wrong! Bye bye, so you on Monday ...')
+
+        capacity = results[hp_investflow[0]][key_result]['invest'][0]
+        hp_typ = hp_investflow[0][0].label[2]
+
+    else:
+        raise ValueError(
+            "{} has a negative maximum heat load!"
+            "".format(house_connection['to_node']))
     # model.InvestmentFlow.investment_costs.expr()
     
     return capacity, hp_typ
