@@ -147,32 +147,14 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     nodes, busd)
 
             elif q['from_node'].split('-')[0] == "consumers":
+                raise ValueError(
+                    "Edges must not go from 'consumers'!"
+                    " Existing heatpipe id {}".format(p))
 
-                start = q['to_node']
-                end = q['from_node']
-                b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
-                b_out = busd[('consumers', d_labels['l_2'], 'bus', end)]
-
-                d_labels['l_4'] = start + '-' + end
-
-                nodes, busd = ac.add_heatpipes(
-                    opti_network.invest_options['network']['pipes'], d_labels, gd,
-                    q, b_in, b_out,
-                    nodes, busd)
-
-            # connection energy generation site
             elif q['to_node'].split('-')[0] == "producers":
-
-                start = q['to_node']
-                end = q['from_node']
-                b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
-                b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
-
-                d_labels['l_4'] = start + '-' + end
-
-                nodes, busd = ac.add_heatpipes(
-                    opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
-                    nodes, busd)
+                raise ValueError(
+                    "Edges must not go from 'forks' to 'producers'!"
+                    " Existing heatpipe id {}".format(p))
 
             elif q['from_node'].split('-')[0] == "producers":
 
@@ -187,9 +169,10 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
                     nodes, busd)
 
-            # connection of knots with 2 pipes in each direction since flow
-            # direction is unknown
-            if (q['from_node'].split('-')[0] =='forks') and (q['to_node'].split('-')[0] == 'forks'):
+            elif (q['from_node'].split('-')[0] =='forks') and (q['to_node'].split('-')[0] == 'forks'):
+
+                # connection of forks with 2 pipes in each direction since flow
+                # direction is unknown
 
                 start = q['from_node']
                 end = q['to_node']
@@ -212,6 +195,9 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 nodes, busd = ac.add_heatpipes(
                     opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
                     nodes, busd)
+
+            else:
+                raise ValueError("Something wrong!")
 
     return nodes, busd
 
