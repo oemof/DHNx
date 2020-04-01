@@ -22,9 +22,7 @@ import pandas as pd
 import numpy as np
 
 import oemof.solph as solph
-import oemof.outputlib as outputlib
-from oemof.tools import helpers
-from oemof.network import Node
+from oemof.solph import helpers
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
     r"""
@@ -355,7 +353,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.om.solve(solver=self.settings['solver'],
                       solve_kwargs=self.settings['solve_kw'])
 
-        self.es.results['main'] = outputlib.processing.results(self.om)
+        self.es.results['main'] = solph.processing.results(self.om)
         # self.es.results['meta'] = outputlib.processing.meta_results(self.om)
 
         return

@@ -15,7 +15,7 @@ SPDX-License-Identifier: MIT
 import oemof.solph as solph
 from dhnx.optimization_modules import oemof_heatpipe as oh, add_components as ac
 import pandas as pd
-from oemof import outputlib
+from oemof.solph import processing
 
 # def add_nodes_dhs(geo_data, gd, gd_infra, nodes, busd):
 def add_nodes_dhs(opti_network, gd, nodes, busd):
@@ -302,7 +302,7 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
         esys.add(*nodes)
         model = solph.Model(esys)
         model.solve(solver=set['solver'])
-        results = outputlib.processing.results(model)
+        results = processing.results(model)
 
         # filter flows for investflow with investment > 0
         key_result = 'scalars'
