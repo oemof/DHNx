@@ -353,7 +353,8 @@ class HeatPipelineInvestBlock(SimpleBlock):
 
 class HeatPipeline2(Transformer):
     r"""
-    Component `GenericStorage` to model with basic characteristics of storages.
+    Component `HeatPipeline2` to model basic characteristics of district
+    heating pipelines. It is based on the GenericStorage.
 
     Parameters
     ----------
@@ -370,23 +371,6 @@ class HeatPipeline2(Transformer):
         investment variable of the storage:
         :math:`\dot{E}_{out,invest} = E_{invest} \cdot r_{cap,out}`
 
-    invest_relation_input_output : numeric or None, :math:`r_{in,out}`
-        Ratio between the investment variable of the output Flow and the
-        investment variable of the input flow. This ratio used to fix the
-        flow investments to each other.
-        Values < 1 set the input flow lower than the output and > 1 will
-        set the input flow higher than the output flow. If None no relation
-        will be set:
-        :math:`\dot{E}_{in,invest} = \dot{E}_{out,invest} \cdot r_{in,out}`
-
-    initial_storage_level : numeric, :math:`c(-1)`
-        The relative storage content in the timestep before the first
-        time step of optimization (between 0 and 1).
-    balanced : boolean
-        Couple storage level of first and last time step.
-        (Total inflow and total outflow are balanced.)
-    loss_rate : numeric (iterable or scalar)
-        The relative loss of the storage content per timeunit.
     fixed_losses_relative : numeric (iterable or scalar), :math:`\gamma(t)`
         Losses independent of state of charge between two consecutive
         timesteps relative to nominal storage capacity.
@@ -398,12 +382,6 @@ class HeatPipeline2(Transformer):
         inflow of the storage.
     outflow_conversion_factor : numeric (iterable or scalar), :math:`\eta_o(t)`
         see: inflow_conversion_factor
-    min_storage_level : numeric (iterable or scalar), :math:`c_{min}(t)`
-        The normed minimum storage content as fraction of the
-        nominal storage capacity (between 0 and 1).
-        To set different values in every time step use a sequence.
-    max_storage_level : numeric (iterable or scalar), :math:`c_{max}(t)`
-        see: min_storage_level
     investment : :class:`oemof.solph.options.Investment` object
         Object indicating if a nominal_value of the flow is determined by
         the optimization problem. Note: This will refer all attributes to an
@@ -757,17 +735,9 @@ class HeatPipeline2InvestBlock(SimpleBlock):
         Outflow of the storage
         (created in :class:`oemof.solph.models.BaseModel`).
 
-    * :math:`E(t)`
-
-        Current storage content (Absolute level of stored energy).
-
     * :math:`E_{invest}`
 
         Invested (nominal) capacity of the storage.
-
-    * :math:`E(-1)`
-
-        Initial storage content (before timestep 0).
 
     * :math:`b_{invest}`
 
@@ -780,8 +750,7 @@ class HeatPipeline2InvestBlock(SimpleBlock):
 
             Storage balance (Same as for :class:`.GenericStorageBlock`)
 
-        .. math:: E(t) = &E(t-1) \cdot
-            (1 - \beta(t)) ^{\tau(t)/(t_u)} \\
+        .. math:: 0 =
             &- \gamma(t)\cdot (E_{exist} + E_{invest}) \cdot {\tau(t)/(t_u)}\\
             &- \delta(t) \cdot {\tau(t)/(t_u)}\\
             &- \frac{P_o(t)}{\eta_o(t)} \cdot \tau(t)
@@ -806,28 +775,6 @@ class HeatPipeline2InvestBlock(SimpleBlock):
     The following constraints are created depending on the attributes of
     the :class:`.components.GenericStorage`:
 
-        * :attr:`initial_storage_level is None`
-
-            Constraint for a variable initial storage content:
-
-        .. math::
-               E(-1) \le E_{invest} + E_{exist}
-
-        * :attr:`initial_storage_level is not None`
-
-            An initial value for the storage content is given:
-
-        .. math::
-               E(-1) = (E_{invest} + E_{exist}) \cdot c(-1)
-
-        * :attr:`balanced=True`
-
-            The energy content of storage of the first and the last timestep
-            are set equal:
-
-        .. math::
-            E(-1) = E(t_{last})
-
         * :attr:`invest_relation_input_capacity is not None`
 
             Connect the invest variables of the storage and the input flow:
@@ -843,28 +790,6 @@ class HeatPipeline2InvestBlock(SimpleBlock):
         .. math::
             P_{o,invest} + P_{o,exist} =
             (E_{invest} + E_{exist}) \cdot r_{cap,out}
-
-        * :attr:`invest_relation_input_output is not None`
-
-            Connect the invest variables of the input and the output flow:
-
-        .. math::
-            P_{i,invest} + P_{i,exist} =
-            (P_{o,invest} + P_{o,exist}) \cdot r_{in,out}
-
-        * :attr:`max_storage_level`
-
-            Rule for upper bound constraint for the storage content:
-
-        .. math::
-            E(t) \leq E_{invest} \cdot c_{max}(t)
-
-        * :attr:`min_storage_level`
-
-            Rule for lower bound constraint for the storage content:
-
-        .. math:: E(t) \geq E_{invest} \cdot c_{min}(t)
-
 
     **Objective function**
 
@@ -894,12 +819,8 @@ class HeatPipeline2InvestBlock(SimpleBlock):
 
         ":math:`P_i(t)`", ":attr:`flow[i[n], n, t]`", "Inflow of the storage"
         ":math:`P_o(t)`", ":attr:`flow[n, o[n], t]`", "Outlfow of the storage"
-        ":math:`E(t)`", ":attr:`storage_content[n, t]`", "Current storage content
-        (current absolute stored energy)"
         ":math:`E_{invest}`", ":attr:`invest[n, t]`", "Invested (nominal)
         capacity of the storage"
-        ":math:`E(-1)`", ":attr:`init_cap[n]`", "Initial storage capacity
-        (before timestep 0)"
         ":math:`b_{invest}`", ":attr:`invest_status[i, o]`", "Binary variable
         for the status of investment"
         ":math:`P_{i,invest}`", ":attr:`InvestmentFlow.invest[i[n], n]`", "
@@ -929,10 +850,6 @@ class HeatPipeline2InvestBlock(SimpleBlock):
         Relation of storage capacity and nominal inflow"
         ":math:`r_{cap,out}`", ":attr:`invest_relation_output_capacity`", "
         Relation of storage capacity and nominal outflow"
-        ":math:`r_{in,out}`", ":attr:`invest_relation_input_output`", "
-        Relation of nominal in- and outflow"
-        ":math:`\beta(t)`", ":py:obj:`loss_rate[t]`", "Fraction of lost energy
-        as share of :math:`E(t)` per time unit"
         ":math:`\gamma(t)`", ":py:obj:`fixed_losses_relative[t]`", "Fixed loss
         of energy relative to :math:`E_{invest} + E_{exist}` per time unit"
         ":math:`\delta(t)`", ":py:obj:`fixed_losses_absolute[t]`", "Absolute
@@ -941,12 +858,6 @@ class HeatPipeline2InvestBlock(SimpleBlock):
         Conversion factor (i.e. efficiency) when storing energy"
         ":math:`\eta_o(t)`", ":py:obj:`outflow_conversion_factor[t]`", "
         Conversion factor when (i.e. efficiency) taking stored energy"
-        ":math:`c(-1)`", ":py:obj:`initial_storage_level`", "Initial relativ
-        storage content (before timestep 0)"
-        ":math:`c_{max}`", ":py:obj:`flows[i, o].max[t]`", "Normed maximum
-        value of storage content"
-        ":math:`c_{min}`", ":py:obj:`flows[i, o].min[t]`", "Normed minimum
-        value of storage content"
         ":math:`\tau(t)`", "", "Duration of time step"
         ":math:`t_u`", "", "Time unit of losses :math:`\beta(t)`,
         :math:`\gamma(t)`, :math:`\delta(t)` and timeincrement :math:`\tau(t)`"
