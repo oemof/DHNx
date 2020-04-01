@@ -464,12 +464,10 @@ class HeatPipeline2(Transformer):
         self.outflow_conversion_factor = sequence(
             kwargs.get('outflow_conversion_factor', 1))
         self.investment = kwargs.get('investment')
-        self.invest_relation_input_output = kwargs.get(
-            'invest_relation_input_output')
         self.invest_relation_input_capacity = kwargs.get(
-            'invest_relation_input_capacity')
+            'invest_relation_input_capacity', 1)
         self.invest_relation_output_capacity = kwargs.get(
-            'invest_relation_output_capacity')
+            'invest_relation_output_capacity', 1)
         self._invest_group = isinstance(self.investment, Investment)
 
         # Check attributes for the investment mode.
@@ -492,12 +490,6 @@ class HeatPipeline2(Transformer):
                   "replaces the nominal_storage_capacity.\n Therefore the "
                   "nominal_storage_capacity should be 'None'.\n")
             raise AttributeError(e1)
-        if (self.invest_relation_input_output is not None and
-                self.invest_relation_output_capacity is not None and
-                self.invest_relation_input_capacity is not None):
-            e2 = ("Overdetermined. Three investment object will be coupled"
-                  "with three constraints. Set one invest relation to 'None'.")
-            raise AttributeError(e2)
         if (self.investment and
                 sum(sequence(self.fixed_losses_absolute)) != 0 and
                 self.investment.existing == 0 and
@@ -989,9 +981,6 @@ class HeatPipeline2InvestBlock(SimpleBlock):
         self.INVEST_REL_CAP_OUT = Set(initialize=[
             n for n in group if n.invest_relation_output_capacity is not None])
 
-        self.INVEST_REL_IN_OUT = Set(initialize=[
-            n for n in group if n.invest_relation_input_output is not None])
-
         # ######################### Variables  ################################
 
         def _storage_investvar_bound_rule(block, n):
@@ -1055,19 +1044,6 @@ class HeatPipeline2InvestBlock(SimpleBlock):
 
         self.balance = Constraint(self.INVESTSTORAGES, m.TIMESTEPS,
                                   rule=_storage_balance_rule)
-
-        def _power_coupled(block, n):
-            """Rule definition for constraint to connect the input power
-            and output power
-            """
-            expr = ((m.InvestmentFlow.invest[n, o[n]] +
-                     m.flows[n, o[n]].investment.existing) *
-                    n.invest_relation_input_output ==
-                    (m.InvestmentFlow.invest[i[n], n] +
-                     m.flows[i[n], n].investment.existing))
-            return expr
-        self.power_coupled = Constraint(
-                self.INVEST_REL_IN_OUT, rule=_power_coupled)
 
         def _storage_capacity_inflow_invest_rule(block, n):
             """Rule definition of constraint connecting the inflow
