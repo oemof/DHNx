@@ -351,7 +351,7 @@ class HeatPipelineInvestBlock(SimpleBlock):
                                    rule=_relation_rule)
 
 
-class HeatPipeline2(Transformer):
+class HeatPipelineNew(Transformer):
     r"""
     Component `HeatPipeline2` to model basic characteristics of district
     heating pipelines. It is based on the GenericStorage.
@@ -480,12 +480,12 @@ class HeatPipeline2(Transformer):
 
     def constraint_group(self):
         if self._invest_group is True:
-            return HeatPipeline2InvestBlock
+            return HeatPipelineNewInvestBlock
         else:
-            return HeatPipeline2Block
+            return HeatPipelineNewBlock
 
 
-class HeatPipeline2Block(SimpleBlock):
+class HeatPipelineNewBlock(SimpleBlock):
     r"""Storage without an :class:`.Investment` object.
 
     **The following sets are created:** (-> see basic sets at
@@ -713,7 +713,7 @@ class HeatPipeline2Block(SimpleBlock):
         return 0
 
 
-class HeatPipeline2InvestBlock(SimpleBlock):
+class HeatPipelineNewInvestBlock(SimpleBlock):
     r"""Block for all storages with :attr:`Investment` being not None.
     See :class:`oemof.solph.options.Investment` for all parameters of the
     Investment class.
