@@ -67,7 +67,6 @@ class HeatPipeline(Transformer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.length = kwargs.get('length', 1)
         self.heat_loss_factor = sequence(kwargs.get('heat_loss_factor', 0))
         self.heat_loss_factor_fix = sequence(kwargs.get(
             'heat_loss_factor_fix', 0))
@@ -210,8 +209,8 @@ class HeatPipelineBlock(SimpleBlock):
             expr = 0
             expr += - block.heat_loss[n, t]
             expr +=\
-                n.heat_loss_factor[t] * n.length * m.flows[n, o].nominal_value
-            expr += n.heat_loss_factor_fix[t] * n.length
+                n.heat_loss_factor[t] * m.flows[n, o].nominal_value
+            expr += n.heat_loss_factor_fix[t]
             return expr == 0
 
         self.heat_loss_equation_fix = Constraint(
@@ -226,7 +225,7 @@ class HeatPipelineBlock(SimpleBlock):
             expr = 0
             expr += - block.heat_loss[n, t]
             expr += (n.heat_loss_factor[t] * m.flows[n, o].nominal_value +
-                     n.heat_loss_factor_fix[t]) * n.length * m.NonConvexFlow.status[n, o, t]
+                     n.heat_loss_factor_fix[t]) * m.NonConvexFlow.status[n, o, t]
             return expr == 0
 
         self.heat_loss_equation_on_off = Constraint(
@@ -328,7 +327,7 @@ class HeatPipelineInvestBlock(SimpleBlock):
             """
             expr = 0
             expr += - block.heat_loss[n, t]
-            expr += n.heat_loss_factor[t] * n.length * m.InvestmentFlow.invest[
+            expr += n.heat_loss_factor[t] * m.InvestmentFlow.invest[
                 n, list(n.outputs.keys())[0]]
             return expr == 0
         self.heat_loss_equation_convex = Constraint(self.CONVEX_INVESTHEATPIPES, m.TIMESTEPS,
@@ -340,9 +339,9 @@ class HeatPipelineInvestBlock(SimpleBlock):
             """
             expr = 0
             expr += - block.heat_loss[n, t]
-            expr += n.heat_loss_factor[t] * n.length * m.InvestmentFlow.invest[
+            expr += n.heat_loss_factor[t] * m.InvestmentFlow.invest[
                 n, list(n.outputs.keys())[0]]
-            expr += n.heat_loss_factor_fix[t] * n.length * m.InvestmentFlow.invest_status[
+            expr += n.heat_loss_factor_fix[t] * m.InvestmentFlow.invest_status[
                 n, list(n.outputs.keys())[0]]
             return expr == 0
         self.heat_loss_equation_nonconvex = Constraint(self.NONCONVEX_INVESTHEATPIPES, m.TIMESTEPS,
