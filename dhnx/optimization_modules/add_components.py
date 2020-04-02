@@ -259,9 +259,12 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
 
                 nodes.append(oh.HeatPipeline(
                     label=oh.Label(labels['l_1'], labels['l_2'],
-                                     labels['l_3'], labels['l_4']),
-                    inputs={b_in: solph.Flow()},
+                                   labels['l_3'], labels['l_4']),
+                    inputs={b_in: solph.Flow(
+                        # bidirectional=True, min=-1
+                    )},
                     outputs={b_out: solph.Flow(
+                        # bidirectional=True, min=-1,
                         nominal_value=None, investment=solph.Investment(
                             ep_costs=epc_p,
                             maximum=t['cap_max'],
@@ -290,6 +293,98 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
                     length=q['length[m]']))
 
     return nodes, busd
+
+
+def add_heatpipes_2(opt_network, q, labels, nodes):
+
+    gd = opt_network.settings   # general data
+    busd = opt_network.buses
+
+    flow_bi_args = {
+        'bidirectional': True, 'min': -1} if gd['bidirectional_pipes'] else {}
+
+    b_in = busd[(labels['l_1'], labels['l_2'], 'bus', q['from_node'])]
+    b_out = busd[(labels['l_1'], labels['l_2'], 'bus', q['to_node'])]
+    labels['l_4'] = q['from_node'] + '-' + q['to_node']
+
+    for i, t in opt_network.invest_options['network']['pipes'].iterrows():
+        # iterate over investment options
+        if t['active']:
+
+            # definition of tag3 of label -> type of pipe
+            labels['l_3'] = t['label_3']
+
+            if t['annuity']:
+                epc_p = float(economics.annuity(
+                    capex=t['capex_pipes'] * q['length[m]'],
+                    n=t['n_pipes'], wacc=gd['rate'])) * gd['f_invest']
+                epc_fix = float(economics.annuity(
+                    capex=t['fix_costs'] * q['length[m]'],
+                    n=t['n_pipes'], wacc=gd['rate']) * gd['f_invest'])
+            else:
+                epc_p = t['capex_pipes'] * q['length[m]']
+                epc_fix = t['fix_costs'] * q['length[m]']
+
+            nc = True if t['nonconvex'] else False
+
+            nodes.append(oh.HeatPipelineNew(
+                label=oh.Label(labels['l_1'], labels['l_2'],
+                               labels['l_3'], labels['l_4']),
+                inputs={b_in: solph.Flow(**flow_bi_args)},
+                outputs={b_out: solph.Flow(**flow_bi_args)},
+                investment=solph.Investment(
+                    ep_costs=epc_p,
+                    maximum=t['cap_max'],
+                    minimum=t['cap_min'],
+                    nonconvex=nc,
+                    offset=epc_fix,
+                ),
+                heat_loss_factor=t['l_factor']*q['length[m]'],
+                heat_loss_factor_fix=t['l_factor_fix']*q['length[m]']))
+
+    if not gd['bidirectional_pipes']:
+        # the heatpipes need to be created in both directions
+
+        b_out = busd[(labels['l_1'], labels['l_2'], 'bus', q['from_node'])]
+        b_in = busd[(labels['l_1'], labels['l_2'], 'bus', q['to_node'])]
+        labels['l_4'] = q['to_node'] + '-' + q['from_node']
+
+        for i, t in opt_network.invest_options['network']['pipes'].iterrows():
+            # iterate over investment options
+            if t['active']:
+
+                # definition of tag3 of label -> type of pipe
+                labels['l_3'] = t['label_3']
+
+                if t['annuity']:
+                    epc_p = float(economics.annuity(
+                        capex=t['capex_pipes'] * q['length[m]'],
+                        n=t['n_pipes'], wacc=gd['rate'])) * gd['f_invest']
+                    epc_fix = float(economics.annuity(
+                        capex=t['fix_costs'] * q['length[m]'],
+                        n=t['n_pipes'], wacc=gd['rate']) * gd['f_invest'])
+                else:
+                    epc_p = t['capex_pipes'] * q['length[m]']
+                    epc_fix = t['fix_costs'] * q['length[m]']
+
+                nc = True if t['nonconvex'] else False
+
+                nodes.append(oh.HeatPipelineNew(
+                    label=oh.Label(labels['l_1'], labels['l_2'],
+                                   labels['l_3'], labels['l_4']),
+                    inputs={b_in: solph.Flow()},
+                    outputs={b_out: solph.Flow()},
+                    investment=solph.Investment(
+                        ep_costs=epc_p,
+                        maximum=t['cap_max'],
+                        minimum=t['cap_min'],
+                        nonconvex=nc,
+                        offset=epc_fix,
+                    ),
+                    heat_loss_factor=t['l_factor'] * q['length[m]'],
+                    heat_loss_factor_fix=t['l_factor_fix'] * q['length[m]']))
+
+    return nodes
 
 
 def add_heatpipes_exist(labels, gd, q, b_in, b_out, nodes):
