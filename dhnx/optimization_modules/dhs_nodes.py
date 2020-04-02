@@ -180,30 +180,9 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 
             elif (q['from_node'].split('-')[0] == 'forks') and (q['to_node'].split('-')[0] == 'forks'):
 
-                nodes = ac.add_heatpipes_2(opti_network, q, d_labels, nodes)
+                # nodes = ac.add_heatpipes_new(opti_network, q, d_labels, nodes)
 
-                # # old heatpipeline component
-                # start = q['from_node']
-                # end = q['to_node']
-                # b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
-                # b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
-                #
-                # d_labels['l_4'] = start + '-' + end
-                #
-                # nodes, busd = ac.add_heatpipes(
-                #     opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
-                #     nodes, busd)
-
-                # start = q['to_node']
-                # end = q['from_node']
-                # b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
-                # b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
-                #
-                # d_labels['l_4'] = start + '-' + end
-                #
-                # nodes, busd = ac.add_heatpipes(
-                #     opti_network.invest_options['network']['pipes'], d_labels, gd, q, b_in, b_out,
-                #     nodes, busd)
+                nodes = ac.add_heatpipes_old(opti_network, q, d_labels, nodes)
 
             else:
                 raise ValueError("Something wrong!")
