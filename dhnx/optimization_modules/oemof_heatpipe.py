@@ -74,10 +74,14 @@ class HeatPipeline(Transformer):
 
         self._invest_group = False
         self._nonconvex_group = False
+        self._demand_group = False
 
-        if len(self.inputs) > 1 or len(self.outputs) > 1:
-            raise ValueError("Heatpipe must not have more than"
-                             " one input and one output!")
+        if len(self.inputs) > 1 or len(self.outputs) > 2:
+            if len(self.outputs) == 2:
+                self._demand_group = True
+            else:
+                raise ValueError("Heatpipe must not have more than"
+                                 " one input and two outputs!")
 
         for f in self.inputs.values():
             if f.nonconvex is not None:
@@ -311,6 +315,9 @@ class HeatPipelineInvestBlock(SimpleBlock):
         self.NONCONVEX_INVESTHEATPIPES = Set(initialize=[
             n for n in group if n.outputs[list(n.outputs.keys())[0]].investment.nonconvex is True])
 
+        self.INVESTHEATPIPES_NO_DEMAND = Set(initialize=[n for n in group if len(n.outputs.keys()) == 1])
+        self.INVESTHEATPIPES_WITH_DEMAND = Set(initialize=[n for n in group if len(n.outputs.keys()) == 2])
+
         # Defining Variables
         self.heat_loss = Var(self.INVESTHEATPIPES, m.TIMESTEPS,
                              within=NonNegativeReals)
@@ -341,7 +348,7 @@ class HeatPipelineInvestBlock(SimpleBlock):
         self.heat_loss_equation_nonconvex = Constraint(self.NONCONVEX_INVESTHEATPIPES, m.TIMESTEPS,
                                              rule=_heat_loss_rule_nonconvex)
 
-        def _relation_rule(block, n, t):
+        def _relation_rule_no_demand(block, n, t):
             """Link input and output flow and subtract heat loss."""
             i = list(n.inputs.keys())[0]
             o = list(n.outputs.keys())[0]
@@ -353,8 +360,24 @@ class HeatPipelineInvestBlock(SimpleBlock):
             expr += - block.heat_loss[n, t]
             return expr == 0
 
-        self.relation = Constraint(self.INVESTHEATPIPES, m.TIMESTEPS,
-                                   rule=_relation_rule)
+        self.relation_no_demand = Constraint(self.INVESTHEATPIPES_NO_DEMAND, m.TIMESTEPS,
+                                   rule=_relation_rule_no_demand)
+
+        def _relation_rule_with_demand(block, n, t):
+            """Link input and output flow and subtract heat loss."""
+            i = list(n.inputs.keys())[0]
+            o = list(n.outputs.keys())[0]
+            d = list(n.outputs.keys())[1]
+
+            expr = 0
+            expr += - m.flow[n, o, t]
+            expr += m.flow[i, n, t] * n.conversion_factors[
+                o][t] / n.conversion_factors[i][t]
+            expr += - block.heat_loss[n, t]
+            expr += - m.flow[n, d, t]
+            return expr == 0
+        self.relation_with_demand = Constraint(self.INVESTHEATPIPES_WITH_DEMAND, m.TIMESTEPS,
+                                   rule=_relation_rule_with_demand)
 
         def _inflow_outflow_invest_coupling_rule(block, n):
             """Rule definition of constraint connecting the inflow

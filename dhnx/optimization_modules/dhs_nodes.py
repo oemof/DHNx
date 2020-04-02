@@ -302,12 +302,14 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
         # filter flows for investflow with investment > 0
         key_result = 'scalars'
         hp_investflow = [x for x in results.keys()
-                         if hasattr(results[x]['scalars'], 'invest')]
+                         if hasattr(results[x]['scalars'], 'invest')
+                         if x[1].label == 'house']
 
         if len(hp_investflow) == 0:
             hp_investflow = [x for x in results.keys()
                              if hasattr(results[x]['sequences'], 'invest')
-                             if results[x]['sequences']['invest'][0] > 0]
+                             if results[x]['sequences']['invest'][0] > 0
+                             if x[1].label == 'house']
             key_result = 'sequences'
 
         # There must be only one investment! Otherwise, it does not make
