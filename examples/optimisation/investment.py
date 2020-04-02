@@ -27,6 +27,8 @@ set = {'num_ts': num_ts,            # number of timesteps
        'SF_timeseries': 1,         # scaling factor for heat demand timeseries
        'SF_1_timeseries': 0.8,     # scaling factor for the first element of the timeseries (bei geoordneter JDL)
        'precalc_consumer_connections': True,
+       'bidirectional_pipes': True,       # specify whether the distribution lines (from fork to fork) should be bidiretional or not,
+                                          # if 'False', then two pipes are build in each direaction, instead of 1 bidirectional pipe
        }
 
 invest_opt = dhnx.input_output.load_invest_options('investment_input_2/invest_options')
