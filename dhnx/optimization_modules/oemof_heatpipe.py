@@ -98,6 +98,7 @@ class HeatPipeline(Transformer):
                 "the Investment attribute.")
 
         if self._invest_group is True:
+            self._set_flows()
             o = list(self.outputs.keys())[0]
             if (self.heat_loss_factor_fix[0] > 0) \
                     and (self.outputs[o].investment.nonconvex is False):
@@ -115,6 +116,11 @@ class HeatPipeline(Transformer):
         for flow in self.outputs.values():
             if isinstance(flow.investment, Investment):
                 self._invest_group = True
+
+    def _set_flows(self):
+        # sets the input flow to investment
+        for flow in self.inputs.values():
+            flow.investment = Investment()
 
     def constraint_group(self):
         if self._invest_group is True:
@@ -349,6 +355,20 @@ class HeatPipelineInvestBlock(SimpleBlock):
 
         self.relation = Constraint(self.INVESTHEATPIPES, m.TIMESTEPS,
                                    rule=_relation_rule)
+
+        def _inflow_outflow_invest_coupling_rule(block, n):
+            """Rule definition of constraint connecting the inflow
+            `InvestmentFlow.invest of pipe with invested outflow `invest`
+            by nominal_storage_capacity__inflow_ratio
+            """
+            i = list(n.inputs.keys())[0]
+            o = list(n.outputs.keys())[0]
+
+            expr = (m.InvestmentFlow.invest[i, n] ==
+                    m.InvestmentFlow.invest[n, o])
+            return expr
+        self.inflow_outflow_invest_coupling = Constraint(
+            self.INVESTHEATPIPES, rule=_inflow_outflow_invest_coupling_rule)
 
 
 class HeatPipelineNew(Transformer):
