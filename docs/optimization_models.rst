@@ -100,11 +100,11 @@ optimization:
 .. code-block:: txt
 
     tree
-    ├── edges.csv
-    ├── consumers.csv
-    ├── forks.csv
-    ├── producers.csv
-    └── sequences
+    ├── edges.csv           # (required)
+    ├── consumers.csv       # (required)
+    ├── forks.csv           # (required)
+    ├── producers.csv       # (required)
+    └── sequences           # (optional)
         └── consumers-heat_flow.csv
 
 The attributes, which are required, and which are optional with respect
@@ -214,12 +214,41 @@ The following table shows an example of a `consumers-heat_flow`:
    :header-rows: 1
    :file: _static/opti_consumers-heat_flow_example.csv
 
-The column index is the consumers `id`.
+The column index must be the consumers `id`.
 
 Investment Options
 """"""""""""""""""
 
-Text.
+If you want to do an investment or an simple unit commitment optimisation using
+the `optimize_investment()` method of the *ThermalNetwork*, you need to provide
+some additional data providing the investment parameter.
+The following sheme illustrates the structure of the investment input data:
+
+.. code-block:: txt
+
+    tree
+    ├── network
+    |   └── pipes.csv           # (required)
+    |
+    ├── consumers
+    |   ├── bus.csv             # (required)
+    |   ├── demand.csv          # (required)
+    |   ├── source.csv          # (optional)
+    |   ├── storages.csv        # (optional)
+    |   └── transformer.csv     # (optional)
+    |
+    └── producers
+        ├── bus.csv             # (required)
+        ├── demand.csv          # (optional)
+        ├── source.csv          # (required)
+        ├── storages.csv        # (optional)
+        └── transformer.csv     # (optional)
+
+The investment input data provides mainly all remaining parameters of the oemof
+solph components, which are not specific for a single edges, producer or
+consumer.
+
+
 
 .. _Optimization settings:
 
