@@ -100,11 +100,11 @@ optimization:
 .. code-block:: txt
 
     tree
-    ├── edges.csv           # (required)
-    ├── consumers.csv       # (required)
-    ├── forks.csv           # (required)
-    ├── producers.csv       # (required)
-    └── sequences           # (optional)
+    ├── edges.csv                       # (required)
+    ├── consumers.csv                   # (required)
+    ├── forks.csv                       # (required)
+    ├── producers.csv                   # (required)
+    └── sequences                       # (optional)
         └── consumers-heat_flow.csv
 
 The attributes, which are required, and which are optional with respect
