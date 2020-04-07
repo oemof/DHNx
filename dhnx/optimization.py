@@ -291,8 +291,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                           axis=1, join='inner')
 
         # check, which optimization type should be performed
-        if self.settings['dhs'] == 'fix':
-
+        if self.settings['heat_demand'] == 'scalar':
             # checks for single timestep optimisation
 
             # just single timestep optimization, overwrite previous!
@@ -354,7 +353,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                       solve_kwargs=self.settings['solve_kw'])
 
         self.es.results['main'] = solph.processing.results(self.om)
-        # self.es.results['meta'] = outputlib.processing.meta_results(self.om)
+        self.es.results['meta'] = solph.processing.meta_results(self.om)
 
         return
 
@@ -473,6 +472,7 @@ def optimize_investment(thermal_network, invest_options, settings=None):
     the investment optimization.
     """
     setting_default = {
+        'heat_demand': 'scalar',
         'num_ts': 1,
         'time_res': 1,
         'rate': 0.01,
@@ -506,6 +506,7 @@ def optimize_investment(thermal_network, invest_options, settings=None):
     edges_results = model.get_results_edges()
 
     results = {'oemof': model.es.results['main'],
+               'oemof_meta': model.es.results['meta'],
                'components': {'edges': edges_results}}
 
     return results
