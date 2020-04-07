@@ -208,8 +208,13 @@ consumers demand must be given in form of *P_heat_max* as attribute of the
 `consumers`, or in form of a heat_flow time series with the minimum length of
 1.
 
+The following table shows an example of a `consumers-heat_flow`:
 
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_consumers-heat_flow_example.csv
 
+The column index is the consumers `id`.
 
 Investment Options
 """"""""""""""""""
