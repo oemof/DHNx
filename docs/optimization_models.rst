@@ -93,18 +93,75 @@ The following figure provides an overview of the input data:
 ThermalNetwork
 """"""""""""""
 
-The
+The data for the *ThermalNetwork* must be provided in the structure as defined
+for the .csv reader. The following data is required for applying an
+optimization:
 
 .. code-block:: txt
 
     tree
-    ├── consumers.csv
     ├── edges.csv
+    ├── consumers.csv
     ├── forks.csv
     ├── producers.csv
     └── sequences
-        ├── consumers-mass_flow.csv
-        └── consumers-temperature_drop.csv
+        └── consumers-heat_flow.csv
+
+The attributes, which are required, and which are optional with respect
+to the optimization, are presented in detail in the following:
+
+Edges
+'''''
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_edges.csv
+
+The following optional attributes are introduced by the optimization module:
+
+* **existing**: Binary indicating an existing pipe. If there is no column
+  *existing* given, all Edges are free for optimization.
+* **capacity**: Capacity of existing pipes.
+  If *existing* is *True*, a *capacity* must be given.
+* **pipe_type**: Label of a type of pipe. The *pipe_type* refers to
+  a set of parameters of a pipeline component. The parameters for a *pipe_type*
+  must be given in the following table (see `pipe_options`).
+  If *existing* is *True*, a *pipe_type* must be given.
+* **active**: Binary indicating that this edge is considered. If no column
+  *active* is given, all edges are active. With this attribute, single edges
+  can be switched on and off. This can be very useful, if different scenarios
+  should be analyzed, e.g. you might not know in advance, whether you are
+  allowed to cross a property or use a street. (*not implemented yet*)
+* **add_fix_costs**: Additional fix investment costs. Depending on the street
+  and route of a DHS, the construction costs might differ. With this parameter,
+  additional fix investment costs (independent of the size of the pipes) can be
+  considered for each edge individually. Therefore, you need to apply a
+  nonconvex investment (see `pipe_options`). (*not implemented yet*)
+
+Consumers
+'''''''''
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_consumers.csv
+
+Producers
+'''''''''
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_producers.csv
+
+Forks
+''''''
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_forks.csv
+
+Consumers-heat_flow
+'''''''''''''''''''
+
 
 
 Investment Options
