@@ -117,15 +117,22 @@ Edges
    :header-rows: 1
    :file: _static/opti_edges.csv
 
+The following optional attributes must be given in every *ThermalNetwork*:
+
+* **id**: see :ref:`Thermal Network <thermal_network_label>`
+* **from_node**: see :ref:`Thermal Network <thermal_network_label>`
+* **to_node**: see :ref:`Thermal Network <thermal_network_label>`
+* **length**: see :ref:`Thermal Network <thermal_network_label>`
+
 The following optional attributes are introduced by the optimization module:
 
 * **existing**: Binary indicating an existing pipe. If there is no column
   *existing* given, all Edges are free for optimization.
 * **capacity**: Capacity of existing pipes.
   If *existing* is *True*, a *capacity* must be given.
-* **pipe_type**: Label of a type of pipe. The *pipe_type* refers to
-  a set of parameters of a pipeline component. The parameters for a *pipe_type*
-  must be given in the following table (see `pipe_options`).
+* **pipe_type**: Label of the type of pipe. The *pipe_type* refers to
+  a set of parameters of a pipeline component. The parameters for the
+  *pipe_type* must be given in the following table (see `pipe_options`).
   If *existing* is *True*, a *pipe_type* must be given.
 * **active**: Binary indicating that this edge is considered. If no column
   *active* is given, all edges are active. With this attribute, single edges
@@ -145,12 +152,39 @@ Consumers
    :header-rows: 1
    :file: _static/opti_consumers.csv
 
+The following optional attributes must be given in every *ThermalNetwork*:
+
+* **id**: see :ref:`Thermal Network <thermal_network_label>`
+
+The following optional attributes are introduced by the optimization module:
+
+* **active**: Binary indicating that consumer-xy is considered. If no column
+  *active* is given, all consumers are active. With this attribute, single
+  consumers can be switched on and off (e.g. for scenario analysis with
+  different connection quotes).
+* **P_heat_max**: Maximum heat load of consumer. If no column
+  *P_heat_max* is given, the maximum heat load is calculated from the heat
+  demand series (see `consumers-heat_flow.csv`). Depending on the optimization
+  setting, *P_heat_max* or the demand series is used for the optimization (see
+  :ref:`Optimization settings` for further information).
+
 Producers
 '''''''''
 
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_producers.csv
+
+The following optional attributes must be given in every *ThermalNetwork*:
+
+* **id**: see :ref:`Thermal Network <thermal_network_label>`
+
+The following optional attributes are introduced by the optimization module:
+
+* **active**: Binary indicating that producer is active. If no column
+  *active* is given, all producers are active. With this attribute, single
+  producers can be switched on and off (e.g. for scenario analysis for
+  different supply plant positions.
 
 Forks
 ''''''
@@ -159,8 +193,21 @@ Forks
    :header-rows: 1
    :file: _static/opti_forks.csv
 
+The following optional attributes must be given in every *ThermalNetwork*:
+
+* **id**: see :ref:`Thermal Network <thermal_network_label>`
+
+For Forks, no additional required or optional attributes are added by the
+optimization module.
+
 Consumers-heat_flow
 '''''''''''''''''''
+
+Providing consumers heat flow time series is optional, **but** either the
+consumers demand must be given in form of *P_heat_max* as attribute of the
+`consumers`, or in form of a heat_flow time series with the minimum length of
+1.
+
 
 
 

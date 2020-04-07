@@ -1,2 +1,3 @@
 attribute,type,unit,default,description,status,requirement
-id,int,n/a,n/a,Unique id,Input,required
+**id**,int,n/a,n/a,Unique id,Input,required
+**active**,bool,n/a,1,Binary indicating that producer is active,Input,optional
