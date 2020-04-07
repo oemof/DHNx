@@ -467,23 +467,41 @@ def optimize_operation(thermal_network):
     return results
 
 
-def optimize_investment(thermal_network, settings, invest_options):
+def optimize_investment(thermal_network, invest_options, settings=None):
     r"""
     Takes a thermal network and returns the result of
     the investment optimization.
-
-    Parameters
-    ----------
-    thermal_network
-
-    Returns
-    -------
-    results : dict
     """
-    model = OemofInvestOptimizationModel(thermal_network, settings,
+    setting_default = {
+        'num_ts': 1,
+        'time_res': 1,
+        'rate': 0.01,
+        'f_invest': 1,
+        'start_date': '1/1/2018',
+        'frequence': 'H',
+        'solver': 'cbc',
+        'solve_kw': {'tee': False},
+        'dhs': 'optional',
+        'simultaneity': 'global',
+        'global_SF': 1,
+        'SF_timeseries': 1,
+        'SF_1_timeseries': 1,
+        'precalc_consumer_connections': False,
+        'bidirectional_pipes': False,
+    }
+
+    if settings is not None:
+        given_keys = [x for x in settings.keys()
+                      if x in setting_default.keys()]
+
+        for key in given_keys:
+            setting_default[key] = settings[key]
+
+    model = OemofInvestOptimizationModel(thermal_network, setting_default,
                                          invest_options)
 
-    model.solve(solver=settings['solver'], solve_kw=settings['solve_kw'])
+    model.solve(solver=setting_default['solver'],
+                solve_kw=setting_default['solve_kw'])
 
     edges_results = model.get_results_edges()
 
