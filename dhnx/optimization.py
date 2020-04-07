@@ -89,10 +89,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # check sequences column index datatype
         # the columns must be integer
-        if self.network.sequences['consumers']['heat_flow'].columns.dtype != 'int64':
-            self.network.sequences['consumers']['heat_flow'].columns = \
-                self.network.sequences['consumers']['heat_flow'].columns.\
-                    astype('int64')
+        if 'consumers' in self.network.sequences.keys():
+            if self.network.sequences['consumers']['heat_flow'].columns.dtype != 'int64':
+                self.network.sequences['consumers']['heat_flow'].columns = \
+                    self.network.sequences['consumers']['heat_flow'].columns.\
+                        astype('int64')
 
         return
 
@@ -297,17 +298,15 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             # just single timestep optimization, overwrite previous!
             self.settings['num_ts'] = 1
 
+            # new approach
+            P_max = self.network.components['consumers']['P_heat_max']
+            df_ts = pd.DataFrame(data=[P_max.values],
+                                 columns=list(P_max.index),
+                                 index=pd.Index([0], name='timestep'))
+
             # heat load is maximum heat load mutiplied with SF
-            seq = self.network.sequences['consumers']['heat_flow']
-            seq.drop(seq.index[1:], inplace=True)
-            seq_T = seq.T
-            # seq_T.index = pd.Index([int(x) for x in list(seq_T.index)])
-            seq_T = pd.concat([seq_T, self.network.components['consumers'][
-                'P_heat_max']], axis=1, join='inner')
-            seq_T[0] = seq_T['P_heat_max']
-            seq_T.drop(['P_heat_max'], axis=1, inplace=True)
             self.network.sequences['consumers']['heat_flow'] = \
-                seq_T.T * self.settings['global_SF']
+                df_ts * self.settings['global_SF']
 
         if self.settings['num_ts'] > \
                 len(self.network.sequences['consumers']['heat_flow'].index):
