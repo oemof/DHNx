@@ -274,9 +274,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.check_input()
 
         # create edges attribute hp_type, if not in the table so far
-        if 'hp_type' not in list(
-                self.network.components['edges'].columns):
+        if 'hp_type' not in list(self.network.components['edges'].columns):
             self.network.components['edges']['hp_type'] = 'nan'
+
+        # if there is no information about active edges, all edges are active
+        if 'active' not in list(self.network.components['edges'].columns):
+            self.network.components['edges']['active'] = 1
 
         # prepare heat data, whether global simultanity or timeseries
         if 'P_heat_max' not in list(
