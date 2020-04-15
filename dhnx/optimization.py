@@ -124,11 +124,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         """
         print('Info: Precalculation Consumers Connection')
 
-        # in case the attribute 'active' is not present, it is supposed
-        # that all consumers are active
-        if 'active' not in list(self.network.components['consumers'].index):
-            self.network.components['consumers']['active'] = 1
-
         edges = self.network.components['edges']
         count = 0   # counts the number of pre-calculatet house connections
         count_multiple = 0 # counts the consumers, which have multiple connection options
@@ -173,7 +168,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         
         return
 
-    def get_pipe_data_existing(self):
+    def get_pipe_data(self):
         """Adds heat loss and investment costs (investment costs just for
         information) of all existing pipes to the edges table."""
 
@@ -184,7 +179,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # check if pipe type in pipe invest options
         hp_list = list(set(
-            [x for x in edges['hp_type'].tolist() if str(x) != 'nan']))
+            [x for x in edges['hp_type'].tolist()
+             if isinstance(x, str)]))
 
         for hp in hp_list:
             if hp not in list(pipe_types['label_3']):
@@ -208,13 +204,13 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             return heat_loss
 
-        edges['heat_loss[1/m]'] = edges.apply(
-            lambda x: get_heat_loss(x['hp_type'], x['capacity'])
-            if x['existing'] == 1 else None, axis=1)
+        edges['heat_loss[kW]'] = edges.apply(
+            lambda x: x['length[m]']*get_heat_loss(x['hp_type'], x['capacity'])
+            if isinstance(x['hp_type'], str) else None, axis=1)
 
-        edges['invest_costs[€/m]'] = edges.apply(
-            lambda x: get_invest_costs(x['hp_type'], x['capacity'])
-            if x['existing'] == 1 else None, axis=1)
+        edges['invest_costs[€]'] = edges.apply(
+            lambda x: x['length[m]']*get_invest_costs(x['hp_type'], x['capacity'])
+            if isinstance(x['hp_type'], str) else None, axis=1)
 
         self.network.components['edges'] = edges
 
@@ -275,11 +271,16 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # create edges attribute hp_type, if not in the table so far
         if 'hp_type' not in list(self.network.components['edges'].columns):
-            self.network.components['edges']['hp_type'] = 'nan'
+            self.network.components['edges']['hp_type'] = None
 
         # if there is no information about active edges, all edges are active
         if 'active' not in list(self.network.components['edges'].columns):
             self.network.components['edges']['active'] = 1
+
+        # in case the attribute 'active' is not present, it is supposed
+        # that all consumers are active
+        if 'active' not in list(self.network.components['consumers'].index):
+            self.network.components['consumers']['active'] = 1
 
         # prepare heat data, whether global simultanity or timeseries
         if 'P_heat_max' not in list(
@@ -338,7 +339,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # if there is the existing attribute, get the information about
         # the pipe types (like heat_loss)
-        self.get_pipe_data_existing()
+        self.get_pipe_data()
 
         # set up oemof energy system
         self.setup_oemof_es()
@@ -442,6 +443,26 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         for hp in active_hp:
             get_hp_results()
             check_multi_dir_invest()
+
+        def write_results_to_edges():
+
+            def check_invest_label():
+                if isinstance(c['hp_type'], str):
+                    raise ValueError(
+                        "Edge id {} already has an investment > 0!".format(r))
+
+            for hp in active_hp:
+                for r, c in df.iterrows():
+                    if c[hp + '.size'] > 0:
+                        check_invest_label()
+                        df.at[r, 'hp_type'] = hp
+                        df.at[r, 'capacity'] = c[hp + '.size']
+
+            return
+
+        write_results_to_edges()
+
+        self.get_pipe_data()
 
         return df
 

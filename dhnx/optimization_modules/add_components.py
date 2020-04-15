@@ -482,7 +482,6 @@ def add_heatpipes_exist(labels, gd, q, b_in, b_out, nodes):
         inputs={b_in: solph.Flow()},
         outputs={b_out: solph.Flow(
             nominal_value=q['capacity'])},
-        heat_loss_factor=q['heat_loss[1/m]'],
-        length=q['length[m]']))
+        heat_loss_factor=q['heat_loss[kW]']))
 
     return nodes
