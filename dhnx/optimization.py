@@ -375,10 +375,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.om.solve(solver=self.settings['solver'],
                       solve_kwargs=self.settings['solve_kw'])
 
-        filename = os.path.join(
-            helpers.extend_basic_path('lp_files'), 'DHNx.lp')
-        logging.info('Store lp-file in {0}.'.format(filename))
-        self.om.write(filename, io_options={'symbolic_solver_labels': True})
+        # filename = os.path.join(
+        #     helpers.extend_basic_path('lp_files'), 'DHNx.lp')
+        # logging.info('Store lp-file in {0}.'.format(filename))
+        # self.om.write(filename, io_options={'symbolic_solver_labels': True})
 
         self.es.results['main'] = solph.processing.results(self.om)
         self.es.results['meta'] = solph.processing.meta_results(self.om)
