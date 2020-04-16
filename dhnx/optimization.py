@@ -16,6 +16,7 @@ from .model import OperationOptimizationModel, InvestOptimizationModel
 from dhnx.optimization_modules.dhs_nodes import add_nodes_dhs,\
     add_nodes_houses, calc_consumer_connection
 from dhnx.optimization_modules import oemof_heatpipe as oh, add_components as ac
+from dhnx.optimization_modules import auxiliary as aux
 
 import logging
 import pandas as pd
@@ -188,29 +189,48 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     "Existing heatpipe type {} is not in the list of "
                     "ACTIVE heatpipe investment options!".format(hp))
 
-        def get_heat_loss(typ, capa):
+        def get_heat_loss(q):
 
-            ind = pipe_types[pipe_types['label_3'] == typ].index
-            heat_loss = pipe_types.loc[ind]['l_factor'].values[0] * capa + \
-                        pipe_types.loc[ind]['l_factor_fix'].values[0]
+            # get index of pipe datasheet
+            ind = pipe_types[pipe_types['label_3'] == q['hp_type']].index
+
+            t = pipe_types.loc[ind].squeeze()
+
+            # differantiate between convex and nonconvex investments
+            if t['nonconvex']:
+                heat_loss = (t['l_factor'] * q['capacity'] +
+                             t['l_factor_fix']) * q['length[m]']
+            else:
+                heat_loss = t['l_factor'] * q['capacity'] * q['length[m]']
 
             return heat_loss
 
-        def get_invest_costs(typ, capa):
+        def get_invest_costs(opti_nw, q):
 
-            ind = pipe_types[pipe_types['label_3'] == typ].index
-            heat_loss = pipe_types.loc[ind]['capex_pipes'].values[0] * capa + \
-                        pipe_types.loc[ind]['fix_costs'].values[0]
+            # get index of pipe datasheet
+            ind = pipe_types[pipe_types['label_3'] == c['hp_type']].index
 
-            return heat_loss
+            t = pipe_types.loc[ind].squeeze()
+            gd = opti_nw.settings
 
-        edges['heat_loss[kW]'] = edges.apply(
-            lambda x: x['length[m]']*get_heat_loss(x['hp_type'], x['capacity'])
-            if isinstance(x['hp_type'], str) else None, axis=1)
+            epc_p, epc_fix = aux.precalc_cost_param(t, q, gd)
 
-        edges['invest_costs[€]'] = edges.apply(
-            lambda x: x['length[m]']*get_invest_costs(x['hp_type'], x['capacity'])
-            if isinstance(x['hp_type'], str) else None, axis=1)
+            # differantiate between convex and nonconvex investments
+            if t['nonconvex']:
+                invest_costs = epc_p * q['capacity'] + epc_fix
+            else:
+                invest_costs = epc_p * q['capacity']
+
+            return invest_costs
+
+        # get investment costs
+        for r, c in edges.iterrows():
+            if isinstance(c['hp_type'], str):
+                edges.at[r, 'heat_loss[kW]'] = get_heat_loss(c)
+                edges.at[r, 'invest_costs[€]'] = get_invest_costs(self, c)
+            else:
+                edges.at[r, 'heat_loss[kW]'] = None
+                edges.at[r, 'invest_costs[€]'] = None
 
         self.network.components['edges'] = edges
 
@@ -354,6 +374,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         logging.info('Solve the optimization problem')
         self.om.solve(solver=self.settings['solver'],
                       solve_kwargs=self.settings['solve_kw'])
+
+        filename = os.path.join(
+            helpers.extend_basic_path('lp_files'), 'DHNx.lp')
+        logging.info('Store lp-file in {0}.'.format(filename))
+        self.om.write(filename, io_options={'symbolic_solver_labels': True})
 
         self.es.results['main'] = solph.processing.results(self.om)
         self.es.results['meta'] = solph.processing.meta_results(self.om)
