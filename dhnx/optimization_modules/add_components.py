@@ -260,9 +260,9 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
                             nonconvex=True,
                             offset=epc_fix,
                         ))},
-                    heat_loss_factor=t['l_factor'],
-                    heat_loss_factor_fix=t['l_factor_fix'],
-                    length=q['length[m]']))
+                    heat_loss_factor=t['l_factor']*q['length[m]'],
+                    heat_loss_factor_fix=t['l_factor_fix']*q['length[m]'],
+                ))
 
             else:
 
@@ -277,8 +277,8 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
                             minimum=0,
                             nonconvex=False,
                         ))},
-                    heat_loss_factor=t['l_factor'],
-                    length=q['length[m]']))
+                    heat_loss_factor=t['l_factor']*q['length[m]'],
+                ))
 
     return nodes, busd
 
