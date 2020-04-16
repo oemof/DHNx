@@ -353,7 +353,13 @@ def add_heatpipes_old(opt_network, q, labels, nodes):
     return nodes
 
 
-def add_heatpipes_exist(labels, gd, q, b_in, b_out, nodes):
+def add_heatpipes_exist(pipes, labels, gd, q, b_in, b_out, nodes):
+
+    # get index of existing pipe label of pipe data
+    ind_pipe = pipes[pipes['label_3'] == q['hp_type']].index[0]
+
+    hlf = pipes.at[ind_pipe, 'l_factor'] * q['length[m]']
+    hlff = pipes.at[ind_pipe, 'l_factor_fix'] * q['length[m]']
 
     nodes.append(oh.HeatPipeline(
         label=oh.Label(labels['l_1'], labels['l_2'],
@@ -361,6 +367,8 @@ def add_heatpipes_exist(labels, gd, q, b_in, b_out, nodes):
         inputs={b_in: solph.Flow()},
         outputs={b_out: solph.Flow(
             nominal_value=q['capacity'])},
-        heat_loss_factor=q['heat_loss[kW]']))
+        heat_loss_factor=hlf,
+        heat_loss_factor_fix=hlff,
+    ))
 
     return nodes
