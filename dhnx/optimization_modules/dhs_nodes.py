@@ -183,8 +183,6 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                         nodes, busd)
     
                 elif (q['from_node'].split('-')[0] == 'forks') and (q['to_node'].split('-')[0] == 'forks'):
-
-                    # nodes = ac.add_heatpipes_new(opti_network, q, d_labels, nodes)
     
                     nodes = ac.add_heatpipes_old(opti_network, q, d_labels, nodes)
     
@@ -242,10 +240,10 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
     if P_max == 0:
         print('Heat demand of {} is zero.'.format(house_connection['to_node']))
 
-        # take first active heatpipe option and set capacity to zero
-        capacity = 0
-        hp_typ = pipes_options.loc[pipes_options[
-            pipes_options['active'] == 1].index[0]]['label_3']
+        capacity = None
+        invest_status = None
+        hp_typ = None
+        exist = 0
 
     elif P_max > 0:
         idx = pd.date_range('1/1/2017', periods=1, freq='H')
@@ -302,6 +300,12 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
 
         capacity = results[hp_investflow[0]][key_result]['invest'][0]
         hp_typ = hp_investflow[0][0].label[2]
+        exist = 1
+
+        if hasattr(results[hp_investflow[0]][key_result], 'invest_status'):
+            invest_status = results[hp_investflow[0]][key_result]['invest_status'][0]
+        else:
+            invest_status = None
 
     else:
         raise ValueError(
@@ -309,4 +313,4 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
             "".format(house_connection['to_node']))
     # model.InvestmentFlow.investment_costs.expr()
     
-    return capacity, hp_typ
+    return capacity, hp_typ, invest_status, exist

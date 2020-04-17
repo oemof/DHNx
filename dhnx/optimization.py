@@ -144,14 +144,15 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
                 house_connection = edges.T[edge_id[0]]
                 # optimize single connection with oemof solph
-                capacity, hp_typ = calc_consumer_connection(
+                capacity, hp_typ, i_status, exist = calc_consumer_connection(
                     house_connection, c['P_heat_max'], self.settings,
                     self.invest_options['network']['pipes'])                
                 
                 # put results into existing pipes data
-                edges.at[edge_id, 'existing'] = 1
+                edges.at[edge_id, 'existing'] = exist
                 edges.at[edge_id, 'capacity'] = capacity
                 edges.at[edge_id, 'hp_type'] = hp_typ
+                edges.at[edge_id, 'invest_status'] = i_status
                 
                 count += 1
 
@@ -167,6 +168,28 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
               ' {} consumers have multiple options for connecting to the grid.'.
               format(count, num_active_consumers, count_multiple))
         
+        return
+
+    def complete_exist_data(self):
+
+        pipe_types = self.invest_options['network']['pipes']
+        edges = self.network.components['edges']
+
+        for r, c in edges.iterrows():
+            if c['existing']:
+                idx = pipe_types[pipe_types['label_3'] == c['hp_type']].index[0]
+                if pipe_types.at[idx, 'nonconvex'] == 1:
+                    if c['capacity'] > 0:
+                        edges.at[r, 'invest_status'] = 1
+                    elif c['capacity'] == 0:
+                        edges.at[r, 'invest_status'] = 0
+                    else:
+                        print('Something wrong?!')
+                else:
+                    edges.at[r, 'invest_status'] = None
+
+        self.network.components['edges'] = edges
+
         return
 
     def get_pipe_data(self):
@@ -199,7 +222,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             # differantiate between convex and nonconvex investments
             if t['nonconvex']:
                 heat_loss = (t['l_factor'] * q['capacity'] +
-                             t['l_factor_fix']) * q['length[m]']
+                             t['l_factor_fix'] * q['invest_status']) * q['length[m]']
             else:
                 heat_loss = t['l_factor'] * q['capacity'] * q['length[m]']
 
@@ -217,7 +240,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             # differantiate between convex and nonconvex investments
             if t['nonconvex']:
-                invest_costs = epc_p * q['capacity'] + epc_fix
+                invest_costs = epc_p * q['capacity'] + epc_fix * q['invest_status']
             else:
                 invest_costs = epc_p * q['capacity']
 
@@ -344,6 +367,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         if 'existing' not in self.network.components['edges'].columns:
             self.network.components['edges']['existing'] = 0
 
+        # get invest_status in order that .get_pipe_data() works proberly for
+        # existing pipes - maybe, needs to be adapted in future
+        self.complete_exist_data()
+
         # precalculate house connections if wanted
         # precalculates takes always the 'P_heat_max' of each house for
         # dimesioning, without simultaneity factor. The simultaneitgy factor
@@ -375,10 +402,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.om.solve(solver=self.settings['solver'],
                       solve_kwargs=self.settings['solve_kw'])
 
-        # filename = os.path.join(
-        #     helpers.extend_basic_path('lp_files'), 'DHNx.lp')
-        # logging.info('Store lp-file in {0}.'.format(filename))
-        # self.om.write(filename, io_options={'symbolic_solver_labels': True})
+        filename = os.path.join(
+            helpers.extend_basic_path('lp_files'), 'DHNx.lp')
+        logging.info('Store lp-file in {0}.'.format(filename))
+        self.om.write(filename, io_options={'symbolic_solver_labels': True})
 
         self.es.results['main'] = solph.processing.results(self.om)
         self.es.results['meta'] = solph.processing.meta_results(self.om)
@@ -412,7 +439,29 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             return invest
 
-        def get_hp_results():
+        def get_invest_status(lab):
+
+            res = self.es.results['main']
+
+            outflow = [x for x in res.keys()
+                       if x[1] is not None
+                       if lab == str(x[0].label)]
+
+            try:
+                invest_status = res[outflow[0]]['scalars']['invest_status']
+            except:
+                try:
+                    # that's in case of a one timestep optimisation due to
+                    # an oemof bug in outputlib
+                    invest_status = res[outflow[0]]['sequences']['invest_status'][0]
+                except:
+                    # this is in case there is no bi-directional heatpipe, e.g. at
+                    # forks-consumers, producers-forks
+                    invest_status = 0
+
+            return invest_status
+
+        def get_hp_results(p):
             """The edge specific investment results of the heatpipelines are
             put
             """
@@ -429,6 +478,14 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             df[hp + '.' + 'size'] = \
                 df[[hp + '.' + 'size-1', hp + '.' + 'size-2']].max(axis=1)
+
+            if p['nonconvex']:
+                df[hp + '.' + 'status-1'] = df[hp + '.' + 'dir-1'].apply(
+                    lambda x: get_invest_status(label_base + x))
+                df[hp + '.' + 'status-2'] = df[hp + '.' + 'dir-2'].apply(
+                    lambda x: get_invest_status(label_base + x))
+                df[hp + '.' + 'status'] = \
+                    df[[hp + '.' + 'status-1', hp + '.' + 'status-2']].max(axis=1)
 
             return df
 
@@ -466,10 +523,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         active_hp = list(df_hp[df_hp['active'] == 1]['label_3'].values)
 
         for hp in active_hp:
-            get_hp_results()
+            hp_param = df_hp[df_hp['label_3'] == hp].squeeze()
+            get_hp_results(hp_param)
             check_multi_dir_invest()
 
-        def write_results_to_edges():
+        def write_results_to_edges(pipe_data):
 
             def check_invest_label():
                 if isinstance(c['hp_type'], str):
@@ -477,15 +535,20 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         "Edge id {} already has an investment > 0!".format(r))
 
             for hp in active_hp:
+                p = pipe_data[pipe_data['label_3'] == hp].squeeze()   # series of heatpipe
                 for r, c in df.iterrows():
                     if c[hp + '.size'] > 0:
                         check_invest_label()
                         df.at[r, 'hp_type'] = hp
                         df.at[r, 'capacity'] = c[hp + '.size']
+                        if p['nonconvex']:
+                            df.at[r, 'invest_status'] = c[hp + '.status']
+                        else:
+                            df.at[r, 'invest_status'] = None
 
             return
 
-        write_results_to_edges()
+        write_results_to_edges(df_hp)
 
         self.get_pipe_data()
 

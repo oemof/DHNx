@@ -243,42 +243,23 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
             epc_p, epc_fix = aux.precalc_cost_param(t, q, gd)
 
             # Heatpipe with binary variable
-            if t['nonconvex']:
+            nc = True if t['nonconvex'] else False
 
-                nodes.append(oh.HeatPipeline(
-                    label=oh.Label(labels['l_1'], labels['l_2'],
-                                   labels['l_3'], labels['l_4']),
-                    inputs={b_in: solph.Flow(
-                        # bidirectional=True, min=-1
-                    )},
-                    outputs={b_out: solph.Flow(
-                        # bidirectional=True, min=-1,
-                        nominal_value=None, investment=solph.Investment(
-                            ep_costs=epc_p,
-                            maximum=t['cap_max'],
-                            minimum=t['cap_min'],
-                            nonconvex=True,
-                            offset=epc_fix,
-                        ))},
-                    heat_loss_factor=t['l_factor']*q['length[m]'],
-                    heat_loss_factor_fix=t['l_factor_fix']*q['length[m]'],
-                ))
-
-            else:
-
-                nodes.append(oh.HeatPipeline(
-                    label=oh.Label(labels['l_1'], labels['l_2'],
-                                     labels['l_3'], labels['l_4']),
-                    inputs={b_in: solph.Flow()},
-                    outputs={b_out: solph.Flow(
-                        nominal_value=None, investment=solph.Investment(
-                            ep_costs=epc_p,
-                            maximum=t['cap_max'],
-                            minimum=0,
-                            nonconvex=False,
-                        ))},
-                    heat_loss_factor=t['l_factor']*q['length[m]'],
-                ))
+            nodes.append(oh.HeatPipeline(
+                label=oh.Label(labels['l_1'], labels['l_2'],
+                               labels['l_3'], labels['l_4']),
+                inputs={b_in: solph.Flow()},
+                outputs={b_out: solph.Flow(
+                    nominal_value=None, investment=solph.Investment(
+                        ep_costs=epc_p,
+                        maximum=t['cap_max'],
+                        minimum=t['cap_min'],
+                        nonconvex=nc,
+                        offset=epc_fix,
+                    ))},
+                heat_loss_factor=t['l_factor']*q['length[m]'],
+                heat_loss_factor_fix=t['l_factor_fix']*q['length[m]'],
+            ))
 
     return nodes, busd
 
