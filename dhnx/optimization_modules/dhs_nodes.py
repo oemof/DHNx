@@ -135,7 +135,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 else:
                     raise ValueError("Something wrong!")
     
-            else:   # Investment
+            else:   # calls Investment heatpipeline function
                 # connection of houses
                 if q['to_node'].split('-')[0] == "consumers":
     
@@ -146,9 +146,9 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     
                     d_labels['l_4'] = start + '-' + end
     
-                    nodes, busd = ac.add_heatpipes(
+                    nodes = ac.add_heatpipes(
                         pipe_data, d_labels, gd, q, b_in, b_out,
-                        nodes, busd)
+                        nodes)
     
                 elif q['from_node'].split('-')[0] == "consumers":
                     raise ValueError(
@@ -156,7 +156,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                         " Existing heatpipe id {}".format(p))
     
                 elif q['to_node'].split('-')[0] == "producers":
-    
+
                     start = q['to_node']
                     end = q['from_node']
                     b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
@@ -164,10 +164,10 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     
                     d_labels['l_4'] = start + '-' + end
     
-                    nodes, busd = ac.add_heatpipes(
+                    nodes = ac.add_heatpipes(
                         pipe_data, d_labels,
                         gd, q, b_in, b_out,
-                        nodes, busd)
+                        nodes)
     
                 elif q['from_node'].split('-')[0] == "producers":
     
@@ -178,9 +178,9 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     
                     d_labels['l_4'] = start + '-' + end
     
-                    nodes, busd = ac.add_heatpipes(
+                    nodes = ac.add_heatpipes(
                         pipe_data, d_labels, gd, q, b_in, b_out,
-                        nodes, busd)
+                        nodes)
     
                 elif (q['from_node'].split('-')[0] == 'forks') and (q['to_node'].split('-')[0] == 'forks'):
     
@@ -219,7 +219,7 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
                 #     nodes, busd = ac.add_buses(item, d_labels, nodes, busd)
 
                 if key == 'source':
-                    nodes, busd = ac.add_sources(item, d_labels, gd, nodes, busd)
+                    nodes, busd = ac.add_sources(opti_network, item, d_labels, gd, nodes, busd)
 
                 if key == 'demand':
                     nodes, busd = ac.add_demand(item, d_labels, gd, series, nodes,
@@ -270,10 +270,10 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
         d_labels['l_4'] = house_connection['from_node'] + '-' + \
                           house_connection['to_node']
 
-        nodes, buses = ac.add_heatpipes(
+        nodes = ac.add_heatpipes(
             pipes_options,
             d_labels, set, house_connection,
-            b_grid, b_house, nodes, buses)
+            b_grid, b_house, nodes)
 
         esys.add(*nodes)
         model = solph.Model(esys)

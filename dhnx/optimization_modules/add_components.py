@@ -64,7 +64,18 @@ def add_buses(it, labels, nodes, busd):
     return nodes, busd
 
 
-def add_sources(it, labels, gd, nodes, busd):
+def add_sources(on, it, labels, gd, nodes, busd):
+
+    # check if timeseries are given
+    ts_status = False   # status if timeseries for sources is present
+    if 'source_' + 'timeseries' in on.invest_options[labels['l_1']].keys():
+        ts = on.invest_options[labels['l_1']]['source_' + 'timeseries']
+        ts_status = True
+
+    # check what flow attributes are given by what comes after 'active'
+    flow_attr = list(it.columns)[2:]
+    idx = flow_attr.index('active')
+    flow_attr = flow_attr[idx+1:]
 
     for i, cs in it.iterrows():
         labels['l_3'] = 'source'
@@ -73,11 +84,15 @@ def add_sources(it, labels, gd, nodes, busd):
             labels['l_2'] = cs['label_2']
             outflow_args = {}
 
-            if cs['cost_series']:
-                print('error: noch nicht angepasst!')
+            for fa in flow_attr:
+                outflow_args[fa] = cs[fa]
 
-            else:
-                outflow_args['variable_costs'] = cs['variable costs']
+            # add timeseries data if present
+            if ts_status:
+                ts_key = labels['l_4'].split('-')[1] + '_' + labels['l_2']
+                for col in ts.columns.values:
+                    if col.split('.')[0] == ts_key:
+                        outflow_args[col.split('.')[1]] = ts[col].values
 
             nodes.append(
                 solph.Source(
@@ -230,8 +245,9 @@ def add_storage(it, labels, gd, nodes, busd):
 
     return nodes, busd
 
+
 # when is this function still used? for old style like precalculation?
-def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
+def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
 
     for i, t in it.iterrows():
 
@@ -245,23 +261,27 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes, busd):
             # Heatpipe with binary variable
             nc = True if t['nonconvex'] else False
 
+            # bidirectional heatpipelines yes or no
+            flow_bi_args = {
+                'bidirectional': True, 'min': -1}\
+                if gd['bidirectional_pipes'] else {}
+
             nodes.append(oh.HeatPipeline(
                 label=oh.Label(labels['l_1'], labels['l_2'],
                                labels['l_3'], labels['l_4']),
-                inputs={b_in: solph.Flow()},
+                inputs={b_in: solph.Flow(**flow_bi_args)},
                 outputs={b_out: solph.Flow(
-                    nominal_value=None, investment=solph.Investment(
-                        ep_costs=epc_p,
-                        maximum=t['cap_max'],
-                        minimum=t['cap_min'],
-                        nonconvex=nc,
-                        offset=epc_fix,
+                    nominal_value=None,
+                    **flow_bi_args,
+                    investment=solph.Investment(
+                        ep_costs=epc_p, maximum=t['cap_max'],
+                        minimum=t['cap_min'], nonconvex=nc, offset=epc_fix,
                     ))},
                 heat_loss_factor=t['l_factor']*q['length[m]'],
                 heat_loss_factor_fix=t['l_factor_fix']*q['length[m]'],
             ))
 
-    return nodes, busd
+    return nodes
 
 
 def add_heatpipes_old(opt_network, q, labels, nodes):
