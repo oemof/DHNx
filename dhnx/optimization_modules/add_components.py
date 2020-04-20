@@ -64,7 +64,7 @@ def add_buses(it, labels, nodes, busd):
     return nodes, busd
 
 
-def add_sources(on, it, labels, gd, nodes, busd):
+def add_sources(on, it, c, labels, gd, nodes, busd):
 
     # check if timeseries are given
     ts_status = False   # status if timeseries for sources is present
@@ -72,7 +72,8 @@ def add_sources(on, it, labels, gd, nodes, busd):
         ts = on.invest_options[labels['l_1']]['source_' + 'timeseries']
         ts_status = True
 
-    # check what flow attributes are given by what comes after 'active'
+    # generel further flow attributes: check what flow attributes are given
+    # by what comes after 'active'
     flow_attr = list(it.columns)[2:]
     idx = flow_attr.index('active')
     flow_attr = flow_attr[idx+1:]
@@ -82,10 +83,31 @@ def add_sources(on, it, labels, gd, nodes, busd):
 
         if cs['active']:
             labels['l_2'] = cs['label_2']
+
             outflow_args = {}
 
+            # general additional flow attributes
             for fa in flow_attr:
                 outflow_args[fa] = cs[fa]
+
+            # specific flow attributes
+            # e.g. check for heat (label 2)
+            # e.g. check for source (label 3)
+            spec_attr = [x for x in list(on.network.components[labels['l_1']].columns)
+                         if x.split('.')[-1] in on.oemof_flow_attr
+                         if x.split('.')[0] == labels['l_2']
+                         if x.split('.')[1] == labels['l_3']]
+
+            for sa in spec_attr:
+                if sa.split('.')[-1] in outflow_args.keys():
+                    print('General attribute <{}> of Label 2 <{}> and '
+                          'Label 3 <{}> (value: {}) will '
+                          'be replaced by specific data. New value for '
+                          '<{}>: {}'.format(
+                          sa.split('.')[-1], labels['l_2'], labels['l_3'],
+                        outflow_args[sa.split('.')[-1]],
+                          labels['l_4'], c[sa]))
+                outflow_args[sa.split('.')[-1]] = c[sa]
 
             # add timeseries data if present
             if ts_status:

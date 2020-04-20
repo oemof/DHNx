@@ -235,7 +235,7 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
                 #     nodes, busd = ac.add_buses(item, d_labels, nodes, busd)
 
                 if key == 'source':
-                    nodes, busd = ac.add_sources(opti_network, item, d_labels, gd, nodes, busd)
+                    nodes, busd = ac.add_sources(opti_network, item, c, d_labels, gd, nodes, busd)
 
                 if key == 'demand':
                     nodes, busd = ac.add_demand(item, d_labels, gd, series, nodes,

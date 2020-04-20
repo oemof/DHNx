@@ -50,6 +50,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     def __init__(self, thermal_network, settings, investment_options):
         self.settings = settings
         self.invest_options = investment_options
+        # list of possible oemof flow attributes
+        self.oemof_flow_attr = {'nominal_value', 'min', 'max',
+                                'variable_costs'}
         super().__init__(thermal_network)
         self.results = {}
 
