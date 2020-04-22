@@ -52,7 +52,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.invest_options = investment_options
         # list of possible oemof flow attributes
         self.oemof_flow_attr = {'nominal_value', 'min', 'max',
-                                'variable_costs'}
+                                'variable_costs', 'fixed', 'actual_value'}
         super().__init__(thermal_network)
         self.results = {}
 
@@ -387,6 +387,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             #         'set the optimisation setting option "dhs" to "fix"!')
             self.precalc_consumers_connections()
 
+            # apply global simultaneity for demand series
+            self.network.sequences['consumers']['heat_flow'] = \
+                self.network.sequences['consumers']['heat_flow'] * \
+                self.settings['global_SF']
+
         # if there is the existing attribute, get the information about
         # the pipe types (like heat_loss)
         self.get_pipe_data()
@@ -594,7 +599,7 @@ def optimize_investment(thermal_network, invest_options, settings=None):
         'start_date': '1/1/2018',
         'frequence': 'H',
         'solver': 'cbc',
-        'solve_kw': {'tee': False},
+        'solve_kw': {'tee': True},
         'dhs': 'optional',
         'simultaneity': 'global',
         'global_SF': 1,
