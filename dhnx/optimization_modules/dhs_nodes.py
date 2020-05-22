@@ -98,9 +98,16 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                         " Existing heatpipe id {}".format(p))
     
                 elif (typ_from == 'forks') and (typ_to == 'producers'):
-                    raise ValueError(
-                        "Edges must not go from 'forks' to 'producers'!"
-                        " Existing heatpipe id {}".format(p))
+                    l_1_in = 'producers'
+
+                    start = q['to_node']
+                    end = q['from_node']
+                    b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+                    b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+                    d_labels['l_4'] = start + '-' + end
+                    nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q,
+                                                   b_in, b_out,
+                                                   nodes)
     
                 elif (typ_from == 'producers') and (typ_to == 'forks'):
                     l_1_in = 'producers'
