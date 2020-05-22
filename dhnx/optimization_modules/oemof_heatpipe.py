@@ -15,6 +15,7 @@ from pyomo.core.base.block import SimpleBlock
 from pyomo.environ import (Binary, Set, NonNegativeReals, Var, Constraint,
                            Expression, BuildAction)
 import logging
+import warnings
 
 from oemof.solph.network import Bus, Transformer
 from oemof.solph.plumbing import sequence
@@ -105,10 +106,15 @@ class HeatPipeline(Transformer):
             o = list(self.outputs.keys())[0]
             if (self.heat_loss_factor_fix[0] > 0) \
                     and (self.outputs[o].investment.nonconvex is False):
-                raise ValueError(
-                    "In case of a convex Investment (Investment.nonconvex is "
-                    " False), the 'heat_loss_factor_fix' is not considered!"
-                    " Set the heat_loss_factor_fix to 0!")
+                warnings.warn(
+                    "Be careful! In case of a convex Investment "
+                    "(Investment.nonconvex is False), the "
+                    "'heat_loss_factor_fix' is considered, even though the "
+                    "investment might be zero! => A simple sink could be "
+                    "the results. Hopefully, you know what you are doing.")
+        else:
+            self._set_nominal_value()
+
 
     def _check_flows_invest(self):
         for flow in self.inputs.values():
@@ -124,6 +130,17 @@ class HeatPipeline(Transformer):
         # sets the input flow to investment
         for flow in self.inputs.values():
             flow.investment = Investment()
+
+    # set nominal values of in- and outflow equal in case of invest_group = False
+    def _set_nominal_value(self):
+        i = list(self.inputs.keys())[0]
+        o = list(self.outputs.keys())[0]
+        if self.outputs[o].nominal_value is not None:
+            self.inputs[i].nominal_value = \
+                self.outputs[o].nominal_value
+        elif self.inputs[i].nominal_value is not None:
+            self.outputs[o].nominal_value = \
+                self.inputs[i].nominal_value
 
     def constraint_group(self):
         if self._invest_group is True:
@@ -329,6 +346,7 @@ class HeatPipelineInvestBlock(SimpleBlock):
             expr += - block.heat_loss[n, t]
             expr += n.heat_loss_factor[t] * m.InvestmentFlow.invest[
                 n, list(n.outputs.keys())[0]]
+            expr += n.heat_loss_factor_fix[t]
             return expr == 0
         self.heat_loss_equation_convex = Constraint(self.CONVEX_INVESTHEATPIPES, m.TIMESTEPS,
                                              rule=_heat_loss_rule_convex)
