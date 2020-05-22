@@ -281,7 +281,7 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
         b_house = solph.Bus(label='house')
         nodes.append(b_house)
         nodes.append(solph.Sink(label='demand', inputs={b_house: solph.Flow(
-            fixed=True, actual_value=[P_max], nominal_value=1)}))
+            fix=[P_max], nominal_value=1)}))
         nodes.append(solph.Source(label='dhs_source', outputs={
             b_grid: solph.Flow(variable_costs=0)}))
 
