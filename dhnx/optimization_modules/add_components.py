@@ -310,16 +310,28 @@ def add_heatpipes_exist(pipes, labels, gd, q, b_in, b_out, nodes):
 
     # get index of existing pipe label of pipe data
     ind_pipe = pipes[pipes['label_3'] == q['hp_type']].index[0]
+    t = pipes.loc[ind_pipe]
+    # get label of pipe
+    labels['l_3'] = t['label_3']
 
-    hlf = pipes.at[ind_pipe, 'l_factor'] * q['length[m]']
-    hlff = pipes.at[ind_pipe, 'l_factor_fix'] * q['length[m]']
+    hlf = t['l_factor'] * q['length[m]']
+    hlff = t['l_factor_fix'] * q['length[m]']
+
+    flow_bi_args = {
+        'bidirectional': True, 'min': -1} \
+        if gd['bidirectional_pipes'] else {}
+
+    outflow_args = {'nonconvex': solph.NonConvex()} if t['nonconvex'] else {}
 
     nodes.append(oh.HeatPipeline(
         label=oh.Label(labels['l_1'], labels['l_2'],
                        labels['l_3'], labels['l_4']),
-        inputs={b_in: solph.Flow()},
+        inputs={b_in: solph.Flow(**flow_bi_args)},
         outputs={b_out: solph.Flow(
-            nominal_value=q['capacity'])},
+            nominal_value=q['capacity'],
+            **flow_bi_args,
+            **outflow_args,
+        )},
         heat_loss_factor=hlf,
         heat_loss_factor_fix=hlff,
     ))
