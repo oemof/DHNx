@@ -179,17 +179,18 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         edges = self.network.components['edges']
 
         for r, c in edges.iterrows():
-            if c['existing']:
-                idx = pipe_types[pipe_types['label_3'] == c['hp_type']].index[0]
-                if pipe_types.at[idx, 'nonconvex'] == 1:
-                    if c['capacity'] > 0:
-                        edges.at[r, 'invest_status'] = 1
-                    elif c['capacity'] == 0:
-                        edges.at[r, 'invest_status'] = 0
-                    else:
-                        print('Something wrong?!')
-                else:
-                    edges.at[r, 'invest_status'] = None
+            if c['active']:
+                if c['existing']:
+                    idx = pipe_types[pipe_types['label_3'] == c['hp_type']].index[0]
+                    if pipe_types.at[idx, 'nonconvex'] == 1:
+                        if c['capacity'] > 0:
+                            edges.at[r, 'invest_status'] = 1
+                        elif c['capacity'] == 0:
+                            edges.at[r, 'invest_status'] = 0
+                        else:
+                            print('Something wrong?!')
+                    # else:
+                    #     edges.at[r, 'invest_status'] = None
 
         self.network.components['edges'] = edges
 
@@ -204,9 +205,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         inplace=True)
         edges = self.network.components['edges']
 
+        # just take active heatpipes
+        edges_active = edges[edges['active'] == True]
+
         # check if pipe type in pipe invest options
         hp_list = list(set(
-            [x for x in edges['hp_type'].tolist()
+            [x for x in edges_active['hp_type'].tolist()
              if isinstance(x, str)]))
 
         for hp in hp_list:
@@ -227,7 +231,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 heat_loss = (t['l_factor'] * q['capacity'] +
                              t['l_factor_fix'] * q['invest_status']) * q['length[m]']
             else:
-                heat_loss = t['l_factor'] * q['capacity'] * q['length[m]']
+                heat_loss = t['l_factor'] * q['capacity'] * q['length[m]'] + \
+                    t['l_factor_fix'] * q['length[m]']
 
             return heat_loss
 
@@ -250,10 +255,13 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             return invest_costs
 
         # get investment costs
-        for r, c in edges.iterrows():
+        for r, c in edges_active.iterrows():
             if isinstance(c['hp_type'], str):
                 edges.at[r, 'heat_loss[kW]'] = get_heat_loss(c)
-                edges.at[r, 'invest_costs[€]'] = get_invest_costs(self, c)
+                if 'annuity' in pipe_types.columns:
+                    edges.at[r, 'invest_costs[€]'] = get_invest_costs(self, c)
+                else:
+                    edges.at[r, 'invest_costs[€]'] = None
             else:
                 edges.at[r, 'heat_loss[kW]'] = None
                 edges.at[r, 'invest_costs[€]'] = None
@@ -387,10 +395,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             #         'set the optimisation setting option "dhs" to "fix"!')
             self.precalc_consumers_connections()
 
-            # apply global simultaneity for demand series
-            self.network.sequences['consumers']['heat_flow'] = \
-                self.network.sequences['consumers']['heat_flow'] * \
-                self.settings['global_SF']
+        # apply global simultaneity for demand series
+        self.network.sequences['consumers']['heat_flow'] = \
+            self.network.sequences['consumers']['heat_flow'] * \
+            self.settings['global_SF']
 
         # if there is the existing attribute, get the information about
         # the pipe types (like heat_loss)
@@ -410,10 +418,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.om.solve(solver=self.settings['solver'],
                       solve_kwargs=self.settings['solve_kw'])
 
-        filename = os.path.join(
-            helpers.extend_basic_path('lp_files'), 'DHNx.lp')
-        logging.info('Store lp-file in {0}.'.format(filename))
-        self.om.write(filename, io_options={'symbolic_solver_labels': True})
+        # filename = os.path.join(
+        #     helpers.extend_basic_path('lp_files'), 'DHNx.lp')
+        # logging.info('Store lp-file in {0}.'.format(filename))
+        # self.om.write(filename, io_options={'symbolic_solver_labels': True})
 
         self.es.results['main'] = solph.processing.results(self.om)
         self.es.results['meta'] = solph.processing.meta_results(self.om)
@@ -607,6 +615,9 @@ def optimize_investment(thermal_network, invest_options, settings=None):
         'SF_1_timeseries': 1,
         'precalc_consumer_connections': False,
         'bidirectional_pipes': False,
+        'dump_path': None,
+        'dump_name': 'dump.oemof',
+        'get_invest_results': True
     }
 
     if settings is not None:
@@ -622,7 +633,15 @@ def optimize_investment(thermal_network, invest_options, settings=None):
     model.solve(solver=setting_default['solver'],
                 solve_kw=setting_default['solve_kw'])
 
-    edges_results = model.get_results_edges()
+    if setting_default['dump_path'] is not None:
+        my_es = model.es
+        my_es.dump(dpath=setting_default['dump_path'], filename=setting_default['dump_name'])
+        print('oemof Energysystem stored in "{}"'.format(setting_default['dump_path']))
+
+    if setting_default['get_invest_results']:
+        edges_results = model.get_results_edges()
+    else:
+        edges_results = model.network.components['edges']
 
     results = {'oemof': model.es.results['main'],
                'oemof_meta': model.es.results['meta'],
