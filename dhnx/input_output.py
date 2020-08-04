@@ -110,6 +110,8 @@ class CSVNetworkImporter(NetworkImporter):
 
         self.thermal_network.is_consistent()
 
+        self.thermal_network.set_timeindex()
+
         return self.thermal_network
 
 
