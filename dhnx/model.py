@@ -18,7 +18,7 @@ class Model():
     Abstract base class for different kind of models.
     """
     def __init__(self, thermal_network):
-        self.network = thermal_network
+        self.thermal_network = thermal_network
         self.setup()
         self.results = Dict()
 
