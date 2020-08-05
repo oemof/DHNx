@@ -13,6 +13,7 @@ SPDX-License-Identifier: MIT
 import networkx as nx
 import numpy as np
 import pandas as pd
+import re
 
 from .model import SimulationModel
 
@@ -25,37 +26,55 @@ class SimulationModelNumpy(SimulationModel):
         super().__init__(thermal_network)
         self.results = {}
 
-    def _solve_hydraulic_eqn(self, tolerance = 1e-10):
-        results = {}
+        self.nx_graph = self.thermal_network.to_nx_graph()
 
-        mass_flow_data = self.thermal_network.sequences.consumers.mass_flow.copy()
+    def _setup_hydraulic_eqn(self):
 
-        mass_flow_data.columns = ['consumers-' + m for m in mass_flow_data.columns]
+        def _set_producers(m):
+            producers = [name for name in m.columns if re.search('producers', name)]
 
-        nx_graph = self.thermal_network.to_nx_graph()
+            assert len(producers) == 1, "Currently, only one producer allowed."
+
+            m.loc[:, producers] = - m.loc[:, ~m.columns.isin(producers)].sum(1)
+
+            return m
+
+        inc_mat = nx.incidence_matrix(self.nx_graph, oriented=True).todense()
+
+        consumers_mass_flow = self.thermal_network.sequences.consumers.mass_flow.copy()
+
+        consumers_mass_flow.columns = ['consumers-' + m for m in consumers_mass_flow.columns]
+
+        all_mass_flow = pd.DataFrame(
+            0,
+            columns=self.nx_graph.nodes(),
+            index=self.thermal_network.timeindex
+        )
+
+        all_mass_flow.loc[:, consumers_mass_flow.columns] = consumers_mass_flow
+
+        all_mass_flow = _set_producers(all_mass_flow)
+
+        return inc_mat, all_mass_flow
+
+    def _solve_hydraulic_eqn(self, inc_mat, all_mass_flow, tolerance = 1e-10):
+
+        all_mass_flow = np.array(all_mass_flow)
 
         for t in self.thermal_network.timeindex:
 
-            inc_mat = nx.incidence_matrix(nx_graph, oriented=True).todense()
-
-            mass_flow = {key: 0 for key in nx_graph.nodes()}
-
-            mass_flow.update(dict(mass_flow_data.iloc[t]))
-
-            mass_flow = np.array(list(mass_flow.values()))
-
-            mass_flow[0] = - np.sum(mass_flow[1:])
-
-            x, residuals, rank, s = np.linalg.lstsq(inc_mat, mass_flow, rcond=None)
+            x, residuals, rank, s = np.linalg.lstsq(inc_mat, all_mass_flow[t], rcond=None)
 
             assert residuals < tolerance,\
                 f"Residuals {residuals} are larger than tolerance {tolerance}!"
 
-            results.update({t: x})
+            self.results.update({t: x})
 
-        results = pd.DataFrame.from_dict(results, orient='index', columns=nx_graph.edges())
-
-        return results
+        self.results = pd.DataFrame.from_dict(
+            self.results,
+            orient='index',
+            columns=self.nx_graph.edges()
+        )
 
     def _solve_thermal_eqn(self):
         pass
@@ -64,8 +83,13 @@ class SimulationModelNumpy(SimulationModel):
         pass
 
     def solve(self):
-        mass_flows = self._solve_hydraulic_eqn()
-        print(mass_flows)
+
+        inc_mat, all_mass_flow = self._setup_hydraulic_eqn()
+
+        self._solve_hydraulic_eqn(inc_mat, all_mass_flow)
+
+        print(self.results)
+
         self._solve_thermal_eqn()
 
     def get_results(self):
