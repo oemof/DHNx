@@ -88,8 +88,6 @@ class SimulationModelNumpy(SimulationModel):
 
         self._solve_hydraulic_eqn(inc_mat, all_mass_flow)
 
-        print(self.results)
-
         self._solve_thermal_eqn()
 
     def get_results(self):
