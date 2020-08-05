@@ -28,7 +28,7 @@ class SimulationModelNumpy(SimulationModel):
     def _solve_hydraulic_eqn(self, tolerance = 1e-10):
         results = {}
 
-        mass_flow_data = self.thermal_network.sequences.consumers.mass_flow
+        mass_flow_data = self.thermal_network.sequences.consumers.mass_flow.copy()
 
         mass_flow_data.columns = ['consumers-' + m for m in mass_flow_data.columns]
 
