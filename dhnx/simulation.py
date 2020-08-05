@@ -59,11 +59,9 @@ class SimulationModelNumpy(SimulationModel):
 
     def _solve_hydraulic_eqn(self, inc_mat, all_mass_flow, tolerance = 1e-10):
 
-        all_mass_flow = np.array(all_mass_flow)
-
         for t in self.thermal_network.timeindex:
 
-            x, residuals, rank, s = np.linalg.lstsq(inc_mat, all_mass_flow[t], rcond=None)
+            x, residuals, rank, s = np.linalg.lstsq(inc_mat, all_mass_flow.loc[t, :], rcond=None)
 
             assert residuals < tolerance,\
                 f"Residuals {residuals} are larger than tolerance {tolerance}!"
