@@ -28,7 +28,11 @@ class SimulationModelNumpy(SimulationModel):
 
         self.nx_graph = self.thermal_network.to_nx_graph()
 
-    def _setup_hydraulic_eqn(self):
+        self.inc_mat = None
+
+        self.all_mass_flow = None
+
+    def _prepare_hydraulic_eqn(self):
 
         def _set_producers(m):
             producers = [name for name in m.columns if re.search('producers', name)]
@@ -39,7 +43,7 @@ class SimulationModelNumpy(SimulationModel):
 
             return m
 
-        inc_mat = nx.incidence_matrix(self.nx_graph, oriented=True).todense()
+        self.inc_mat = nx.incidence_matrix(self.nx_graph, oriented=True).todense()
 
         consumers_mass_flow = self.thermal_network.sequences.consumers.mass_flow.copy()
 
@@ -53,15 +57,17 @@ class SimulationModelNumpy(SimulationModel):
 
         all_mass_flow.loc[:, consumers_mass_flow.columns] = consumers_mass_flow
 
-        all_mass_flow = _set_producers(all_mass_flow)
+        self.all_mass_flow = _set_producers(all_mass_flow)
 
-        return inc_mat, all_mass_flow
-
-    def _solve_hydraulic_eqn(self, inc_mat, all_mass_flow, tolerance = 1e-10):
+    def _solve_hydraulic_eqn(self, tolerance=1e-10):
 
         for t in self.thermal_network.timeindex:
 
-            x, residuals, rank, s = np.linalg.lstsq(inc_mat, all_mass_flow.loc[t, :], rcond=None)
+            x, residuals, rank, s = np.linalg.lstsq(
+                self.inc_mat,
+                self.all_mass_flow.loc[t, :],
+                rcond=None
+            )
 
             assert residuals < tolerance,\
                 f"Residuals {residuals} are larger than tolerance {tolerance}!"
@@ -77,14 +83,14 @@ class SimulationModelNumpy(SimulationModel):
     def _solve_thermal_eqn(self):
         pass
 
-    def setup(self):
-        pass
+    def prepare(self):
+
+        self._prepare_hydraulic_eqn()
+
 
     def solve(self):
 
-        inc_mat, all_mass_flow = self._setup_hydraulic_eqn()
-
-        self._solve_hydraulic_eqn(inc_mat, all_mass_flow)
+        self._solve_hydraulic_eqn()
 
         self._solve_thermal_eqn()
 
@@ -106,6 +112,8 @@ def simulate(thermal_network):
     results : dict
     """
     model = SimulationModelNumpy(thermal_network)
+
+    model.prepare()
 
     model.solve()
 
