@@ -32,6 +32,18 @@ class SimulationModelNumpy(SimulationModel):
 
         self.all_mass_flow = None
 
+    def _concat_sequences(self, name):
+
+        select_sequences = [
+            d[name].copy().rename(columns=lambda x: component + '-' + x)
+            for component, d in self.thermal_network.sequences.items()
+            if name in d
+        ]
+
+        concat_sequences = pd.concat(select_sequences, 1)
+
+        return concat_sequences
+
     def _prepare_hydraulic_eqn(self):
 
         def _set_producers(m):
@@ -45,17 +57,15 @@ class SimulationModelNumpy(SimulationModel):
 
         self.inc_mat = nx.incidence_matrix(self.nx_graph, oriented=True).todense()
 
-        consumers_mass_flow = self.thermal_network.sequences.consumers.mass_flow.copy()
-
-        consumers_mass_flow.columns = ['consumers-' + m for m in consumers_mass_flow.columns]
-
         all_mass_flow = pd.DataFrame(
             0,
             columns=self.nx_graph.nodes(),
             index=self.thermal_network.timeindex
         )
 
-        all_mass_flow.loc[:, consumers_mass_flow.columns] = consumers_mass_flow
+        input_data = self._concat_sequences('mass_flow')
+
+        all_mass_flow.loc[:, input_data.columns] = input_data
 
         self.all_mass_flow = _set_producers(all_mass_flow)
 
@@ -82,12 +92,49 @@ class SimulationModelNumpy(SimulationModel):
             columns=self.nx_graph.edges()
         )
 
+        # TODO: Calculate these
+        # 'edges-pressure_losses'
+        # NOTE: edges have distributed and localized pressure losses zeta_dis * L/D**5
+        # nodes-pressure_losses
+        # NOTE: nodes have only localized pressure losses
+        # 'global-pressure_losses'
+        # 'producers-pump_power'
+
+    def _prepare_thermal_eqn(self):
+
+        temp_inlet = pd.DataFrame(
+            columns=self.nx_graph.nodes(),
+            index=self.thermal_network.timeindex
+        )
+
+        temp_return = pd.DataFrame(
+            columns=self.nx_graph.nodes(),
+            index=self.thermal_network.timeindex
+        )
+
+        input_data = self._concat_sequences('temp_inlet')
+
+        temp_inlet.loc[:, input_data.columns] = input_data
+
     def _solve_thermal_eqn(self):
+
+        # TODO: Calculate these
+        # 'consumers-temp_inlet'
+        # 'consumers-temp_return'
+        # 'forks-temp_inlet'
+        # 'forks-temp_return'
+        # 'producers-temp_return'
+        # 'edges-heat_losses'
+        # 'global-heat_losses'
+
+        # self.results['']
         pass
 
     def prepare(self):
 
         self._prepare_hydraulic_eqn()
+
+        self._prepare_thermal_eqn()
 
 
     def solve(self):
