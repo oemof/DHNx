@@ -61,6 +61,8 @@ class SimulationModelNumpy(SimulationModel):
 
     def _solve_hydraulic_eqn(self, tolerance=1e-10):
 
+        edges_mass_flow = {}
+
         for t in self.thermal_network.timeindex:
 
             x, residuals, rank, s = np.linalg.lstsq(
@@ -72,10 +74,10 @@ class SimulationModelNumpy(SimulationModel):
             assert residuals < tolerance,\
                 f"Residuals {residuals} are larger than tolerance {tolerance}!"
 
-            self.results.update({t: x})
+            edges_mass_flow.update({t: x})
 
-        self.results = pd.DataFrame.from_dict(
-            self.results,
+        self.results['edges-mass_flow'] = pd.DataFrame.from_dict(
+            edges_mass_flow,
             orient='index',
             columns=self.nx_graph.edges()
         )

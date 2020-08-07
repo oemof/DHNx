@@ -14,7 +14,7 @@ tree_network.simulate()
 
 # Plot and save results
 print('================================================================')
-for k, v in tree_network.results.items():
+for k, v in tree_network.results['simulation'].items():
     print(k)
     print('----------------------------------------------------------------')
     print(v, '\n')
