@@ -120,15 +120,20 @@ class SimulationModelNumpy(SimulationModel):
 
         # TODO: Calculate these
         # 'consumers-temp_inlet'
-        # 'consumers-temp_return'
         # 'forks-temp_inlet'
+        # 'consumers-temp_return'
         # 'forks-temp_return'
         # 'producers-temp_return'
         # 'edges-heat_losses'
         # 'global-heat_losses'
 
-        # self.results['']
-        pass
+        self.results['nodes-temp_inlet'] = None  # TODO: Rethink naming
+
+        self.results['nodes-temp_return'] = None
+
+        self.results['edges-heat_losses'] = None
+
+        self.results['global-heat_losses'] = None
 
     def prepare(self):
 
