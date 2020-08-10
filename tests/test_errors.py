@@ -31,9 +31,9 @@ thermal_network = dhnx.network.ThermalNetwork(dir_import)
 #         thermal_network.producers['node_id'] = np.float(thermal_network.producers['node_id'])
 #
 #
-# def test_datatype_param_edges():
+# def test_datatype_param_pipes():
 #     with pytest.raises(TypeError):
-#         thermal_network.edges['edge_id'] = np.float(thermal_network.edges['edge_id'])
+#         thermal_network.pipes['pipe_id'] = np.float(thermal_network.pipes['pipe_id'])
 #
 #
 # def test_required_param_nodes():
@@ -41,9 +41,9 @@ thermal_network = dhnx.network.ThermalNetwork(dir_import)
 #         thermal_network.producers = thermal_network.producers.drop('lat', axis=1)
 #
 #
-# def test_required_param_edges():
+# def test_required_param_pipes():
 #     with pytest.raises(ValueError):
-#         thermal_network.edges = thermal_network.edges.drop('from_node', axis=1)
+#         thermal_network.pipes = thermal_network.pipes.drop('from_node', axis=1)
 #
 #
 # def test_is_consistent_nodes():
@@ -51,14 +51,14 @@ thermal_network = dhnx.network.ThermalNetwork(dir_import)
 #         thermal_network.producers = thermal_network.producers
 #
 #
-# def test_is_consistent_edges():
+# def test_is_consistent_pipes():
 #     with pytest.raises(ValueError):
-#         thermal_network.edges.loc[0] = thermal_network.edges
+#         thermal_network.pipes.loc[0] = thermal_network.pipes
 #
 #
 # def test_is_consistent_thermal_network():
 #     with pytest.raises(ValueError):
-#         thermal_network.edges
+#         thermal_network.pipes
 #
 #
 # def test_is_consistent_thermal_network_2():
@@ -74,4 +74,4 @@ def test_load_inconsistent_thermal_network():
 def test_add():
     # missing required attributes
     with pytest.raises(ValueError):
-        thermal_network.add('Edge', 10)
+        thermal_network.add('Pipe', 10)
