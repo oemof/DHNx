@@ -40,8 +40,8 @@ class InteractiveMap():
     """
     def __init__(self, thermal_network):
         self.node_data = self.collect_node_data(thermal_network)
-        self.edge_data = thermal_network.components['edges']
-        self.edge_data['value'] = 1
+        self.pipe_data = thermal_network.components['pipes']
+        self.pipe_data['value'] = 1
         self.node_id = self.node_data.index
         self.lat = self.node_data['lat']
         self.lon = self.node_data['lon']
@@ -168,23 +168,23 @@ class InteractiveMap():
                 )
             ).add_to(m)
 
-        for i in range(0, len(self.edge_data)):
+        for i in range(0, len(self.pipe_data)):
             # linewidth settings
-            lw_avg = self.edge_data['value'].mean()
-            lw = self.edge_data['value'][i] / lw_avg
+            lw_avg = self.pipe_data['value'].mean()
+            lw = self.pipe_data['value'][i] / lw_avg
 
-            fol.PolyLine(locations=[[self.lat[self.edge_data['from_node'][i]],
-                                     self.lon[self.edge_data['from_node'][i]]],
-                                    [self.lat[self.edge_data['to_node'][i]],
-                                     self.lon[self.edge_data['to_node'][i]]]],
+            fol.PolyLine(locations=[[self.lat[self.pipe_data['from_node'][i]],
+                                     self.lon[self.pipe_data['from_node'][i]]],
+                                    [self.lat[self.pipe_data['to_node'][i]],
+                                     self.lon[self.pipe_data['to_node'][i]]]],
                          color='orange',
                          weight=lw * 3).add_to(m)
 
             arrows = self._get_arrows(
-                locations=[[self.lat[self.edge_data['from_node'][i]],
-                            self.lon[self.edge_data['from_node'][i]]],
-                           [self.lat[self.edge_data['to_node'][i]],
-                            self.lon[self.edge_data['to_node'][i]]]],
+                locations=[[self.lat[self.pipe_data['from_node'][i]],
+                            self.lon[self.pipe_data['from_node'][i]]],
+                           [self.lat[self.pipe_data['to_node'][i]],
+                            self.lon[self.pipe_data['to_node'][i]]]],
                 color='orange', n_arrows=3)
 
             for arrow in arrows:
@@ -198,13 +198,13 @@ class StaticMap():
     A static map of a network.ThermalNetwork.
     """
     def __init__(self, thermal_network, figsize=(5, 5), node_size=3,
-                 edge_width=3, node_color='r', edge_color='g'):
+                 pipe_width=3, node_color='r', pipe_color='g'):
         self.graph = thermal_network.to_nx_graph()
         self.figsize = figsize
         self.node_size = node_size
-        self.edge_width = edge_width
+        self.pipe_width = pipe_width
         self.node_color = node_color
-        self.edge_color = edge_color
+        self.pipe_color = pipe_color
         self.positions = {node_id: np.array([data['lon'], data['lat']])
                           for node_id, data in self.graph.nodes(data=True)}
         self.extent = self._get_extent()
@@ -218,9 +218,9 @@ class StaticMap():
         return extent
 
     def draw(self, bgcolor='w', no_axis=False, background_map=False,
-             use_geom=False, edge_color='b', edge_linewidth=2,
-             edge_alpha=1, node_size=40, node_color='r', node_alpha=1,
-             node_edgecolor='r', node_zorder=1):
+             use_geom=False, pipe_color='b', pipe_linewidth=2,
+             pipe_alpha=1, node_size=40, node_color='r', node_alpha=1,
+             node_pipecolor='r', node_zorder=1):
         """
         This function has been adapted from osmnx plots.plot_graph() function.
         """
@@ -250,7 +250,7 @@ class StaticMap():
                 xs, ys = data['geometry'].xy
                 lines.append(list(zip(xs, ys)))
             else:
-                # if it doesn't have a geometry attribute, the edge is a straight
+                # if it doesn't have a geometry attribute, the pipe is a straight
                 # line from node to node
                 x1 = self.graph.nodes[u]['lon']
                 y1 = self.graph.nodes[u]['lat']
@@ -261,9 +261,9 @@ class StaticMap():
 
         # add the lines to the axis as a linecollection
         lc = collections.LineCollection(lines,
-                                        colors=edge_color,
-                                        linewidths=edge_linewidth,
-                                        alpha=edge_alpha,
+                                        colors=pipe_color,
+                                        linewidths=pipe_linewidth,
+                                        alpha=pipe_alpha,
                                         zorder=2)
         ax.add_collection(lc)
 
@@ -275,7 +275,7 @@ class StaticMap():
                    s=node_size,
                    c=node_color,
                    alpha=node_alpha,
-                   edgecolor=node_edgecolor,
+                   edgecolor=node_pipecolor,
                    zorder=node_zorder)
 
         if no_axis:
