@@ -48,10 +48,15 @@ v, re, lambda_simp, lambda_adv, dp_diss, dp_loc, dp_loc_tee, dp_loc_valve, dp_hy
     [pd.DataFrame() for variable in range(10)]
 
 # Adjust mass flows to a dataframe containing all mass flows in correct order
-mass_flow_total = mass_flow.iloc[:, 1:]  # Get mass flows of all consumers
-mass_flow_total['0'] = mass_flow['2'] + mass_flow['3']  # Calculate sum of consumer mass flows as producer mass flow
-mass_flow_total = mass_flow_total[['0', '2', '3']]  # Change order of columns for later calculation
-mass_flow_total.columns = ['0', '1', '2']   # Rename the columns to edges naming convention
+# Get mass flows of all consumers
+mass_flow_total = mass_flow.iloc[:, 1:]
+# Rename the columns to edges naming convention
+mass_flow_total.columns = ['1', '2']
+# Calculate producer mass flow as sum of consumer mass flows
+mass_flow_total['0'] = mass_flow_total['1'] + mass_flow_total['2']
+# Change order of columns for later calculation
+mass_flow_total = mass_flow_total[['0', '1', '2']]
+
 
 for index, node in enumerate(mass_flow_total):
     # Calculation of the velocity v
