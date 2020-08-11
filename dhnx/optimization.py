@@ -235,14 +235,16 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.es.add(*self.nodes)
 
         logging.info('Energysystem has been created')
-        print("*********************************************************")
-        print("The following objects have been created:")
-        for n in self.es.nodes:
-            oobj = \
-                str(type(n)).replace("<class 'oemof.solph.", "").replace("'>",
-                                                                         "")
-            print(oobj + ':', n.label)
-        print("*********************************************************")
+
+        if self.settings['print_logging_info']:
+            print("*********************************************************")
+            print("The following objects have been created:")
+            for n in self.es.nodes:
+                oobj = \
+                    str(type(n)).replace("<class 'oemof.solph.", "").replace("'>",
+                                                                             "")
+                print(oobj + ':', n.label)
+            print("*********************************************************")
 
         return
 
@@ -330,10 +332,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.om.solve(solver=self.settings['solver'],
                       solve_kwargs=self.settings['solve_kw'])
 
-        # filename = os.path.join(
-        #     helpers.extend_basic_path('lp_files'), 'DHNx.lp')
-        # logging.info('Store lp-file in {0}.'.format(filename))
-        # self.om.write(filename, io_options={'symbolic_solver_labels': True})
+        if self.settings['write_lp_file']:
+            filename = os.path.join(
+                helpers.extend_basic_path('lp_files'), 'DHNx.lp')
+            logging.info('Store lp-file in {0}.'.format(filename))
+            self.om.write(filename, io_options={'symbolic_solver_labels': True})
 
         self.es.results['main'] = solph.processing.results(self.om)
         self.es.results['meta'] = solph.processing.meta_results(self.om)
@@ -424,20 +427,21 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df_double_invest = \
                 df[(df[hp + '.' + 'size-1'] > 0.001) & (df[hp + '.' + 'size-2'] > 0.001)]
 
-            print('***')
-            if df_double_invest.empty:
-                print('There is NO investment in both directions at the'
-                      'following edges for "', hp, '"')
-            else:
-                print('There is an investment in both directions at the'
-                      'following edges for "', hp, '":')
-                print('----------')
-                print(' id | from_node | to_node | size-1 | size-2 ')
-                print('============================================')
-                for r, c in df_double_invest.iterrows():
-                    print(r, ' | ', c['from_node'], ' | ', c['to_node'],
-                          ' | ', c[hp + '.' + 'size-1'], ' | ', c[hp + '.' + 'size-2'], ' | ')
-                print('----------')
+            if self.settings['print_logging_info']:
+                print('***')
+                if df_double_invest.empty:
+                    print('There is NO investment in both directions at the'
+                          'following edges for "', hp, '"')
+                else:
+                    print('There is an investment in both directions at the'
+                          'following edges for "', hp, '":')
+                    print('----------')
+                    print(' id | from_node | to_node | size-1 | size-2 ')
+                    print('============================================')
+                    for r, c in df_double_invest.iterrows():
+                        print(r, ' | ', c['from_node'], ' | ', c['to_node'],
+                              ' | ', c[hp + '.' + 'size-1'], ' | ', c[hp + '.' + 'size-2'], ' | ')
+                    print('----------')
 
             return
 
@@ -519,7 +523,7 @@ def optimize_investment(thermal_network, invest_options, settings=None):
         'start_date': '1/1/2018',
         'frequence': 'H',
         'solver': 'cbc',
-        'solve_kw': {'tee': True},
+        'solve_kw': {'tee': False},
         'dhs': 'optional',
         'simultaneity': 'global',
         'global_SF': 1,
@@ -529,7 +533,9 @@ def optimize_investment(thermal_network, invest_options, settings=None):
         'bidirectional_pipes': False,
         'dump_path': None,
         'dump_name': 'dump.oemof',
-        'get_invest_results': True
+        'get_invest_results': True,
+        'print_logging_info': False,
+        'write_lp_file': False,
     }
 
     if settings is not None:
