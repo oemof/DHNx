@@ -35,14 +35,18 @@ pi = math.pi
 U_spec, t_cons_i, t_cons_r, t_fork_r, Q_loss, Q_cons, Q_loss_glob = [pd.DataFrame() for variable in range(7)]
 
 # Adjust mass flows and temp drop to a dataframe containing all data in correct order
-mass_flow_total = mass_flow.iloc[:, 1:]  # Get mass flows of all consumers
-mass_flow_total['0'] = mass_flow['2'] + mass_flow['3']  # Calculate sum of consumer mass flows as producer mass flow
-mass_flow_total = mass_flow_total[['0', '2', '3']]  # Change order of columns for later calculation
-mass_flow_total = mass_flow_total.rename(columns={'2': '1', '3': '2'})  # Rename the columns to edges naming convention
+# Get mass flows of all consumers
+mass_flow_total = mass_flow.iloc[:, 1:]
+# Rename the columns to edges naming convention
+mass_flow_total.columns = ['1', '2']
+# Calculate producer mass flow as sum of consumer mass flows
+mass_flow_total['0'] = mass_flow_total['1'] + mass_flow_total['2']
+# Change order of columns for later calculation
+mass_flow_total = mass_flow_total[['0', '1', '2']]
 
 # Get temperature drop of all consumers
 temp_drop = temp_drop.iloc[:, 1:]
-temp_drop = temp_drop.rename(columns={'2': '1', '3': '2'})  # Rename the columns to edges naming convention
+temp_drop = temp_drop.rename(columns={'0': '1', '1': '2'})  # Rename the columns to edges naming convention
 
 
 def calc_temp_heat_loss(t_in, index):
