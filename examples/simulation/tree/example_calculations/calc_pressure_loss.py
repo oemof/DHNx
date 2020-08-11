@@ -38,8 +38,8 @@ rho = 971.78        # [kg/m3] TODO: later the density could be variable and calc
 epsilon = 0.01      # [mm]
 zeta_tee = 2        # [-] Rough estimate of Tee connector: WJ Beek - Transport Phenomena (1999) for rougher pipes 0,75
 zeta_valve = 3.3    # [-] VDI Wärmeatlas für Nennweite von 50 mm
-mu = 0.255          # [mPa*s]
-eta_pump = 0.8      # [-] TODO: Right now made up value. What should it be in model?
+mu = 0.35           # [mPa*s]
+eta_pump = 0.7      # [-] TODO: Right now made up value. What should it be in model?
 g = 9.81            # [m/s2]
 pi = math.pi
 
