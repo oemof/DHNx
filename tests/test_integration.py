@@ -82,8 +82,9 @@ def test_setup_operation_optimization():
 
 
 def test_setup_investment_optimization():
-
-    tn_invest.optimize_investment(invest_options=invest_opt)
+    
+    oemof_dhnx_model = dhnx.optimization.setup_optimise_investment(
+        tn_invest, invest_opt)
 
 
 def test_setup_simulation():
