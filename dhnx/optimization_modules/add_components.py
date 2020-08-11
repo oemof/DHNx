@@ -243,6 +243,7 @@ def add_storage(it, labels, gd, nodes, busd):
                         inputs={label_bus: solph.Flow()},
                         outputs={label_bus: solph.Flow()},
                         loss_rate=s['capacity_loss'],
+                        fixed_losses_relative=s['fixed_losses_relative'],
                         invest_relation_input_capacity=s[
                             'invest_relation_input_capacity'],
                         invest_relation_output_capacity=s[
@@ -259,6 +260,7 @@ def add_storage(it, labels, gd, nodes, busd):
                         inputs={label_bus: solph.Flow()},
                         outputs={label_bus: solph.Flow()},
                         loss_rate=s['capacity_loss'],
+                        fixed_losses_relative=s['fixed_losses_relative'],
                         nominal_storage_capacity=s['capacity'],
                         inflow_conversion_factor=s['inflow_conversion_factor'],
                         outflow_conversion_factor=s[
