@@ -19,7 +19,8 @@ import pandas as pd
 
 from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
 from .graph import thermal_network_to_nx_graph
-from .optimization import optimize_operation, optimize_investment
+from .optimization import optimize_operation, setup_optimise_investment, \
+    solve_optimisation_investment
 from .simulation import simulate
 
 dir_name = os.path.dirname(__file__)
@@ -220,8 +221,14 @@ class ThermalNetwork():
         self.results.operation = optimize_operation(self)
 
     def optimize_investment(self, invest_options, settings=None):
-        self.results.optimization = optimize_investment(self, invest_options,
-                                                        settings)
+
+        oemof_opti_model = setup_optimise_investment(
+            self, invest_options, settings
+        )
+
+        self.results.optimization = solve_optimisation_investment(
+            oemof_opti_model
+        )
 
     def simulate(self):
         self.results.simulation = simulate(self)
