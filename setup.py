@@ -24,6 +24,7 @@ setup(
         'geopandas',
         'folium',
         'addict',
+        'oemof.solph',
     ],
     extras_require={
         'cartopy': ['cartopy'],
