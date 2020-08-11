@@ -15,7 +15,6 @@ from oemof.tools import economics
 
 def precalc_cost_param(t, q, gd):
     """
-    
     Parameters
     ----------
     t : series of heatpipeline data row
@@ -25,8 +24,8 @@ def precalc_cost_param(t, q, gd):
     Returns
     -------
 
-    """    
-    
+    """
+
     if t['annuity']:
         epc_p = float(economics.annuity(
             capex=t['capex_pipes'] * q['length[m]'],
@@ -37,5 +36,5 @@ def precalc_cost_param(t, q, gd):
     else:
         epc_p = t['capex_pipes'] * q['length[m]']
         epc_fix = t['fix_costs'] * q['length[m]']
-    
+
     return epc_p, epc_fix
