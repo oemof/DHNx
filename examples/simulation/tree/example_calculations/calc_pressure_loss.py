@@ -84,9 +84,9 @@ for index, node in enumerate(mass_flow_total):
 dp_loc = dp_loc_tee + dp_loc_valve
 
 # Calculate hydrostatic pressure difference
-dp_hyd['0'] = - rho * g * abs(producers['lat'][0] - forks['lat'][0]) * v['0']**0
-dp_hyd['1'] = - rho * g * abs(forks['lat'][0] - consumers['lat'].iloc[0]) * v['1']**0
-dp_hyd['2'] = - rho * g * abs(forks['lat'][0] - consumers['lat'].iloc[1]) * v['2']**0
+dp_hyd['0'] = - rho * g * abs(producers['m_over_NHN'][0] - forks['m_over_NHN'][0]) * v['0']**0
+dp_hyd['1'] = - rho * g * abs(forks['m_over_NHN'][0] - consumers['m_over_NHN'].iloc[0]) * v['1']**0
+dp_hyd['2'] = - rho * g * abs(forks['m_over_NHN'][0] - consumers['m_over_NHN'].iloc[1]) * v['2']**0
 
 # Calculate total pressure loss
 dp = dp_diss + dp_loc + dp_hyd
