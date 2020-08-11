@@ -52,7 +52,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.invest_options = investment_options
         # list of possible oemof flow attributes
         self.oemof_flow_attr = {'nominal_value', 'min', 'max',
-                                'variable_costs', 'fixed', 'actual_value'}
+                                'variable_costs', 'fix'}
         super().__init__(thermal_network)
         self.results = {}
 
