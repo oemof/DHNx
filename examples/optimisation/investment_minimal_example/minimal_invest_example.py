@@ -10,7 +10,8 @@ network = network.from_csv_folder('twn_data')
 invest_opt = dhnx.input_output.load_invest_options('invest_data')
 
 # Execute investment optimization
-network.optimize_investment(invest_options=invest_opt)
+network.optimize_investment(invest_options=invest_opt,
+                            settings={'write_lp_file': True})
 
 # ####### Postprocessing and Plotting ###########
 # Draw network
