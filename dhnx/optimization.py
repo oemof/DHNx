@@ -343,15 +343,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df_max = self.network.sequences['consumers']['heat_flow'].max().\
                 to_frame(name='P_heat_max')
 
-            # df_max.index = pd.Index([int(x) for x in list(df_max.index)])
-
             self.network.components['consumers'] = \
                 pd.concat([self.network.components['consumers'], df_max],
                           axis=1, join='inner')
 
         # check, which optimization type should be performed
         if self.settings['heat_demand'] == 'scalar':
-            # checks for single timestep optimisation
 
             # just single timestep optimization, overwrite previous!
             self.settings['num_ts'] = 1
@@ -362,7 +359,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                                  columns=list(P_max.index),
                                  index=pd.Index([0], name='timestep'))
 
-            # heat load is maximum heat load mutiplied with SF
+            # heat load is maximum heat load mutiplied with simultaneity
             self.network.sequences['consumers']['heat_flow'] = \
                 df_ts * self.settings['global_SF']
 
