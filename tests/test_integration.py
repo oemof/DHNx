@@ -26,6 +26,13 @@ dir_import = os.path.join(basedir, '_files/network_import')
 
 thermal_network = dhnx.network.ThermalNetwork(dir_import)
 
+dir_import_invest = os.path.join(basedir, '_files/investment/')
+
+tn_invest = dhnx.network.ThermalNetwork(dir_import_invest + 'network')
+
+invest_opt = dhnx.input_output.load_invest_options(
+    dir_import_invest + 'invest_options'
+)
 
 def test_import_export_csv():
     dir_export = os.path.join(tmpdir, 'network_export')
@@ -76,7 +83,7 @@ def test_setup_operation_optimization():
 
 def test_setup_investment_optimization():
 
-    thermal_network.optimize_investment()
+    tn_invest.optimize_investment(invest_options=invest_opt)
 
 
 def test_setup_simulation():
