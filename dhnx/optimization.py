@@ -509,7 +509,7 @@ def optimize_operation(thermal_network):
     return results
 
 
-def optimize_investment(thermal_network, invest_options, settings=None):
+def setup_optimise_investment(thermal_network, invest_options, settings=None):
     r"""
     Takes a thermal network and returns the result of
     the investment optimization.
@@ -548,15 +548,20 @@ def optimize_investment(thermal_network, invest_options, settings=None):
     model = OemofInvestOptimizationModel(thermal_network, setting_default,
                                          invest_options)
 
-    model.solve(solver=setting_default['solver'],
-                solve_kw=setting_default['solve_kw'])
+    return model
 
-    if setting_default['dump_path'] is not None:
+
+def solve_optimisation_investment(model):
+
+    model.solve(solver=model.settings['solver'],
+                solve_kw=model.settings['solve_kw'])
+
+    if model.settings['dump_path'] is not None:
         my_es = model.es
-        my_es.dump(dpath=setting_default['dump_path'], filename=setting_default['dump_name'])
-        print('oemof Energysystem stored in "{}"'.format(setting_default['dump_path']))
+        my_es.dump(dpath=model.settings['dump_path'], filename=model.settings['dump_name'])
+        print('oemof Energysystem stored in "{}"'.format(model.settings['dump_path']))
 
-    if setting_default['get_invest_results']:
+    if model.settings['get_invest_results']:
         edges_results = model.get_results_edges()
     else:
         edges_results = model.network.components['edges']
