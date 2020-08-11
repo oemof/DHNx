@@ -101,78 +101,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         return
 
-    def precalc_consumers_connections(self):
-        """This method pre calculates the house connections and adds the
-        results to the edges as further input for the oemof solph model.
-        This function should be used only, if all consumers should be
-        connected to the dhs grid (not in case of central-decentral
-        comparison).
-
-        Notes:
-
-            - if 'active' is not present in the edges tables, all consumers
-            connections are pre-calculated.
-
-            - as options for dimensioning, the same options for pipes should
-            be used as for the optimization itself
-
-            - as design power, either the max heat value of the consumers table
-            is used (if 'max heat load' is given), or the maximum value of each
-            timeseries is used (depending on the number of timesteps). This
-            max heat value will be written in the consumers table.
-
-            - the results of the precalculation should be written in the
-            edges table, and should exactly look like as if existing pipes are
-            given.
-
-        """
-        print('Info: Precalculation Consumers Connection')
-
-        edges = self.network.components['edges']
-        count = 0   # counts the number of pre-calculatet house connections
-        count_multiple = 0 # counts the consumers, which have multiple connection options
-        for r, c in self.network.components['consumers'].iterrows():
-
-            # get edge index
-            edge_id = edges[edges['to_node'] == 'consumers-' + str(r)].index
-
-            if len(edge_id) > 1:
-                count_multiple += 1
-                print('consumers-{} has multiple options for connection to the grid.'
-                      ''.format(str(r)))
-                
-            # only if there is just one option of connecting a consumer to the
-            # grid, it makes sense to precalculate the house connection
-            elif c['active'] and len(edge_id) == 1:
-
-                house_connection = edges.T[edge_id[0]]
-                # optimize single connection with oemof solph
-                capacity, hp_typ, i_status, exist = calc_consumer_connection(
-                    house_connection, c['P_heat_max'], self.settings,
-                    self.invest_options['network']['pipes'])                
-                
-                # put results into existing pipes data
-                edges.at[edge_id, 'existing'] = exist
-                edges.at[edge_id, 'capacity'] = capacity
-                edges.at[edge_id, 'hp_type'] = hp_typ
-                edges.at[edge_id, 'invest_status'] = i_status
-                
-                count += 1
-
-            else:
-                raise ValueError('Something wrong!')
-
-        self.network.components['edges'] = edges
-
-        num_active_consumers = \
-            self.network.components['consumers']['active'].sum()
-        
-        print('Info: {} out of {} active consumers connections were precalculated.'
-              ' {} consumers have multiple options for connecting to the grid.'.
-              format(count, num_active_consumers, count_multiple))
-        
-        return
-
     def complete_exist_data(self):
 
         pipe_types = self.invest_options['network']['pipes']
@@ -378,19 +306,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # get invest_status in order that .get_pipe_data() works proberly for
         # existing pipes - maybe, needs to be adapted in future
         self.complete_exist_data()
-
-        # precalculate house connections if wanted
-        # precalculates takes always the 'P_heat_max' of each house for
-        # dimesioning, without simultaneity factor. The simultaneitgy factor
-        # is applied to the timeseries, which are in case of single-timestep
-        # optimisation inserted and replaced above
-        if self.settings['precalc_consumer_connections']:
-            # if self.settings['dhs'] != 'fix':
-            #     raise ValueError(
-            #         'Are you sure, you want to do that?! '
-            #         'If you want to precalculate the consumers connections, '
-            #         'set the optimisation setting option "dhs" to "fix"!')
-            self.precalc_consumers_connections()
 
         # apply global simultaneity for demand series
         self.network.sequences['consumers']['heat_flow'] = \
