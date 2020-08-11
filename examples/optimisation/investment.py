@@ -108,28 +108,3 @@ df_heat_loss.columns = ['label', 'heat_loss']
 
 print('Heat loss nodes: ', df_heat_loss['heat_loss'].sum())
 print('Heat loss recalc: ', results_edges['heat_loss[kW]'].sum())
-
-
-
-
-
-# TESTING #########################
-
-# results = network.results['optimization']['oemof']
-#
-# label = 'infrastructure_' + 'heat_' + 'heatpipe-milp' + '_' + 'producers-0-forks-0'
-#
-# flow = [x for x in results.keys()
-#         if x[1] is not None
-#         if x[0].label.__str__() == label]
-#
-# results[flow[0]]['sequences']
-
-
-# # maybe slow approach with lambda function
-# df[hp + '.' + 'dir-1'] = df['from_node'] + '-' + df['to_node']
-# df[hp + '.' + 'size-1'] = df[hp + '.' + 'dir-1'].apply(
-#   lambda x: get_invest_val(label_base + x))
-# df[hp + '.' + 'dir-2'] = df['to_node'] + '-' + df['from_node']
-# df[hp + '.' + 'size-2'] = df[hp + '.' + 'dir-2'].apply(
-#   lambda x: get_invest_val(label_base + x))
