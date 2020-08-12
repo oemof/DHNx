@@ -49,16 +49,14 @@ def add_buses(it, labels, nodes, busd):
                     nodes.append(
                         solph.Sink(label=oh.Label(
                             labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
-                            inputs={busd[l_bus]: solph.Flow(
-                                variable_costs=b['excess costs'])}))
+                            inputs={busd[l_bus]: solph.Flow(variable_costs=b['excess costs'])}))
 
                 if b['shortage']:
                     labels['l_3'] = 'shortage'
                     nodes.append(
                         solph.Source(label=oh.Label(
                             labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
-                                     outputs={busd[l_bus]: solph.Flow(
-                                         variable_costs=b['shortage costs'])}))
+                            outputs={busd[l_bus]: solph.Flow(variable_costs=b['shortage costs'])}))
 
     return nodes, busd
 
@@ -75,7 +73,7 @@ def add_sources(on, it, c, labels, gd, nodes, busd):
     # by what comes after 'active'
     flow_attr = list(it.columns)[2:]
     idx = flow_attr.index('active')
-    flow_attr = flow_attr[idx+1:]
+    flow_attr = flow_attr[idx + 1:]
 
     for i, cs in it.iterrows():
         labels['l_3'] = 'source'
@@ -115,8 +113,8 @@ def add_sources(on, it, c, labels, gd, nodes, busd):
 
             nodes.append(
                 solph.Source(
-                    label=oh.Label(labels['l_1'], labels['l_2'],
-                                     labels['l_3'], labels['l_4']),
+                    label=oh.Label(
+                        labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                     outputs={
                         busd[(labels['l_1'], cs['label_2'], 'bus',
                               labels['l_4'])]: solph.Flow(**outflow_args)}))
@@ -138,8 +136,8 @@ def add_demand(it, labels, gd, series, nodes, busd):
 
             # create
             nodes.append(
-                solph.Sink(label=oh.Label(labels['l_1'], labels['l_2'],
-                                       labels['l_3'], labels['l_4']),
+                solph.Sink(label=oh.Label(
+                    labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                            inputs={
                                busd[(labels['l_1'], labels['l_2'], 'bus',
                                      labels['l_4'])]: solph.Flow(**inflow_args)}))
@@ -170,23 +168,21 @@ def add_transformer(it, labels, gd, nodes, busd):
                     # calculation epc
                     if t['annuity']:
                         epc_t = economics.annuity(
-                            capex=t['capex'], n=t['n'], wacc=gd['rate']) \
-                                * gd['f_invest']
+                            capex=t['capex'], n=t['n'], wacc=gd['rate']) * gd['f_invest']
                     else:
                         epc_t = t['capex']
 
                     # create
                     nodes.append(
                         solph.Transformer(
-                            label=oh.Label(labels['l_1'], labels['l_2'],
-                                        labels['l_3'], labels['l_4']),
+                            label=oh.Label(
+                                labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                             inputs={b_in_1: solph.Flow()},
                             outputs={b_out_1: solph.Flow(
                                 variable_costs=t['variable_costs'],
                                 summed_max=t['in_1_sum_max'],
                                 investment=solph.Investment(
-                                    ep_costs=epc_t +
-                                             t['service'] * gd['f_invest'],
+                                    ep_costs=epc_t + t['service'] * gd['f_invest'],
                                     maximum=t['max_invest'],
                                     minimum=t['min_invest']))},
                             conversion_factors={
@@ -203,8 +199,8 @@ def add_transformer(it, labels, gd, nodes, busd):
 
                     nodes.append(
                         solph.Transformer(
-                            label=oh.Label(labels['l_1'], labels['l_2'],
-                                        labels['l_3'], labels['l_4']),
+                            label=oh.Label(labels['l_1'], labels['l_2'], labels['l_3'],
+                                           labels['l_4']),
                             inputs={b_in_1: solph.Flow()},
                             outputs={b_out_1: solph.Flow(
                                 nominal_value=t['installed'],
@@ -220,16 +216,14 @@ def add_storage(it, labels, gd, nodes, busd):
     for i, s in it.iterrows():
         if s['active']:
 
-            label_storage = oh.Label(labels['l_1'], s['bus'], s['label'],
-                                  labels['l_4'])
+            label_storage = oh.Label(labels['l_1'], s['bus'], s['label'], labels['l_4'])
             label_bus = busd[(labels['l_1'], s['bus'], 'bus', labels['l_4'])]
 
             if s['invest']:
 
                 if s['annuity']:
                     epc_s = economics.annuity(
-                        capex=s['capex'], n=s['n'], wacc=gd['rate']) \
-                            * gd['f_invest']
+                        capex=s['capex'], n=s['n'], wacc=gd['rate']) * gd['f_invest']
                 else:
                     epc_s = s['capex']
 
@@ -296,8 +290,8 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
                         ep_costs=epc_p, maximum=t['cap_max'],
                         minimum=t['cap_min'], nonconvex=nc, offset=epc_fix,
                     ))},
-                heat_loss_factor=t['l_factor']*q['length[m]'],
-                heat_loss_factor_fix=t['l_factor_fix']*q['length[m]'],
+                heat_loss_factor=t['l_factor'] * q['length[m]'],
+                heat_loss_factor_fix=t['l_factor_fix'] * q['length[m]'],
             ))
 
     return nodes

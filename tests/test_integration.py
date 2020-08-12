@@ -34,6 +34,7 @@ invest_opt = dhnx.input_output.load_invest_options(
     dir_import_invest + 'invest_options'
 )
 
+
 def test_import_export_csv():
     dir_export = os.path.join(tmpdir, 'network_export')
 
@@ -83,8 +84,7 @@ def test_setup_operation_optimization():
 
 def test_setup_investment_optimization():
     
-    oemof_dhnx_model = dhnx.optimization.setup_optimise_investment(
-        tn_invest, invest_opt)
+    dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
 
 
 def test_setup_simulation():
