@@ -92,7 +92,7 @@ class ThermalNetwork():
                 summary += ' * ' + str(count) + ' ' + component + '\n'
 
         if summary == '':
-            return f"empty dhnx.network.ThermalNetwork object containing no components"
+            return f'{"empty dhnx.network.ThermalNetwork object containing no components"}'
 
         return f"dhnx.network.ThermalNetwork object with these components\n{summary}"
 

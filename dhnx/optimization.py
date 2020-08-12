@@ -136,7 +136,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         edges = self.network.components['edges']
 
         # just take active heatpipes
-        edges_active = edges[edges['active'] == True]
+        edges_active = edges[edges['active'] == 1]
 
         # check if pipe type in pipe invest options
         hp_list = list(set(
@@ -158,8 +158,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             # differantiate between convex and nonconvex investments
             if t['nonconvex'] is True:
-                heat_loss = (t['l_factor'] * q['capacity'] +
-                             t['l_factor_fix'] * q['invest_status']) * q['length[m]']
+                heat_loss = (t['l_factor'] * q['capacity'] + t['l_factor_fix'] *
+                             q['invest_status']) * q['length[m]']
             else:
                 heat_loss = t['l_factor'] * q['capacity'] * q['length[m]'] + \
                     t['l_factor_fix'] * q['length[m]']

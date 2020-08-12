@@ -61,7 +61,6 @@ class CSVNetworkImporter(NetworkImporter):
 
         return component_table
 
-
     def load_sequence(self, list_name, attr_name):
 
         if list_name not in self.thermal_network.available_components.list_name.values:

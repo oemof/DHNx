@@ -49,8 +49,8 @@ def add_buses(it, labels, nodes, busd):
                     nodes.append(
                         solph.Sink(label=oh.Label(
                             labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
-                                   inputs={busd[l_bus]: solph.Flow(
-                                       variable_costs=b['excess costs'])}))
+                            inputs={busd[l_bus]: solph.Flow(
+                                variable_costs=b['excess costs'])}))
 
                 if b['shortage']:
                     labels['l_3'] = 'shortage'
