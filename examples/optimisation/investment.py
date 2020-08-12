@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import dhnx
-
+import pandas as pd
 
 # Initialize thermal network
 network = dhnx.network.ThermalNetwork()
@@ -9,25 +9,31 @@ network = network.from_csv_folder('investment_input_2/network')
 # general optimisation settings
 num_ts = 3     # number of timesteps
 time_res = 1    # time resolution: [1/h] (percentage of hour) => 0.25 is quarter-hour resolution
-set = {'num_ts': num_ts,            # number of timesteps
-       'time_res': time_res,         # time resolution: [1/h] (percentage of hour) => 0.25 is quarter-hour resolution
-       'rate': 0.01,                 # interest rate (just in case of annuity)
-       'f_invest': num_ts / (8760 / time_res),   # scaling factor for investment costs (just in case annuity is on)
-       # 'f_invest': 1,
+set = {'num_ts': num_ts,           # number of timesteps
+       'time_res': time_res,       # time resolution: [1/h] (percentage of hour) => 0.25 is
+                                   # quarter-hour resolution
+       'rate': 0.01,               # interest rate (just in case of annuity)
+       'f_invest': num_ts / (8760 / time_res),   # scaling factor for investment costs (just in case
+                                                 # annuity is on)
        'start_date': '1/1/2018',     # start of datetimeindex for oemof solph
        'frequence': 'H',             # time resolution
        'solver': 'cbc',              # solver
        'solve_kw': {'tee': True},    # solver kwargs
        # optimization types
-       'heat_demand': 'optional',        # parameter which defines type of optimization. ...
+       'heat_demand': 'optional',    # parameter which defines type of optimization. ...
        # either the heat supply should be via dhs ('fix') (=> all active houses are connected), ...
        # or is part of the optimization ('optional').
-       'simultaneity': 'global',   # 'global' or 'timeseries' => a single timestep optimization is performed
-       'global_SF': 0.8,           # global simultaneity factor. is only applied, if simultaneity='global'
+       'simultaneity': 'global',   # 'global' or 'timeseries' => a single timestep optimization is
+                                   # performed
+       'global_SF': 0.8,           # global simultaneity factor. is only applied,
+                                   # if simultaneity='global'
        'SF_timeseries': 1,         # scaling factor for heat demand timeseries
-       'SF_1_timeseries': 0.8,     # scaling factor for the first element of the timeseries (bei geoordneter JDL)
-       'bidirectional_pipes': True,       # specify whether the distribution lines (from fork to fork) should be bidiretional or not,
-                                          # if 'False', then two pipes are build in each direaction, instead of 1 bidirectional pipe
+       'SF_1_timeseries': 0.8,     # scaling factor for the first element of the timeseries (bei
+                                   # geoordneter JDL)
+       'bidirectional_pipes': True,       # specify whether the distribution lines (from fork to
+                                          # fork) should be bidiretional or not,
+                                          # if 'False', then two pipes are build in each direaction,
+                                          # instead of 1 bidirectional pipe
        # 'dump_path': 'investment_input_2/'
        }
 
@@ -51,8 +57,8 @@ col_size = [x for x in col_size if x.split('.')[1] == 'size']
 # get indices which are existing or invested
 ind = []
 for hp in col_size:
-       if len(list(results_edges[results_edges[hp] > 0.001].index)) > 0:
-              ind = ind + list(results_edges[results_edges[hp] > 0.001].index)
+    if len(list(results_edges[results_edges[hp] > 0.001].index)) > 0:
+        ind = ind + list(results_edges[results_edges[hp] > 0.001].index)
 
 ind_exist = list(results_edges[results_edges['existing'] == 1].index)
 
@@ -90,18 +96,18 @@ print('')
 # recalc heat loss
 # Re-calc heat loss
 results = network.results['optimization']['oemof']
-hp = [x for x in results.keys()
-             if x[1] is None
-             if 'heatpipe' in x[0].label[2]]
+hp = [
+    x for x in results.keys()
+    if x[1] is None
+    if 'heatpipe' in x[0].label[2]
+]
 len(hp)
 len(results_edges.index)
 
 label_list = [x[0].label[3] for x in hp]
-heat_loss_list = [results[x]['sequences']['heat_loss'][0].squeeze()
-                       for x in hp]
+heat_loss_list = [results[x]['sequences']['heat_loss'][0].squeeze() for x in hp]
 heat_loss_total = sum(heat_loss_list)
 
-import pandas as pd
 df_heat_loss = pd.DataFrame([label_list, heat_loss_list]).T
 df_heat_loss.columns = ['label', 'heat_loss']
 
