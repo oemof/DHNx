@@ -278,9 +278,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             self.settings['num_ts'] = 1
 
             # new approach
-            P_max = self.network.components['consumers']['P_heat_max']
-            df_ts = pd.DataFrame(data=[P_max.values],
-                                 columns=list(P_max.index),
+            p_max = self.network.components['consumers']['P_heat_max']
+            df_ts = pd.DataFrame(data=[p_max.values],
+                                 columns=list(p_max.index),
                                  index=pd.Index([0], name='timestep'))
 
             # heat load is maximum heat load mutiplied with simultaneity
@@ -415,10 +415,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         def check_multi_dir_invest(hp_lab):
 
-            df = self.network.components['edges']
+            ed = self.network.components['edges']
 
             df_double_invest = \
-                df[(df[hp_lab + '.' + 'size-1'] > 0.001) & (df[hp_lab + '.' + 'size-2'] > 0.001)]
+                ed[(ed[hp_lab + '.' + 'size-1'] > 0.001) & (ed[hp_lab + '.' + 'size-2'] > 0.001)]
 
             if self.settings['print_logging_info']:
                 print('***')
@@ -458,15 +458,15 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     raise ValueError(
                         "Edge id {} already has an investment > 0!".format(edge_id))
 
-            for hp in active_hp:
-                p = pipe_data[pipe_data['label_3'] == hp].squeeze()   # series of heatpipe
+            for ahp in active_hp:
+                p = pipe_data[pipe_data['label_3'] == ahp].squeeze()   # series of heatpipe
                 for r, c in df.iterrows():
-                    if c[hp + '.size'] > 0:
+                    if c[ahp + '.size'] > 0:
                         check_invest_label(c['hp_type'], id)
-                        df.at[r, 'hp_type'] = hp
-                        df.at[r, 'capacity'] = c[hp + '.size']
+                        df.at[r, 'hp_type'] = ahp
+                        df.at[r, 'capacity'] = c[ahp + '.size']
                         if p['nonconvex']:
-                            df.at[r, 'invest_status'] = c[hp + '.status']
+                            df.at[r, 'invest_status'] = c[ahp + '.status']
                         else:
                             df.at[r, 'invest_status'] = None
 
