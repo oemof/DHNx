@@ -29,7 +29,7 @@ print('Objective Value: ',
       network.results.optimization['oemof_meta']['objective'])
 
 # manually recalculate total costs
-total_costs = (33*3.162 + 15*1 + 18*1 + 18*0.5)*0.5
+total_costs = (33 * 3.162 + 15 * 1 + 18 * 1 + 18 * 0.5) * 0.5
 print('Costs re-calculation: ', total_costs)
 
 col_size = [x for x in list(results_edges.columns) if '.size' in x]

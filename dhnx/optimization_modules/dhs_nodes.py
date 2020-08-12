@@ -17,7 +17,7 @@ from dhnx.optimization_modules import oemof_heatpipe as oh, add_components as ac
 import pandas as pd
 from oemof.solph import processing
 
-# def add_nodes_dhs(geo_data, gd, gd_infra, nodes, busd):
+
 def add_nodes_dhs(opti_network, gd, nodes, busd):
     """
     :param geo_data: geometry data (points and line layer from qgis)
@@ -69,21 +69,21 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 
         d_labels['l_1'] = 'infrastructure'
         d_labels['l_2'] = 'heat'
-        
+
         if q['active']:
-            
+
             if q['existing']:
-    
+
                 # terminate the first label
                 l_1_in = 'infrastructure'
                 l_1_out = 'infrastructure'
-    
+
                 typ_from = q['from_node'].split('-')[0]
                 typ_to = q['to_node'].split('-')[0]
-    
+
                 if (typ_from == 'forks') and (typ_to == 'consumers'):
                     l_1_out = 'consumers'
-    
+
                     start = q['from_node']
                     end = q['to_node']
                     b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
@@ -91,12 +91,12 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     d_labels['l_4'] = start + '-' + end
                     nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
                                                    nodes)
-    
+
                 elif (typ_from == 'consumers') and (typ_to == 'forks'):
                     raise ValueError(
                         "Edges must not go from 'consumers' to 'forks'!"
                         " Existing heatpipe id {}".format(p))
-    
+
                 elif (typ_from == 'forks') and (typ_to == 'producers'):
                     l_1_in = 'producers'
 
@@ -108,10 +108,10 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q,
                                                    b_in, b_out,
                                                    nodes)
-    
+
                 elif (typ_from == 'producers') and (typ_to == 'forks'):
                     l_1_in = 'producers'
-    
+
                     start = q['from_node']
                     end = q['to_node']
                     b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
@@ -119,9 +119,9 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     d_labels['l_4'] = start + '-' + end
                     nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
                                                    nodes)
-    
+
                 elif (typ_from == 'forks') and (typ_to == 'forks'):
-    
+
                     start = q['from_node']
                     end = q['to_node']
                     b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
@@ -129,7 +129,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     d_labels['l_4'] = start + '-' + end
                     nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
                                                    nodes)
-    
+
                     # # Should there be a second pipe in the other direction?!
                     # start = q['to_node']
                     # end = q['from_node']
@@ -138,59 +138,60 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     # d_labels['l_4'] = start + '-' + end
                     # nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
                     #                                nodes)
-    
+
                 else:
                     raise ValueError("Something wrong!")
-    
+
             else:   # calls Investment heatpipeline function
                 # connection of houses
                 if q['to_node'].split('-')[0] == "consumers":
-    
+
                     start = q['from_node']
                     end = q['to_node']
                     b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
                     b_out = busd[('consumers', d_labels['l_2'], 'bus', end)]
-    
+
                     d_labels['l_4'] = start + '-' + end
-    
+
                     nodes = ac.add_heatpipes(
                         pipe_data, d_labels, gd, q, b_in, b_out,
                         nodes)
-    
+
                 elif q['from_node'].split('-')[0] == "consumers":
                     raise ValueError(
                         "Edges must not go from 'consumers'!"
                         " Existing heatpipe id {}".format(p))
-    
+
                 elif q['to_node'].split('-')[0] == "producers":
 
                     start = q['to_node']
                     end = q['from_node']
                     b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
                     b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
-    
+
                     d_labels['l_4'] = start + '-' + end
-    
+
                     nodes = ac.add_heatpipes(
                         pipe_data, d_labels,
                         gd, q, b_in, b_out,
                         nodes)
-    
+
                 elif q['from_node'].split('-')[0] == "producers":
-    
+
                     start = q['from_node']
                     end = q['to_node']
                     b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
                     b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', end)]
-    
+
                     d_labels['l_4'] = start + '-' + end
-    
+
                     nodes = ac.add_heatpipes(
                         pipe_data, d_labels, gd, q, b_in, b_out,
                         nodes)
-    
-                elif (q['from_node'].split('-')[0] == 'forks') and (q['to_node'].split('-')[0] == 'forks'):
 
+                elif (q['from_node'].split('-')[0] == 'forks') and \
+                        (q['to_node'].split('-')[0] == 'forks'):
+                    
                     b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', q['from_node'])]
                     b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', q['to_node'])]
                     d_labels['l_4'] = q['from_node'] + '-' + q['to_node']
@@ -202,13 +203,13 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                         # the heatpipes from fork to fork need to be created in
                         # both directions in this case bidiretional = False
                         b_in = busd[(
-                        d_labels['l_1'], d_labels['l_2'], 'bus', q['to_node'])]
+                            d_labels['l_1'], d_labels['l_2'], 'bus', q['to_node'])]
                         b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', q['from_node'])]
                         d_labels['l_4'] = q['to_node'] + '-' + q['from_node']
 
                         nodes = ac.add_heatpipes(
                             pipe_data, d_labels, gd, q, b_in, b_out, nodes)
-    
+
                 else:
                     raise ValueError("Something wrong!")
 
@@ -274,7 +275,6 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
         # Node.registry = esys
 
         nodes = []
-        buses = {}
 
         b_grid = solph.Bus(label='grid')
         nodes.append(b_grid)
@@ -290,8 +290,7 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
         d_labels['l_1'] = 'infrastructure'
         d_labels['l_2'] = 'heat'
         d_labels['l_3'] = 'placeholder'
-        d_labels['l_4'] = house_connection['from_node'] + '-' + \
-                          house_connection['to_node']
+        d_labels['l_4'] = house_connection['from_node'] + '-' + house_connection['to_node']
 
         nodes = ac.add_heatpipes(
             pipes_options,
@@ -335,5 +334,5 @@ def calc_consumer_connection(house_connection, P_max, set, pipes_options):
             "{} has a negative maximum heat load!"
             "".format(house_connection['to_node']))
     # model.InvestmentFlow.investment_costs.expr()
-    
+
     return capacity, hp_typ, invest_status, exist

@@ -99,8 +99,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             if self.network.sequences['consumers']['heat_flow'].columns.dtype \
                     != 'int64':
                 self.network.sequences['consumers']['heat_flow'].columns = \
-                    self.network.sequences['consumers']['heat_flow'].columns.\
-                        astype('int64')
+                    self.network.sequences['consumers']['heat_flow'].columns.astype('int64')
 
         return
 
@@ -158,7 +157,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             t = pipe_types.loc[ind].squeeze()
 
             # differantiate between convex and nonconvex investments
-            if t['nonconvex']:
+            if t['nonconvex'] is True:
                 heat_loss = (t['l_factor'] * q['capacity'] +
                              t['l_factor_fix'] * q['invest_status']) * q['length[m]']
             else:
@@ -220,7 +219,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # qgis_data : ursprünglich dict mit point and line layer
         # gd_infra : invest optionen heat pipe
         # data_houses : dict mit excel/csv (buses, transformer, ...) daten von consumer
-        # data_generation : dict mit excel/csv (buses, transformer, ...) daten von generation/producer
+        # data_generation :
+        #       dict mit excel/csv (buses, transformer, ...) daten von generation/producer
 
         # add houses
         for typ in ['consumers', 'producers']:
@@ -386,7 +386,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             try:
                 invest_status = res[outflow[0]]['scalars']['invest_status']
             except (KeyError, IndexError):
-                try :
+                try:
                     # that's in case of a one timestep optimisation due to
                     # an oemof bug in outputlib
                     invest_status = res[outflow[0]]['sequences']['invest_status'][0]

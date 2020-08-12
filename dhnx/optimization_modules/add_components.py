@@ -32,8 +32,7 @@ def add_buses(it, labels, nodes, busd):
 
         if b['active']:
             labels['l_2'] = b['label_2']
-            l_bus = oh.Label(labels['l_1'], labels['l_2'], labels['l_3'],
-                          labels['l_4'])
+            l_bus = oh.Label(labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4'])
 
             # check if bus already exists (due to infrastructure)
             if l_bus in busd:
@@ -48,16 +47,16 @@ def add_buses(it, labels, nodes, busd):
                 if b['excess']:
                     labels['l_3'] = 'excess'
                     nodes.append(
-                        solph.Sink(label=oh.Label(labels['l_1'], labels['l_2'],
-                                               labels['l_3'], labels['l_4']),
+                        solph.Sink(label=oh.Label(
+                            labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                                    inputs={busd[l_bus]: solph.Flow(
                                        variable_costs=b['excess costs'])}))
 
                 if b['shortage']:
                     labels['l_3'] = 'shortage'
                     nodes.append(
-                        solph.Source(label=oh.Label(labels['l_1'], labels['l_2'],
-                                                 labels['l_3'], labels['l_4']),
+                        solph.Source(label=oh.Label(
+                            labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                                      outputs={busd[l_bus]: solph.Flow(
                                          variable_costs=b['shortage costs'])}))
 
@@ -100,13 +99,11 @@ def add_sources(on, it, c, labels, gd, nodes, busd):
 
             for sa in spec_attr:
                 if sa.split('.')[-1] in outflow_args.keys():
-                    print('General attribute <{}> of Label 2 <{}> and '
-                          'Label 3 <{}> (value: {}) will '
-                          'be replaced by specific data. New value for '
-                          '<{}>: {}'.format(
-                          sa.split('.')[-1], labels['l_2'], labels['l_3'],
-                        outflow_args[sa.split('.')[-1]],
-                          labels['l_4'], c[sa]))
+                    print(
+                        'General attribute <{}> of Label 2 <{}> and Label 3 <{}> (value: {}) will '
+                        'be replaced by specific data. New value for <{}>: {}'.format(
+                            sa.split('.')[-1], labels['l_2'], labels['l_3'],
+                            outflow_args[sa.split('.')[-1]], labels['l_4'], c[sa]))
                 outflow_args[sa.split('.')[-1]] = c[sa]
 
             # add timeseries data if present
@@ -120,9 +117,9 @@ def add_sources(on, it, c, labels, gd, nodes, busd):
                 solph.Source(
                     label=oh.Label(labels['l_1'], labels['l_2'],
                                      labels['l_3'], labels['l_4']),
-                    outputs={busd[(
-                        labels['l_1'], cs['label_2'], 'bus',
-                        labels['l_4'])]: solph.Flow(**outflow_args)}))
+                    outputs={
+                        busd[(labels['l_1'], cs['label_2'], 'bus',
+                              labels['l_4'])]: solph.Flow(**outflow_args)}))
 
     return nodes, busd
 
@@ -145,8 +142,7 @@ def add_demand(it, labels, gd, series, nodes, busd):
                                        labels['l_3'], labels['l_4']),
                            inputs={
                                busd[(labels['l_1'], labels['l_2'], 'bus',
-                                     labels['l_4'])]: solph.Flow(
-                                        **inflow_args)}))
+                                     labels['l_4'])]: solph.Flow(**inflow_args)}))
 
     return nodes, busd
 
