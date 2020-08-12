@@ -138,9 +138,8 @@ def add_demand(it, labels, gd, series, nodes, busd):
             nodes.append(
                 solph.Sink(label=oh.Label(
                     labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
-                           inputs={
-                               busd[(labels['l_1'], labels['l_2'], 'bus',
-                                     labels['l_4'])]: solph.Flow(**inflow_args)}))
+                    inputs={busd[(labels['l_1'], labels['l_2'], 'bus',
+                                  labels['l_4'])]: solph.Flow(**inflow_args)}))
 
     return nodes, busd
 

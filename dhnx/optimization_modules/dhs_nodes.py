@@ -189,8 +189,8 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                         pipe_data, d_labels, gd, q, b_in, b_out,
                         nodes)
 
-                elif (q['from_node'].split('-')[0] == 'forks') and \
-                        (q['to_node'].split('-')[0] == 'forks'):
+                elif (q['from_node'].split('-')[0] == 'forks') and (
+                        q['to_node'].split('-')[0] == 'forks'):
                
                     b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', q['from_node'])]
                     b_out = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', q['to_node'])]

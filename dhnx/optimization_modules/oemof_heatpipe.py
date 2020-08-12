@@ -12,8 +12,7 @@ SPDX-License-Identifier: MIT
 """
 
 from pyomo.core.base.block import SimpleBlock
-from pyomo.environ import (Binary, Set, NonNegativeReals, Var, Constraint,
-                           Expression)
+from pyomo.environ import (Set, NonNegativeReals, Var, Constraint)
 import warnings
 
 from oemof.solph.network import Transformer
