@@ -13,11 +13,10 @@ SPDX-License-Identifier: MIT
 
 from pyomo.core.base.block import SimpleBlock
 from pyomo.environ import (Binary, Set, NonNegativeReals, Var, Constraint,
-                           Expression, BuildAction)
-import logging
+                           Expression)
 import warnings
 
-from oemof.solph.network import Bus, Transformer
+from oemof.solph.network import Transformer
 from oemof.solph.plumbing import sequence
 from oemof.solph import Investment
 from collections import namedtuple
@@ -115,7 +114,6 @@ class HeatPipeline(Transformer):
         else:
             self._set_nominal_value()
 
-
     def _check_flows_invest(self):
         for flow in self.inputs.values():
             if isinstance(flow.investment, Investment):
@@ -210,8 +208,10 @@ class HeatPipelineBlock(SimpleBlock):
         m = self.parent_block()
 
         self.HEATPIPES = Set(initialize=[n for n in group])
-        self.CONVEX_HEATPIPES = Set(initialize=[n for n in group if n.outputs[list(n.outputs.keys())[0]].nonconvex is None])
-        self.NONCONVEX_HEATPIPES = Set(initialize=[n for n in group if n.outputs[list(n.outputs.keys())[0]].nonconvex is not None])
+        self.CONVEX_HEATPIPES = Set(initialize=[
+            n for n in group if n.outputs[list(n.outputs.keys())[0]].nonconvex is None])
+        self.NONCONVEX_HEATPIPES = Set(initialize=[
+            n for n in group if n.outputs[list(n.outputs.keys())[0]].nonconvex is not None])
 
         # Defining Variables
         self.heat_loss = Var(self.HEATPIPES, m.TIMESTEPS,
@@ -241,8 +241,9 @@ class HeatPipelineBlock(SimpleBlock):
 
             expr = 0
             expr += - block.heat_loss[n, t]
-            expr += (n.heat_loss_factor[t] * m.flows[n, o].nominal_value +
-                     n.heat_loss_factor_fix[t]) * m.NonConvexFlow.status[n, o, t]
+            expr += \
+                (n.heat_loss_factor[t] * m.flows[n, o].nominal_value + n.heat_loss_factor_fix[t]) *\
+                m.NonConvexFlow.status[n, o, t]
             return expr == 0
 
         self.heat_loss_equation_on_off = Constraint(
@@ -331,8 +332,10 @@ class HeatPipelineInvestBlock(SimpleBlock):
         self.NONCONVEX_INVESTHEATPIPES = Set(initialize=[
             n for n in group if n.outputs[list(n.outputs.keys())[0]].investment.nonconvex is True])
 
-        self.INVESTHEATPIPES_NO_DEMAND = Set(initialize=[n for n in group if len(n.outputs.keys()) == 1])
-        self.INVESTHEATPIPES_WITH_DEMAND = Set(initialize=[n for n in group if len(n.outputs.keys()) == 2])
+        self.INVESTHEATPIPES_NO_DEMAND = Set(
+            initialize=[n for n in group if len(n.outputs.keys()) == 1])
+        self.INVESTHEATPIPES_WITH_DEMAND = Set(
+            initialize=[n for n in group if len(n.outputs.keys()) == 2])
 
         # Defining Variables
         self.heat_loss = Var(self.INVESTHEATPIPES, m.TIMESTEPS,
@@ -344,8 +347,7 @@ class HeatPipelineInvestBlock(SimpleBlock):
             """
             expr = 0
             expr += - block.heat_loss[n, t]
-            expr += n.heat_loss_factor[t] * m.InvestmentFlow.invest[
-                n, list(n.outputs.keys())[0]]
+            expr += n.heat_loss_factor[t] * m.InvestmentFlow.invest[n, list(n.outputs.keys())[0]]
             expr += n.heat_loss_factor_fix[t]
             return expr == 0
         self.heat_loss_equation_convex = Constraint(self.CONVEX_INVESTHEATPIPES, m.TIMESTEPS,
@@ -357,11 +359,11 @@ class HeatPipelineInvestBlock(SimpleBlock):
             """
             expr = 0
             expr += - block.heat_loss[n, t]
-            expr += n.heat_loss_factor[t] * m.InvestmentFlow.invest[
-                n, list(n.outputs.keys())[0]]
-            expr += n.heat_loss_factor_fix[t] * m.InvestmentFlow.invest_status[
-                n, list(n.outputs.keys())[0]]
+            expr += n.heat_loss_factor[t] * m.InvestmentFlow.invest[n, list(n.outputs.keys())[0]]
+            expr += n.heat_loss_factor_fix[t] * \
+                m.InvestmentFlow.invest_status[n, list(n.outputs.keys())[0]]
             return expr == 0
+        
         self.heat_loss_equation_nonconvex = Constraint(self.NONCONVEX_INVESTHEATPIPES, m.TIMESTEPS,
                                              rule=_heat_loss_rule_nonconvex)
 
@@ -377,8 +379,8 @@ class HeatPipelineInvestBlock(SimpleBlock):
             expr += - block.heat_loss[n, t]
             return expr == 0
 
-        self.relation_no_demand = Constraint(self.INVESTHEATPIPES_NO_DEMAND, m.TIMESTEPS,
-                                   rule=_relation_rule_no_demand)
+        self.relation_no_demand = Constraint(
+            self.INVESTHEATPIPES_NO_DEMAND, m.TIMESTEPS, rule=_relation_rule_no_demand)
 
         def _relation_rule_with_demand(block, n, t):
             """Link input and output flow and subtract heat loss."""
@@ -393,8 +395,8 @@ class HeatPipelineInvestBlock(SimpleBlock):
             expr += - block.heat_loss[n, t]
             expr += - m.flow[n, d, t]
             return expr == 0
-        self.relation_with_demand = Constraint(self.INVESTHEATPIPES_WITH_DEMAND, m.TIMESTEPS,
-                                   rule=_relation_rule_with_demand)
+        self.relation_with_demand = Constraint(
+            self.INVESTHEATPIPES_WITH_DEMAND, m.TIMESTEPS, rule=_relation_rule_with_demand)
 
         def _inflow_outflow_invest_coupling_rule(block, n):
             """Rule definition of constraint connecting the inflow
@@ -404,8 +406,7 @@ class HeatPipelineInvestBlock(SimpleBlock):
             i = list(n.inputs.keys())[0]
             o = list(n.outputs.keys())[0]
 
-            expr = (m.InvestmentFlow.invest[i, n] ==
-                    m.InvestmentFlow.invest[n, o])
+            expr = (m.InvestmentFlow.invest[i, n] == m.InvestmentFlow.invest[n, o])
             return expr
         self.inflow_outflow_invest_coupling = Constraint(
             self.INVESTHEATPIPES, rule=_inflow_outflow_invest_coupling_rule)
@@ -514,12 +515,12 @@ class HeatPipelineNew(Transformer):
 
     def _set_flows(self):
         for flow in self.inputs.values():
-            if (self.invest_relation_input_capacity is not None and
-                    not isinstance(flow.investment, Investment)):
+            if (self.invest_relation_input_capacity is not None and not isinstance(
+                    flow.investment, Investment)):
                 flow.investment = Investment()
         for flow in self.outputs.values():
-            if (self.invest_relation_output_capacity is not None and
-                    not isinstance(flow.investment, Investment)):
+            if (self.invest_relation_output_capacity is not None and not isinstance(
+                    flow.investment, Investment)):
                 flow.investment = Investment()
 
     def _check_invest_attributes(self):
@@ -528,9 +529,8 @@ class HeatPipelineNew(Transformer):
                   "replaces the nominal_storage_capacity.\n Therefore the "
                   "nominal_storage_capacity should be 'None'.\n")
             raise AttributeError(e1)
-        if (self.investment and
-                sum(sequence(self.fixed_losses_absolute)) != 0 and
-                self.investment.existing == 0 and
+        if (self.investment and sum(
+                sequence(self.fixed_losses_absolute)) != 0 and self.investment.existing == 0 and
                 self.investment.minimum == 0):
             e3 = ("With fixed_losses_absolute > 0, either investment.existing "
                   "or investment.minimum has to be non-zero.")
@@ -760,7 +760,7 @@ class HeatPipelineNewBlock(SimpleBlock):
                      m.flows[i[n], n].investment.existing))
             return expr
         self.power_coupled = Constraint(
-                self.STORAGES_WITH_INVEST_FLOW_REL, rule=_power_coupled)
+            self.STORAGES_WITH_INVEST_FLOW_REL, rule=_power_coupled)
 
     def _objective_expression(self):
         r"""Objective expression for storages with no investment.
@@ -1076,8 +1076,8 @@ class HeatPipelineNewInvestBlock(SimpleBlock):
                 self.invest[n] * n.investment.ep_costs)
         for n in self.NON_CONVEX_INVESTSTORAGES:
             investment_costs += (
-                    self.invest[n] * n.investment.ep_costs +
-                    self.invest_status[n] * n.investment.offset)
+                self.invest[n] * n.investment.ep_costs + 
+                self.invest_status[n] * n.investment.offset)
         self.investment_costs = Expression(expr=investment_costs)
 
         return investment_costs
