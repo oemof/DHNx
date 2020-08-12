@@ -12,16 +12,15 @@ SPDX-License-Identifier: MIT
 """
 
 import os
-from .model import OperationOptimizationModel, InvestOptimizationModel
-from dhnx.optimization_modules.dhs_nodes import add_nodes_dhs,\
-    add_nodes_houses
-from dhnx.optimization_modules import auxiliary as aux
-
 import logging
 import pandas as pd
-
 import oemof.solph as solph
 from oemof.solph import helpers
+
+from .optimization_modules.dhs_nodes import add_nodes_dhs,\
+    add_nodes_houses
+from .optimization_modules import auxiliary as aux
+from .model import OperationOptimizationModel, InvestOptimizationModel
 
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
@@ -50,6 +49,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         self.settings = settings
         self.invest_options = investment_options
+        self.nodes = []  # list of all nodes
+        self.buses = {}
+        self.es = solph.EnergySystem()
+        self.om = None
 
         # list of possible oemof flow attributes
         self.oemof_flow_attr = {'nominal_value', 'min', 'max',
@@ -84,8 +87,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             if ((q['from_node'].split('-')[0] == "producers") and (
                     q['to_node'].split('-')[0] == "consumers")) or ((
-                    q['from_node'].split('-')[0] == "consumers") and (
-                    q['to_node'].split('-')[0] == "producers")):
+                        q['from_node'].split('-')[0] == "consumers") and (
+                            q['to_node'].split('-')[0] == "producers")):
 
                 raise ValueError(
                     ""
@@ -100,8 +103,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     != 'int64':
                 self.network.sequences['consumers']['heat_flow'].columns = \
                     self.network.sequences['consumers']['heat_flow'].columns.astype('int64')
-
-        return
 
     def complete_exist_data(self):
 
@@ -124,8 +125,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         self.network.components['edges'] = edges
 
-        return
-
     def get_pipe_data(self):
         """Adds heat loss and investment costs (investment costs just for
         information) of all existing pipes to the edges table."""
@@ -139,9 +138,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         edges_active = edges[edges['active'] == 1]
 
         # check if pipe type in pipe invest options
-        hp_list = list(set(
-            [x for x in edges_active['hp_type'].tolist()
-             if isinstance(x, str)]))
+        hp_list = list({x for x in edges_active['hp_type'].tolist()
+                        if isinstance(x, str)})
 
         for hp in hp_list:
             if hp not in list(pipe_types['label_3']):
@@ -169,7 +167,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         def get_invest_costs(opti_nw, q):
 
             # get index of pipe datasheet
-            ind = pipe_types[pipe_types['label_3'] == c['hp_type']].index
+            ind = pipe_types[pipe_types['label_3'] == q['hp_type']].index
 
             t = pipe_types.loc[ind].squeeze()
             gd = opti_nw.settings
@@ -198,12 +196,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         self.network.components['edges'] = edges
 
-        return
-
     def setup_oemof_es(self):
-
-        self.nodes = []  # list of all nodes
-        self.buses = {}
 
         date_time_index = pd.date_range(self.settings['start_date'],
                                         periods=self.settings['num_ts'],
@@ -248,8 +241,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                                                                              "")
                 print(oobj + ':', n.label)
             print("*********************************************************")
-
-        return
 
     def setup(self):
 
@@ -324,9 +315,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # set up oemof energy system
         self.setup_oemof_es()
 
-        return
-
-    def solve(self, solver='cbc', solve_kw=None):
+    def solve(self):
 
         logging.info('Build the operational model')
         self.om = solph.Model(self.es)
@@ -338,13 +327,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         if self.settings['write_lp_file']:
             filename = os.path.join(
                 helpers.extend_basic_path('lp_files'), 'DHNx.lp')
-            logging.info('Store lp-file in {0}.'.format(filename))
+            logging.info('Store lp-file in %s', filename)
             self.om.write(filename, io_options={'symbolic_solver_labels': True})
 
         self.es.results['main'] = solph.processing.results(self.om)
         self.es.results['meta'] = solph.processing.meta_results(self.om)
-
-        return
 
     def get_results_edges(self):
 
@@ -402,53 +389,53 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             put
             """
 
-            label_base = 'infrastructure_' + 'heat_' + hp + '_'
+            hp_lab = p['label_3']
+            label_base = 'infrastructure_' + 'heat_' + hp_lab + '_'
 
             # maybe slow approach with lambda function
-            df[hp + '.' + 'dir-1'] = df['from_node'] + '-' + df['to_node']
-            df[hp + '.' + 'size-1'] = df[hp + '.' + 'dir-1'].apply(
+            df[hp_lab + '.' + 'dir-1'] = df['from_node'] + '-' + df['to_node']
+            df[hp_lab + '.' + 'size-1'] = df[hp_lab + '.' + 'dir-1'].apply(
                 lambda x: get_invest_val(label_base + x))
-            df[hp + '.' + 'dir-2'] = df['to_node'] + '-' + df['from_node']
-            df[hp + '.' + 'size-2'] = df[hp + '.' + 'dir-2'].apply(
+            df[hp_lab + '.' + 'dir-2'] = df['to_node'] + '-' + df['from_node']
+            df[hp_lab + '.' + 'size-2'] = df[hp_lab + '.' + 'dir-2'].apply(
                 lambda x: get_invest_val(label_base + x))
 
-            df[hp + '.' + 'size'] = \
-                df[[hp + '.' + 'size-1', hp + '.' + 'size-2']].max(axis=1)
+            df[hp_lab + '.' + 'size'] = \
+                df[[hp_lab + '.' + 'size-1', hp_lab + '.' + 'size-2']].max(axis=1)
 
             if p['nonconvex']:
-                df[hp + '.' + 'status-1'] = df[hp + '.' + 'dir-1'].apply(
+                df[hp_lab + '.' + 'status-1'] = df[hp_lab + '.' + 'dir-1'].apply(
                     lambda x: get_invest_status(label_base + x))
-                df[hp + '.' + 'status-2'] = df[hp + '.' + 'dir-2'].apply(
+                df[hp_lab + '.' + 'status-2'] = df[hp_lab + '.' + 'dir-2'].apply(
                     lambda x: get_invest_status(label_base + x))
-                df[hp + '.' + 'status'] = \
-                    df[[hp + '.' + 'status-1', hp + '.' + 'status-2']].max(axis=1)
+                df[hp_lab + '.' + 'status'] = \
+                    df[[hp_lab + '.' + 'status-1', hp_lab + '.' + 'status-2']].max(axis=1)
 
             return df
 
-        def check_multi_dir_invest():
+        def check_multi_dir_invest(hp_lab):
 
             df = self.network.components['edges']
 
             df_double_invest = \
-                df[(df[hp + '.' + 'size-1'] > 0.001) & (df[hp + '.' + 'size-2'] > 0.001)]
+                df[(df[hp_lab + '.' + 'size-1'] > 0.001) & (df[hp_lab + '.' + 'size-2'] > 0.001)]
 
             if self.settings['print_logging_info']:
                 print('***')
                 if df_double_invest.empty:
                     print('There is NO investment in both directions at the'
-                          'following edges for "', hp, '"')
+                          'following edges for "', hp_lab, '"')
                 else:
                     print('There is an investment in both directions at the'
-                          'following edges for "', hp, '":')
+                          'following edges for "', hp_lab, '":')
                     print('----------')
                     print(' id | from_node | to_node | size-1 | size-2 ')
                     print('============================================')
                     for r, c in df_double_invest.iterrows():
                         print(r, ' | ', c['from_node'], ' | ', c['to_node'],
-                              ' | ', c[hp + '.' + 'size-1'], ' | ', c[hp + '.' + 'size-2'], ' | ')
+                              ' | ', c[hp_lab + '.' + 'size-1'], ' | ',
+                              c[hp_lab + '.' + 'size-2'], ' | ')
                     print('----------')
-
-            return
 
         # use edges dataframe as base and add results as new columns to it
         df = self.network.components['edges']
@@ -462,28 +449,26 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         for hp in active_hp:
             hp_param = df_hp[df_hp['label_3'] == hp].squeeze()
             get_hp_results(hp_param)
-            check_multi_dir_invest()
+            check_multi_dir_invest(hp)
 
         def write_results_to_edges(pipe_data):
 
-            def check_invest_label():
-                if isinstance(c['hp_type'], str):
+            def check_invest_label(hp_type, edge_id):
+                if isinstance(hp_type, str):
                     raise ValueError(
-                        "Edge id {} already has an investment > 0!".format(r))
+                        "Edge id {} already has an investment > 0!".format(edge_id))
 
             for hp in active_hp:
                 p = pipe_data[pipe_data['label_3'] == hp].squeeze()   # series of heatpipe
                 for r, c in df.iterrows():
                     if c[hp + '.size'] > 0:
-                        check_invest_label()
+                        check_invest_label(c['hp_type'], id)
                         df.at[r, 'hp_type'] = hp
                         df.at[r, 'capacity'] = c[hp + '.size']
                         if p['nonconvex']:
                             df.at[r, 'invest_status'] = c[hp + '.status']
                         else:
                             df.at[r, 'invest_status'] = None
-
-            return
 
         write_results_to_edges(df_hp)
 
@@ -496,14 +481,6 @@ def optimize_operation(thermal_network):
     r"""
     Takes a thermal network and returns the result of
     the operational optimization.
-
-    Parameters
-    ----------
-    thermal_network
-
-    Returns
-    -------
-    results : dict
     """
     model = OemofOperationOptimizationModel(thermal_network)
 
@@ -558,8 +535,7 @@ def setup_optimise_investment(thermal_network, invest_options, settings=None):
 
 def solve_optimisation_investment(model):
 
-    model.solve(solver=model.settings['solver'],
-                solve_kw=model.settings['solve_kw'])
+    model.solve()
 
     if model.settings['dump_path'] is not None:
         my_es = model.es
