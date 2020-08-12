@@ -14,16 +14,15 @@ SPDX-License-Identifier: MIT
 import os
 from .model import OperationOptimizationModel, InvestOptimizationModel
 from dhnx.optimization_modules.dhs_nodes import add_nodes_dhs,\
-    add_nodes_houses, calc_consumer_connection
-from dhnx.optimization_modules import oemof_heatpipe as oh, add_components as ac
+    add_nodes_houses
 from dhnx.optimization_modules import auxiliary as aux
 
 import logging
 import pandas as pd
-import numpy as np
 
 import oemof.solph as solph
 from oemof.solph import helpers
+
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
     r"""
@@ -48,11 +47,14 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     Implementation of an invest optimization model using oemof-solph.
     """
     def __init__(self, thermal_network, settings, investment_options):
+
         self.settings = settings
         self.invest_options = investment_options
+
         # list of possible oemof flow attributes
         self.oemof_flow_attr = {'nominal_value', 'min', 'max',
                                 'variable_costs', 'fix'}
+
         super().__init__(thermal_network)
         self.results = {}
 
@@ -94,7 +96,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # check sequences column index datatype
         # the columns must be integer
         if 'consumers' in self.network.sequences.keys():
-            if self.network.sequences['consumers']['heat_flow'].columns.dtype != 'int64':
+            if self.network.sequences['consumers']['heat_flow'].columns.dtype \
+                    != 'int64':
                 self.network.sequences['consumers']['heat_flow'].columns = \
                     self.network.sequences['consumers']['heat_flow'].columns.\
                         astype('int64')
@@ -356,14 +359,16 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             if len(outflow) > 1:
                 print('Multiple IDs!')
 
+            # invest = res[outflow[0]]['scalars']['invest']
+
             try:
                 invest = res[outflow[0]]['scalars']['invest']
-            except:
+            except (KeyError, IndexError):
                 try:
                     # that's in case of a one timestep optimisation due to
                     # an oemof bug in outputlib
                     invest = res[outflow[0]]['sequences']['invest'][0]
-                except:
+                except (KeyError, IndexError):
                     # this is in case there is no bi-directional heatpipe, e.g. at
                     # forks-consumers, producers-forks
                     invest = 0
@@ -380,12 +385,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             try:
                 invest_status = res[outflow[0]]['scalars']['invest_status']
-            except:
-                try:
+            except (KeyError, IndexError):
+                try :
                     # that's in case of a one timestep optimisation due to
                     # an oemof bug in outputlib
                     invest_status = res[outflow[0]]['sequences']['invest_status'][0]
-                except:
+                except (KeyError, IndexError):
                     # this is in case there is no bi-directional heatpipe, e.g. at
                     # forks-consumers, producers-forks
                     invest_status = 0
