@@ -286,6 +286,12 @@ Each row represents an investment option. Note this investment option creates an
   setting, *P_heat_max* or the demand series is used for the optimization
   (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
   for further information).
+* **annuity**: Uses the annualized costs as investment costs. A pre-calculation for the
+  *capex_pipes* and *fix_costs* is performed using *n_pipes* as the investment period. The annual
+  interest rate is defined in the global settings
+  (see :ref:`optimization settings <Optimization settings>`).
+* **l_factor**: Defines the loss factor depending on the installed heat transport capacity of the
+  pipe. The heat loss due to the *l_factor* multiplied by the resulting capacity is the heat loss.
 
 
 .. _Optimization settings:
