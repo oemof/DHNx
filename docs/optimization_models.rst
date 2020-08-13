@@ -259,6 +259,33 @@ The investment input data provides mainly all remaining parameters of the oemof
 solph components, which are not specific for a single edges, producer or
 consumer.
 
+The minimum of required data is a specification of the pipe parameters (costs, and losses), a (heat)
+bus and a heat demand at the consumers, and a (heat) bus and a heat source at the producers. The
+detailed attributes are described in the following sections.
+
+network: pipes.csv
+''''''''''''''''''
+
+You need to provide data on the investment options for the piping system. The following table shows
+the minimal required data you need to provide:
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_pipes.csv
+
+Each row represents an investment option. Note this investment option creates an oemof-solph
+*Heatpipeline* component for each active edge.
+
+* **label_3**: Label of the third tag.
+* **active**: If *active* is 0, this heatpipeline component is not considered. This attribute helps
+  for easy selecting and deselecting different investment options.
+* **nonconvex**: Choose whether a convex or a nonconvex investment should be performed. This leads
+  to a different meaning of the minimum heat transport capacity (*cap_min*). See
+  *P_heat_max* is given, the maximum heat load is calculated from the heat
+  demand series (see `consumers-heat_flow.csv`). Depending on the optimization
+  setting, *P_heat_max* or the demand series is used for the optimization
+  (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
+  for further information).
 
 
 .. _Optimization settings:
@@ -268,13 +295,20 @@ Optimization settings
 
 Text.
 
+Label systematic
+~~~~~~~~~~~~~~~~
+
+In order to access the oemof-solph optimisation results, a label systematic containing of a tuple
+with 4 items is used:
+
+The labels are partly given automatically by the oemof-solph model builder
+
 .. _Results:
 
 Results
 ~~~~~~~
 
 Text.
-
 
 Underlying Concept
 ------------------
