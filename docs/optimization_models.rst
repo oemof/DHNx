@@ -13,8 +13,8 @@ or by also considering the overall energy system of a district, which could not
 just be the heating sector, but also the electricity, mobility sector or the
 gas infrastructure.
 
-At the moment, there is one approach in this context implemented. This approach
-is explained in the following sections.
+At the moment, there is one approach using oemof-solph as linear optimisation library
+implemented. This approach is explained in the following sections.
 
 Scope
 -----
@@ -65,11 +65,11 @@ The optimization of a given *ThermalNetwork* is executed by:
 
     tnw = dhnx.network.ThermalNetwork()
 
-    tnw.optimize_investment(settings=set, invest_options=invest_opt)
+    tnw.optimize_investment(settings=settgs, invest_options=invest_opt)
 
 For executing an optimization, you must provide the optimization `settings`
 and the `invest_options` additional to the previous data, which defines a
-*ThermalNetwork*.
+*ThermalNetwork*. Both are explained in the following section.
 
 .. _Input Data:
 
@@ -89,6 +89,18 @@ The following figure provides an overview of the input data:
 
    Fig. 1: Optimization Input Data
 
+The structure of the input data might look a bit confusing at the beginning, but provides a lot of
+options for building up complex district heating models. There are two groups of data:
+geo-referenced data and parameters for the investment optimisation (with might include other
+oemof-solph related data). All data needs to be provided in csv files. This means the geo-referenced
+data does not need to be geo-referenced for this model at all, but probably in many cases, it is the
+export of four geo-referenced layers (e.g. geopandasdataframe, shp-file, or any other), which are
+a line layer representing the potential places for the DHS-trenches, and three point layers for the
+producers, the consumers, and the potential forks of the DHS system. All geometry information of
+the network system is passed by an *id* for each element. Thus, the line layer connects all points
+and provides the spatial relation with the attributes *from_node*, *to_node*, and *length*. If you
+prepare the data, be careful that every consumer is connected to an edge/line, and every piping
+network system is connected to at least one producer.
 
 ThermalNetwork
 """"""""""""""
@@ -137,8 +149,7 @@ The following optional attributes are introduced by the optimization module:
 * **active**: Binary indicating that this edge is considered. If no column
   *active* is given, all edges are active. With this attribute, single edges
   can be switched on and off. This can be very useful, if different scenarios
-  should be analyzed, e.g. you might not know in advance, whether you are
-  allowed to cross a property or use a street. (*not implemented yet*)
+  should be analyzed, e.g. you might like to make a given street/edges unavailable.
 * **add_fix_costs**: Additional fix investment costs. Depending on the street
   and route of a DHS, the construction costs might differ. With this parameter,
   additional fix investment costs (independent of the size of the pipes) can be
