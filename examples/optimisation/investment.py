@@ -23,18 +23,14 @@ set = {'num_ts': num_ts,           # number of timesteps
        'heat_demand': 'optional',    # parameter which defines type of optimization. ...
        # either the heat supply should be via dhs ('fix') (=> all active houses are connected), ...
        # or is part of the optimization ('optional').
-       'simultaneity': 'global',   # 'global' or 'timeseries' => a single timestep optimization is
-                                   # performed
-       'global_SF': 0.8,           # global simultaneity factor. is only applied,
+       'simultaneity': 0.8,           # global simultaneity factor. is only applied,
                                    # if simultaneity='global'
-       'SF_timeseries': 1,         # scaling factor for heat demand timeseries
-       'SF_1_timeseries': 0.8,     # scaling factor for the first element of the timeseries (bei
-                                   # geoordneter JDL)
        'bidirectional_pipes': True,       # specify whether the distribution lines (from fork to
                                           # fork) should be bidiretional or not,
                                           # if 'False', then two pipes are build in each direaction,
                                           # instead of 1 bidirectional pipe
-       # 'dump_path': 'investment_input_2/'
+       # 'dump_path': 'investment_input_2/',
+       'get_invest_results': True
        }
 
 invest_opt = dhnx.input_output.load_invest_options('investment_input_2/invest_options')

@@ -285,7 +285,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             # heat load is maximum heat load mutiplied with simultaneity
             self.network.sequences['consumers']['heat_flow'] = \
-                df_ts * self.settings['global_SF']
+                df_ts * self.settings['simultaneity']
 
         if self.settings['num_ts'] > \
                 len(self.network.sequences['consumers']['heat_flow'].index):
@@ -306,7 +306,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # apply global simultaneity for demand series
         self.network.sequences['consumers']['heat_flow'] = \
             self.network.sequences['consumers']['heat_flow'] * \
-            self.settings['global_SF']
+            self.settings['simultaneity']
 
         # if there is the existing attribute, get the information about
         # the pipe types (like heat_loss)
@@ -506,12 +506,7 @@ def setup_optimise_investment(thermal_network, invest_options, settings=None):
         'frequence': 'H',
         'solver': 'cbc',
         'solve_kw': {'tee': False},
-        'dhs': 'optional',
-        'simultaneity': 'global',
-        'global_SF': 1,
-        'SF_timeseries': 1,
-        'SF_1_timeseries': 1,
-        'precalc_consumer_connections': False,
+        'simultaneity': 1,
         'bidirectional_pipes': False,
         'dump_path': None,
         'dump_name': 'dump.oemof',
@@ -545,7 +540,7 @@ def solve_optimisation_investment(model):
     if model.settings['get_invest_results']:
         edges_results = model.get_results_edges()
     else:
-        edges_results = model.network.components['edges']
+        edges_results = None
 
     results = {'oemof': model.es.results['main'],
                'oemof_meta': model.es.results['meta'],
