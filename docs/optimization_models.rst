@@ -238,8 +238,8 @@ The following table shows an example of a `consumers-heat_flow`:
 
 The column index must be the consumers `id`.
 
-Investment Options
-""""""""""""""""""
+Investment and additional options
+"""""""""""""""""""""""""""""""""
 
 If you want to do an investment or an simple unit commitment optimisation using
 the `optimize_investment()` method of the *ThermalNetwork*, you need to provide
