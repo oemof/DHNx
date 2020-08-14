@@ -1,5 +1,5 @@
-tag1: ,tag2: commodity,tag3: specification / oemof object,tag4: Specific id
-**consumers**,heat,**source**,*forks-34*
+tag1: general classification,tag2: commodity,tag3: specification / oemof object,tag4: Specific id
+**consumers**,**heat**,**source**,*forks-34*
 **producers**,*electricity*,**demand**,*consumers-15*
 **infrastructure**,*gas*,excess,*prdocuers-4*
 ,*hydrogen*,shortage,*forks-14-forks-27*

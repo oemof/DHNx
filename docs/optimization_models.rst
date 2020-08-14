@@ -420,6 +420,11 @@ The following table shows all options for the optimisation settings:
    :header-rows: 1
    :file: _static/opti_settings.csv
 
+Some more explanation:
+
+* **heat_demand**: If you set *heat_demand* to `'scalar'`, *num_ts* is automatically 1. If you
+  want to use the time series, simple type anything else `'scalar'`.
+
 
 .. _Results:
 
