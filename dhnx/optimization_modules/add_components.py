@@ -71,7 +71,7 @@ def add_sources(on, it, c, labels, gd, nodes, busd):
 
     # generel further flow attributes: check what flow attributes are given
     # by what comes after 'active'
-    flow_attr = list(it.columns)[2:]
+    flow_attr = list(it.columns)
     idx = flow_attr.index('active')
     flow_attr = flow_attr[idx + 1:]
 
