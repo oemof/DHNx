@@ -66,6 +66,13 @@ The optimization of a given *ThermalNetwork* is executed by:
 
     tnw = dhnx.network.ThermalNetwork()
 
+    invest_opt = dhnx.input_output.load_invest_options('path/to/invest_options')
+
+    settgs = {
+        'keyword1': value1,
+        'keyword2': value2,
+    }
+
     tnw.optimize_investment(settings=settgs, invest_options=invest_opt)
 
 For executing an optimization, you must provide the optimization `settings`
@@ -406,7 +413,11 @@ The labels are partly given automatically by the oemof-solph model builder:
 Optimization settings
 ~~~~~~~~~~~~~~~~~~~~~
 
-Text.
+The following table shows all options for the optimisation settings:
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_settings.csv
 
 
 .. _Results:
@@ -414,23 +425,21 @@ Text.
 Results
 ~~~~~~~
 
+For checking and analysing the results you can either select to write the investment results of the
+heatpipeline components in the Thermalnetwork. You will find the results there:
+
+.. code-block:: python
+
+    results = network.results.optimization['components']['edges']
+
+Or you can also dump the oemof results and analyze the results as described in
+`oemof-solph handling results <https://oemof-solph.readthedocs.io/en/latest/usage.html#handling-results>`_.
+The labelling systematic will help you to easily get want you want,
+check :ref:`Label system <Label system>`.
+
+
+Introducing example
+-------------------
+
 Text.
 
-Underlying Concept
-------------------
-
-Text.
-
-Thermal equations
-~~~~~~~~~~~~~~~~~
-
-Text.
-
-Costs
-~~~~~
-
-Text.
-
-
-References
-----------
