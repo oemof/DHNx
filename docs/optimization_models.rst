@@ -318,21 +318,26 @@ of the consumers folder. For a principal understanding, check out the excel read
 *oemof-solph*, which works the same way:
 `oemof-solph excel reader example <https://github.com/oemof/oemof-examples/tree/master/oemof_examples/oemof.solph/v0.4.x/excel_reader>`_.
 
-The minimum requirement of consumer data are the following two .csv files:
+The minimum requirement of consumer data are the following two .csv files: *bus.csv* specifies the
+*oemof-solph* *Bus* components, and *demand.csv* defines the *oemof.solph.Sink*.
 
 .. csv-table:: bus.csv
    :header-rows: 1
    :file: _static/opti_consumer_bus.csv
 
-Text
+You must provide at least one bus, which has a label
+(*label_2*, see :ref:`Label system <Label system>`), and needs to be *active*. Optionally, you can
+add an *excess* or a *shortage* with *shortage costs* or *excess costs* respectively. This might
+help to get an feasible optimisation problem, in case your solver says, 'infeasible', for finding
+the error.
 
 .. csv-table:: demand.csv
    :header-rows: 1
    :file: _static/opti_consumer_demand.csv
 
-Text.
-
-
+The demand also needs to have a label (*label_2*, see :ref:`Label system <Label system>`), has the
+option for deactivating certain demands by using the attribute *active*, and needs to have a
+specification for the *nominal_value*. The *nominal_value* scales your demand.
 
 producers/.
 '''''''''''
