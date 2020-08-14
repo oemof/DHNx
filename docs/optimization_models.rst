@@ -311,6 +311,8 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 
 See the *Heatpipeline* API for further details about the attributes.
 
+.. _Consumer invest data:
+
 consumers/.
 '''''''''''
 
@@ -353,9 +355,35 @@ the source is connected. The two files *bus.csv* and *source.csv* need to be pro
    :header-rows: 1
    :file: _static/opti_consumer_bus.csv
 
+The *bus.csv* table works analog to the consumers (see :ref:`consumers/. <Consumer invest data>`).
+
 .. csv-table:: source.csv
    :header-rows: 1
-   :file: _static/opti_consumer_bus.csv
+   :file: _static/opti_producer_source.csv
+
+You need to provide at least on source at the *source.csv* table. Additional, there are already a
+couple of options for adding additional attributes of the *oemof.solph.FLow* to the source, e.g.
+*variable_costs*, *fix* feed-in series, and *min* and *max* restrictions.
+
+Generally, with this structure at every producer and consumer multiple oemof components, like
+*transformer* and *storages* can be already added.
+
+.. _Label system:
+
+Label systematic
+~~~~~~~~~~~~~~~~
+
+In order to access the oemof-solph optimisation results, a label systematic containing of a tuple
+with 4 items is used. Please check the basic example of oemof-solph for using tuple as label
+(`oemof-solph example tuple as label <https://github.com/oemof/oemof-examples/blob/master/oemof_examples/oemof.solph/v0.4.x/basic_example/basic_example_tuple_as_label.py>`_).
+
+The following table illustrates the systematic:
+
+.. csv-table:: Labelling system
+   :header-rows: 1
+   :file: _static/opti_label_sys.csv
+
+The labels are partly given automatically by the oemof-solph model builder.
 
 
 .. _Optimization settings:
@@ -365,15 +393,6 @@ Optimization settings
 
 Text.
 
-.. _Label system:
-
-Label systematic
-~~~~~~~~~~~~~~~~
-
-In order to access the oemof-solph optimisation results, a label systematic containing of a tuple
-with 4 items is used:
-
-The labels are partly given automatically by the oemof-solph model builder
 
 .. _Results:
 

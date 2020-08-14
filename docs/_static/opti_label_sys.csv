@@ -1,0 +1,7 @@
+tag1: ,tag2: commodity,tag3: specification / oemof object,tag4: id
+consumers,heat,source,*specific id the node belongs to*
+producers,electricity,demand,
+infrastrucutre,gas,sink,
+,hydrogen,excess,
+,,shortage,
+,,pipe-typ-A,
