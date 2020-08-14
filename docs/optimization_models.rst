@@ -361,7 +361,7 @@ The *bus.csv* table works analog to the consumers (see :ref:`consumers/. <Consum
    :header-rows: 1
    :file: _static/opti_producer_source.csv
 
-You need to provide at least on source at the *source.csv* table. Additional, there are already a
+You need to provide at least one source at the *source.csv* table. Additionally, there are already a
 couple of options for adding additional attributes of the *oemof.solph.FLow* to the source, e.g.
 *variable_costs*, *fix* feed-in series, and *min* and *max* restrictions.
 
@@ -373,7 +373,7 @@ Generally, with this structure at every producer and consumer multiple oemof com
 Label systematic
 ~~~~~~~~~~~~~~~~
 
-In order to access the oemof-solph optimisation results, a label systematic containing of a tuple
+In order to access the oemof-solph optimisation results, a label systematic containing a tuple
 with 4 items is used. Please check the basic example of oemof-solph for using tuple as label
 (`oemof-solph example tuple as label <https://github.com/oemof/oemof-examples/blob/master/oemof_examples/oemof.solph/v0.4.x/basic_example/basic_example_tuple_as_label.py>`_).
 
