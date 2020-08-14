@@ -310,6 +310,37 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 
 See the *Heatpipeline* API for further details about the attributes.
 
+consumers/.
+'''''''''''
+
+All data for initialising *oemof-solph* components at the consumers are provided by the .csv files
+of the consumers folder. For a principal understanding, check out the excel reader example of
+*oemof-solph*, which works the same way:
+`oemof-solph excel reader example <https://github.com/oemof/oemof-examples/tree/master/oemof_examples/oemof.solph/v0.4.x/excel_reader>`_.
+
+The minimum requirement of consumer data are the following two .csv files:
+
+.. csv-table:: bus.csv
+   :header-rows: 1
+   :file: _static/opti_consumer_bus.csv
+
+Text
+
+.. csv-table:: demand.csv
+   :header-rows: 1
+   :file: _static/opti_consumer_demand.csv
+
+Text.
+
+
+
+producers/.
+'''''''''''
+
+
+
+
+
 
 .. _Optimization settings:
 
