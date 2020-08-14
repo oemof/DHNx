@@ -263,7 +263,7 @@ The minimum of required data is a specification of the pipe parameters (costs, a
 bus and a heat demand at the consumers, and a (heat) bus and a heat source at the producers. The
 detailed attributes are described in the following sections.
 
-network: pipes.csv
+network/pipes.csv
 ''''''''''''''''''
 
 You need to provide data on the investment options for the piping system. The following table shows
@@ -274,24 +274,41 @@ the minimal required data you need to provide:
    :file: _static/opti_pipes.csv
 
 Each row represents an investment option. Note this investment option creates an oemof-solph
-*Heatpipeline* component for each active edge.
+*Heatpipeline* component for each active edge. The units are given es examples. There are no units
+implemented, everybody needs to care about consistent units in his own model. At the same time,
+everybody is free to choose his own units (energy, mass flow, etc.).
 
-* **label_3**: Label of the third tag.
-* **active**: If *active* is 0, this heatpipeline component is not considered. This attribute helps
+* **label_3**: Label of the third tag. See :ref:`Label system <Label system>`.
+* **active**: (0/1). If *active* is 0, this heatpipeline component is not considered. This attribute helps
   for easy selecting and deselecting different investment options.
-* **nonconvex**: Choose whether a convex or a nonconvex investment should be performed. This leads
+* **nonconvex**: (0/1). Choose whether a convex or a nonconvex investment should be performed. This leads
   to a different meaning of the minimum heat transport capacity (*cap_min*). See
   *P_heat_max* is given, the maximum heat load is calculated from the heat
   demand series (see `consumers-heat_flow.csv`). Depending on the optimization
   setting, *P_heat_max* or the demand series is used for the optimization
   (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
   for further information).
-* **annuity**: Uses the annualized costs as investment costs. A pre-calculation for the
+* **annuity**: (0/1). Uses the annualized costs as investment costs. A pre-calculation for the
   *capex_pipes* and *fix_costs* is performed using *n_pipes* as the investment period. The annual
   interest rate is defined in the global settings
   (see :ref:`optimization settings <Optimization settings>`).
-* **l_factor**: Defines the loss factor depending on the installed heat transport capacity of the
-  pipe. The heat loss due to the *l_factor* multiplied by the resulting capacity is the heat loss.
+* **l_factor**: Relative thermal loss per length unit (e.g. [kW_loss/(m*kW_installed)].
+  Defines the loss factor depending on the installed heat transport capacity of the
+  pipe. The *l_factor* is multiplied by the invested capacity in investment case, and by the given
+  *capacity* for a specific edge in case of existing DHS pipes.
+* **l_factor_fix**: Absolute thermal loss per length unit (e.g. [kW/m]).
+  In case of *nonconvex* is 1, the *l_factor_fix* is zero if no investement in a specific pipe
+  element is done. Be careful, if *nonconvex* is 0, this creates a fixed thermal loss.
+* **cap_max**: Maximum installable capacity (e.g. [kW]).
+* **cap_min**: Minimum installable capacity (e.g. [kW]). Note that there is a difference if a
+  *nonconvex* investment is applied (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
+  for further information).
+* **capex_pipes**: Variable investment costs depending on the installed heat transport capacity
+  (e.g. [€/kW]).
+* **fix_costs**: Fix investment costs independent of the installed capacity (e.g. [€])
+* **n_pipes**: Investment period for the the annualized costs (e.g. [a]).
+
+See the *Heatpipeline* API for further details about the attributes.
 
 
 .. _Optimization settings:
@@ -300,6 +317,8 @@ Optimization settings
 ~~~~~~~~~~~~~~~~~~~~~
 
 Text.
+
+.. _Label system:
 
 Label systematic
 ~~~~~~~~~~~~~~~~
