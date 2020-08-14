@@ -431,7 +431,14 @@ heatpipeline components in the Thermalnetwork. You will find the results there:
 
 .. code-block:: python
 
+    # edges-specific investment results (if you select settings['get_invest_results'] = True)
     results = network.results.optimization['components']['edges']
+
+    # oemof-solph results "main"
+    r_oemof_main = network.results.optimization['oemof']
+
+    # oemof-solph results "meta"
+    r_oemof_meta = network.results.optimization['oemof_meta']
 
 Or you can also dump the oemof results and analyze the results as described in
 `oemof-solph handling results <https://oemof-solph.readthedocs.io/en/latest/usage.html#handling-results>`_.
