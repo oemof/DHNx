@@ -13,8 +13,9 @@ or by also considering the overall energy system of a district, which could not
 just be the heating sector, but also the electricity, mobility sector or the
 gas infrastructure.
 
-At the moment, there is one approach using oemof-solph as linear optimisation library
-implemented. This approach is explained in the following sections.
+At the moment, there is one approach using *oemof-solph* as linear optimisation library
+implemented. This approach is explained in the following sections. It totally makes sense to have
+some experiences with *oemof-solph* to understand this toolbox more easily.
 
 Scope
 -----
@@ -318,7 +319,8 @@ of the consumers folder. For a principal understanding, check out the excel read
 *oemof-solph*, which works the same way:
 `oemof-solph excel reader example <https://github.com/oemof/oemof-examples/tree/master/oemof_examples/oemof.solph/v0.4.x/excel_reader>`_.
 
-The minimum requirement of consumer data are the following two .csv files: *bus.csv* specifies the
+The minimum requirement for doing an DHS optimisation is to provide an demand at the consumers.
+Therefore, you need the following two .csv files: *bus.csv* specifies the
 *oemof-solph* *Bus* components, and *demand.csv* defines the *oemof.solph.Sink*.
 
 .. csv-table:: bus.csv
@@ -342,9 +344,18 @@ specification for the *nominal_value*. The *nominal_value* scales your demand.
 producers/.
 '''''''''''
 
+The producers look quite similar as the consumers. The consumers are taking energy from the
+DHS system. That means, the energy need to be supplied somewhere, which makes some kind of source
+necessary. To connect a source in the oemof logic, there needs to be a *oemof.solph.Bus* to which
+the source is connected. The two files *bus.csv* and *source.csv* need to be provided:
 
+.. csv-table:: bus.csv
+   :header-rows: 1
+   :file: _static/opti_consumer_bus.csv
 
-
+.. csv-table:: source.csv
+   :header-rows: 1
+   :file: _static/opti_consumer_bus.csv
 
 
 .. _Optimization settings:
