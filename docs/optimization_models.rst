@@ -423,7 +423,7 @@ The following table shows all options for the optimisation settings:
 Some more explanation:
 
 * **heat_demand**: If you set *heat_demand* to `'scalar'`, *num_ts* is automatically 1. If you
-  want to use the time series, simple type anything else `'scalar'`.
+  want to use the time series, simple type anything else than `'scalar'`.
 
 
 .. _Results:
