@@ -103,6 +103,8 @@ and provides the spatial relation with the attributes *from_node*, *to_node*, an
 prepare the data, be careful that every consumer is connected to an edge/line, and every piping
 network system is connected to at least one producer.
 
+.. _TN_Input :
+
 ThermalNetwork
 """"""""""""""
 
@@ -379,11 +381,24 @@ with 4 items is used. Please check the basic example of oemof-solph for using tu
 
 The following table illustrates the systematic:
 
-.. csv-table:: Labelling system
+.. csv-table:: Labelling system (bold: obligatory; italic: examples)
    :header-rows: 1
    :file: _static/opti_label_sys.csv
 
-The labels are partly given automatically by the oemof-solph model builder.
+The labels are partly given automatically by the oemof-solph model builder:
+
+* **tag1: general classification**: This tag is given automatically depending on the spatial
+  belonging. *Tag1* can be either *consumers* (consumer point layer), *producers*
+  (producer point layer) or *infrastructure* (edges and forks layer).
+  See :ref:`Thermal Network <TN_Input>`.
+* **tag2: commodity**: This tag specifies the commodity, e.g. all buses and transformer
+  (heatpipelines) of the DHS pipeline system have automatically the *heat* as *tag2*. For a
+  transformer of the consumers or the producers the *tag2* is *None*, because a transformer usually
+  connects two commodities, e.g. gas --> heat.
+* **tag3: specification / oemof object**: The third tag indicates either the oemof object and is
+  generated automatically (this is the case for *demand.csv*, *source.csv* and *bus.csv*),
+  or is the specific *label_3* of the *pipes.csv*, *transformer.csv* or *storages.csv*.
+* **tag4: id**: The last tag shows the specific spatial position and is generated automatically.
 
 
 .. _Optimization settings:

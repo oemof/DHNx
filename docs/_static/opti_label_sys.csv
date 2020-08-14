@@ -1,9 +1,8 @@
-tag1: ,tag2: commodity,tag3: specification / oemof object,tag4: id
-consumers,heat,source,*specific* **id** *the node belongs to*
-producers,electricity,demand,
-infrastrucutre,gas,sink,
-,hydrogen,excess,
-,…,shortage,
-,,*pipe-typ-A*,
+tag1: ,tag2: commodity,tag3: specification / oemof object,tag4: Specific id
+**consumers**,heat,**source**,*forks-34*
+**producers**,*electricity*,**demand**,*consumers-15*
+**infrastructure**,*gas*,excess,*prdocuers-4*
+,*hydrogen*,shortage,*forks-14-forks-27*
+,*…*,*pipe-typ-A*,*forks-24-consumers-122*
 ,,*storage_xy*,
 ,,*boiler_typ_xy*,
