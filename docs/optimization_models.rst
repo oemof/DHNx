@@ -454,5 +454,82 @@ check :ref:`Label system <Label system>`.
 Introducing example
 -------------------
 
-Text.
+The following sections illustrates some features of the DHNx investment optimisation library.
 
+You can execute and reproduce the example with all figures,
+check the *introduction_example*.
+
+.. code-block:: python
+
+    import matplotlib.pyplot as plt
+    import dhnx
+
+
+    # Initialize thermal network
+    network = dhnx.network.ThermalNetwork()
+    network = network.from_csv_folder('twn_data')
+
+    # Load investment parameter
+    invest_opt = dhnx.input_output.load_invest_options('invest_data')
+
+    # plot network
+    static_map = dhnx.plotting.StaticMap(network)
+    static_map.draw(background_map=False)
+    plt.title('Given network')
+    plt.scatter(network.components.consumers['lon'], network.components.consumers['lat'],
+                color='tab:green', label='consumers', zorder=2.5, s=50)
+    plt.scatter(network.components.producers['lon'], network.components.producers['lat'],
+                color='tab:red', label='producers', zorder=2.5, s=50)
+    plt.scatter(network.components.forks['lon'], network.components.forks['lat'],
+                color='tab:grey', label='forks', zorder=2.5, s=50)
+    plt.text(-2, 32, 'P0', fontsize=14)
+    plt.text(82, 0, 'P1', fontsize=14)
+    plt.legend()
+    plt.show()
+
+The following figure shows the initial status of an (thermal)
+network, which is examined in the following sections:
+
+.. 	figure:: _static/intro_opti_network.svg
+   :width: 75 %
+   :alt: optimization_input_data.svg
+   :align: center
+
+   Fig. 2: Introduction example
+
+The network of Fig. 2 consists of two options for the heat *producers* ("P0" and "P1"),
+eight *consumers*, and 11 *forks*. Before running the whole script, we will have a brief look at
+some input data. Let's start with the *consumers.csv* (`"twn_data/consumers.csv"`):
+
+.. csv-table:: consumers.csv
+   :header-rows: 1
+   :file: _static/intro_consumers.csv
+
+A peak heating load *P_heat_max* is given for every consumer within the thermal network input data
+(see :ref:`Thermal Network Input <TN_Input>`). The heat load needs to be pre-calculated, or assumed.
+The geographical attributes *lat* and *lon* are optional, but needed for plotting purpose.
+The next table shows the input data of the heat pipeline elements
+(`"invest_data/network/pipes.csv"`):
+
+.. csv-table:: consumers.csv
+   :header-rows: 1
+   :file: _static/intro_pipes.csv
+
+In the simplest (and most approximate) case, a linear correlation between the thermal capacity and
+the investment costs can be used. In this example, we assume costs of 2 € per kilowatt installed
+thermal capacity and meter trench length. As maximum capacity *cap_max*, we take a very high value
+to make sure that the total heat load of all consumers (including losses) can be supplied.
+Additionally, we assume a heat loss of 0.00001 kW/m. The parameters of the district heating pipes
+need to be pre-calculated depending on the piping system and technical data sheet of the
+manufacturer. (In future, some pre-calculation function might be added.)
+The length of each edge, the costs and the losses are related to, must be given in the *edges.csv*
+table of the :ref:`Thermal Network Input <TN_Input>`). Next, we optimise the network:
+
+.. code-block:: python
+
+    network.optimize_investment(invest_options=invest_opt)
+
+    # get results
+    results_edges = network.results.optimization['components']['edges']
+    print('*Results*')
+    print(results_edges)
