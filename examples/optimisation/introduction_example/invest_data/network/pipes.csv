@@ -1,2 +1,2 @@
 label_3,active,nonconvex,annuity,l_factor,l_factor_fix,cap_max,cap_min,capex_pipes,fix_costs,n_pipes
-pipe-typ-A,1,0,0,0,0,100000,0,0.5,0,0
+pipe-typ-A,1,0,0,0.00001,0,100000,0,2,0,0
