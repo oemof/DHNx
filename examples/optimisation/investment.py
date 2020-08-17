@@ -23,8 +23,8 @@ set = {'num_ts': num_ts,           # number of timesteps
        'heat_demand': 'optional',    # parameter which defines type of optimization. ...
        # either the heat supply should be via dhs ('fix') (=> all active houses are connected), ...
        # or is part of the optimization ('optional').
-       'simultaneity': 0.8,           # global simultaneity factor. is only applied,
-                                   # if simultaneity='global'
+       'simultaneity': 0.8,         # global simultaneity factor. is only applied,
+                                    # if simultaneity='global'
        'bidirectional_pipes': True,       # specify whether the distribution lines (from fork to
                                           # fork) should be bidiretional or not,
                                           # if 'False', then two pipes are build in each direaction,
