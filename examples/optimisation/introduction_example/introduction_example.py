@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import dhnx
 
-
 # Initialize thermal network
 network = dhnx.network.ThermalNetwork()
 network = network.from_csv_folder('twn_data')
@@ -23,7 +22,6 @@ plt.text(-2, 32, 'P0', fontsize=14)
 plt.text(82, 0, 'P1', fontsize=14)
 plt.legend()
 plt.show()
-# plt.savefig('intro_opti_network.svg')
 
 # Execute investment optimization
 network.optimize_investment(invest_options=invest_opt)
@@ -32,24 +30,27 @@ network.optimize_investment(invest_options=invest_opt)
 
 # get results
 results_edges = network.results.optimization['components']['edges']
-print('*Results*')
-print(results_edges)
+print(results_edges[['from_node', 'to_node', 'hp_type', 'capacity', 'heat_loss[kW]',
+                     'invest_costs[€]']])
 
-# col_size = [x for x in list(results_edges.columns) if '.size' in x]
-# col_size = [x for x in col_size if x.split('.')[1] == 'size']
-#
-# # get indices which are existing or invested
-# ind = []
-# for hp in col_size:
-#     if len(list(results_edges[results_edges[hp] > 0.001].index)) > 0:
-#         ind = ind + list(results_edges[results_edges[hp] > 0.001].index)
-#
-# # select invested edges
-# network_result = network
-# network_result.components['edges'] = results_edges.loc[ind]
-#
-# # plot results network
-# static_map = dhnx.plotting.StaticMap(network_result)
-# static_map.draw(background_map=False)
-# plt.title('Optimization result')
-# plt.show()
+print(results_edges[['invest_costs[€]']].sum())
+print(network.results.optimization['oemof_meta']['objective'])
+
+# assign new ThermalNetwork with invested pipes
+twn_results = network
+twn_results.components['edges'] = results_edges[results_edges['capacity'] > 0.001]
+
+# plot invested edges
+static_map_2 = dhnx.plotting.StaticMap(twn_results)
+static_map_2.draw(background_map=False)
+plt.title('Given network')
+plt.scatter(network.components.consumers['lon'], network.components.consumers['lat'],
+            color='tab:green', label='consumers', zorder=2.5, s=50)
+plt.scatter(network.components.producers['lon'], network.components.producers['lat'],
+            color='tab:red', label='producers', zorder=2.5, s=50)
+plt.scatter(network.components.forks['lon'], network.components.forks['lat'],
+            color='tab:grey', label='forks', zorder=2.5, s=50)
+plt.text(-2, 32, 'P0', fontsize=14)
+plt.text(82, 0, 'P1', fontsize=14)
+plt.legend()
+plt.show()
