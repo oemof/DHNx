@@ -94,7 +94,7 @@ The following figure provides an overview of the input data:
 .. 	figure:: _static/optimization_input_data.svg
    :width: 100 %
    :alt: optimization_input_data.svg
-   :align: left
+   :align: center
 
    Fig. 1: Optimization Input Data
 
@@ -139,6 +139,7 @@ Edges
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_edges.csv
+   :align: center
 
 The following optional attributes must be given in every *ThermalNetwork*:
 
@@ -173,6 +174,7 @@ Consumers
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_consumers.csv
+   :align: center
 
 The following optional attributes must be given in every *ThermalNetwork*:
 
@@ -196,6 +198,7 @@ Producers
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_producers.csv
+   :align: center
 
 The following optional attributes must be given in every *ThermalNetwork*:
 
@@ -214,6 +217,7 @@ Forks
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_forks.csv
+   :align: center
 
 The following optional attributes must be given in every *ThermalNetwork*:
 
@@ -235,6 +239,7 @@ The following table shows an example of a `consumers-heat_flow`:
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_consumers-heat_flow_example.csv
+   :align: center
 
 The column index must be the consumers `id`.
 
@@ -283,6 +288,7 @@ the minimal required data you need to provide:
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_pipes.csv
+   :align: center
 
 Each row represents an investment option. Note this investment option creates an oemof-solph
 *Heatpipeline* component for each active edge. The units are given es examples. There are no units
@@ -338,6 +344,7 @@ Therefore, you need the following two .csv files: *bus.csv* specifies the
 .. csv-table:: bus.csv
    :header-rows: 1
    :file: _static/opti_consumer_bus.csv
+   :align: center
 
 You must provide at least one bus, which has a label
 (*label_2*, see :ref:`Label system <Label system>`), and needs to be *active*. Optionally, you can
@@ -348,6 +355,7 @@ the error.
 .. csv-table:: demand.csv
    :header-rows: 1
    :file: _static/opti_consumer_demand.csv
+   :align: center
 
 The demand also needs to have a label (*label_2*, see :ref:`Label system <Label system>`), has the
 option for deactivating certain demands by using the attribute *active*, and needs to have a
@@ -364,12 +372,14 @@ the source is connected. The two files *bus.csv* and *source.csv* need to be pro
 .. csv-table:: bus.csv
    :header-rows: 1
    :file: _static/opti_consumer_bus.csv
+   :align: center
 
 The *bus.csv* table works analog to the consumers (see :ref:`consumers/. <Consumer invest data>`).
 
 .. csv-table:: source.csv
    :header-rows: 1
    :file: _static/opti_producer_source.csv
+   :align: center
 
 You need to provide at least one source at the *source.csv* table. Additionally, there are already a
 couple of options for adding additional attributes of the *oemof.solph.FLow* to the source, e.g.
@@ -392,6 +402,7 @@ The following table illustrates the systematic:
 .. csv-table:: Labelling system (bold: obligatory; italic: examples)
    :header-rows: 1
    :file: _static/opti_label_sys.csv
+   :align: center
 
 The labels are partly given automatically by the oemof-solph model builder:
 
@@ -419,6 +430,7 @@ The following table shows all options for the optimisation settings:
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_settings.csv
+   :align: center
 
 Some more explanation:
 
@@ -492,7 +504,7 @@ network, which is examined in the following sections:
 
 .. 	figure:: _static/intro_opti_network.svg
    :width: 75 %
-   :alt: optimization_input_data.svg
+   :alt: intro_opti_network.svg
    :align: center
 
    Fig. 2: Introduction example
@@ -504,6 +516,7 @@ some input data. Let's start with the *consumers.csv* (`"twn_data/consumers.csv"
 .. csv-table:: consumers.csv
    :header-rows: 1
    :file: _static/intro_consumers.csv
+   :align: center
 
 A peak heating load *P_heat_max* is given for every consumer within the thermal network input data
 (see :ref:`Thermal Network Input <TN_Input>`). The heat load needs to be pre-calculated, or assumed.
@@ -514,6 +527,7 @@ The next table shows the input data of the heat pipeline elements
 .. csv-table:: consumers.csv
    :header-rows: 1
    :file: _static/intro_pipes.csv
+   :align: center
 
 In the simplest (and most approximate) case, a linear correlation between the thermal capacity and
 the investment costs can be used. In this example, we assume costs of 2 € per kilowatt installed
@@ -523,7 +537,8 @@ Additionally, we assume a heat loss of 0.00001 kW/m. The parameters of the distr
 need to be pre-calculated depending on the piping system and technical data sheet of the
 manufacturer. (In future, some pre-calculation function might be added.)
 The length of each edge, the costs and the losses are related to, must be given in the *edges.csv*
-table of the :ref:`Thermal Network Input <TN_Input>`). Next, we optimise the network:
+table of the :ref:`Thermal Network Input <TN_Input>`). Next, we optimise the network and get the
+results:
 
 .. code-block:: python
 
@@ -531,5 +546,83 @@ table of the :ref:`Thermal Network Input <TN_Input>`). Next, we optimise the net
 
     # get results
     results_edges = network.results.optimization['components']['edges']
-    print('*Results*')
-    print(results_edges)
+    print(results_edges[['from_node', 'to_node', 'hp_type', 'capacity', 'heat_loss[kW]',
+                         'invest_costs[€]']])
+
+Since we do not have any other costs than investment costs, we can check if our results have been
+correctly processed by comparing the objective of the optimisation problem with the sum of the
+investment costs of the single edges, which should be the same:
+
+.. code-block:: python
+
+    # sum of the investment costs of all pipes
+    print(results_edges[['invest_costs[€]']].sum())
+
+    # objective value of optimisation problem
+    print(network.results.optimization['oemof_meta']['objective'])
+
+Next, we can transfer the results to a *ThermalNetwork*, which contains only the edges with
+an investment (to avoid possible numerical inaccuracy, the criterion is > 0.001):
+
+.. code-block:: python
+
+    # assign new ThermalNetwork with invested pipes
+    twn_results = network
+    twn_results.components['edges'] = results_edges[results_edges['capacity'] > 0.001]
+
+Now, lets have a look at the optimisation results, and plot the edges:
+
+.. code-block:: python
+
+    # plot invested edges
+    static_map_2 = dhnx.plotting.StaticMap(twn_results)
+    static_map_2.draw(background_map=False)
+    plt.title('Given network')
+    plt.scatter(network.components.consumers['lon'], network.components.consumers['lat'],
+                color='tab:green', label='consumers', zorder=2.5, s=50)
+    plt.scatter(network.components.producers['lon'], network.components.producers['lat'],
+                color='tab:red', label='producers', zorder=2.5, s=50)
+    plt.scatter(network.components.forks['lon'], network.components.forks['lat'],
+                color='tab:grey', label='forks', zorder=2.5, s=50)
+    plt.text(-2, 32, 'P0', fontsize=14)
+    plt.text(82, 0, 'P1', fontsize=14)
+    plt.legend()
+    plt.show()
+
+
+... which should give:
+
+.. 	figure:: _static/intro_opti_network_results.svg
+   :width: 75 %
+   :alt: intro_opti_network_results.svg
+   :align: center
+
+   Fig. 3: Pipes with investment
+
+The next thing is to deactivate one heat producer by setting the attribute *active* of
+producer *P1* to 0 (compare :ref:`Thermal Network Input <TN_Input>`):
+
+.. csv-table:: producers.csv
+   :header-rows: 1
+   :file: _static/intro_producers_deactive.csv
+   :align: center
+
+Now, the plot of pipes with a positive investment should look like this:
+
+.. 	figure:: _static/intro_opti_network_results_2.svg
+   :width: 75 %
+   :alt: intro_opti_network_results_2.svg
+   :align: center
+
+   Fig. 4: Pipes with investment (only *P0*)
+
+
+There are many other options already implemented. For example:
+
+  * Using time series as heat demand
+  * Doing redundancy analysis by setting *min* and *max* attributes to the producers' sources
+  * Adding other *oemof-solph* objects like *Transformer*, *Storages*, further *Buses*, *Sinks*
+    and *Sources* to each producer and consumer
+  * Using discrete pipe data by using the *nonconvex* investment options
+
+Have fun!
