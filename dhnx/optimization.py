@@ -50,11 +50,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.settings = settings
         self.invest_options = investment_options
         self.nodes = []  # list of all nodes
-        self.buses = {}
+        self.buses = {}  # dict of all buses
         self.es = solph.EnergySystem()
         self.om = None
 
-        # list of possible oemof flow attributes
+        # list of possible oemof flow attributes, e.g. for producers source
         self.oemof_flow_attr = {'nominal_value', 'min', 'max',
                                 'variable_costs', 'fix'}
 
@@ -62,9 +62,22 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.results = {}
 
     def check_input(self):
-        """This functions checks, if all there are any not-allowed edges. For
-        the oemof optimization model, consumer-consumer, producer-producer, and
-        diret producer-consumer connections are not allowed."""
+        """Check 1:
+
+        Firstly, it is checked, if there are any not-allowed connection in the *edge* data.
+        The following connections are not allowed:
+
+          * consumer -> consumer
+          * producer -> producer
+          * producer -> consumer
+          * consumer -> fork
+
+        An error is raised if one of these connection occurs.
+
+        Check 2:
+
+        Check, if the columns of the heat demand series (if given) have the datatype *int*.
+        """
 
         # check edges
         for p, q in self.network.components['edges'].iterrows():
@@ -105,6 +118,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     self.network.sequences['consumers']['heat_flow'].columns.astype('int64')
 
     def complete_exist_data(self):
+        """
+        For all existing pipes, this method completes the attribute *invest_status* of the results
+        dataframe of the edges. If there is an existing pipe, the *invest_status* is set to 1.
+        """
 
         pipe_types = self.invest_options['network']['pipes']
         edges = self.network.components['edges']
@@ -126,8 +143,16 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.network.components['edges'] = edges
 
     def get_pipe_data(self):
-        """Adds heat loss and investment costs (investment costs just for
-        information) of all existing pipes to the edges table."""
+        """Adds heat loss and investment costs to edges dataframe.
+
+        This method is applied for existing pipes before setting up the oemof energy system,
+        and after the optimisation as part of the processing of the results.
+
+        The columns (total) heat loss *heat_loss[kW]* and the (total) investment costs
+        *invest_costs[€]* of each pipe element are calculated based on the oemof-solph results
+        of the *capacity* of each pipe, the *length*, and the pipe parameters, which are looked up
+        based on *label_3* from the */network/pipes.csv* of the investment options data.
+        """
 
         pipe_types = self.invest_options['network']['pipes'].copy()
         pipe_types.drop(pipe_types[pipe_types['active'] == 0].index,
