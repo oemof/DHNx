@@ -42,8 +42,44 @@ class OemofOperationOptimizationModel(OperationOptimizationModel):
 
 
 class OemofInvestOptimizationModel(InvestOptimizationModel):
-    r"""
+    """
     Implementation of an invest optimization model using oemof-solph.
+
+    ...
+
+    Attributes
+    ----------
+    settings : dict
+        Dictionary holding the optimisation settings. See .
+    invest_options : dict
+        Dictionary holding the investment options for the district heating system.
+    nodes : list
+        Empty list for collecting all oemof.solph nodes.
+    buses : dict
+        Empty dictionary for collecting all oemof.solph.Buses of the energy system.
+    es : oemof.solph.EnergySystem
+        Empty oemof.solph.EnergySystem.
+    om : oemof.solph.Model
+        Attribute, which will be the oemof.solph.Model for optimisation.
+    oemof_flow_attr : set
+        Possible flow attributes, which can be used additionally:
+        {'nominal_value', 'min', 'max', 'variable_costs', 'fix'}
+    results : dict
+        Empty dictionary for the results.
+
+    Methods
+    -------
+    check_input():
+        Performs checks on the input data.
+    complete_exist_data():
+        Sets the investment status for the results dataframe of the edges.
+    get_pipe_data():
+        Adds heat loss and investment costs to edges dataframe.
+    setup_oemof_es():
+        The energy system *es* is build.
+    setup():
+        Calls *check_input()*, *complete_exist_data()*, *get_pipe_data()*, and *setup_oemof_es()*.
+
     """
     def __init__(self, thermal_network, settings, investment_options):
 
@@ -222,6 +258,15 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.network.components['edges'] = edges
 
     def setup_oemof_es(self):
+        """The oemof solph energy system is initialised based on the settings,
+         and filled with oemof-solph object:
+
+         The oemof-solph objects of the *consumers* and *producers* are defined at the consumers
+         and producers investment options.
+
+         For the heating infrastructure, there is a *oemof.solph.Bus* added for every fork,
+         and a pipe component for every edge as defined in */network/pipes.csv*.
+         """
 
         date_time_index = pd.date_range(self.settings['start_date'],
                                         periods=self.settings['num_ts'],
@@ -268,6 +313,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             print("*********************************************************")
 
     def setup(self):
+        """
+        Calls *check_input()*, *complete_exist_data()*, *get_pipe_data()*, and *setup_oemof_es()*,
+        and does some further checks and completing the attributes of the input edges data.
+        """
 
         # initial check of edges connections
         self.check_input()
@@ -341,6 +390,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.setup_oemof_es()
 
     def solve(self):
+        """Builds the oemof.solph.Model of the energysystem *es*.
+        """
 
         logging.info('Build the operational model')
         self.om = solph.Model(self.es)
@@ -359,6 +410,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.es.results['meta'] = solph.processing.meta_results(self.om)
 
     def get_results_edges(self):
+        """Postprocessing of the investment results of the edges."""
 
         def get_invest_val(lab):
 
@@ -517,10 +569,25 @@ def optimize_operation(thermal_network):
 
 
 def setup_optimise_investment(thermal_network, invest_options, settings=None):
-    r"""
-    Takes a thermal network and returns the result of
-    the investment optimization.
     """
+    Function for setting up the oemof solph operational Model.
+
+    Parameters
+    ----------
+    thermal_network : ThermalNetwork
+        See the ThermalNetwork class.
+    settings : dict
+        Dictionary holding the optimisation settings.
+    invest_options : dict
+        Dictionary holding the investment options for the district heating system.
+
+    Returns
+    -------
+    model : oemof.solph.Model
+        The oemof.solph.Model is build.
+
+    """
+
     setting_default = {
         'heat_demand': 'scalar',
         'num_ts': 1,
