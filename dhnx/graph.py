@@ -40,7 +40,7 @@ def thermal_network_to_nx_graph(thermal_network):
         'from_node',
         'to_node',
         edge_attr=edge_attr,
-        create_using=thermal_network.graph
+        create_using=nx_graph
     )
 
     nodes = {
