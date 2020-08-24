@@ -25,6 +25,14 @@ dir_import_inconsistent = os.path.join(basedir, '_files/inconsistent_network_imp
 
 thermal_network = dhnx.network.ThermalNetwork(dir_import)
 
+dir_import_invest = os.path.join(basedir, '_files/investment/')
+
+tn_invest = dhnx.network.ThermalNetwork(dir_import_invest + 'network')
+
+invest_opt = dhnx.input_output.load_invest_options(
+    dir_import_invest + 'invest_options'
+)
+
 
 # def test_datatype_param_nodes():
 #     with pytest.raises(TypeError):
@@ -75,3 +83,10 @@ def test_add():
     # missing required attributes
     with pytest.raises(ValueError):
         thermal_network.add('Edge', 10)
+
+
+def test_prod_prod():
+    # there is a direct producer to producer connection
+    with pytest.raises(ValueError, match=r"goes from producers to producers."):
+        tn_invest.components['edges'].at[0, 'to_node'] = 'producers-0'
+        dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
