@@ -90,3 +90,10 @@ def test_prod_prod():
     with pytest.raises(ValueError, match=r"goes from producers to producers."):
         tn_invest.components['edges'].at[0, 'to_node'] = 'producers-0'
         dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
+
+
+def test_prod_cons():
+    # there is a direct producer to producer connection
+    with pytest.raises(ValueError, match=r"goes from consumer to consumer."):
+        tn_invest.components['edges'].at[10, 'from_node'] = 'consumers-0'
+        dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
