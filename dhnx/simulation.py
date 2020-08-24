@@ -102,34 +102,114 @@ class SimulationModelNumpy(SimulationModel):
 
     def _prepare_thermal_eqn(self):
 
-        temp_inlet = pd.DataFrame(
-            columns=self.nx_graph.nodes(),
-            index=self.thermal_network.timeindex
-        )
-
-        temp_return = pd.DataFrame(
+        self.temp_inlet = pd.DataFrame(
+            0,
             columns=self.nx_graph.nodes(),
             index=self.thermal_network.timeindex
         )
 
         input_data = self._concat_sequences('temp_inlet')
 
-        temp_inlet.loc[:, input_data.columns] = input_data
+        self.temp_inlet.loc[:, input_data.columns] = input_data
 
     def _solve_thermal_eqn(self):
 
+        c = 200  # TODO: set heat capacity
+
+        heat_transfer_coefficient = nx.adjacency_matrix(
+            self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
+
+        diameter = nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
+
+        length = nx.adjacency_matrix(self.nx_graph, weight='length_m').todense()
+
+        exponent = - np.pi\
+                   * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length))\
+                   / c  # TODO: Check units
+
+        def _calc_temps(exponent, known_temp, direction):
+            # TODO: Rethink function layout and naming
+
+            temps = {}
+
+            for t in self.thermal_network.timeindex:
+
+                # TODO: Consider mass flow
+                # print(self.results['edges-mass_flow'].loc[t, :])
+                #
+                # x = 0
+                #
+                # exponent = np.multiply(exponent, x)
+
+                matrix = np.exp(exponent)
+
+                matrix = np.multiply(matrix, nx.adjacency_matrix(self.nx_graph).todense())
+
+                if direction == 1:
+                    matrix = matrix.T
+                    normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(0)).flatten()
+
+                    normalisation = np.divide(np.array([1]), normalisation, where=normalisation!=0)
+
+                elif direction == -1:
+                    normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(1)).flatten()
+
+                    normalisation = np.divide(np.array([1]), normalisation, where=normalisation!=0)
+
+                else:
+                    raise ValueError("Direction has to be either 1 or -1.")
+
+                normalisation = np.diag(normalisation)
+
+                matrix = np.dot(normalisation, matrix)
+
+                matrix = np.identity(matrix.shape[0]) - matrix
+
+                vector = np.array(known_temp.loc[t])
+
+                x, residuals, rank, s = np.linalg.lstsq(
+                    matrix,
+                    vector,
+                    rcond=None
+                )
+
+                temps.update({t: x})
+
+            temp_df = pd.DataFrame.from_dict(
+                temps,
+                orient='index',
+                columns=self.nx_graph.nodes()
+            )
+
+            return temp_df
+
+        temp_inlet = _calc_temps(exponent, self.temp_inlet, direction=1)
+
+        def _set_temp_return_input(temp_inlet):
+
+            temp_return = pd.DataFrame(
+                0,
+                columns=self.nx_graph.nodes(),
+                index=self.thermal_network.timeindex
+            )
+
+            temp_drop = self._concat_sequences('temperature_drop')
+
+            temp_return.loc[:, temp_drop.columns] = temp_inlet.loc[:, temp_drop.columns] - temp_drop
+
+            return temp_return
+
+        temp_return_known = _set_temp_return_input(temp_inlet)
+
+        temp_return = _calc_temps(exponent, temp_return_known, direction=-1)
+
         # TODO: Calculate these
-        # 'consumers-temp_inlet'
-        # 'forks-temp_inlet'
-        # 'consumers-temp_return'
-        # 'forks-temp_return'
-        # 'producers-temp_return'
         # 'edges-heat_losses'
         # 'global-heat_losses'
 
-        self.results['nodes-temp_inlet'] = None  # TODO: Rethink naming
+        self.results['nodes-temp_inlet'] = temp_inlet
 
-        self.results['nodes-temp_return'] = None
+        self.results['nodes-temp_return'] = temp_return
 
         self.results['edges-heat_losses'] = None
 
