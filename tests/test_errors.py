@@ -88,12 +88,22 @@ def test_add():
 def test_prod_prod():
     # there is a direct producer to producer connection
     with pytest.raises(ValueError, match=r"goes from producers to producers."):
-        tn_invest.components['edges'].at[0, 'to_node'] = 'producers-0'
+        tn_invest_wrong_1 = tn_invest
+        tn_invest_wrong_1.components['edges'].at[0, 'to_node'] = 'producers-0'
+        dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
+
+
+def test_cons_cons():
+    # there is a edge from consumer to consumer
+    with pytest.raises(ValueError, match=r"goes from consumer to consumer."):
+        tn_invest_wrong_2 = tn_invest
+        tn_invest_wrong_2.components['edges'].at[10, 'from_node'] = 'consumers-0'
         dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
 
 
 def test_prod_cons():
-    # there is a direct producer to producer connection
-    with pytest.raises(ValueError, match=r"goes from consumer to consumer."):
-        tn_invest.components['edges'].at[10, 'from_node'] = 'consumers-0'
+    # there is a direct producer to consumer connection
+    with pytest.raises(ValueError, match=r"goes from producers directly to consumers, or vice "):
+        tn_invest_wrong_3 = tn_invest
+        tn_invest_wrong_3.components['edges'].at[0, 'to_node'] = 'consumers-0'
         dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
