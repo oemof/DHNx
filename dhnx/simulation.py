@@ -16,6 +16,7 @@ import pandas as pd
 import re
 
 from .model import SimulationModel
+from .graph import write_edge_data_to_graph
 
 
 class SimulationModelNumpy(SimulationModel):
@@ -114,16 +115,16 @@ class SimulationModelNumpy(SimulationModel):
 
     def _solve_thermal_eqn(self):
 
-        c = 200  # TODO: set heat capacity
+        c = 4190  # TODO: set heat capacity
 
         heat_transfer_coefficient = nx.adjacency_matrix(
             self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
 
-        diameter = nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
+        diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
 
         length = nx.adjacency_matrix(self.nx_graph, weight='length_m').todense()
 
-        exponent = - np.pi\
+        exponent_constant = - np.pi\
                    * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length))\
                    / c  # TODO: Check units
 
@@ -134,17 +135,28 @@ class SimulationModelNumpy(SimulationModel):
 
             for t in self.thermal_network.timeindex:
 
-                # TODO: Consider mass flow
-                # print(self.results['edges-mass_flow'].loc[t, :])
-                #
-                # x = 0
-                #
-                # exponent = np.multiply(exponent, x)
+                # Divide exponent matrix by current edges-mass_flows.
+                data = self.results['edges-mass_flow'].loc[t, :].copy()
+
+                data = 1/data
+
+                graph_with_data = write_edge_data_to_graph(
+                    data, self.nx_graph, var_name='edges-mass_flow'
+                )
+
+                inverse_mass_flows = nx.adjacency_matrix(
+                    graph_with_data, weight='edges-mass_flow'
+                ).todense()
+
+                exponent = np.multiply(exponent_constant, inverse_mass_flows)
 
                 matrix = np.exp(exponent)
 
+                # Clear out elements where matrix was zero before exponentiation. This could be
+                # replaced by properly passing `where` to np.multiply in the line above.
                 matrix = np.multiply(matrix, nx.adjacency_matrix(self.nx_graph).todense())
 
+                # Adapt matrix
                 if direction == 1:
                     matrix = matrix.T
                     normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(0)).flatten()
@@ -183,7 +195,7 @@ class SimulationModelNumpy(SimulationModel):
 
             return temp_df
 
-        temp_inlet = _calc_temps(exponent, self.temp_inlet, direction=1)
+        temp_inlet = _calc_temps(exponent_constant, self.temp_inlet, direction=1)
 
         def _set_temp_return_input(temp_inlet):
 
@@ -201,7 +213,7 @@ class SimulationModelNumpy(SimulationModel):
 
         temp_return_known = _set_temp_return_input(temp_inlet)
 
-        temp_return = _calc_temps(exponent, temp_return_known, direction=-1)
+        temp_return = _calc_temps(exponent_constant, temp_return_known, direction=-1)
 
         # TODO: Calculate these
         # 'edges-heat_losses'
