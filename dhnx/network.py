@@ -13,12 +13,12 @@ SPDX-License-Identifier: MIT
 
 import os
 
-import addict
 import numpy as np
 import pandas as pd
 
-from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
 from .graph import thermal_network_to_nx_graph
+from .helpers import Dict
+from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
 from .optimization import optimize_operation, optimize_investment
 from .simulation import simulate
 
@@ -41,15 +41,6 @@ default_attrs = {
         if not np.isnan(specs.default)
     } for list_name, attrs in component_attrs.items()
 }
-
-
-class Dict(addict.Dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
-
-    def __repr__(self):
-        overview = ['* ' + str(key) for key, value in self.items()]
-        return '\n'.join(overview)
 
 
 class ThermalNetwork():
