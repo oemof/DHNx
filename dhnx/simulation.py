@@ -110,7 +110,7 @@ class SimulationModelNumpy(SimulationModel):
 
     def _prepare_thermal_eqn(self):
 
-        self.temp_inlet = pd.DataFrame(
+        self.input_data.temp_inlet = pd.DataFrame(
             0,
             columns=self.nx_graph.nodes(),
             index=self.thermal_network.timeindex
@@ -118,7 +118,7 @@ class SimulationModelNumpy(SimulationModel):
 
         input_data = self._concat_sequences('temp_inlet')
 
-        self.temp_inlet.loc[:, input_data.columns] = input_data
+        self.input_data.temp_inlet.loc[:, input_data.columns] = input_data
 
     def _solve_thermal_eqn(self):
 
@@ -202,7 +202,7 @@ class SimulationModelNumpy(SimulationModel):
 
             return temp_df
 
-        temp_inlet = _calc_temps(exponent_constant, self.temp_inlet, direction=1)
+        temp_inlet = _calc_temps(exponent_constant, self.input_data.temp_inlet, direction=1)
 
         def _set_temp_return_input(temp_inlet):
 
