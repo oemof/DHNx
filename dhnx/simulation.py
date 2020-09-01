@@ -16,6 +16,7 @@ import pandas as pd
 import re
 
 from .model import SimulationModel
+from .helpers import Dict
 from .graph import write_edge_data_to_graph
 
 
@@ -31,7 +32,7 @@ class SimulationModelNumpy(SimulationModel):
 
         self.inc_mat = None
 
-        self.all_mass_flow = None
+        self.input_data = Dict()
 
     def _concat_sequences(self, name):
 
@@ -58,7 +59,7 @@ class SimulationModelNumpy(SimulationModel):
 
         self.inc_mat = nx.incidence_matrix(self.nx_graph, oriented=True).todense()
 
-        all_mass_flow = pd.DataFrame(
+        mass_flow = pd.DataFrame(
             0,
             columns=self.nx_graph.nodes(),
             index=self.thermal_network.timeindex
@@ -66,9 +67,9 @@ class SimulationModelNumpy(SimulationModel):
 
         input_data = self._concat_sequences('mass_flow')
 
-        all_mass_flow.loc[:, input_data.columns] = input_data
+        mass_flow.loc[:, input_data.columns] = input_data
 
-        self.all_mass_flow = _set_producers(all_mass_flow)
+        self.input_data.mass_flow = _set_producers(mass_flow)
 
     def _solve_hydraulic_eqn(self, tolerance=1e-10):
 
@@ -78,7 +79,7 @@ class SimulationModelNumpy(SimulationModel):
 
             x, residuals, rank, s = np.linalg.lstsq(
                 self.inc_mat,
-                self.all_mass_flow.loc[t, :],
+                self.input_data.mass_flow.loc[t, :],
                 rcond=None
             )
 
@@ -100,6 +101,12 @@ class SimulationModelNumpy(SimulationModel):
         # NOTE: nodes have only localized pressure losses
         # 'global-pressure_losses'
         # 'producers-pump_power'
+
+        self.results['edges-pressure_losses'] = None
+
+        self.results['nodes-pressure_losses'] = None
+
+        self.results['producers-pump_power'] = None  # pressure losses times mass flow for one loop
 
     def _prepare_thermal_eqn(self):
 
@@ -128,7 +135,7 @@ class SimulationModelNumpy(SimulationModel):
                    * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length))\
                    / c  # TODO: Check units
 
-        def _calc_temps(exponent, known_temp, direction):
+        def _calc_temps(exponent_constant, known_temp, direction):
             # TODO: Rethink function layout and naming
 
             temps = {}
