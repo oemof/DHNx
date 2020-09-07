@@ -28,8 +28,8 @@ is also possible to couple the two approaches, running an optimization first and
 the detailled physical behavior. To learn about this option, please refer to the section
 :ref:`model coupling <model_coupling_label>`.
 
-Currently, the available do not handle transient states (i.e. propagation of temperature fronts
-through the pipes). The simulation model evaluates a steady state of the hydraulic and thermal
+Currently, the available simulation model does not handle transient states (i.e. propagation of temperature fronts
+through the pipes). The model evaluates a steady state of the hydraulic and thermal
 physical equations. This also means that consecutive time steps are modelled independently and the
 behaviour of thermal storages cannot be represented. A dynamic simulation model may be implemented
 at a later point in time.
@@ -205,4 +205,3 @@ loss per meter :math:`U_{spez} [W/(K m)]`.
 
 References
 ----------
-
