@@ -16,7 +16,7 @@ The following questions can be addressed using a simulation model:
 * How do the heat losses in the network depend on the temperatures of feed and return pipes and
   ambient temperature?
 * How much energy is necessary for the pumps to overcome the pressure losses in the network?
-* How do these properties change if the supply temperatures are lowered?
+* How do these properties behave if the supply temperatures change?
 
 To answer these questions, data has to be present or assumptions have to be made about the pipe's
 physical properties and the temperature drop at the consumers. Have a look at the
