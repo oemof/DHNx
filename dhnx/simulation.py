@@ -155,8 +155,6 @@ class SimulationModelNumpy(SimulationModel):
 
         def _calculate_edges_pressure_losses(lamb):
 
-            lamb = 1
-
             rho = 971.78
 
             edges_mass_flow = self.results['edges-mass_flow'].copy()
