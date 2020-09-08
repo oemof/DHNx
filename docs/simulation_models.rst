@@ -25,7 +25,7 @@ parameters involved.
 
 Conversely, if these are not known, running an optimization model would be the better choice. It
 is also possible to couple the two approaches, running an optimization first and then investigating
-the detailled physical behavior. To learn about this option, please refer to the section
+the detailed physical behavior. To learn about this option, please refer to the section
 :ref:`model coupling <model_coupling_label>`.
 
 Currently, the available simulation model does not handle transient states (i.e. propagation of temperature fronts
