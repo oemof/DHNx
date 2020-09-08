@@ -24,7 +24,7 @@ class SimulationModelNumpy(SimulationModel):
     r"""
     Implementation of a simulation model using numpy.
     """
-    def __init__(self, thermal_network):
+    def __init__(self, thermal_network, rho=971.78, c=4190, mu=0.00035):
         super().__init__(thermal_network)
         self.results = {}
 
@@ -33,6 +33,12 @@ class SimulationModelNumpy(SimulationModel):
         self.inc_mat = None
 
         self.input_data = Dict()
+
+        self.rho = rho
+
+        self.c = c
+
+        self.mu = mu
 
     def _concat_sequences(self, name):
 
@@ -115,15 +121,12 @@ class SimulationModelNumpy(SimulationModel):
 
             re : pd.DataFrame
             """
-
-            mu = 0.00035  # TODO: Decide where to define the constants.
-
             edges_mass_flow = self.results['edges-mass_flow']
 
             diameter = 1e-3 * self.thermal_network.components.edges['diameter_mm']
 
             re = 4 * edges_mass_flow.divide(diameter, axis='index') \
-                / (np.pi * mu)
+                / (np.pi * self.mu)
 
             return re
 
@@ -155,11 +158,9 @@ class SimulationModelNumpy(SimulationModel):
 
         def _calculate_edges_pressure_losses(lamb):
 
-            rho = 971.78
-
             edges_mass_flow = self.results['edges-mass_flow'].copy()
 
-            constant = 8 * lamb / (rho * np.pi**2)
+            constant = 8 * lamb / (self.rho * np.pi**2)
 
             length = self.thermal_network.components.edges[['from_node', 'to_node', 'length_m']]
 
@@ -203,8 +204,6 @@ class SimulationModelNumpy(SimulationModel):
 
     def _solve_thermal_eqn(self):
 
-        c = 4190  # TODO: set heat capacity
-
         heat_transfer_coefficient = nx.adjacency_matrix(
             self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
 
@@ -214,7 +213,7 @@ class SimulationModelNumpy(SimulationModel):
 
         exponent_constant = - np.pi\
                    * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length))\
-                   / c  # TODO: Check units
+                   / self.c  # TODO: Check units
 
         def _calc_temps(exponent_constant, known_temp, direction):
             # TODO: Rethink function layout and naming
