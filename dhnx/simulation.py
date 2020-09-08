@@ -102,11 +102,62 @@ class SimulationModelNumpy(SimulationModel):
         # 'global-pressure_losses'
         # 'producers-pump_power'
 
-        def _calculate_edges_pressure_losses():
+        def _calculate_reynolds():
+            r"""
+            Calculates the reynolds number.
+
+            ..math::
+
+                Re = \frac{4\dot{m}{\pi\mu D}
+
+            Returns
+            -------
+
+            re : pd.DataFrame
+            """
+
+            mu = 0.00035  # TODO: Decide where to define the constants.
+
+            edges_mass_flow = self.results['edges-mass_flow']
+
+            diameter = 1e-3 * self.thermal_network.components.edges['diameter_mm']
+
+            re = 4 * edges_mass_flow.divide(diameter, axis='index') \
+                / (np.pi * mu)
+
+            return re
+
+        def _calculate_lambda(re):
+            r"""
+            Calculates the darcy friction factor.
+
+            ..math::
+
+                \lambda = 0.007 \cdot Re^{-0.13} \cdot D ^ {-0.14}
+
+            Parameters
+            ----------
+            re
+
+            Returns
+            -------
+
+            lamb : pd.DataFrame
+            """
+
+            factor_diameter = 1e-3 * self.thermal_network.components.edges['diameter_mm'] ** -0.14
+
+            lamb = 0.07 * re **-0.13
+
+            lamb = lamb.multiply(factor_diameter, axis='index')
+
+            return lamb
+
+        def _calculate_edges_pressure_losses(lamb):
 
             lamb = 1
 
-            rho = 1
+            rho = 971.78
 
             edges_mass_flow = self.results['edges-mass_flow'].copy()
 
@@ -128,7 +179,11 @@ class SimulationModelNumpy(SimulationModel):
 
             return edges_pressure_losses
 
-        edges_pressure_losses = _calculate_edges_pressure_losses()
+        re = _calculate_reynolds()
+
+        lamb = _calculate_lambda(re)
+
+        edges_pressure_losses = _calculate_edges_pressure_losses(lamb)
 
         self.results['edges-pressure_losses'] = edges_pressure_losses
 
