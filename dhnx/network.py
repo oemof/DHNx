@@ -91,7 +91,7 @@ class ThermalNetwork():
                 summary += ' * ' + str(count) + ' ' + component + '\n'
 
         if summary == '':
-            return f"empty dhnx.network.ThermalNetwork object containing no components"
+            return "Empty dhnx.network.ThermalNetwork object containing no components."
 
         return f"dhnx.network.ThermalNetwork object with these components\n{summary}"
 
@@ -172,9 +172,9 @@ class ThermalNetwork():
     def is_consistent(self):
         r"""
         Checks that
-         * edges connect to existing nodes,
-         * edges do not connect a node with itself,
-         * there are no duplicate edges between two nodes.
+         * pipes connect to existing nodes,
+         * pipes do not connect a node with itself,
+         * there are no duplicate pipes between two nodes.
         """
         nodes = {list_name: self.components[list_name].copy() for list_name in [
             'consumers',
@@ -189,7 +189,7 @@ class ThermalNetwork():
 
         node_indices = nodes.index
 
-        for id, data in self.components.edges.iterrows():
+        for id, data in self.components.pipes.iterrows():
 
             if not data['from_node'] in node_indices:
                 raise ValueError(f"Node {data['from_node']} not defined.")
@@ -198,18 +198,18 @@ class ThermalNetwork():
                 raise ValueError(f"Node {data['to_node']} not defined.")
 
             assert data['from_node'] != data['to_node'], \
-                f"Edge {id} connects {data['from_node']} to itself"
+                f"Pipe {id} connects {data['from_node']} to itself"
 
-        if not self.components.edges.empty:
+        if not self.components.pipes.empty:
 
-            duplicate_edges = [
-                name for name, group in self.components.edges.groupby(['from_node', 'to_node'])
+            duplicate_pipes = [
+                name for name, group in self.components.pipes.groupby(['from_node', 'to_node'])
                 if len(group) > 1
             ]
 
-            assert not duplicate_edges, (
-                f"There is more than one edge that connects "
-                f"{[edge[0] + ' to ' + edge[1] for edge in duplicate_edges]}")
+            assert not duplicate_pipes, (
+                f"There is more than one pipe that connects "
+                f"{[pipe[0] + ' to ' + pipe[1] for pipe in duplicate_pipes]}")
 
         return True
 
