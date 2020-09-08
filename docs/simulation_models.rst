@@ -53,9 +53,9 @@ Usage
 
     import dhnx
 
-    tnw = dhnx.network.ThermalNetwork()
+    thermal_network = dhnx.network.ThermalNetwork()
 
-    tnw.simulate()
+    thermal_network.simulate()
 
 
 .. 	figure:: _static/radial_network_details.svg
@@ -99,8 +99,8 @@ All three effects can be captured in this formula:
 
 **Distributed pressure losses**
 
-Darcy-Weissbach-equation discribes distributed pressure losses
-:math:`\Delta p_{dis}` inside the pipes as
+The Darcy-Weissbach-equation describes distributed pressure losses
+:math:`\Delta p_{dis}` inside the pipe:
 
 .. math::
     \Delta p_{dis} = \lambda \rho \frac{L}{2D} v^2.
@@ -111,29 +111,26 @@ Together with the flow velocity
 .. math::
     v = \frac{4 \dot{m}}{\rho \pi D^2}
 
-this can be written to
+it can be written to:
 
 .. math::
-    \Delta p_{dis} = \lambda \frac{8 L}{\rho \pi^2 D^5} \dot{m}^2.
+    \Delta p_{dis} = \lambda \frac{8 L}{\rho \pi^2 D^5} \dot{m}^2,
 
 
-Here, :math:`\lambda = \lambda(Re, \epsilon, D)`, depends on
-:math:`Re:`, der Rohrrauigkeit (pipe's surface roughness) :math:`\epsilon` und dem Rohrdurchmesser
-:math:`D`.
-The Reynolds number
+where the darcy friction factor :math:`\lambda = \lambda(Re, \epsilon, D)` depends on the Reynolds number
+:math:`Re:`, the pipe's surface roughness :math:`\epsilon` and the pipe’s inner diameter :math:`D`.
+The Reynolds number is a dimensionless quantity characterizing fluid flows and is defined as follows:
 
-.. math:::
-    Re = \frac{Dv\rho}{\mu}
+.. math::
+    Re = \frac{Dv\rho}{\mu}.
 
-
-is a dimensionless quantity characterizing fluid flows. :math:`\mu` is the dynamic viscosity of
-water.
+:math:`\mu` is the dynamic viscosity of water.
 
 In a pipe, flow is laminar if :math:`Re` < 2300 and turbulent if :math:`Re` > 4000.
 In district heating pipes, flow is usually turbulent. The turbulent flow regime can be further
 distinguished into smooth, intermediate and rough regime depending on the pipe's surface roughness.
 
-:math:`\lambda` can be calculated using approximation formulas. Bordin2015 nimmt folgende Formel an:
+In Bordin2015 :math:`\lambda` is calculated using the approximation formula:
 
 .. math::
     \lambda = 0.07 \cdot Re ^{-0.13} \cdot D^{-0.14}.
@@ -146,16 +143,17 @@ formula:
 
 **Local pressure losses**
 
-Local pressure losses are losses at junction elements, angles, valves  etc. They are described by
-the local pressure loss factor (German: Druckverlustbeiwert) :math:`\zeta`:
+Local pressure losses are losses at junction elements, angles, valves etc. They are described by
+the localized pressure loss coefficient :math:`\zeta`:
 
 .. math::
     \Delta p_{loc} = \zeta \frac{v^2}{2} \rho
 
 **Hydrostatic pressure difference**
 
+The hydrostatic pressure difference is calculated as follows:
 .. math::
-    \Delta p_{hydrostatic}- \rho g \Delta h
+    \Delta p_{hydrostatic} = - \rho g \Delta h
 
 
 **Pump power**
@@ -186,14 +184,14 @@ investment cost of new pipes or increases the thermal power of existing pipes.
 Heat losses depend on temperature level, mass flow and pipe insulation.
 Especially the representation of the heat losses depends a lot on the level of detail of a model.
 As mentioned above, the current implementation treats the thermal beaviour as steady state.
-The temperature at the outlet can be described like this:
+The temperature at the outlet is calculated as follows:
 
 .. math::
     T_{out} = T_{env} + (T_{in} - T_{env}) \cdot exp\{-\frac{U \pi D L}{c \dot{m}}\}.
 
 
 Where :math:`T_{in}` and :math:`T_{out}` are the temperatures at the start and end of the pipe,
-:math:`T_{env}` the environmental temperature and :math:`U` thermal transmittance.
+:math:`T_{env}` the environmental temperature and :math:`U` the thermal transmittance.
 
 .. math::
     U_{spez} = U \cdot \pi D &\text{\hspace{1cm} for single pipes}\\
