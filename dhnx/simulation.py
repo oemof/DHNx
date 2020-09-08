@@ -102,7 +102,35 @@ class SimulationModelNumpy(SimulationModel):
         # 'global-pressure_losses'
         # 'producers-pump_power'
 
-        self.results['edges-pressure_losses'] = None
+        def _calculate_edges_pressure_losses():
+
+            lamb = 1
+
+            rho = 1
+
+            edges_mass_flow = self.results['edges-mass_flow'].copy()
+
+            constant = 8 * lamb / (rho * np.pi**2)
+
+            length = self.thermal_network.components.edges[['from_node', 'to_node', 'length_m']]
+
+            diameter = self.thermal_network.components.edges[['from_node', 'to_node', 'length_m']]
+
+            length = length.set_index(['from_node', 'to_node'])['length_m']
+
+            diameter = diameter.set_index(['from_node', 'to_node'])['length_m']
+
+            diameter_5 = 1e-3 * diameter ** 5
+
+            edges_pressure_losses = constant * edges_mass_flow\
+                .multiply(length, axis='columns')\
+                .divide(diameter_5, axis='columns')
+
+            return edges_pressure_losses
+
+        edges_pressure_losses = _calculate_edges_pressure_losses()
+
+        self.results['edges-pressure_losses'] = edges_pressure_losses
 
         self.results['nodes-pressure_losses'] = None
 
