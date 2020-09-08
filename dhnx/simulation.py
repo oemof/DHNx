@@ -222,17 +222,38 @@ class SimulationModelNumpy(SimulationModel):
 
         temp_return = _calc_temps(exponent_constant, temp_return_known, direction=-1)
 
-        # TODO: Calculate these
-        # 'edges-heat_losses'
-        # 'global-heat_losses'
+        def _calculate_edges_heat_losses(temp_node):
+
+            edges_heat_losses = {}
+
+            for i, row in temp_inlet.iterrows():
+
+                mass_flow = self.results['edges-mass_flow'].loc[i, :].copy()
+
+                temp_difference = np.array(np.dot(row, self.inc_mat)).flatten()
+
+                heat_losses = mass_flow
+
+                edges_heat_losses[i] = heat_losses.multiply(temp_difference, axis=0)
+
+            edges_heat_losses = pd.DataFrame.from_dict(edges_heat_losses, orient='index')
+
+            return edges_heat_losses
+
+        edges_heat_losses = _calculate_edges_heat_losses(temp_return)\
+                            + _calculate_edges_heat_losses(temp_return)
+
+        global_heat_losses = edges_heat_losses.sum(axis=1)
+
+        global_heat_losses.name = 'global_heat_losses'
 
         self.results['nodes-temp_inlet'] = temp_inlet
 
         self.results['nodes-temp_return'] = temp_return
 
-        self.results['edges-heat_losses'] = None
+        self.results['edges-heat_losses'] = edges_heat_losses
 
-        self.results['global-heat_losses'] = None
+        self.results['global-heat_losses'] = global_heat_losses
 
     def prepare(self):
 
