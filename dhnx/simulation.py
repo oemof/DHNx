@@ -182,15 +182,35 @@ class SimulationModelNumpy(SimulationModel):
 
             return edges_pressure_losses
 
+        def _calculate_nodes_pressure_losses():
+
+            diameter_4 = 1e-3 * self.thermal_network.components.edges['diameter_mm'] ** 4
+
+            zeta_nodes = 1 # self.thermal_network.components.mnodse
+            inflow_mat = self.inc_mat
+            nodes_mass_flow = np.dot(self.inc_mat, self.results['edges-mass_flow'].loc[0, :])
+
+            print(nodes_mass_flow)
+
+            nodes_pressure_losses = 1  # nodes_mass_flow.multiply(diameter_4, axis='index')
+
+            nodes_pressure_losses = 8 * zeta_nodes / (self.rho ** 2 * np.pi ** 2) * nodes_pressure_losses
+
+            return nodes_pressure_losses
+
         re = _calculate_reynolds()
 
         lamb = _calculate_lambda(re)
 
         edges_pressure_losses = _calculate_edges_pressure_losses(lamb)
 
+        nodes_pressure_losses = _calculate_nodes_pressure_losses()
+
         self.results['edges-pressure_losses'] = edges_pressure_losses
 
-        self.results['nodes-pressure_losses'] = None
+        self.results['nodes-pressure_losses'] = nodes_pressure_losses
+
+        self.results['global-pressure_losses'] = nodes_pressure_losses
 
         self.results['producers-pump_power'] = None  # pressure losses times mass flow for one loop
 
