@@ -38,11 +38,11 @@ class SimulationModelNumpy(SimulationModel):
 
         self.input_data = Dict()
 
-        self.rho = rho
+        self.rho = rho  # kg/m3
 
-        self.c = c
+        self.c = c  # J/(kg*K)
 
-        self.mu = mu
+        self.mu = mu  # kg/(m*s)
 
     def _concat_sequences(self, name):
 
