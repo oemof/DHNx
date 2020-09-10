@@ -30,6 +30,10 @@ class SimulationModelNumpy(SimulationModel):
 
         self.nx_graph = self.thermal_network.to_nx_graph()
 
+        assert nx.algorithms.tree.is_tree(self.nx_graph),\
+            "Currently, only tree networks can be modeled. " \
+            "Looped networks are not implemented yet."
+
         self.inc_mat = None
 
         self.input_data = Dict()
