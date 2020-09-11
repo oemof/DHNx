@@ -33,7 +33,7 @@ def create_nodes(lines):
                     start-point and end-point of line;
     """
 
-    nodes = gpd.GeoDataFrame()
+    nodes = gpd.GeoDataFrame(crs=lines.crs)
 
     for i, r in lines.iterrows():
         line_str = lines.iloc[i]['geometry']
@@ -206,6 +206,19 @@ def split_multilinestr_to_linestr(gdf_lines_streets_new):
                         new_row, ignore_index=True, sort=False)
 
                 gdf_lines_streets_new.drop(index=i, inplace=True)
+
+        elif len(geom.coords) > 2:
+
+            num_new_lines = len(geom.coords) - 1
+
+            for num in range(num_new_lines):
+                new_row = b.copy()
+                new_row['geometry'] = \
+                    LineString([geom.coords[num], geom.coords[num + 1]])
+                new_lines = new_lines.append(
+                    new_row, ignore_index=True, sort=False)
+
+            gdf_lines_streets_new.drop(index=i, inplace=True)
 
     gdf_lines_streets_new = gdf_lines_streets_new.append(
         new_lines, ignore_index=True, sort=False)
