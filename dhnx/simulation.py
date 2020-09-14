@@ -44,6 +44,8 @@ class SimulationModelNumpy(SimulationModel):
 
         self.mu = mu  # kg/(m*s)
 
+        self.temp_env = 20
+
     def _concat_sequences(self, name):
         r"""
         Concatenates sequences of all
@@ -284,6 +286,29 @@ class SimulationModelNumpy(SimulationModel):
                    / self.c  # TODO: Check units
 
         def _calc_temps(exponent_constant, known_temp, direction):
+            r"""
+            Calculate temperatures
+
+            .. math::
+
+            \Delta T = exp ^(\frac{U \pi D L }{c}) \cdot exp ^{1}{\dot{m}} \Delta T_{known}
+
+            Parameters
+            ----------
+            exponent_constant : np.array
+                Constant part of the exponent.
+
+            known_temp : pd.DataFrame
+                Known temperatures at producers or consumers.
+
+            direction : +1 or -1
+                For inlet and return flow.
+
+            Returns
+            -------
+            temp_df : pd.DataFrame
+                DataFrame containing temperatures for all nodes.
+            """
             # TODO: Rethink function layout and naming
 
             temps = {}
@@ -334,13 +359,15 @@ class SimulationModelNumpy(SimulationModel):
 
                 vector = np.array(known_temp.loc[t])
 
+                vector[vector!=0] -= self.temp_env
+
                 x, residuals, rank, s = np.linalg.lstsq(
                     matrix,
                     vector,
                     rcond=None
                 )
 
-                temps.update({t: x})
+                temps.update({t: x + self.temp_env})
 
             temp_df = pd.DataFrame.from_dict(
                 temps,
