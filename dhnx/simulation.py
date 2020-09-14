@@ -113,7 +113,7 @@ class SimulationModelNumpy(SimulationModel):
 
     def _solve_hydraulic_eqn(self, tolerance=1e-10):
 
-        edges_mass_flow = {}
+        pipes_mass_flow = {}
 
         for t in self.thermal_network.timeindex:
 
@@ -126,17 +126,17 @@ class SimulationModelNumpy(SimulationModel):
             assert residuals < tolerance,\
                 f"Residuals {residuals} are larger than tolerance {tolerance}!"
 
-            edges_mass_flow.update({t: x})
+            pipes_mass_flow.update({t: x})
 
-        self.results['edges-mass_flow'] = pd.DataFrame.from_dict(
-            edges_mass_flow,
+        self.results['pipes-mass_flow'] = pd.DataFrame.from_dict(
+            pipes_mass_flow,
             orient='index',
             columns=self.nx_graph.edges()
         )
 
         # TODO: Calculate these
-        # 'edges-pressure_losses'
-        # NOTE: edges have distributed and localized pressure losses zeta_dis * L/D**5
+        # 'pipes-pressure_losses'
+        # NOTE: pipes have distributed and localized pressure losses zeta_dis * L/D**5
         # nodes-pressure_losses
         # NOTE: nodes have only localized pressure losses
         # 'global-pressure_losses'
@@ -155,13 +155,13 @@ class SimulationModelNumpy(SimulationModel):
 
             re : pd.DataFrame
             """
-            edges_mass_flow = self.results['edges-mass_flow']
+            pipes_mass_flow = self.results['pipes-mass_flow']
 
-            diameter = self.thermal_network.components.edges[['from_node', 'to_node', 'diameter_mm']]
+            diameter = self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
 
             diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter_mm']
 
-            re = 4 * edges_mass_flow.divide(diameter, axis='columns') \
+            re = 4 * pipes_mass_flow.divide(diameter, axis='columns') \
                 / (np.pi * self.mu)
 
             return re
@@ -184,7 +184,7 @@ class SimulationModelNumpy(SimulationModel):
             lamb : pd.DataFrame
             """
 
-            factor_diameter = 1e-3 * self.thermal_network.components.edges['diameter_mm'] ** -0.14
+            factor_diameter = 1e-3 * self.thermal_network.components.pipes['diameter_mm'] ** -0.14
 
             lamb = 0.07 * re **-0.13
 
@@ -192,7 +192,7 @@ class SimulationModelNumpy(SimulationModel):
 
             return lamb
 
-        def _calculate_edges_pressure_losses(lamb):
+        def _calculate_pipes_pressure_losses(lamb):
             r"""
             Calculates the pressure losses in the pipes.
 
@@ -207,16 +207,16 @@ class SimulationModelNumpy(SimulationModel):
 
             Returns
             -------
-            edges_pressure_losses : pd.DataFrame
+            pipes_pressure_losses : pd.DataFrame
                 DataFrame with pressure losses values for each timestep.
             """
-            edges_mass_flow = self.results['edges-mass_flow'].copy()
+            pipes_mass_flow = self.results['pipes-mass_flow'].copy()
 
             constant = 8 * lamb / (self.rho * np.pi**2)
 
-            length = self.thermal_network.components.edges[['from_node', 'to_node', 'length_m']]
+            length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
 
-            diameter = self.thermal_network.components.edges[['from_node', 'to_node', 'length_m']]
+            diameter = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
 
             length = length.set_index(['from_node', 'to_node'])['length_m']
 
@@ -224,19 +224,19 @@ class SimulationModelNumpy(SimulationModel):
 
             diameter_5 = 1e-3 * diameter ** 5
 
-            edges_pressure_losses = constant * edges_mass_flow\
+            pipes_pressure_losses = constant * pipes_mass_flow\
                 .multiply(length, axis='columns')\
                 .divide(diameter_5, axis='columns')
 
-            return edges_pressure_losses
+            return pipes_pressure_losses
 
         def _calculate_nodes_pressure_losses():
 
-            diameter_4 = 1e-3 * self.thermal_network.components.edges['diameter_mm'] ** 4
+            diameter_4 = 1e-3 * self.thermal_network.components.pipes['diameter_mm'] ** 4
 
             zeta_nodes = 1 # self.thermal_network.components.mnodse
             inflow_mat = self.inc_mat
-            nodes_mass_flow = np.dot(self.inc_mat, self.results['edges-mass_flow'].loc[0, :])
+            nodes_mass_flow = np.dot(self.inc_mat, self.results['pipes-mass_flow'].loc[0, :])
 
             print(nodes_mass_flow)
 
@@ -250,11 +250,11 @@ class SimulationModelNumpy(SimulationModel):
 
         lamb = _calculate_lambda(re)
 
-        edges_pressure_losses = _calculate_edges_pressure_losses(lamb)
+        pipes_pressure_losses = _calculate_pipes_pressure_losses(lamb)
 
         nodes_pressure_losses = _calculate_nodes_pressure_losses()
 
-        self.results['edges-pressure_losses'] = edges_pressure_losses
+        self.results['pipes-pressure_losses'] = pipes_pressure_losses
 
         self.results['nodes-pressure_losses'] = nodes_pressure_losses
 
@@ -317,17 +317,17 @@ class SimulationModelNumpy(SimulationModel):
 
             for t in self.thermal_network.timeindex:
 
-                # Divide exponent matrix by current edges-mass_flows.
-                data = self.results['edges-mass_flow'].loc[t, :].copy()
+                # Divide exponent matrix by current pipes-mass_flows.
+                data = self.results['pipes-mass_flow'].loc[t, :].copy()
 
                 data = 1/data
 
                 graph_with_data = write_edge_data_to_graph(
-                    data, self.nx_graph, var_name='edges-mass_flow'
+                    data, self.nx_graph, var_name='pipes-mass_flow'
                 )
 
                 inverse_mass_flows = nx.adjacency_matrix(
-                    graph_with_data, weight='edges-mass_flow'
+                    graph_with_data, weight='pipes-mass_flow'
                 ).todense()
 
                 exponent = np.multiply(exponent_constant, inverse_mass_flows)
@@ -399,28 +399,28 @@ class SimulationModelNumpy(SimulationModel):
 
         temp_return = _calc_temps(exponent_constant, temp_return_known, direction=-1)
 
-        def _calculate_edges_heat_losses(temp_node):
+        def _calculate_pipes_heat_losses(temp_node):
 
-            edges_heat_losses = {}
+            pipes_heat_losses = {}
 
             for i, row in temp_inlet.iterrows():
 
-                mass_flow = self.results['edges-mass_flow'].loc[i, :].copy()
+                mass_flow = self.results['pipes-mass_flow'].loc[i, :].copy()
 
                 temp_difference = np.array(np.dot(row, self.inc_mat)).flatten()
 
                 heat_losses = mass_flow
 
-                edges_heat_losses[i] = heat_losses.multiply(temp_difference, axis=0)
+                pipes_heat_losses[i] = heat_losses.multiply(temp_difference, axis=0)
 
-            edges_heat_losses = pd.DataFrame.from_dict(edges_heat_losses, orient='index')
+            pipes_heat_losses = pd.DataFrame.from_dict(pipes_heat_losses, orient='index')
 
-            return edges_heat_losses
+            return pipes_heat_losses
 
-        edges_heat_losses = _calculate_edges_heat_losses(temp_return)\
-                            + _calculate_edges_heat_losses(temp_return)
+        pipes_heat_losses = _calculate_pipes_heat_losses(temp_return)\
+                            + _calculate_pipes_heat_losses(temp_return)
 
-        global_heat_losses = edges_heat_losses.sum(axis=1)
+        global_heat_losses = pipes_heat_losses.sum(axis=1)
 
         global_heat_losses.name = 'global_heat_losses'
 
@@ -428,7 +428,7 @@ class SimulationModelNumpy(SimulationModel):
 
         self.results['nodes-temp_return'] = temp_return
 
-        self.results['edges-heat_losses'] = edges_heat_losses
+        self.results['pipes-heat_losses'] = pipes_heat_losses
 
         self.results['global-heat_losses'] = global_heat_losses
 
