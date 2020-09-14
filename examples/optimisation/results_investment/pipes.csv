@@ -1,4 +1,4 @@
-edge_id,from_node,to_node,built
+pipe_id,from_node,to_node,built
 0,0,1,True
 1,0,2,True
 2,0,3,True

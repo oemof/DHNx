@@ -48,7 +48,7 @@ def test_access_attributes():
 
     assert isinstance(network.components.consumers, pd.DataFrame)
 
-    assert isinstance(network.sequences.edges.temperature_return, pd.DataFrame)
+    assert isinstance(network.sequences.pipes.temperature_return, pd.DataFrame)
 
 
 def test_get_nx_graph():

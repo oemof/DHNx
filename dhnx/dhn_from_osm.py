@@ -38,7 +38,9 @@ def connect_points_to_network(points, nodes, edges):
         Points connected to the network
 
     nodes : geopandas.GeoDataFrame
-        Nodes of the network
+        Original nodes of the network and
+        nearest connecting points on the
+        network's edges.
 
     edges :  geopandas.GeoDataFrame
         Edges of the network.
