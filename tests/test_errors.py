@@ -19,7 +19,7 @@ import dhnx
 
 basedir = os.path.dirname(__file__)
 
-dir_import = os.path.join(basedir, '_files/network_import')
+dir_import = os.path.join(basedir, '_files/looped_network_import')
 
 dir_import_inconsistent = os.path.join(basedir, '_files/inconsistent_network_import')
 
