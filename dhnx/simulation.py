@@ -45,7 +45,21 @@ class SimulationModelNumpy(SimulationModel):
         self.mu = mu  # kg/(m*s)
 
     def _concat_sequences(self, name):
+        r"""
+        Concatenates sequences of all
+        components with a given variable name
 
+        Parameters
+        ----------
+        name : str
+            Name of the variable
+
+        Returns
+        -------
+        concat_sequences : pd.DataFrame
+            DataFrame containing the sequences
+
+        """
         select_sequences = [
             d[name].copy().rename(columns=lambda x: component + '-' + x)
             for component, d in self.thermal_network.sequences.items()
@@ -58,7 +72,21 @@ class SimulationModelNumpy(SimulationModel):
 
     def _prepare_hydraulic_eqn(self):
 
-        def _set_producers(m):
+        def _set_producers_mass_flow(m):
+            r"""
+            Set the mass flow of the producer.
+
+            Parameters
+            ----------
+            m : pd.DataFrame
+                DataFrame with all know consumer mass flows.
+
+            Returns
+            -------
+            m : pd.DataFrame
+                DataFrame with all know mass flow of
+                consumers and producer.
+            """
             producers = [name for name in m.columns if re.search('producers', name)]
 
             assert len(producers) == 1, "Currently, only one producer allowed."
@@ -79,7 +107,7 @@ class SimulationModelNumpy(SimulationModel):
 
         mass_flow.loc[:, input_data.columns] = input_data
 
-        self.input_data.mass_flow = _set_producers(mass_flow)
+        self.input_data.mass_flow = _set_producers_mass_flow(mass_flow)
 
     def _solve_hydraulic_eqn(self, tolerance=1e-10):
 
@@ -161,7 +189,23 @@ class SimulationModelNumpy(SimulationModel):
             return lamb
 
         def _calculate_edges_pressure_losses(lamb):
+            r"""
+            Calculates the pressure losses in the pipes.
 
+            .. math::
+
+            \delta p = \lambda \frac{8L}{\rho \pi^2 D^5}\dot{m}^2.
+
+            Parameters
+            ----------
+            lamb : pd.DataFrame
+                DataFrame with lambda values for each timestep.
+
+            Returns
+            -------
+            edges_pressure_losses : pd.DataFrame
+                DataFrame with pressure losses values for each timestep.
+            """
             edges_mass_flow = self.results['edges-mass_flow'].copy()
 
             constant = 8 * lamb / (self.rho * np.pi**2)
