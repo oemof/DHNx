@@ -157,9 +157,11 @@ class SimulationModelNumpy(SimulationModel):
             """
             edges_mass_flow = self.results['edges-mass_flow']
 
-            diameter = 1e-3 * self.thermal_network.components.edges['diameter_mm']
+            diameter = self.thermal_network.components.edges[['from_node', 'to_node', 'diameter_mm']]
 
-            re = 4 * edges_mass_flow.divide(diameter, axis='index') \
+            diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter_mm']
+
+            re = 4 * edges_mass_flow.divide(diameter, axis='columns') \
                 / (np.pi * self.mu)
 
             return re
