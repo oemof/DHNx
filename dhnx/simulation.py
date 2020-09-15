@@ -134,6 +134,8 @@ class SimulationModelNumpy(SimulationModel):
             columns=self.nx_graph.edges()
         )
 
+        self.results['pipes-mass_flow'].columns.names = ('from_node', 'to_node')
+
         # TODO: Calculate these
         # 'pipes-pressure_losses'
         # NOTE: pipes have distributed and localized pressure losses zeta_dis * L/D**5
@@ -236,19 +238,70 @@ class SimulationModelNumpy(SimulationModel):
             return pipes_pressure_losses
 
         def _calculate_nodes_pressure_losses():
+            r"""
+            Calculates localized pressure losses at the nodes.
 
-            diameter_4 = 1e-3 * self.thermal_network.components.pipes['diameter_mm'] ** 4
+            \Delta p_{loc} = \zeta
+            Returns
+            -------
+            nodes_pressure_losses : pd.DataFrame
+                Pressure losses at the nodes.
+            """
+            constant = 8 / (self.rho * np.pi ** 2)
 
-            zeta_nodes = 1 # self.thermal_network.components.mnodse
-            inflow_mat = self.inc_mat
-            nodes_mass_flow = np.dot(self.inc_mat, self.results['pipes-mass_flow'].loc[0, :])
+            zeta_nodes = 2  # TODO: use zeta values from input data
 
-            print(nodes_mass_flow)
+            diameter_4 = self.thermal_network.components.pipes[
+                ['from_node', 'to_node', 'diameter_mm']
+            ]
 
-            nodes_pressure_losses = 1  # nodes_mass_flow.multiply(diameter_4, axis='index')
+            diameter_4 = diameter_4.set_index(['from_node', 'to_node'])['diameter_mm']
 
-            nodes_pressure_losses = 8 * zeta_nodes / (self.rho ** 2 * np.pi ** 2) * nodes_pressure_losses
+            diameter_4 = (1e-3 * diameter_4) ** 4
 
+            def _get_inflow_nodes(pipes_mass_flow, t):
+                # TODO: Avoid passing t here.
+
+                flow_into_node = np.sign(pipes_mass_flow).reset_index()
+
+                flow_into_node.loc[flow_into_node[t] < 0, 'flow_into_node'] = flow_into_node[
+                    'from_node']
+
+                flow_into_node.loc[flow_into_node[t] > 0, 'flow_into_node'] = flow_into_node[
+                    'to_node']
+
+                flow_into_node.drop(t, axis=1, inplace=True)
+
+                flow_into_node.set_index(['from_node', 'to_node'], inplace=True)
+
+                return flow_into_node
+
+            nodes_pressure_losses = {}
+
+            for t in self.thermal_network.timeindex:
+
+                pipes_mass_flow = self.results['pipes-mass_flow'].loc[t, :]
+
+                mass_flow_2_over_diameter_4 = pipes_mass_flow.divide(diameter_4)
+
+                mass_flow_2_over_diameter_4.name = 'mass_flow_2_over_diameter_4'
+
+                inflow_nodes = _get_inflow_nodes(pipes_mass_flow, t)
+
+                mass_flow_2_over_diameter_4_nodes = pd.concat([mass_flow_2_over_diameter_4, inflow_nodes], axis=1)
+
+                mass_flow_2_over_diameter_4_nodes = mass_flow_2_over_diameter_4_nodes \
+                    .set_index(inflow_nodes['flow_into_node'], drop=True) \
+                    .loc[:, 'mass_flow_2_over_diameter_4']
+
+                x = constant * zeta_nodes * mass_flow_2_over_diameter_4_nodes
+
+                nodes_pressure_losses.update({t: x})
+
+            nodes_pressure_losses = pd.DataFrame.from_dict(nodes_pressure_losses, orient='index')
+            print(nodes_pressure_losses)
+            import sys
+            sys.exit()
             return nodes_pressure_losses
 
         re = _calculate_reynolds()
