@@ -229,7 +229,7 @@ class SimulationModelNumpy(SimulationModel):
 
             diameter = diameter.set_index(['from_node', 'to_node'])['diameter_mm']
 
-            diameter_5 = 1e-3 * diameter ** 5
+            diameter_5 = (1e-3 * diameter) ** 5
 
             pipes_pressure_losses = constant * pipes_mass_flow\
                 .multiply(length, axis='columns')\
