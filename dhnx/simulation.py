@@ -184,11 +184,16 @@ class SimulationModelNumpy(SimulationModel):
             lamb : pd.DataFrame
             """
 
-            factor_diameter = 1e-3 * self.thermal_network.components.pipes['diameter_mm'] ** -0.14
+            factor_diameter = self.thermal_network.components.pipes[
+                ['from_node', 'to_node', 'diameter_mm']
+            ]
 
-            lamb = 0.07 * re **-0.13
+            factor_diameter =  1e-3 \
+                * factor_diameter.set_index(['from_node', 'to_node'])['diameter_mm'] ** -0.14
 
-            lamb = lamb.multiply(factor_diameter, axis='index')
+            lamb = 0.07 * re ** -0.13
+
+            lamb = lamb.multiply(factor_diameter, axis='columns')
 
             return lamb
 
