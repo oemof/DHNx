@@ -422,7 +422,7 @@ class SimulationModelNumpy(SimulationModel):
 
             return pipes_heat_losses
 
-        pipes_heat_losses = _calculate_pipes_heat_losses(temp_return)\
+        pipes_heat_losses = _calculate_pipes_heat_losses(temp_inlet) \
                             + _calculate_pipes_heat_losses(temp_return)
 
         global_heat_losses = pipes_heat_losses.sum(axis=1)
