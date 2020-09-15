@@ -411,7 +411,7 @@ class SimulationModelNumpy(SimulationModel):
 
                 heat_losses = mass_flow
 
-                pipes_heat_losses[i] = heat_losses.multiply(temp_difference, axis=0)
+                pipes_heat_losses[i] = self.c * heat_losses.multiply(temp_difference, axis=0)
 
             pipes_heat_losses = pd.DataFrame.from_dict(pipes_heat_losses, orient='index')
 
