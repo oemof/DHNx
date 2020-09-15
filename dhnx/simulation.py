@@ -225,13 +225,13 @@ class SimulationModelNumpy(SimulationModel):
 
             length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
 
-            diameter = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
+            diameter = self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
 
             length = length.set_index(['from_node', 'to_node'])['length_m']
 
-            diameter = diameter.set_index(['from_node', 'to_node'])['length_m']
+            diameter = diameter.set_index(['from_node', 'to_node'])['diameter_mm']
 
-            diameter_5 = 1e-3 * diameter ** 5
+            diameter_5 = (1e-3 * diameter) ** 5
 
             pipes_pressure_losses = constant * pipes_mass_flow_2\
                 .multiply(length, axis='columns')\
