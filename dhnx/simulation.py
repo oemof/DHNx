@@ -188,8 +188,8 @@ class SimulationModelNumpy(SimulationModel):
                 ['from_node', 'to_node', 'diameter_mm']
             ]
 
-            factor_diameter =  1e-3 \
-                * factor_diameter.set_index(['from_node', 'to_node'])['diameter_mm'] ** -0.14
+            factor_diameter =  (1e-3 \
+                * factor_diameter.set_index(['from_node', 'to_node'])['diameter_mm']) ** -0.14
 
             lamb = 0.07 * re ** -0.13
 
