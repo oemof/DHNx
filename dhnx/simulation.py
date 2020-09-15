@@ -219,6 +219,8 @@ class SimulationModelNumpy(SimulationModel):
             """
             pipes_mass_flow = self.results['pipes-mass_flow'].copy()
 
+            pipes_mass_flow_2 = pipes_mass_flow ** 2
+
             constant = 8 * lamb / (self.rho * np.pi**2)
 
             length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
@@ -231,7 +233,7 @@ class SimulationModelNumpy(SimulationModel):
 
             diameter_5 = 1e-3 * diameter ** 5
 
-            pipes_pressure_losses = constant * pipes_mass_flow\
+            pipes_pressure_losses = constant * pipes_mass_flow_2\
                 .multiply(length, axis='columns')\
                 .divide(diameter_5, axis='columns')
 
@@ -299,9 +301,7 @@ class SimulationModelNumpy(SimulationModel):
                 nodes_pressure_losses.update({t: x})
 
             nodes_pressure_losses = pd.DataFrame.from_dict(nodes_pressure_losses, orient='index')
-            print(nodes_pressure_losses)
-            import sys
-            sys.exit()
+
             return nodes_pressure_losses
 
         re = _calculate_reynolds()
