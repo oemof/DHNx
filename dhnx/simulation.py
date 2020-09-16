@@ -34,7 +34,7 @@ class SimulationModelNumpy(SimulationModel):
             "Currently, only tree networks can be modeled. " \
             "Looped networks are not implemented yet."
 
-        self.inc_mat = None
+        self.inc_mat = nx.incidence_matrix(self.nx_graph, oriented=True).todense()
 
         self.input_data = Dict()
 
@@ -96,8 +96,6 @@ class SimulationModelNumpy(SimulationModel):
             m.loc[:, producers] = - m.loc[:, ~m.columns.isin(producers)].sum(1)
 
             return m
-
-        self.inc_mat = nx.incidence_matrix(self.nx_graph, oriented=True).todense()
 
         mass_flow = pd.DataFrame(
             0,
