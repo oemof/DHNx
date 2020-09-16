@@ -457,15 +457,13 @@ class SimulationModelNumpy(SimulationModel):
 
             pipes_heat_losses = {}
 
-            for i, row in temp_inlet.iterrows():
+            for i, row in temp_node.iterrows():
 
                 mass_flow = self.results['pipes-mass_flow'].loc[i, :].copy()
 
-                temp_difference = np.array(np.dot(row, self.inc_mat)).flatten()
+                temp_difference = np.abs(np.array(np.dot(row, self.inc_mat)).flatten())
 
-                heat_losses = mass_flow
-
-                pipes_heat_losses[i] = self.c * heat_losses.multiply(temp_difference, axis=0)
+                pipes_heat_losses[i] = self.c * mass_flow.multiply(temp_difference, axis=0)
 
             pipes_heat_losses = pd.DataFrame.from_dict(pipes_heat_losses, orient='index')
 
