@@ -32,7 +32,8 @@ c = 4190                                                                        
 pi = math.pi
 
 # Initialize variables of type dataframe (needed for later calculations)
-U_spec, t_cons_i, t_cons_r, t_fork_r, Q_loss, Q_cons, Q_loss_glob = [pd.DataFrame() for variable in range(7)]
+U_spec, t_cons_i, t_cons_r, t_fork_r, Q_loss_i, Q_loss_r, Q_cons, Q_loss_glob = \
+    [pd.DataFrame() for variable in range(8)]
 
 # Adjust mass flows and temp drop to a dataframe containing all data in correct order
 # Get mass flows of all consumers
@@ -83,9 +84,7 @@ def calc_heat_loss(m, t_in, t_out):
 t_fork_i = pd.DataFrame(data={'0': calc_temp_heat_loss(t_prod_i['t_prod_i'], 0)})
 
 # Calculate heat loss at edge from producer to fork
-# Inlet and return pipes same heat transfer coefficient, lengths and diameters. Hence inlet and return heat lossses
-# are the same. -> Q_loss['0'] * 2
-Q_loss['0'] = calc_heat_loss(mass_flow_total['0'], t_prod_i['t_prod_i'], t_fork_i['0']) * 2
+Q_loss_i['0'] = calc_heat_loss(mass_flow_total['0'], t_prod_i['t_prod_i'], t_fork_i['0'])
 
 for index in list(temp_drop):
     # Calculate inlet temperature at consumers
@@ -95,9 +94,9 @@ for index in list(temp_drop):
     # Calculate return temperature at fork
     t_fork_r[index] = calc_temp_heat_loss(t_cons_r[index], int(index))
     # Calculate heat losses at edge from fork to consumer
-    # Inlet and return pipes same heat transfer coefficient, lengths and diameters. Hence inlet and return heat losses
-    # are the same. -> Q_loss[index] * 2
-    Q_loss[index] = calc_heat_loss(mass_flow_total[index], t_fork_i['0'], t_cons_i[index]) * 2
+    Q_loss_i[index] = calc_heat_loss(mass_flow_total[index], t_fork_i['0'], t_cons_i[index])
+    # Calculate heat losses at edge from consumer to fork
+    Q_loss_r[index] = calc_heat_loss(mass_flow_total[index], t_cons_r[index], t_fork_r[index])
     # Calculate heat transfer at consumers with temperature drop
     Q_cons[index] = calc_heat_loss(mass_flow_total[index], t_cons_i[index], t_cons_r[index])
 
@@ -109,6 +108,12 @@ t_fork_r_mix = pd.DataFrame(data={'0': (mass_flow_total['1'] * t_fork_r['1'] +
 
 # Calculate return temperature at producer
 t_prod_r = pd.DataFrame(data={'0': calc_temp_heat_loss(t_fork_r_mix['0'], int('0'))})
+
+# Calculate heat loss at edge from fork to producer
+Q_loss_r['0'] = calc_heat_loss(mass_flow_total['0'], t_fork_r_mix['0'], t_prod_r['0'])
+
+# Calculate total heat losses (inlet and return)
+Q_loss = Q_loss_i + Q_loss_r
 
 # Calculate global heat losses
 Q_loss_glob = pd.DataFrame(data={'losses': np.zeros(len(mass_flow_total))})
