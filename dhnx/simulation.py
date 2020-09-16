@@ -48,8 +48,7 @@ class SimulationModelNumpy(SimulationModel):
 
     def _concat_sequences(self, name):
         r"""
-        Concatenates sequences of all
-        components with a given variable name
+        Concatenates sequences of all components with a given variable name
 
         Parameters
         ----------
@@ -60,7 +59,6 @@ class SimulationModelNumpy(SimulationModel):
         -------
         concat_sequences : pd.DataFrame
             DataFrame containing the sequences
-
         """
         select_sequences = [
             d[name].copy().rename(columns=lambda x: component + '-' + x)
@@ -73,10 +71,13 @@ class SimulationModelNumpy(SimulationModel):
         return concat_sequences
 
     def _prepare_hydraulic_eqn(self):
+        r"""
+        Prepares the input data for the hydraulic problem.
+        """
 
         def _set_producers_mass_flow(m):
             r"""
-            Set the mass flow of the producer.
+            Sets the mass flow of the producer.
 
             Parameters
             ----------
@@ -110,8 +111,20 @@ class SimulationModelNumpy(SimulationModel):
         self.input_data.mass_flow = _set_producers_mass_flow(self.input_data.mass_flow)
 
     def _solve_hydraulic_eqn(self, tolerance=1e-10):
+        r"""
+        Solves the hydraulic problem.
+        """
 
         def _calculate_pipes_mass_flow():
+            r"""
+            Determines the mass flow in all pipes using numpy's
+            least squares function.
+
+            Returns
+            -------
+            pipes_mass_flow : pd.DataFrame
+                Mass flow in the pipes
+            """
 
             pipes_mass_flow = {}
 
@@ -140,16 +153,16 @@ class SimulationModelNumpy(SimulationModel):
 
         def _calculate_reynolds():
             r"""
-            Calculates the reynolds number.
+            Calculates the Reynolds number.
 
             ..math::
 
-                Re = \frac{4\dot{m}{\pi\mu D}
+                Re = \frac{4\dot{m}}{\pi\mu D}
 
             Returns
             -------
-
             re : pd.DataFrame
+                Reynoldes number for every timestep and pipe.
             """
             pipes_mass_flow = self.results['pipes-mass_flow']
 
@@ -168,16 +181,17 @@ class SimulationModelNumpy(SimulationModel):
 
             ..math::
 
-                \lambda = 0.007 \cdot Re^{-0.13} \cdot D ^ {-0.14}
+                \lambda = 0.007 \cdot Re ^ {-0.13} \cdot D ^ {-0.14}
 
             Parameters
             ----------
-            re
+            re : pd.DataFrame
+                Reynoldes number for every timestep and pipe.
 
             Returns
             -------
-
             lamb : pd.DataFrame
+                Darcy friction factor for every timestep and pipe.
             """
 
             factor_diameter = self.thermal_network.components.pipes[
@@ -199,17 +213,17 @@ class SimulationModelNumpy(SimulationModel):
 
             .. math::
 
-            \delta p = \lambda \frac{8L}{\rho \pi^2 D^5}\dot{m}^2.
+                \delta p = \lambda \frac{8L}{\rho \pi^2 D^5}\dot{m}^2.
 
             Parameters
             ----------
             lamb : pd.DataFrame
-                DataFrame with lambda values for each timestep.
+                Darcy friction factor for every timestep and pipe.
 
             Returns
             -------
             pipes_pressure_losses : pd.DataFrame
-                DataFrame with pressure losses values for each timestep.
+                DataFrame with distributed pressure losses for every timestep and pipe.
             """
             pipes_mass_flow = self.results['pipes-mass_flow'].copy()
 
@@ -237,7 +251,10 @@ class SimulationModelNumpy(SimulationModel):
             r"""
             Calculates localized pressure losses at the nodes.
 
-            \Delta p_{loc} = \zeta
+            .. math::
+
+                \Delta p_{loc} = \zeta
+
             Returns
             -------
             nodes_pressure_losses : pd.DataFrame
@@ -319,6 +336,9 @@ class SimulationModelNumpy(SimulationModel):
         self.results['producers-pump_power'] = None  # TODO: pressure losses times mass flow for one loop
 
     def _prepare_thermal_eqn(self):
+        r"""
+        Prepares the input data for the thermal problem.
+        """
 
         self.input_data.temp_inlet = pd.DataFrame(
             0,
@@ -331,8 +351,24 @@ class SimulationModelNumpy(SimulationModel):
         self.input_data.temp_inlet.loc[:, input_data.columns] = input_data
 
     def _solve_thermal_eqn(self):
+        r"""
+        Solves the thermal problem.
+        """
 
         def _calculate_exponent_constant():
+            r"""
+            Calculates the constant part of the exponent that determines the
+            cooling of the medium in the pipes.
+
+            .. math::
+
+                \frac{- U \pi D L }{c}
+
+            Returns
+            -------
+            exponent_constant : np.matrix
+                Constant part of the exponent
+            """
 
             heat_transfer_coefficient = nx.adjacency_matrix(
                 self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
@@ -440,6 +476,22 @@ class SimulationModelNumpy(SimulationModel):
             return temp_df
 
         def _set_temp_return_input(temp_inlet):
+            r"""
+            Sets the temperature of the return pipes
+            at the consumers.
+
+            T_{cons,r} = T_{cons,i} - T_{cons,drop}
+
+            Parameters
+            ----------
+            temp_inlet : pd.DataFrame
+                Known inlet temperature
+
+            Returns
+            -------
+            temp_return : pd.DataFrame
+                Return temperature with the consumers values set.
+            """
 
             temp_return = pd.DataFrame(
                 0,
@@ -454,6 +506,20 @@ class SimulationModelNumpy(SimulationModel):
             return temp_return
 
         def _calculate_pipes_heat_losses(temp_node):
+            r"""
+            Calculates the pipes' heat losses given the
+            temperatures.
+
+            Parameters
+            ----------
+            temp_node : pd.DataFrame
+                Temperatures at the nodes.
+
+            Returns
+            -------
+            pipes_heat_losses : pd.DataFrame
+                Heat losses in the pipes.
+            """
 
             pipes_heat_losses = {}
 
