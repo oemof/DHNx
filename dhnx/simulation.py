@@ -332,16 +332,20 @@ class SimulationModelNumpy(SimulationModel):
 
     def _solve_thermal_eqn(self):
 
-        heat_transfer_coefficient = nx.adjacency_matrix(
-            self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
+        def _calculate_exponent_constant():
 
-        diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
+            heat_transfer_coefficient = nx.adjacency_matrix(
+                self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
 
-        length = nx.adjacency_matrix(self.nx_graph, weight='length_m').todense()
+            diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
 
-        exponent_constant = - np.pi\
-                   * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length))\
-                   / self.c  # TODO: Check units
+            length = nx.adjacency_matrix(self.nx_graph, weight='length_m').todense()
+
+            exponent_constant = - np.pi\
+                       * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length))\
+                       / self.c  # TODO: Check units
+
+            return exponent_constant
 
         def _calc_temps(exponent_constant, known_temp, direction):
             r"""
@@ -435,8 +439,6 @@ class SimulationModelNumpy(SimulationModel):
 
             return temp_df
 
-        temp_inlet = _calc_temps(exponent_constant, self.input_data.temp_inlet, direction=1)
-
         def _set_temp_return_input(temp_inlet):
 
             temp_return = pd.DataFrame(
@@ -450,10 +452,6 @@ class SimulationModelNumpy(SimulationModel):
             temp_return.loc[:, temp_drop.columns] = temp_inlet.loc[:, temp_drop.columns] - temp_drop
 
             return temp_return
-
-        temp_return_known = _set_temp_return_input(temp_inlet)
-
-        temp_return = _calc_temps(exponent_constant, temp_return_known, direction=-1)
 
         def _calculate_pipes_heat_losses(temp_node):
 
@@ -472,6 +470,14 @@ class SimulationModelNumpy(SimulationModel):
             pipes_heat_losses = pd.DataFrame.from_dict(pipes_heat_losses, orient='index')
 
             return pipes_heat_losses
+
+        exponent_constant = _calculate_exponent_constant()
+
+        temp_inlet = _calc_temps(exponent_constant, self.input_data.temp_inlet, direction=1)
+
+        temp_return_known = _set_temp_return_input(temp_inlet)
+
+        temp_return = _calc_temps(exponent_constant, temp_return_known, direction=-1)
 
         pipes_heat_losses = _calculate_pipes_heat_losses(temp_inlet) \
                             + _calculate_pipes_heat_losses(temp_return)
