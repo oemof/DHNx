@@ -25,7 +25,7 @@ parameters involved.
 
 Conversely, if these are not known, running an optimization model would be the better choice. It
 is also possible to couple the two approaches, running an optimization first and then investigating
-the detailed physical behavior. To learn about this option, please refer to the section
+the detailed physical behaviour. To learn about this option, please refer to the section
 :ref:`model coupling <model_coupling_label>`.
 
 Currently, the available simulation model does not handle transient states (i.e. propagation of temperature fronts
@@ -148,6 +148,7 @@ the localized pressure loss coefficient :math:`\zeta`:
 
 .. math::
     \Delta p_{loc} = \zeta \frac{v^2}{2} \rho
+It is assumed that each fork has a tee and each consumer has a valve installed.
 
 **Hydrostatic pressure difference**
 
@@ -187,7 +188,7 @@ As mentioned above, the current implementation treats the thermal beaviour as st
 The temperature at the outlet is calculated as follows:
 
 .. math::
-    T_{out} = T_{env} + (T_{in} - T_{env}) \cdot exp\{-\frac{U \pi D L}{c \dot{m}}\}.
+    T_{out} = T_{env} + (T_{in} - T_{env}) \cdot exp\{-\frac{U \pi D L}{c \cdot \dot{m}}\}.
 
 
 Where :math:`T_{in}` and :math:`T_{out}` are the temperatures at the start and end of the pipe,
