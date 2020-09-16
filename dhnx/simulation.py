@@ -284,7 +284,9 @@ class SimulationModelNumpy(SimulationModel):
 
                 pipes_mass_flow = self.results['pipes-mass_flow'].loc[t, :]
 
-                mass_flow_2_over_diameter_4 = pipes_mass_flow.divide(diameter_4)
+                mass_flow_2 = pipes_mass_flow ** 2
+
+                mass_flow_2_over_diameter_4 = mass_flow_2.divide(diameter_4)
 
                 mass_flow_2_over_diameter_4.name = 'mass_flow_2_over_diameter_4'
 
