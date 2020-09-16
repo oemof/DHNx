@@ -97,7 +97,7 @@ class SimulationModelNumpy(SimulationModel):
 
             return m
 
-        mass_flow = pd.DataFrame(
+        self.input_data.mass_flow = pd.DataFrame(
             0,
             columns=self.nx_graph.nodes(),
             index=self.thermal_network.timeindex
@@ -105,9 +105,9 @@ class SimulationModelNumpy(SimulationModel):
 
         input_data = self._concat_sequences('mass_flow')
 
-        mass_flow.loc[:, input_data.columns] = input_data
+        self.input_data.mass_flow.loc[:, input_data.columns] = input_data
 
-        self.input_data.mass_flow = _set_producers_mass_flow(mass_flow)
+        self.input_data.mass_flow = _set_producers_mass_flow(self.input_data.mass_flow)
 
     def _solve_hydraulic_eqn(self, tolerance=1e-10):
 
