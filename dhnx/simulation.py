@@ -113,36 +113,32 @@ class SimulationModelNumpy(SimulationModel):
 
     def _solve_hydraulic_eqn(self, tolerance=1e-10):
 
-        pipes_mass_flow = {}
+        def _calculate_pipes_mass_flow():
 
-        for t in self.thermal_network.timeindex:
+            pipes_mass_flow = {}
 
-            x, residuals, rank, s = np.linalg.lstsq(
-                self.inc_mat,
-                self.input_data.mass_flow.loc[t, :],
-                rcond=None
+            for t in self.thermal_network.timeindex:
+
+                x, residuals, rank, s = np.linalg.lstsq(
+                    self.inc_mat,
+                    self.input_data.mass_flow.loc[t, :],
+                    rcond=None
+                )
+
+                assert residuals < tolerance,\
+                    f"Residuals {residuals} are larger than tolerance {tolerance}!"
+
+                pipes_mass_flow.update({t: x})
+
+            pipes_mass_flow = pd.DataFrame.from_dict(
+                pipes_mass_flow,
+                orient='index',
+                columns=self.nx_graph.edges()
             )
 
-            assert residuals < tolerance,\
-                f"Residuals {residuals} are larger than tolerance {tolerance}!"
+            pipes_mass_flow.columns.names = ('from_node', 'to_node')
 
-            pipes_mass_flow.update({t: x})
-
-        self.results['pipes-mass_flow'] = pd.DataFrame.from_dict(
-            pipes_mass_flow,
-            orient='index',
-            columns=self.nx_graph.edges()
-        )
-
-        self.results['pipes-mass_flow'].columns.names = ('from_node', 'to_node')
-
-        # TODO: Calculate these
-        # 'pipes-pressure_losses'
-        # NOTE: pipes have distributed and localized pressure losses zeta_dis * L/D**5
-        # nodes-pressure_losses
-        # NOTE: nodes have only localized pressure losses
-        # 'global-pressure_losses'
-        # 'producers-pump_power'
+            return pipes_mass_flow
 
         def _calculate_reynolds():
             r"""
@@ -306,6 +302,8 @@ class SimulationModelNumpy(SimulationModel):
 
             return nodes_pressure_losses
 
+        self.results['pipes-mass_flow'] = _calculate_pipes_mass_flow()
+
         re = _calculate_reynolds()
 
         lamb = _calculate_lambda(re)
@@ -316,11 +314,11 @@ class SimulationModelNumpy(SimulationModel):
 
         self.results['pipes-pressure_losses'] = pipes_pressure_losses
 
-        self.results['nodes-pressure_losses'] = nodes_pressure_losses
+        self.results['nodes-pressure_losses'] = nodes_pressure_losses  # TODO: Check literature
 
-        self.results['global-pressure_losses'] = nodes_pressure_losses
+        self.results['global-pressure_losses'] = None  # TODO
 
-        self.results['producers-pump_power'] = None  # pressure losses times mass flow for one loop
+        self.results['producers-pump_power'] = None  # TODO: pressure losses times mass flow for one loop
 
     def _prepare_thermal_eqn(self):
 
