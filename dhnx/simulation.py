@@ -379,7 +379,7 @@ class SimulationModelNumpy(SimulationModel):
 
             exponent_constant = - np.pi\
                        * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length))\
-                       / self.c  # TODO: Check units
+                       / self.c
 
             return exponent_constant
 
