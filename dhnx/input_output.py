@@ -67,7 +67,7 @@ class CSVNetworkImporter(NetworkImporter):
             raise KeyError(f"Component '{list_name}' is not "
                            f"part of the available components.")
 
-        if attr_name not in self.thermal_network.component_attrs:
+        if attr_name not in self.thermal_network.component_attrs[list_name]:
             logger.info("Attribute '%s' is not "
                         "part of the component attributes.", attr_name)
 
