@@ -14,6 +14,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import re
+import warnings
 
 from .model import SimulationModel
 from .helpers import Dict
@@ -45,6 +46,39 @@ class SimulationModelNumpy(SimulationModel):
         self.mu = mu  # kg/(m*s)
 
         self.temp_env = 20
+
+        if self._concat_scalars('height') is not None:
+            warnings.warn(
+                "Pressure differences due to height differences are not implemented yet."
+            )
+
+    def _concat_scalars(self, name):
+        r"""
+        Concatenates scalars of all components with a given variable name
+
+        Parameters
+        ----------
+        name : str
+            Name of the variable
+
+        Returns
+        -------
+        concat_sequences : pd.DataFrame
+            DataFrame containing the sequences
+        """
+        select_scalars = [
+            scalar[name].copy().rename(index=lambda x: component + '-' + str(x))
+            for component, scalar in self.thermal_network.components.items()
+            if name in scalar
+        ]
+
+        if select_scalars:
+            select_scalars = pd.concat(select_scalars, 0)
+
+            return select_scalars
+
+        else:
+            return None
 
     def _concat_sequences(self, name):
         r"""
