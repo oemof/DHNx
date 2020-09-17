@@ -29,7 +29,7 @@ class SimulationModelNumpy(SimulationModel):
         super().__init__(thermal_network)
         self.results = {}
 
-        self.nx_graph = self.thermal_network.to_nx_graph()
+        self.nx_graph = thermal_network.to_nx_graph()
 
         assert nx.algorithms.tree.is_tree(self.nx_graph),\
             "Currently, only tree networks can be modeled. " \
@@ -45,7 +45,7 @@ class SimulationModelNumpy(SimulationModel):
 
         self.mu = mu  # kg/(m*s)
 
-        self.temp_env = 20
+        self.temp_env = thermal_network.sequences.environment.temp_env.iloc[:, 0]
 
         if self._concat_scalars('height') is not None:
             warnings.warn(
@@ -491,7 +491,7 @@ class SimulationModelNumpy(SimulationModel):
 
                 vector = np.array(known_temp.loc[t])
 
-                vector[vector!=0] -= self.temp_env
+                vector[vector!=0] -= self.temp_env.loc[t]
 
                 x, residuals, rank, s = np.linalg.lstsq(
                     matrix,
@@ -499,7 +499,7 @@ class SimulationModelNumpy(SimulationModel):
                     rcond=None
                 )
 
-                temps.update({t: x + self.temp_env})
+                temps.update({t: x + self.temp_env.loc[t]})
 
             temp_df = pd.DataFrame.from_dict(
                 temps,
