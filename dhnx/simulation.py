@@ -291,7 +291,7 @@ class SimulationModelNumpy(SimulationModel):
 
             .. math::
 
-                \Delta p_{loc} = \zeta
+                \Delta p_{loc} = \frac{8\zeta\dot{m}^2}{\rho \pi^2 D^4}
 
             Returns
             -------
