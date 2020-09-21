@@ -245,7 +245,7 @@ class SimulationModelNumpy(SimulationModel):
 
             return lamb
 
-        def _calculate_pipes_pressure_losses(lamb):
+        def _calculate_pipes_distributed_pressure_losses(lamb):
             r"""
             Calculates the pressure losses in the pipes.
 
@@ -285,7 +285,7 @@ class SimulationModelNumpy(SimulationModel):
 
             return pipes_pressure_losses
 
-        def _calculate_nodes_pressure_losses():
+        def _calculate_pipes_localized_pressure_losses():
             r"""
             Calculates localized pressure losses at the nodes.
 
@@ -310,24 +310,7 @@ class SimulationModelNumpy(SimulationModel):
 
             diameter_4 = (1e-3 * diameter_4) ** 4
 
-            def _get_inflow_nodes(pipes_mass_flow, t):
-                # TODO: Avoid passing t here.
-
-                flow_into_node = np.sign(pipes_mass_flow).reset_index()
-
-                flow_into_node.loc[flow_into_node[t] < 0, 'flow_into_node'] = flow_into_node[
-                    'from_node']
-
-                flow_into_node.loc[flow_into_node[t] > 0, 'flow_into_node'] = flow_into_node[
-                    'to_node']
-
-                flow_into_node.drop(t, axis=1, inplace=True)
-
-                flow_into_node.set_index(['from_node', 'to_node'], inplace=True)
-
-                return flow_into_node
-
-            nodes_pressure_losses = {}
+            pipes_localized_pressure_losses = {}
 
             for t in self.thermal_network.timeindex:
 
@@ -339,21 +322,16 @@ class SimulationModelNumpy(SimulationModel):
 
                 mass_flow_2_over_diameter_4.name = 'mass_flow_2_over_diameter_4'
 
-                inflow_nodes = _get_inflow_nodes(pipes_mass_flow, t)
+                x = constant * zeta_nodes * mass_flow_2_over_diameter_4
 
-                mass_flow_2_over_diameter_4_nodes = pd.concat([mass_flow_2_over_diameter_4, inflow_nodes], axis=1)
+                pipes_localized_pressure_losses.update({t: x})
 
-                mass_flow_2_over_diameter_4_nodes = mass_flow_2_over_diameter_4_nodes \
-                    .set_index(inflow_nodes['flow_into_node'], drop=True) \
-                    .loc[:, 'mass_flow_2_over_diameter_4']
+            pipes_localized_pressure_losses = pd.DataFrame.from_dict(
+                pipes_localized_pressure_losses,
+                orient='index'
+            )
 
-                x = constant * zeta_nodes * mass_flow_2_over_diameter_4_nodes
-
-                nodes_pressure_losses.update({t: x})
-
-            nodes_pressure_losses = pd.DataFrame.from_dict(nodes_pressure_losses, orient='index')
-
-            return nodes_pressure_losses
+            return pipes_localized_pressure_losses
 
         def _calculate_global_pressure_losses(pipes_pressure_losses):
 
@@ -436,17 +414,19 @@ class SimulationModelNumpy(SimulationModel):
 
         lamb = _calculate_lambda(re)
 
-        pipes_pressure_losses = _calculate_pipes_pressure_losses(lamb)
+        pipes_dist_pressure_losses = _calculate_pipes_distributed_pressure_losses(lamb)
 
-        nodes_pressure_losses = _calculate_nodes_pressure_losses()
+        pipes_loc_pressure_losses = _calculate_pipes_localized_pressure_losses()
 
-        global_pressure_losses = _calculate_global_pressure_losses(pipes_pressure_losses)
+        pipes_total_pressure_losses = pipes_dist_pressure_losses + pipes_loc_pressure_losses
+
+        global_pressure_losses = _calculate_global_pressure_losses(pipes_total_pressure_losses)
 
         pump_power = _calculate_pump_power(global_pressure_losses)
 
-        self.results['pipes-pressure_losses'] = pipes_pressure_losses
+        self.results['pipes-dist_pressure_losses'] = pipes_dist_pressure_losses
 
-        self.results['nodes-pressure_losses'] = nodes_pressure_losses  # TODO: Assign to pipes
+        self.results['pipes_loc_pressure_losses'] = pipes_loc_pressure_losses
 
         self.results['global-pressure_losses'] = global_pressure_losses
 
