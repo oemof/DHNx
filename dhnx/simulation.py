@@ -30,7 +30,7 @@ class SimulationModelNumpy(SimulationModel):
     r"""
     Implementation of a simulation model using numpy.
     """
-    def __init__(self, thermal_network, rho=971.78, c=4190, mu=0.00035):
+    def __init__(self, thermal_network, rho=971.78, c=4190, mu=0.00035, tolerance=1e-10):
         super().__init__(thermal_network)
         self.results = {}
 
@@ -51,6 +51,8 @@ class SimulationModelNumpy(SimulationModel):
         self.mu = mu  # kg/(m*s)
 
         self.temp_env = thermal_network.sequences.environment.temp_env.iloc[:, 0]
+
+        self.tolerance = tolerance
 
         if self._concat_scalars('height') is not None:
             warnings.warn(
@@ -149,7 +151,7 @@ class SimulationModelNumpy(SimulationModel):
 
         self.input_data.mass_flow = _set_producers_mass_flow(self.input_data.mass_flow)
 
-    def _solve_hydraulic_eqn(self, tolerance=1e-10):
+    def _solve_hydraulic_eqn(self):
         r"""
         Solves the hydraulic problem.
         """
@@ -169,14 +171,14 @@ class SimulationModelNumpy(SimulationModel):
 
             for t in self.thermal_network.timeindex:
 
-                x, residuals, rank, s = np.linalg.lstsq(
+                x, residuals, _, _ = np.linalg.lstsq(
                     self.inc_mat,
                     self.input_data.mass_flow.loc[t, :],
                     rcond=None
                 )
 
-                assert residuals < tolerance,\
-                    f"Residuals {residuals} are larger than tolerance {tolerance}!"
+                assert residuals < self.tolerance,\
+                    f"Residuals {residuals} are larger than tolerance {self.tolerance}!"
 
                 pipes_mass_flow.update({t: x})
 
@@ -564,7 +566,7 @@ class SimulationModelNumpy(SimulationModel):
 
                 vector[vector != 0] -= self.temp_env.loc[t]
 
-                x, residuals, rank, s = np.linalg.lstsq(
+                x, _, _, _ = np.linalg.lstsq(
                     matrix,
                     vector,
                     rcond=None
