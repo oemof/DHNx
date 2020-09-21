@@ -19,6 +19,7 @@ import warnings
 from .model import SimulationModel
 from .helpers import Dict
 from .graph import write_edge_data_to_graph
+from .input_output import save_results
 
 
 class SimulationModelNumpy(SimulationModel):
@@ -609,7 +610,7 @@ class SimulationModelNumpy(SimulationModel):
         return self.results
 
 
-def simulate(thermal_network):
+def simulate(thermal_network, results_dir=None):
     r"""
     Takes a thermal network and returns the result of
     the simulation.
@@ -629,5 +630,8 @@ def simulate(thermal_network):
     model.solve()
 
     results = model.get_results()
+
+    if results_dir is not None:
+        save_results(results, results_dir)
 
     return results

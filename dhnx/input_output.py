@@ -184,3 +184,13 @@ def load_component_attrs(dir_name, available_components):
         component_attrs[list_name] = df.T.to_dict()
 
     return Dict(component_attrs)
+
+
+def save_results(results, results_dir):
+
+    if not os.path.exists(results_dir):
+        os.mkdir(results_dir)
+
+    for k, v in results.items():
+        if v is not None:
+            v.to_csv(os.path.join(results_dir, k + '.csv'), header=True)

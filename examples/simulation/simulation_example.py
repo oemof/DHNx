@@ -12,7 +12,7 @@ input_data_dir = 'tree'
 thermal_network.from_csv_folder(input_data_dir)
 
 # Create simulation model
-thermal_network.simulate()
+thermal_network.simulate(results_dir='tree_results')
 
 # Plot and save results
 print('================================================================')
