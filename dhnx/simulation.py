@@ -382,13 +382,14 @@ class SimulationModelNumpy(SimulationModel):
 
                 return paths_pressure_losses
 
-            def _calculate_consumer_pressure_losses():
-                consumer_pressure_losses = 0
-                return consumer_pressure_losses
-
             paths_pressure_losses = _calculate_paths_pressure_losses()
 
-            global_pressure_losses = paths_pressure_losses.max(axis=1)
+            # Here, we take the path with the maximum pressure losses and assume that the other
+            # consumer's valves are adjusted so that in sum, the pressure losses along all paths are
+            # equal. We multiply by the factor of two to represent the pressure losses along inlet
+            # and return flow.
+
+            global_pressure_losses = 2 * paths_pressure_losses.max(axis=1)
 
             return global_pressure_losses
 
