@@ -22,6 +22,9 @@ from .graph import write_edge_data_to_graph
 from .input_output import save_results
 
 
+idx = pd.IndexSlice
+
+
 class SimulationModelNumpy(SimulationModel):
     r"""
     Implementation of a simulation model using numpy.
@@ -352,6 +355,81 @@ class SimulationModelNumpy(SimulationModel):
 
             return nodes_pressure_losses
 
+        def _calculate_global_pressure_losses(pipes_pressure_losses):
+
+            def calculate_path_weights(source_nodes, sink_nodes, graph, weight):
+
+                path_weights = {}
+
+                for sink in sink_nodes:
+                    for source in source_nodes:
+
+                        path_weights[sink] = nx.dijkstra_path_length(
+                            graph,
+                            source=source,
+                            target=sink,
+                            weight=weight
+                        )
+
+                return path_weights
+
+            def _calculate_paths_pressure_losses():
+
+                sink_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
+                              data['node_type'] == 'consumer']
+
+                source_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
+                                data['node_type'] == 'producer']
+
+                paths_pressure_losses = {}
+
+                for t in self.thermal_network.timeindex:
+
+                    graph = write_edge_data_to_graph(
+                        pipes_pressure_losses.loc[t, :],
+                        self.nx_graph,
+                        var_name='pipes_pressure_losses'
+                    )
+
+                    path_weights = calculate_path_weights(
+                        source_nodes,
+                        sink_nodes,
+                        graph,
+                        'pipes_pressure_losses'
+                    )
+
+                    paths_pressure_losses[t] = path_weights
+
+                paths_pressure_losses = pd.DataFrame.from_dict(paths_pressure_losses, orient='index')
+
+                return paths_pressure_losses
+
+            def _calculate_consumer_pressure_losses():
+                consumer_pressure_losses = 0
+                return consumer_pressure_losses
+
+            paths_pressure_losses = _calculate_paths_pressure_losses()
+
+            global_pressure_losses = paths_pressure_losses.max(axis=1)
+
+            return global_pressure_losses
+
+        def _calculate_pump_power(global_pressure_losses):
+
+            eta_pump = 1
+
+            producers = [
+                node for node, data in self.nx_graph.nodes(data=True)
+                if data['node_type'] == 'producer'
+            ]
+
+            mass_flow_producers = \
+                self.results['pipes-mass_flow'].loc[:, idx[producers, :]].sum(axis=1)
+
+            pump_power = mass_flow_producers * global_pressure_losses / (eta_pump * self.rho)
+
+            return pump_power
+
         self.results['pipes-mass_flow'] = _calculate_pipes_mass_flow()
 
         re = _calculate_reynolds()
@@ -362,13 +440,17 @@ class SimulationModelNumpy(SimulationModel):
 
         nodes_pressure_losses = _calculate_nodes_pressure_losses()
 
+        global_pressure_losses = _calculate_global_pressure_losses(pipes_pressure_losses)
+
+        pump_power = _calculate_pump_power(global_pressure_losses)
+
         self.results['pipes-pressure_losses'] = pipes_pressure_losses
 
-        self.results['nodes-pressure_losses'] = nodes_pressure_losses  # TODO: Check literature
+        self.results['nodes-pressure_losses'] = nodes_pressure_losses  # TODO: Assign to pipes
 
-        self.results['global-pressure_losses'] = None  # TODO
+        self.results['global-pressure_losses'] = global_pressure_losses
 
-        self.results['producers-pump_power'] = None  # TODO: pressure losses times mass flow for one loop
+        self.results['producers-pump_power'] = pump_power
 
     def _prepare_thermal_eqn(self):
         r"""
