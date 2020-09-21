@@ -230,7 +230,7 @@ class ThermalNetwork():
             List of all values
         """
         leaves = []
-        for k, v in d.items():
+        for _, v in d.items():
             if isinstance(v, dict):
                 leaves.extend(self._list_nested_dict_values(v))
             else:
@@ -286,4 +286,3 @@ class ThermalNetwork():
 
     def simulate(self, *args, **kwargs):
         self.results.simulation = simulate(self, *args, **kwargs)
-

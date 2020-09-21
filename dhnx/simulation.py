@@ -10,11 +10,12 @@ available from its original location:
 
 SPDX-License-Identifier: MIT
 """
+import re
+import warnings
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-import re
-import warnings
 
 from .model import SimulationModel
 from .helpers import Dict
@@ -204,16 +205,17 @@ class SimulationModelNumpy(SimulationModel):
             """
             pipes_mass_flow = self.results['pipes-mass_flow']
 
-            diameter = self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
+            diameter = \
+                self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
 
             diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter_mm']
 
-            re = 4 * pipes_mass_flow.divide(diameter, axis='columns') \
+            reynolds = 4 * pipes_mass_flow.divide(diameter, axis='columns') \
                 / (np.pi * self.mu)
 
-            return re
+            return reynolds
 
-        def _calculate_lambda(re):
+        def _calculate_lambda(reynolds):
             r"""
             Calculates the darcy friction factor.
 
@@ -236,10 +238,11 @@ class SimulationModelNumpy(SimulationModel):
                 ['from_node', 'to_node', 'diameter_mm']
             ]
 
-            factor_diameter =  (1e-3 \
-                * factor_diameter.set_index(['from_node', 'to_node'])['diameter_mm']) ** -0.14
+            factor_diameter = (
+                1e-3 * factor_diameter.set_index(['from_node', 'to_node'])['diameter_mm']
+            ) ** -0.14
 
-            lamb = 0.07 * re ** -0.13
+            lamb = 0.07 * reynolds ** -0.13
 
             lamb = lamb.multiply(factor_diameter, axis='columns')
 
@@ -271,7 +274,8 @@ class SimulationModelNumpy(SimulationModel):
 
             length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
 
-            diameter = self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
+            diameter = \
+                self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
 
             length = length.set_index(['from_node', 'to_node'])['length_m']
 
@@ -378,7 +382,8 @@ class SimulationModelNumpy(SimulationModel):
 
                     paths_pressure_losses[t] = path_weights
 
-                paths_pressure_losses = pd.DataFrame.from_dict(paths_pressure_losses, orient='index')
+                paths_pressure_losses = \
+                    pd.DataFrame.from_dict(paths_pressure_losses, orient='index')
 
                 return paths_pressure_losses
 
@@ -411,9 +416,9 @@ class SimulationModelNumpy(SimulationModel):
 
         self.results['pipes-mass_flow'] = _calculate_pipes_mass_flow()
 
-        re = _calculate_reynolds()
+        reynolds = _calculate_reynolds()
 
-        lamb = _calculate_lambda(re)
+        lamb = _calculate_lambda(reynolds)
 
         pipes_dist_pressure_losses = _calculate_pipes_distributed_pressure_losses(lamb)
 
@@ -475,9 +480,9 @@ class SimulationModelNumpy(SimulationModel):
 
             length = nx.adjacency_matrix(self.nx_graph, weight='length_m').todense()
 
-            exponent_constant = - np.pi\
-                       * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length))\
-                       / self.c
+            exponent_constant = - np.pi \
+                * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length)) \
+                / self.c
 
             return exponent_constant
 
@@ -514,7 +519,7 @@ class SimulationModelNumpy(SimulationModel):
                 # Divide exponent matrix by current pipes-mass_flows.
                 data = self.results['pipes-mass_flow'].loc[t, :].copy()
 
-                data = 1/data
+                data = 1 / data
 
                 graph_with_data = write_edge_data_to_graph(
                     data, self.nx_graph, var_name='pipes-mass_flow'
@@ -537,12 +542,14 @@ class SimulationModelNumpy(SimulationModel):
                     matrix = matrix.T
                     normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(0)).flatten()
 
-                    normalisation = np.divide(np.array([1]), normalisation, where=normalisation!=0)
+                    normalisation = \
+                        np.divide(np.array([1]), normalisation, where=normalisation != 0)
 
                 elif direction == -1:
                     normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(1)).flatten()
 
-                    normalisation = np.divide(np.array([1]), normalisation, where=normalisation!=0)
+                    normalisation = \
+                        np.divide(np.array([1]), normalisation, where=normalisation != 0)
 
                 else:
                     raise ValueError("Direction has to be either 1 or -1.")
@@ -555,7 +562,7 @@ class SimulationModelNumpy(SimulationModel):
 
                 vector = np.array(known_temp.loc[t])
 
-                vector[vector!=0] -= self.temp_env.loc[t]
+                vector[vector != 0] -= self.temp_env.loc[t]
 
                 x, residuals, rank, s = np.linalg.lstsq(
                     matrix,
@@ -642,7 +649,7 @@ class SimulationModelNumpy(SimulationModel):
         temp_return = _calc_temps(exponent_constant, temp_return_known, direction=-1)
 
         pipes_heat_losses = _calculate_pipes_heat_losses(temp_inlet) \
-                            + _calculate_pipes_heat_losses(temp_return)
+            + _calculate_pipes_heat_losses(temp_return)
 
         global_heat_losses = pipes_heat_losses.sum(axis=1)
 
@@ -661,7 +668,6 @@ class SimulationModelNumpy(SimulationModel):
         self._prepare_hydraulic_eqn()
 
         self._prepare_thermal_eqn()
-
 
     def solve(self):
 
