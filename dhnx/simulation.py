@@ -19,7 +19,7 @@ import numpy as np
 import pandas as pd
 
 from .model import SimulationModel
-from .helpers import Dict
+from .helpers import Dict, sum_ignore_none
 from .graph import write_edge_data_to_graph
 from .input_output import save_results
 
@@ -322,6 +322,11 @@ class SimulationModelNumpy(SimulationModel):
 
                 zeta = self._concat_scalars('zeta_' + flow_type)
 
+                if zeta is None:
+                    print(f"No values for zeta_{flow_type} found. Skipping.")
+
+                    return None
+
                 flow_direction = np.sign(self.results['pipes-mass_flow'])
 
                 zeta_pipes = pd.DataFrame([[1,2,3],[4,5,6],[7,8,9]],
@@ -358,6 +363,9 @@ class SimulationModelNumpy(SimulationModel):
 
             def _calc_loc_pressure_loss_for_flow_type(flow_type):
                 zeta_pipes = _assign_zeta_to_pipes(flow_type)
+
+                if zeta_pipes is None:
+                    return None
 
                 pipes_localized_pressure_losses = {}
 
@@ -397,8 +405,9 @@ class SimulationModelNumpy(SimulationModel):
 
             pipes_localized_pressure_losses_return = _calc_loc_pressure_loss_for_flow_type('return')
 
-            pipes_localized_pressure_losses = pipes_localized_pressure_losses_inlet \
-                                              + pipes_localized_pressure_losses_return
+            pipes_localized_pressure_losses = sum_ignore_none(
+                    pipes_localized_pressure_losses_inlet, pipes_localized_pressure_losses_return
+            )
 
             return pipes_localized_pressure_losses
 
@@ -488,7 +497,9 @@ class SimulationModelNumpy(SimulationModel):
 
         pipes_loc_pressure_losses = _calculate_pipes_localized_pressure_losses()
 
-        pipes_total_pressure_losses = pipes_dist_pressure_losses + pipes_loc_pressure_losses
+        pipes_total_pressure_losses = sum_ignore_none(
+            pipes_dist_pressure_losses, pipes_loc_pressure_losses
+        )
 
         global_pressure_losses = _calculate_global_pressure_losses(pipes_total_pressure_losses)
 
