@@ -4,3 +4,5 @@ lat,float,n/a,n/a,Geographic latitude,Input,optional
 lon,float,n/a,n/a,Geographic longitude,Input,optional
 mass_flow,float,kg/s,n/a,Mass flow,Input,optional
 temperature_drop,float,kg/s,n/a,Temperature drop from inlet to return,Input,optional
+zeta_inlet,float,-,n/a,Localized pressure loss coefficient for inlet flow,Input,optional
+zeta_return,float,-,n/a,Localized pressure loss coefficient for return flow,Input,optional
