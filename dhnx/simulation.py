@@ -12,6 +12,7 @@ SPDX-License-Identifier: MIT
 """
 import re
 import warnings
+from functools import partial
 
 import networkx as nx
 import numpy as np
@@ -289,6 +290,11 @@ class SimulationModelNumpy(SimulationModel):
                 .multiply(length, axis='columns')\
                 .divide(diameter_5, axis='columns')
 
+            # We multiply by the factor of two to represent the pressure losses along inlet
+            # and return flow.
+
+            pipes_pressure_losses *= 2
+
             return pipes_pressure_losses
 
         def _calculate_pipes_localized_pressure_losses():
@@ -304,9 +310,80 @@ class SimulationModelNumpy(SimulationModel):
             nodes_pressure_losses : pd.DataFrame
                 Pressure losses at the nodes.
             """
-            constant = 8 / (self.rho * np.pi ** 2)
+            def _assign_zeta_to_pipes(flow_type):
 
-            zeta_nodes = 2  # TODO: use zeta values from input data
+                def func(row, level):
+
+                    res = zeta.loc[row.index.get_level_values(level).values]
+
+                    res.index = row.index
+
+                    return res
+
+                zeta = self._concat_scalars('zeta_' + flow_type)
+
+                flow_direction = np.sign(self.results['pipes-mass_flow'])
+
+                zeta_pipes = pd.DataFrame([[1,2,3],[4,5,6],[7,8,9]],
+                    columns=flow_direction.columns,
+                    index=flow_direction.index
+                )
+
+                zeta_pipes_forward = zeta_pipes.copy()
+
+                zeta_pipes_backward = zeta_pipes.copy()
+
+                func_forward = partial(func, level=0)
+
+                zeta_pipes_forward = zeta_pipes_forward.apply(func_forward, axis=1)
+
+                func_backward = partial(func, level=1)
+
+                zeta_pipes_backward = zeta_pipes_backward.apply(func_backward, axis=1)
+
+                if flow_type == 'inlet':
+                    zeta_pipes[flow_direction > 0] = zeta_pipes_forward
+
+                    zeta_pipes[flow_direction < 0] = zeta_pipes_backward
+
+                elif flow_type == 'return':
+                    zeta_pipes[flow_direction > 0] = zeta_pipes_backward
+
+                    zeta_pipes[flow_direction < 0] = zeta_pipes_forward
+
+                else:
+                    raise ValueError("Flow type has to be either inlet or return.")
+
+                return zeta_pipes
+
+            def _calc_loc_pressure_loss_for_flow_type(flow_type):
+                zeta_pipes = _assign_zeta_to_pipes(flow_type)
+
+                pipes_localized_pressure_losses = {}
+
+                for t in self.thermal_network.timeindex:
+                    pipes_mass_flow = self.results['pipes-mass_flow'].loc[t, :]
+
+                    mass_flow_2 = pipes_mass_flow ** 2
+
+                    mass_flow_2_over_diameter_4 = mass_flow_2.divide(diameter_4)
+
+                    mass_flow_2_over_diameter_4.name = 'mass_flow_2_over_diameter_4'
+
+                    x = constant * zeta_pipes.loc[t, :].multiply(mass_flow_2_over_diameter_4)
+
+                    pipes_localized_pressure_losses.update({t: x})
+
+                pipes_localized_pressure_losses = pd.DataFrame.from_dict(
+                    pipes_localized_pressure_losses,
+                    orient='index'
+                )
+
+                pipes_localized_pressure_losses = pipes_localized_pressure_losses.fillna(0)
+
+                return pipes_localized_pressure_losses
+
+            constant = 8 / (self.rho * np.pi ** 2)
 
             diameter_4 = self.thermal_network.components.pipes[
                 ['from_node', 'to_node', 'diameter_mm']
@@ -316,26 +393,12 @@ class SimulationModelNumpy(SimulationModel):
 
             diameter_4 = (1e-3 * diameter_4) ** 4
 
-            pipes_localized_pressure_losses = {}
+            pipes_localized_pressure_losses_inlet = _calc_loc_pressure_loss_for_flow_type('inlet')
 
-            for t in self.thermal_network.timeindex:
+            pipes_localized_pressure_losses_return = _calc_loc_pressure_loss_for_flow_type('return')
 
-                pipes_mass_flow = self.results['pipes-mass_flow'].loc[t, :]
-
-                mass_flow_2 = pipes_mass_flow ** 2
-
-                mass_flow_2_over_diameter_4 = mass_flow_2.divide(diameter_4)
-
-                mass_flow_2_over_diameter_4.name = 'mass_flow_2_over_diameter_4'
-
-                x = constant * zeta_nodes * mass_flow_2_over_diameter_4
-
-                pipes_localized_pressure_losses.update({t: x})
-
-            pipes_localized_pressure_losses = pd.DataFrame.from_dict(
-                pipes_localized_pressure_losses,
-                orient='index'
-            )
+            pipes_localized_pressure_losses = pipes_localized_pressure_losses_inlet \
+                                              + pipes_localized_pressure_losses_return
 
             return pipes_localized_pressure_losses
 
@@ -393,10 +456,9 @@ class SimulationModelNumpy(SimulationModel):
 
             # Here, we take the path with the maximum pressure losses and assume that the other
             # consumer's valves are adjusted so that in sum, the pressure losses along all paths are
-            # equal. We multiply by the factor of two to represent the pressure losses along inlet
-            # and return flow.
+            # equal.
 
-            global_pressure_losses = 2 * paths_pressure_losses.max(axis=1)
+            global_pressure_losses = paths_pressure_losses.max(axis=1)
 
             return global_pressure_losses
 
