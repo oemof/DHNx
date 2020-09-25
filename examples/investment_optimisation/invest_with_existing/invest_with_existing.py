@@ -45,7 +45,7 @@ plt.title('Given network')
 plt.show()
 
 # get results
-results_edges = network.results.optimization['components']['edges']
+results_edges = network.results.optimization['components']['pipes']
 print('*Results*')
 print(results_edges)
 
@@ -62,7 +62,7 @@ ind_exist = list(results_edges[results_edges['existing'] == 1].index)
 
 # plot existing network
 network_exist = network
-network_exist.components['edges'] = results_edges.loc[ind_exist]
+network_exist.components['pipes'] = results_edges.loc[ind_exist]
 
 # plot existing network
 static_map = dhnx.plotting.StaticMap(network_exist)
@@ -74,7 +74,7 @@ ind = ind + ind_exist
 
 # select xisting or invested edges
 network_result = network
-network_result.components['edges'] = results_edges.loc[ind]
+network_result.components['pipes'] = results_edges.loc[ind]
 
 # plot results network
 static_map = dhnx.plotting.StaticMap(network_result)

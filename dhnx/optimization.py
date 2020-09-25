@@ -118,7 +118,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         """
 
         # check edges
-        for p, q in self.network.components['edges'].iterrows():
+        for p, q in self.network.components['pipes'].iterrows():
 
             if (q['from_node'].split('-')[0] == "consumers") and (
                     q['to_node'].split('-')[0] == "consumers"):
@@ -156,7 +156,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 v.columns.astype('str')
 
         # components
-        for comp in ['edges', 'consumers', 'producers', 'forks']:
+        for comp in ['pipes', 'consumers', 'producers', 'forks']:
             self.network.components[comp].index = \
                 self.network.components[comp].index.astype('str')
 
@@ -167,7 +167,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         """
 
         pipe_types = self.invest_options['network']['pipes']
-        edges = self.network.components['edges']
+        edges = self.network.components['pipes']
 
         for r, c in edges.iterrows():
             if c['active']:
@@ -183,7 +183,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     # else:
                     #     edges.at[r, 'invest_status'] = None
 
-        self.network.components['edges'] = edges
+        self.network.components['pipes'] = edges
 
     def get_pipe_data(self):
         """Adds heat loss and investment costs to edges dataframe.
@@ -200,7 +200,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         pipe_types = self.invest_options['network']['pipes'].copy()
         pipe_types.drop(pipe_types[pipe_types['active'] == 0].index,
                         inplace=True)
-        edges = self.network.components['edges']
+        edges = self.network.components['pipes']
 
         # just take active heatpipes
         edges_active = edges[edges['active'] == 1]
@@ -262,7 +262,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 edges.at[r, 'heat_loss[kW]'] = None
                 edges.at[r, 'invest_costs[€]'] = None
 
-        self.network.components['edges'] = edges
+        self.network.components['pipes'] = edges
 
     def setup_oemof_es(self):
         """The oemof solph energy system is initialised based on the settings,
@@ -329,12 +329,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.check_input()
 
         # create edges attribute hp_type, if not in the table so far
-        if 'hp_type' not in list(self.network.components['edges'].columns):
-            self.network.components['edges']['hp_type'] = None
+        if 'hp_type' not in list(self.network.components['pipes'].columns):
+            self.network.components['pipes']['hp_type'] = None
 
         # if there is no information about active edges, all edges are active
-        if 'active' not in list(self.network.components['edges'].columns):
-            self.network.components['edges']['active'] = 1
+        if 'active' not in list(self.network.components['pipes'].columns):
+            self.network.components['pipes']['active'] = 1
 
         # in case the attribute 'active' is not present, it is supposed
         # that all consumers are active
@@ -376,8 +376,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     self.settings['num_ts']))
 
         # check whether there the 'existing' attribute is present at the edges
-        if 'existing' not in self.network.components['edges'].columns:
-            self.network.components['edges']['existing'] = 0
+        if 'existing' not in self.network.components['pipes'].columns:
+            self.network.components['pipes']['existing'] = 0
 
         # get invest_status in order that .get_pipe_data() works proberly for
         # existing pipes - maybe, needs to be adapted in future
@@ -498,7 +498,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         def check_multi_dir_invest(hp_lab):
 
-            ed = self.network.components['edges']
+            ed = self.network.components['pipes']
 
             df_double_invest = \
                 ed[(ed[hp_lab + '.' + 'size-1'] > 0.001) & (ed[hp_lab + '.' + 'size-2'] > 0.001)]
@@ -521,7 +521,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     print('----------')
 
         # use edges dataframe as base and add results as new columns to it
-        df = self.network.components['edges']
+        df = self.network.components['pipes']
 
         # putting the results of the investments in heatpipes to the edges:
         df_hp = self.invest_options['network']['pipes']
@@ -642,6 +642,6 @@ def solve_optimisation_investment(model):
 
     results = {'oemof': model.es.results['main'],
                'oemof_meta': model.es.results['meta'],
-               'components': {'edges': edges_results}}
+               'components': {'pipes': edges_results}}
 
     return results

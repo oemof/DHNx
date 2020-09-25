@@ -21,7 +21,7 @@ plt.title('Given network')
 plt.show()
 
 # get results
-results_edges = network.results.optimization['components']['edges']
+results_edges = network.results.optimization['components']['pipes']
 print('*Results*')
 print(results_edges)
 print('')
@@ -43,7 +43,7 @@ for hp in col_size:
 
 # select invested edges
 network_result = network
-network_result.components['edges'] = results_edges.loc[ind]
+network_result.components['pipes'] = results_edges.loc[ind]
 
 # plot results network
 static_map = dhnx.plotting.StaticMap(network_result)

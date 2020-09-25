@@ -61,7 +61,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     #     busd[l_bus] = bus
 
     # add heatpipes for all lines
-    for p, q in opti_network.network.components['edges'].iterrows():
+    for p, q in opti_network.network.components['pipes'].iterrows():
 
         pipe_data = opti_network.invest_options['network']['pipes']
 
