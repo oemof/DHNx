@@ -77,7 +77,7 @@ def test_prod_prod():
 
 def test_cons_cons():
     # there is a edge from consumer to consumer
-    with pytest.raises(ValueError, match=r"goes from consumer to consumer."):
+    with pytest.raises(ValueError, match=r"goes from consumer to consumer"):
         tn_invest_wrong_2 = tn_invest
         tn_invest_wrong_2.components['pipes'].at[10, 'from_node'] = 'consumers-0'
         dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
