@@ -286,13 +286,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         logging.info('Create oemof objects')
 
-        # qgis_data : ursprünglich dict mit point and line layer
-        # gd_infra : invest optionen heat pipe
-        # data_houses : dict mit excel/csv (buses, transformer, ...) daten von consumer
-        # data_generation :
-        #       dict mit excel/csv (buses, transformer, ...) daten von generation/producer
-
-        # add houses
+        # add houses and generation
         for typ in ['consumers', 'producers']:
             self.nodes, self.buses = add_nodes_houses(
                 self, self.settings, self.nodes, self.buses, typ)

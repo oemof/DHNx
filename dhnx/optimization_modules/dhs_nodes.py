@@ -32,16 +32,6 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     d_labels['l_2'] = 'heat'
     d_labels['l_3'] = 'bus'
 
-    # add heat buses for all nodes
-    # for n, o in opti_network.network.components['consumers'].iterrows():
-    #     d_labels['l_4'] = 'consumers-' + str(n)
-    #     d_labels['l_1'] = 'consumers'
-    #     l_bus = oh.Label(d_labels['l_1'], d_labels['l_2'], d_labels['l_3'],
-    #                      d_labels['l_4'])
-    #     bus = solph.Bus(label=l_bus)
-    #     nodes.append(bus)
-    #     busd[l_bus] = bus
-
     for n, o in opti_network.network.components['forks'].iterrows():
         d_labels['l_4'] = 'forks-' + str(n)
         d_labels['l_1'] = 'infrastructure'
@@ -50,15 +40,6 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
         bus = solph.Bus(label=l_bus)
         nodes.append(bus)
         busd[l_bus] = bus
-
-    # for n, o in opti_network.network.components['producers'].iterrows():
-    #     d_labels['l_4'] = 'producers-' + str(n)
-    #     d_labels['l_1'] = 'producers'
-    #     l_bus = oh.Label(d_labels['l_1'], d_labels['l_2'], d_labels['l_3'],
-    #                      d_labels['l_4'])
-    #     bus = solph.Bus(label=l_bus)
-    #     nodes.append(bus)
-    #     busd[l_bus] = bus
 
     # add heatpipes for all lines
     for p, q in opti_network.network.components['pipes'].iterrows():
@@ -127,15 +108,6 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     d_labels['l_4'] = start + '-' + end
                     nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
                                                    nodes)
-
-                    # # Should there be a second pipe in the other direction?!
-                    # start = q['to_node']
-                    # end = q['from_node']
-                    # b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
-                    # b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
-                    # d_labels['l_4'] = start + '-' + end
-                    # nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
-                    #                                nodes)
 
                 else:
                     raise ValueError("Something wrong!")
@@ -236,9 +208,6 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
         if c['active']:
 
             for key, item in gen_data.items():
-
-                # if key == 'bus':
-                #     nodes, busd = ac.add_buses(item, d_labels, nodes, busd)
 
                 if key == 'source':
                     nodes, busd = ac.add_sources(opti_network, item, c, d_labels, gd, nodes, busd)
