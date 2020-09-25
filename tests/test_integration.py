@@ -11,11 +11,11 @@ SPDX-License-Identifier: MIT
 
 import os
 
-import pandas as pd
+import helpers
 import networkx as nx
+import pandas as pd
 
 import dhnx
-import helpers
 
 
 tmpdir = helpers.extend_basic_path('tmp')
