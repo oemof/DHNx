@@ -72,9 +72,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     check_input():
         Performs checks on the input data.
     complete_exist_data():
-        Sets the investment status for the results dataframe of the edges.
+        Sets the investment status for the results dataframe of the pipes.
     get_pipe_data():
-        Adds heat loss and investment costs to edges dataframe.
+        Adds heat loss and investment costs to pipes dataframe.
     setup_oemof_es():
         The energy system *es* is build.
     setup():
@@ -100,7 +100,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     def check_input(self):
         """Check 1:
 
-        Firstly, it is checked, if there are any not-allowed connection in the *edge* data.
+        Firstly, it is checked, if there are any not-allowed connection in the *pipe* data.
         The following connections are not allowed:
 
           * consumer -> consumer
@@ -113,11 +113,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         Check 2:
 
         Check and make sure, that the dtypes of the columns of the sequences
-        and the indices (=ids) of the forks, edges, producers and consumers
+        and the indices (=ids) of the forks, pipes, producers and consumers
         are of type 'str'. (They need to be the same dtye.)
         """
 
-        # check edges
+        # check pipes
         for p, q in self.network.components['pipes'].iterrows():
 
             if (q['from_node'].split('-')[0] == "consumers") and (
@@ -125,7 +125,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
                 raise ValueError(
                     ""
-                    "Edge id {} goes from consumer to consumer. This is not "
+                    "Pipe id {} goes from consumer to consumer. This is not "
                     "allowed!".format(p))
 
             if (q['from_node'].split('-')[0] == "producers") and (
@@ -133,7 +133,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
                 raise ValueError(
                     ""
-                    "Edge id {} goes from producers to producers. "
+                    "Pipe id {} goes from producers to producers. "
                     "This is not allowed!".format(p))
 
             if ((q['from_node'].split('-')[0] == "producers") and (
@@ -143,7 +143,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
                 raise ValueError(
                     ""
-                    "Edge id {} goes from producers directly "
+                    "Pipe id {} goes from producers directly "
                     "to consumers, or vice versa. This is not allowed!"
                     "".format(p))
 
@@ -163,7 +163,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     def complete_exist_data(self):
         """
         For all existing pipes, this method completes the attribute *invest_status* of the results
-        dataframe of the edges. If there is an existing pipe, the *invest_status* is set to 1.
+        dataframe of the pipes. If there is an existing pipe, the *invest_status* is set to 1.
         """
 
         pipe_types = self.invest_options['network']['pipes']
@@ -186,7 +186,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.network.components['pipes'] = edges
 
     def get_pipe_data(self):
-        """Adds heat loss and investment costs to edges dataframe.
+        """Adds heat loss and investment costs to pipes dataframe.
 
         This method is applied for existing pipes before setting up the oemof energy system,
         and after the optimisation as part of the processing of the results.
@@ -272,7 +272,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
          and producers investment options.
 
          For the heating infrastructure, there is a *oemof.solph.Bus* added for every fork,
-         and a pipe component for every edge as defined in */network/pipes.csv*.
+         and a pipe component for every pipe as defined in */network/pipes.csv*.
          """
 
         date_time_index = pd.date_range(self.settings['start_date'],
@@ -316,17 +316,17 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     def setup(self):
         """
         Calls *check_input()*, *complete_exist_data()*, *get_pipe_data()*, and *setup_oemof_es()*,
-        and does some further checks and completing the attributes of the input edges data.
+        and does some further checks and completing the attributes of the input pipes data.
         """
 
-        # initial check of edges connections
+        # initial check of pipes connections
         self.check_input()
 
-        # create edges attribute hp_type, if not in the table so far
+        # create pipes attribute hp_type, if not in the table so far
         if 'hp_type' not in list(self.network.components['pipes'].columns):
             self.network.components['pipes']['hp_type'] = None
 
-        # if there is no information about active edges, all edges are active
+        # if there is no information about active pipes, all pipes are active
         if 'active' not in list(self.network.components['pipes'].columns):
             self.network.components['pipes']['active'] = 1
 
@@ -369,7 +369,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 'for the given number of {} timesteps.'.format(
                     self.settings['num_ts']))
 
-        # check whether there the 'existing' attribute is present at the edges
+        # check whether there the 'existing' attribute is present at the pipes
         if 'existing' not in self.network.components['pipes'].columns:
             self.network.components['pipes']['existing'] = 0
 
@@ -410,7 +410,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.es.results['meta'] = solph.processing.meta_results(self.om)
 
     def get_results_edges(self):
-        """Postprocessing of the investment results of the edges."""
+        """Postprocessing of the investment results of the pipes."""
 
         def get_invest_val(lab):
 
@@ -462,7 +462,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             return invest_status
 
         def get_hp_results(p):
-            """The edge specific investment results of the heatpipelines are
+            """The pipe specific investment results of the heatpipelines are
             put
             """
 
@@ -501,10 +501,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 print('***')
                 if df_double_invest.empty:
                     print('There is NO investment in both directions at the'
-                          'following edges for "', hp_lab, '"')
+                          'following pipes for "', hp_lab, '"')
                 else:
                     print('There is an investment in both directions at the'
-                          'following edges for "', hp_lab, '":')
+                          'following pipes for "', hp_lab, '":')
                     print('----------')
                     print(' id | from_node | to_node | size-1 | size-2 ')
                     print('============================================')
@@ -514,10 +514,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                               c[hp_lab + '.' + 'size-2'], ' | ')
                     print('----------')
 
-        # use edges dataframe as base and add results as new columns to it
+        # use pipes dataframe as base and add results as new columns to it
         df = self.network.components['pipes']
 
-        # putting the results of the investments in heatpipes to the edges:
+        # putting the results of the investments in heatpipes to the pipes:
         df_hp = self.invest_options['network']['pipes']
 
         # list of active heat pipes
@@ -533,7 +533,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             def check_invest_label(hp_type, edge_id):
                 if isinstance(hp_type, str):
                     raise ValueError(
-                        "Edge id {} already has an investment > 0!".format(edge_id))
+                        "Pipe id {} already has an investment > 0!".format(edge_id))
 
             for ahp in active_hp:
                 p = pipe_data[pipe_data['label_3'] == ahp].squeeze()   # series of heatpipe

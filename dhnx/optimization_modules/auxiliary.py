@@ -18,7 +18,7 @@ def precalc_cost_param(t, q, gd):
     Parameters
     ----------
     t : series of heatpipeline data row
-    q : series of edges row
+    q : series of pipes row
     gd : general optimisation settings
 
     Returns

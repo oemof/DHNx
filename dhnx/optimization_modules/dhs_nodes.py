@@ -73,7 +73,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 
                 elif (typ_from == 'consumers') and (typ_to == 'forks'):
                     raise ValueError(
-                        "Edges must not go from 'consumers' to 'forks'!"
+                        "Pipes must not go from 'consumers' to 'forks'!"
                         " Existing heatpipe id {}".format(p))
 
                 elif (typ_from == 'forks') and (typ_to == 'producers'):
@@ -129,7 +129,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 
                 elif q['from_node'].split('-')[0] == "consumers":
                     raise ValueError(
-                        "Edges must not go from 'consumers'!"
+                        "Pipes must not go from 'consumers'!"
                         " Existing heatpipe id {}".format(p))
 
                 elif q['to_node'].split('-')[0] == "producers":
