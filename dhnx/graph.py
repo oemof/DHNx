@@ -29,14 +29,16 @@ def thermal_network_to_nx_graph(thermal_network):
     """
     nx_graph = nx.MultiDiGraph()  # TODO: Check if this line can be removed.
 
-    edge_attr = list(thermal_network.components['edges'].columns)
+    edges = thermal_network.components['pipes'].copy()
+
+    edge_attr = list(edges.columns)
 
     edge_attr.remove('from_node')
 
     edge_attr.remove('to_node')
 
     nx_graph = nx.from_pandas_edgelist(
-        thermal_network.components['edges'],
+        edges,
         'from_node',
         'to_node',
         edge_attr=edge_attr,

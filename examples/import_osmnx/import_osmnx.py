@@ -8,7 +8,7 @@ try:
 except ImportError:
     print("Need to install osmnx to run this example")
 
-import dhnx
+from dhnx.dhn_from_osm import connect_points_to_network
 
 
 # load street network and footprints from osm
@@ -63,25 +63,29 @@ building_midpoints['x'] = building_midpoints.apply(lambda x: x.geometry.x, 1)
 building_midpoints['y'] = building_midpoints.apply(lambda x: x.geometry.y, 1)
 building_midpoints = building_midpoints[['x', 'y', 'geometry']]
 
-points, splits, edges = dhnx.dhn_from_osm.connect_points_to_network(
+points, forks, pipes = connect_points_to_network(
     building_midpoints, nodes, edges)
 
-producer = points.loc[[323], :]
-consumer = points.drop(323)
+# choose one of the points to be a producer
+producer_id = 469
+
+producers = points.loc[[producer_id], :]
+
+consumers = points.drop(producer_id)
 
 # save files
 if not os.path.isdir(os.path.join('data', f'{file_name}_potential_dhn')):
     os.makedirs(os.path.join('data', f'{file_name}_potential_dhn'))
 
-producer.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'producer.shp'))
-consumer.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'consumer.shp'))
-splits.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'splits.shp'))
-edges.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'edges.shp'))
+producers.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'producer.shp'))
+consumers.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'consumer.shp'))
+forks.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'forks.shp'))
+pipes.to_file(os.path.join('data', f'{file_name}_potential_dhn', 'pipes.shp'))
 
 # plot
 fig, ax = plt.subplots()
-producer.plot(ax=ax, color='r')
-consumer.plot(ax=ax, color='g')
+producers.plot(ax=ax, color='r')
+consumers.plot(ax=ax, color='g')
 
 for x, y, label in zip(points.geometry.x, points.geometry.y, points.index):
     ax.annotate(label, xy=(x, y),
@@ -95,7 +99,7 @@ for x, y, label in zip(nodes.geometry.x, nodes.geometry.y, nodes.index):
                 textcoords='offset points',
                 alpha=.3)
 
-splits.plot(ax=ax)
-edges.plot(ax=ax)
+forks.plot(ax=ax)
+pipes.plot(ax=ax)
 footprints.plot(ax=ax, alpha=.3)
 plt.show()
