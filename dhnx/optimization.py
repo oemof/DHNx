@@ -152,7 +152,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # sequences
         sequ_items = self.network.sequences.keys()
         for it in sequ_items:
-            for k, v in self.network.sequences[it].items():
+            for v in self.network.sequences[it].values():
                 v.columns.astype('str')
 
         # components
