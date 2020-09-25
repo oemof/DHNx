@@ -4,7 +4,7 @@ import pandas as pd
 
 # Initialize thermal network
 network = dhnx.network.ThermalNetwork()
-network = network.from_csv_folder('investment_input_2/network')
+network = network.from_csv_folder('network')
 
 # general optimisation settings
 num_ts = 3     # number of timesteps
@@ -30,16 +30,18 @@ set = {'num_ts': num_ts,           # number of timesteps
                                           # if 'False', then two pipes are build in each direaction,
                                           # instead of 1 bidirectional pipe
        # 'dump_path': 'investment_input_2/',
-       'get_invest_results': True
+       'get_invest_results': True,
+       'print_logging_info': True,
        }
 
-invest_opt = dhnx.input_output.load_invest_options('investment_input_2/invest_options')
+invest_opt = dhnx.input_output.load_invest_options('invest_options')
 
 network.optimize_investment(settings=set, invest_options=invest_opt)
 
 # Draw network
 static_map = dhnx.plotting.StaticMap(network)
 static_map.draw(background_map=False)
+plt.title('Given network')
 plt.show()
 
 # get results
@@ -65,6 +67,7 @@ network_exist.components['edges'] = results_edges.loc[ind_exist]
 # plot existing network
 static_map = dhnx.plotting.StaticMap(network_exist)
 static_map.draw(background_map=False)
+plt.title('Existing pipes')
 plt.show()
 
 ind = ind + ind_exist
@@ -76,6 +79,7 @@ network_result.components['edges'] = results_edges.loc[ind]
 # plot results network
 static_map = dhnx.plotting.StaticMap(network_result)
 static_map.draw(background_map=False)
+plt.title('Investment result')
 plt.show()
 
 # recalculate objective value

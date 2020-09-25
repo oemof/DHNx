@@ -43,7 +43,7 @@ twn_results.components['edges'] = results_edges[results_edges['capacity'] > 0.00
 # plot invested edges
 static_map_2 = dhnx.plotting.StaticMap(twn_results)
 static_map_2.draw(background_map=False)
-plt.title('Given network')
+plt.title('Result network')
 plt.scatter(network.components.consumers['lon'], network.components.consumers['lat'],
             color='tab:green', label='consumers', zorder=2.5, s=50)
 plt.scatter(network.components.producers['lon'], network.components.producers['lat'],
