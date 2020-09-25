@@ -18,13 +18,33 @@ from dhnx.optimization_modules import oemof_heatpipe as oh, add_components as ac
 
 def add_nodes_dhs(opti_network, gd, nodes, busd):
     """
-    :param geo_data: geometry data (points and line layer from qgis)
-    :param gd: general data
-    :param gd_infra: general data for infrastructure nodes
-    :param nodes: list of nodes for oemof
-    :param busd: dict of buses for building nodes
-    :return:    nodes - updated list of nodes
-                busd - updated list of buses
+    Based on the *forks* and *pipes* of the *ThermalNetwork* of the
+    *OemofInvestOptimisationModel*, the oemof-solph components for the district heating
+    network optimisation are initialised.
+
+    For all *forks*, a `solph.Bus` with the label `infrastructure_heat_bus_forks-<id>`
+    (string representation) is generated.
+
+    For all *pipes*, a 'HeatPipeline' with the label
+    `infrastructure_heat_<type>_<from_node>-<to_node>` (string representation)
+    is generated. Depending on the attributes in *pipes*,
+    an investment pipe, or an existing pipe is built.
+
+
+    Parameters
+    ----------
+    opti_network : OemofInvestOptimisationModel
+    gd : dict
+        General optimisation settings.
+    nodes : list
+        List for collecting all oemof-solph objects.
+    busd : dict
+        Dictionary collecting all oemof-solph Buses. Keys: labels of the oemof-solph Buses;
+        Values: oemof-solph Buses.
+
+    Returns
+    -------
+    list, dict : List of all oemof-solph objects and dictionary of oemof-solph Buses.
     """
 
     d_labels = {}
@@ -187,9 +207,48 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 
 
 def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
+    """
+    For each *consumers*/*producers* of the *ThermalNetwork* of the
+    *OemofInvestOptimisationModel*, the oemof-solph components for the *consumers*/*producers*
+    are initialised depending on the given tables of the ``invest_options`` of the
+    *OemofInvestOptimisationModel*.
 
-    gen_data = opti_network.invest_options[label_1]  # genic data for all houses
-    series = opti_network.network.sequences[label_1]        # sequences
+    The tables of `invest_options` provide the information and attributes for the oemof-solph
+    components, which should be build at every *consumer*/*producer*.
+
+    The minimum requirement is to provide table with at least one *heat Bus* for all consumers
+    and all producers, a table with a *heat sink* as demand for all consumers, and
+    a table with at least one *heat source* for all producers.
+
+    Additionally, further tables with *Transformer*, *Storages*, and further *Sources* and
+    *Sinks* can be added.
+
+    For the attributes for each table, you need to provide, please see:
+
+    .. py:module::`~dhnx.optimization_modules.add_components`
+
+    Parameters
+    ----------
+    opti_network : OemofInvestOptimisationModel
+
+    gd : dict
+        General optimisation settings.
+    nodes : list
+        List for collecting all oemof-solph objects.
+    busd : dict
+        Dictionary collecting all oemof-solph Buses. Keys: labels of the oemof-solph Buses;
+        Values: oemof-solph Buses.
+    label_1 : str
+        First tag of the label, which is either `producers` or `consumers`.
+
+    Returns
+    -------
+    list, dict : List of all oemof-solph objects and dictionary of oemof-solph Buses.
+
+    """
+
+    gen_data = opti_network.invest_options[label_1]     # genic data for all houses
+    series = opti_network.network.sequences[label_1]    # sequences
     d_labels = {}
 
     for r, c in opti_network.network.components[label_1].iterrows():
