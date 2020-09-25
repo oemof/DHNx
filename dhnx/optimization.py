@@ -112,7 +112,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         Check 2:
 
-        Check, if the columns of the heat demand series (if given) have the datatype *int*.
+        Check and make sure, that the dtypes of the columns of the sequences
+        and the indices (=ids) of the forks, edges, producers and consumers
+        are of type 'str'. (They need to be the same dtye.)
         """
 
         # check edges
@@ -145,13 +147,18 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     "to consumers, or vice versa. This is not allowed!"
                     "".format(p))
 
-        # check sequences column index datatype
-        # the columns must be integer
-        if 'consumers' in self.network.sequences.keys():
-            if self.network.sequences['consumers']['heat_flow'].columns.dtype \
-                    != 'int64':
-                self.network.sequences['consumers']['heat_flow'].columns = \
-                    self.network.sequences['consumers']['heat_flow'].columns.astype('int64')
+        # Check 2
+        # make sure that all ids are of type str
+        # sequences
+        sequ_items = self.network.sequences.keys()
+        for it in sequ_items:
+            for k, v in self.network.sequences[it].items():
+                v.columns.astype('str')
+
+        # components
+        for comp in ['edges', 'consumers', 'producers', 'forks']:
+            self.network.components[comp].index = \
+                self.network.components[comp].index.astype('str')
 
     def complete_exist_data(self):
         """
@@ -331,7 +338,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # in case the attribute 'active' is not present, it is supposed
         # that all consumers are active
-        if 'active' not in list(self.network.components['consumers'].index):
+        if 'active' not in list(self.network.components['consumers'].columns):
             self.network.components['consumers']['active'] = 1
 
         # prepare heat data, whether global simultanity or timeseries
@@ -343,7 +350,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             self.network.components['consumers'] = \
                 pd.concat([self.network.components['consumers'], df_max],
-                          axis=1, join='inner')
+                          axis=1, join='outer', sort=False)
 
         # check, which optimization type should be performed
         if self.settings['heat_demand'] == 'scalar':
@@ -358,8 +365,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                                  index=pd.Index([0], name='timestep'))
 
             # heat load is maximum heat load mutiplied with simultaneity
-            self.network.sequences['consumers']['heat_flow'] = \
-                df_ts * self.settings['simultaneity']
+            self.network.sequences['consumers']['heat_flow'] = df_ts
 
         if self.settings['num_ts'] > \
                 len(self.network.sequences['consumers']['heat_flow'].index):
@@ -597,7 +603,7 @@ def setup_optimise_investment(thermal_network, invest_options, settings=None):
         'start_date': '1/1/2018',
         'frequence': 'H',
         'solver': 'cbc',
-        'solve_kw': {'tee': False},
+        'solve_kw': {'tee': True},
         'simultaneity': 1,
         'bidirectional_pipes': False,
         'dump_path': None,
