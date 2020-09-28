@@ -60,6 +60,110 @@ class SimulationModelNumpy(SimulationModel):
                 "Pressure differences due to height differences are not implemented yet."
             )
 
+    def prepare(self):
+
+        self.prepare_hydraulic_eqn()
+
+        self.prepare_thermal_eqn()
+
+    def solve(self):
+
+        self.solve_hydraulic_eqn()
+
+        self.solve_thermal_eqn()
+
+    def get_results(self):
+
+        return self.results
+
+    def prepare_hydraulic_eqn(self):
+        r"""
+        Prepares the input data for the hydraulic problem.
+        """
+        self.input_data.mass_flow = pd.DataFrame(
+            0,
+            columns=self.nx_graph.nodes(),
+            index=self.thermal_network.timeindex
+        )
+
+        input_data = self._concat_sequences('mass_flow')
+
+        self.input_data.mass_flow.loc[:, input_data.columns] = input_data
+
+        self.input_data.mass_flow = self._set_producers_mass_flow(self.input_data.mass_flow)
+
+    def prepare_thermal_eqn(self):
+        r"""
+        Prepares the input data for the thermal problem.
+        """
+
+        self.input_data.temp_inlet = pd.DataFrame(
+            0,
+            columns=self.nx_graph.nodes(),
+            index=self.thermal_network.timeindex
+        )
+
+        input_data = self._concat_sequences('temp_inlet')
+
+        self.input_data.temp_inlet.loc[:, input_data.columns] = input_data
+
+    def solve_hydraulic_eqn(self):
+        r"""
+        Solves the hydraulic problem.
+        """
+        self.results['pipes-mass_flow'] = self._calculate_pipes_mass_flow()
+
+        reynolds = self._calculate_reynolds()
+
+        lamb = self._calculate_lambda(reynolds)
+
+        pipes_dist_pressure_losses = self._calculate_pipes_distributed_pressure_losses(lamb)
+
+        pipes_loc_pressure_losses = self._calculate_pipes_localized_pressure_losses()
+
+        pipes_total_pressure_losses = sum_ignore_none(
+            pipes_dist_pressure_losses, pipes_loc_pressure_losses
+        )
+
+        global_pressure_losses = self._calculate_global_pressure_losses(pipes_total_pressure_losses)
+
+        pump_power = self._calculate_pump_power(global_pressure_losses)
+
+        self.results['pipes-dist_pressure_losses'] = pipes_dist_pressure_losses
+
+        self.results['pipes_loc_pressure_losses'] = pipes_loc_pressure_losses
+
+        self.results['global-pressure_losses'] = global_pressure_losses
+
+        self.results['producers-pump_power'] = pump_power
+
+    def solve_thermal_eqn(self):
+        r"""
+        Solves the thermal problem.
+        """
+        exponent_constant = self._calculate_exponent_constant()
+
+        temp_inlet = self._calc_temps(exponent_constant, self.input_data.temp_inlet, direction=1)
+
+        temp_return_known = self._set_temp_return_input(temp_inlet)
+
+        temp_return = self._calc_temps(exponent_constant, temp_return_known, direction=-1)
+
+        pipes_heat_losses = self._calculate_pipes_heat_losses(temp_inlet) \
+            + self._calculate_pipes_heat_losses(temp_return)
+
+        global_heat_losses = pipes_heat_losses.sum(axis=1)
+
+        global_heat_losses.name = 'global_heat_losses'
+
+        self.results['nodes-temp_inlet'] = temp_inlet
+
+        self.results['nodes-temp_return'] = temp_return
+
+        self.results['pipes-heat_losses'] = pipes_heat_losses
+
+        self.results['global-heat_losses'] = global_heat_losses
+
     def _concat_scalars(self, name):
         r"""
         Concatenates scalars of all components with a given variable name
@@ -135,22 +239,6 @@ class SimulationModelNumpy(SimulationModel):
         m.loc[:, producers] = - m.loc[:, ~m.columns.isin(producers)].sum(1)
 
         return m
-
-    def prepare_hydraulic_eqn(self):
-        r"""
-        Prepares the input data for the hydraulic problem.
-        """
-        self.input_data.mass_flow = pd.DataFrame(
-            0,
-            columns=self.nx_graph.nodes(),
-            index=self.thermal_network.timeindex
-        )
-
-        input_data = self._concat_sequences('mass_flow')
-
-        self.input_data.mass_flow.loc[:, input_data.columns] = input_data
-
-        self.input_data.mass_flow = self._set_producers_mass_flow(self.input_data.mass_flow)
 
     def _calculate_pipes_mass_flow(self):
         r"""
@@ -482,51 +570,6 @@ class SimulationModelNumpy(SimulationModel):
 
         return pump_power
 
-    def solve_hydraulic_eqn(self):
-        r"""
-        Solves the hydraulic problem.
-        """
-        self.results['pipes-mass_flow'] = self._calculate_pipes_mass_flow()
-
-        reynolds = self._calculate_reynolds()
-
-        lamb = self._calculate_lambda(reynolds)
-
-        pipes_dist_pressure_losses = self._calculate_pipes_distributed_pressure_losses(lamb)
-
-        pipes_loc_pressure_losses = self._calculate_pipes_localized_pressure_losses()
-
-        pipes_total_pressure_losses = sum_ignore_none(
-            pipes_dist_pressure_losses, pipes_loc_pressure_losses
-        )
-
-        global_pressure_losses = self._calculate_global_pressure_losses(pipes_total_pressure_losses)
-
-        pump_power = self._calculate_pump_power(global_pressure_losses)
-
-        self.results['pipes-dist_pressure_losses'] = pipes_dist_pressure_losses
-
-        self.results['pipes_loc_pressure_losses'] = pipes_loc_pressure_losses
-
-        self.results['global-pressure_losses'] = global_pressure_losses
-
-        self.results['producers-pump_power'] = pump_power
-
-    def prepare_thermal_eqn(self):
-        r"""
-        Prepares the input data for the thermal problem.
-        """
-
-        self.input_data.temp_inlet = pd.DataFrame(
-            0,
-            columns=self.nx_graph.nodes(),
-            index=self.thermal_network.timeindex
-        )
-
-        input_data = self._concat_sequences('temp_inlet')
-
-        self.input_data.temp_inlet.loc[:, input_data.columns] = input_data
-
     def _calculate_exponent_constant(self):
         r"""
         Calculates the constant part of the exponent that determines the
@@ -712,48 +755,6 @@ class SimulationModelNumpy(SimulationModel):
         pipes_heat_losses = pd.DataFrame.from_dict(pipes_heat_losses, orient='index')
 
         return pipes_heat_losses
-
-    def solve_thermal_eqn(self):
-        r"""
-        Solves the thermal problem.
-        """
-        exponent_constant = self._calculate_exponent_constant()
-
-        temp_inlet = self._calc_temps(exponent_constant, self.input_data.temp_inlet, direction=1)
-
-        temp_return_known = self._set_temp_return_input(temp_inlet)
-
-        temp_return = self._calc_temps(exponent_constant, temp_return_known, direction=-1)
-
-        pipes_heat_losses = self._calculate_pipes_heat_losses(temp_inlet) \
-            + self._calculate_pipes_heat_losses(temp_return)
-
-        global_heat_losses = pipes_heat_losses.sum(axis=1)
-
-        global_heat_losses.name = 'global_heat_losses'
-
-        self.results['nodes-temp_inlet'] = temp_inlet
-
-        self.results['nodes-temp_return'] = temp_return
-
-        self.results['pipes-heat_losses'] = pipes_heat_losses
-
-        self.results['global-heat_losses'] = global_heat_losses
-
-    def prepare(self):
-
-        self.prepare_hydraulic_eqn()
-
-        self.prepare_thermal_eqn()
-
-    def solve(self):
-
-        self.solve_hydraulic_eqn()
-
-        self.solve_thermal_eqn()
-
-    def get_results(self):
-        return self.results
 
 
 def simulate(thermal_network, results_dir=None):
