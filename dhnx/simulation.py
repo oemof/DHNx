@@ -489,7 +489,7 @@ class SimulationModelNumpy(SimulationModel):
         pipes_localized_pressure_losses_return = _calc_loc_pressure_loss_for_flow_type('return')
 
         pipes_localized_pressure_losses = sum_ignore_none(
-                pipes_localized_pressure_losses_inlet, pipes_localized_pressure_losses_return
+            pipes_localized_pressure_losses_inlet, pipes_localized_pressure_losses_return
         )
 
         return pipes_localized_pressure_losses
