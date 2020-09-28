@@ -112,34 +112,34 @@ class SimulationModelNumpy(SimulationModel):
 
         return concat_sequences
 
-    def _prepare_hydraulic_eqn(self):
+    @staticmethod
+    def _set_producers_mass_flow(m):
+        r"""
+        Sets the mass flow of the producer.
+
+        Parameters
+        ----------
+        m : pd.DataFrame
+            DataFrame with all know consumer mass flows.
+
+        Returns
+        -------
+        m : pd.DataFrame
+            DataFrame with all know mass flow of
+            consumers and producer.
+        """
+        producers = [name for name in m.columns if re.search('producers', name)]
+
+        assert len(producers) == 1, "Currently, only one producer allowed."
+
+        m.loc[:, producers] = - m.loc[:, ~m.columns.isin(producers)].sum(1)
+
+        return m
+
+    def prepare_hydraulic_eqn(self):
         r"""
         Prepares the input data for the hydraulic problem.
         """
-
-        def _set_producers_mass_flow(m):
-            r"""
-            Sets the mass flow of the producer.
-
-            Parameters
-            ----------
-            m : pd.DataFrame
-                DataFrame with all know consumer mass flows.
-
-            Returns
-            -------
-            m : pd.DataFrame
-                DataFrame with all know mass flow of
-                consumers and producer.
-            """
-            producers = [name for name in m.columns if re.search('producers', name)]
-
-            assert len(producers) == 1, "Currently, only one producer allowed."
-
-            m.loc[:, producers] = - m.loc[:, ~m.columns.isin(producers)].sum(1)
-
-            return m
-
         self.input_data.mass_flow = pd.DataFrame(
             0,
             columns=self.nx_graph.nodes(),
@@ -150,360 +150,359 @@ class SimulationModelNumpy(SimulationModel):
 
         self.input_data.mass_flow.loc[:, input_data.columns] = input_data
 
-        self.input_data.mass_flow = _set_producers_mass_flow(self.input_data.mass_flow)
+        self.input_data.mass_flow = self._set_producers_mass_flow(self.input_data.mass_flow)
 
-    def _solve_hydraulic_eqn(self):
+    def _calculate_pipes_mass_flow(self):
         r"""
-        Solves the hydraulic problem.
+        Determines the mass flow in all pipes using numpy's
+        least squares function.
+
+        Returns
+        -------
+        pipes_mass_flow : pd.DataFrame
+            Mass flow in the pipes
         """
 
-        def _calculate_pipes_mass_flow():
-            r"""
-            Determines the mass flow in all pipes using numpy's
-            least squares function.
+        pipes_mass_flow = {}
 
-            Returns
-            -------
-            pipes_mass_flow : pd.DataFrame
-                Mass flow in the pipes
-            """
+        for t in self.thermal_network.timeindex:
 
-            pipes_mass_flow = {}
+            x, residuals, _, _ = np.linalg.lstsq(
+                self.inc_mat,
+                self.input_data.mass_flow.loc[t, :],
+                rcond=None
+            )
+
+            assert residuals < self.tolerance,\
+                f"Residuals {residuals} are larger than tolerance {self.tolerance}!"
+
+            pipes_mass_flow.update({t: x})
+
+        pipes_mass_flow = pd.DataFrame.from_dict(
+            pipes_mass_flow,
+            orient='index',
+            columns=self.nx_graph.edges()
+        )
+
+        pipes_mass_flow.columns.names = ('from_node', 'to_node')
+
+        return pipes_mass_flow
+
+    def _calculate_reynolds(self):
+        r"""
+        Calculates the Reynolds number.
+
+        ..math::
+
+            Re = \frac{4\dot{m}}{\pi\mu D}
+
+        Returns
+        -------
+        re : pd.DataFrame
+            Reynoldes number for every timestep and pipe.
+        """
+        pipes_mass_flow = self.results['pipes-mass_flow']
+
+        diameter = \
+            self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
+
+        diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter_mm']
+
+        reynolds = 4 * pipes_mass_flow.divide(diameter, axis='columns') \
+            / (np.pi * self.mu)
+
+        return reynolds
+
+    def _calculate_lambda(self, reynolds):
+        r"""
+        Calculates the darcy friction factor.
+
+        ..math::
+
+            \lambda = 0.007 \cdot Re ^ {-0.13} \cdot D ^ {-0.14}
+
+        Parameters
+        ----------
+        re : pd.DataFrame
+            Reynoldes number for every timestep and pipe.
+
+        Returns
+        -------
+        lamb : pd.DataFrame
+            Darcy friction factor for every timestep and pipe.
+        """
+
+        factor_diameter = self.thermal_network.components.pipes[
+            ['from_node', 'to_node', 'diameter_mm']
+        ]
+
+        factor_diameter = (
+            1e-3 * factor_diameter.set_index(['from_node', 'to_node'])['diameter_mm']
+        ) ** -0.14
+
+        lamb = 0.07 * reynolds ** -0.13
+
+        lamb = lamb.multiply(factor_diameter, axis='columns')
+
+        return lamb
+
+    def _calculate_pipes_distributed_pressure_losses(self, lamb):
+        r"""
+        Calculates the pressure losses in the pipes.
+
+        .. math::
+
+            \delta p = \lambda \frac{8L}{\rho \pi^2 D^5}\dot{m}^2.
+
+        Parameters
+        ----------
+        lamb : pd.DataFrame
+            Darcy friction factor for every timestep and pipe.
+
+        Returns
+        -------
+        pipes_pressure_losses : pd.DataFrame
+            DataFrame with distributed pressure losses for every timestep and pipe.
+        """
+        pipes_mass_flow = self.results['pipes-mass_flow'].copy()
+
+        pipes_mass_flow_2 = pipes_mass_flow ** 2
+
+        constant = 8 * lamb / (self.rho * np.pi**2)
+
+        length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
+
+        diameter = \
+            self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
+
+        length = length.set_index(['from_node', 'to_node'])['length_m']
+
+        diameter = diameter.set_index(['from_node', 'to_node'])['diameter_mm']
+
+        diameter_5 = (1e-3 * diameter) ** 5
+
+        pipes_pressure_losses = constant * pipes_mass_flow_2\
+            .multiply(length, axis='columns')\
+            .divide(diameter_5, axis='columns')
+
+        # We multiply by the factor of two to represent the pressure losses along inlet
+        # and return flow.
+
+        pipes_pressure_losses *= 2
+
+        return pipes_pressure_losses
+
+    def _calculate_pipes_localized_pressure_losses(self):
+        r"""
+        Calculates localized pressure losses at the nodes.
+
+        .. math::
+
+            \Delta p_{loc} = \frac{8\zeta\dot{m}^2}{\rho \pi^2 D^4}
+
+        Returns
+        -------
+        nodes_pressure_losses : pd.DataFrame
+            Pressure losses at the nodes.
+        """
+        def _assign_zeta_to_pipes(flow_type):
+
+            def func(row, level):
+
+                res = zeta.reindex(row.index.get_level_values(level).values)
+
+                res.index = row.index
+
+                return res
+
+            zeta = self._concat_scalars('zeta_' + flow_type)
+
+            if zeta is None:
+                print(f"No values for zeta_{flow_type} found. Skipping.")
+
+                return None
+
+            flow_direction = np.sign(self.results['pipes-mass_flow'])
+
+            zeta_pipes = pd.DataFrame([[1,2,3],[4,5,6],[7,8,9]],
+                columns=flow_direction.columns,
+                index=flow_direction.index
+            )
+
+            zeta_pipes_forward = zeta_pipes.copy()
+
+            zeta_pipes_backward = zeta_pipes.copy()
+
+            func_forward = partial(func, level=0)
+
+            zeta_pipes_forward = zeta_pipes_forward.apply(func_forward, axis=1)
+
+            func_backward = partial(func, level=1)
+
+            zeta_pipes_backward = zeta_pipes_backward.apply(func_backward, axis=1)
+
+            if flow_type == 'inlet':
+                zeta_pipes[flow_direction > 0] = zeta_pipes_forward
+
+                zeta_pipes[flow_direction < 0] = zeta_pipes_backward
+
+            elif flow_type == 'return':
+                zeta_pipes[flow_direction > 0] = zeta_pipes_backward
+
+                zeta_pipes[flow_direction < 0] = zeta_pipes_forward
+
+            else:
+                raise ValueError("Flow type has to be either inlet or return.")
+
+            return zeta_pipes
+
+        def _calc_loc_pressure_loss_for_flow_type(flow_type):
+            zeta_pipes = _assign_zeta_to_pipes(flow_type)
+
+            if zeta_pipes is None:
+                return None
+
+            pipes_localized_pressure_losses = {}
 
             for t in self.thermal_network.timeindex:
+                pipes_mass_flow = self.results['pipes-mass_flow'].loc[t, :]
 
-                x, residuals, _, _ = np.linalg.lstsq(
-                    self.inc_mat,
-                    self.input_data.mass_flow.loc[t, :],
-                    rcond=None
-                )
+                mass_flow_2 = pipes_mass_flow ** 2
 
-                assert residuals < self.tolerance,\
-                    f"Residuals {residuals} are larger than tolerance {self.tolerance}!"
+                mass_flow_2_over_diameter_4 = mass_flow_2.divide(diameter_4)
 
-                pipes_mass_flow.update({t: x})
+                mass_flow_2_over_diameter_4.name = 'mass_flow_2_over_diameter_4'
 
-            pipes_mass_flow = pd.DataFrame.from_dict(
-                pipes_mass_flow,
-                orient='index',
-                columns=self.nx_graph.edges()
+                x = constant * zeta_pipes.loc[t, :].multiply(mass_flow_2_over_diameter_4)
+
+                pipes_localized_pressure_losses.update({t: x})
+
+            pipes_localized_pressure_losses = pd.DataFrame.from_dict(
+                pipes_localized_pressure_losses,
+                orient='index'
             )
 
-            pipes_mass_flow.columns.names = ('from_node', 'to_node')
-
-            return pipes_mass_flow
-
-        def _calculate_reynolds():
-            r"""
-            Calculates the Reynolds number.
-
-            ..math::
-
-                Re = \frac{4\dot{m}}{\pi\mu D}
-
-            Returns
-            -------
-            re : pd.DataFrame
-                Reynoldes number for every timestep and pipe.
-            """
-            pipes_mass_flow = self.results['pipes-mass_flow']
-
-            diameter = \
-                self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
-
-            diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter_mm']
-
-            reynolds = 4 * pipes_mass_flow.divide(diameter, axis='columns') \
-                / (np.pi * self.mu)
-
-            return reynolds
-
-        def _calculate_lambda(reynolds):
-            r"""
-            Calculates the darcy friction factor.
-
-            ..math::
-
-                \lambda = 0.007 \cdot Re ^ {-0.13} \cdot D ^ {-0.14}
-
-            Parameters
-            ----------
-            re : pd.DataFrame
-                Reynoldes number for every timestep and pipe.
-
-            Returns
-            -------
-            lamb : pd.DataFrame
-                Darcy friction factor for every timestep and pipe.
-            """
-
-            factor_diameter = self.thermal_network.components.pipes[
-                ['from_node', 'to_node', 'diameter_mm']
-            ]
-
-            factor_diameter = (
-                1e-3 * factor_diameter.set_index(['from_node', 'to_node'])['diameter_mm']
-            ) ** -0.14
-
-            lamb = 0.07 * reynolds ** -0.13
-
-            lamb = lamb.multiply(factor_diameter, axis='columns')
-
-            return lamb
-
-        def _calculate_pipes_distributed_pressure_losses(lamb):
-            r"""
-            Calculates the pressure losses in the pipes.
-
-            .. math::
-
-                \delta p = \lambda \frac{8L}{\rho \pi^2 D^5}\dot{m}^2.
-
-            Parameters
-            ----------
-            lamb : pd.DataFrame
-                Darcy friction factor for every timestep and pipe.
-
-            Returns
-            -------
-            pipes_pressure_losses : pd.DataFrame
-                DataFrame with distributed pressure losses for every timestep and pipe.
-            """
-            pipes_mass_flow = self.results['pipes-mass_flow'].copy()
-
-            pipes_mass_flow_2 = pipes_mass_flow ** 2
-
-            constant = 8 * lamb / (self.rho * np.pi**2)
-
-            length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
-
-            diameter = \
-                self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
-
-            length = length.set_index(['from_node', 'to_node'])['length_m']
-
-            diameter = diameter.set_index(['from_node', 'to_node'])['diameter_mm']
-
-            diameter_5 = (1e-3 * diameter) ** 5
-
-            pipes_pressure_losses = constant * pipes_mass_flow_2\
-                .multiply(length, axis='columns')\
-                .divide(diameter_5, axis='columns')
-
-            # We multiply by the factor of two to represent the pressure losses along inlet
-            # and return flow.
-
-            pipes_pressure_losses *= 2
-
-            return pipes_pressure_losses
-
-        def _calculate_pipes_localized_pressure_losses():
-            r"""
-            Calculates localized pressure losses at the nodes.
-
-            .. math::
-
-                \Delta p_{loc} = \frac{8\zeta\dot{m}^2}{\rho \pi^2 D^4}
-
-            Returns
-            -------
-            nodes_pressure_losses : pd.DataFrame
-                Pressure losses at the nodes.
-            """
-            def _assign_zeta_to_pipes(flow_type):
-
-                def func(row, level):
-
-                    res = zeta.reindex(row.index.get_level_values(level).values)
-
-                    res.index = row.index
-
-                    return res
-
-                zeta = self._concat_scalars('zeta_' + flow_type)
-
-                if zeta is None:
-                    print(f"No values for zeta_{flow_type} found. Skipping.")
-
-                    return None
-
-                flow_direction = np.sign(self.results['pipes-mass_flow'])
-
-                zeta_pipes = pd.DataFrame([[1,2,3],[4,5,6],[7,8,9]],
-                    columns=flow_direction.columns,
-                    index=flow_direction.index
-                )
-
-                zeta_pipes_forward = zeta_pipes.copy()
-
-                zeta_pipes_backward = zeta_pipes.copy()
-
-                func_forward = partial(func, level=0)
-
-                zeta_pipes_forward = zeta_pipes_forward.apply(func_forward, axis=1)
-
-                func_backward = partial(func, level=1)
-
-                zeta_pipes_backward = zeta_pipes_backward.apply(func_backward, axis=1)
-
-                if flow_type == 'inlet':
-                    zeta_pipes[flow_direction > 0] = zeta_pipes_forward
-
-                    zeta_pipes[flow_direction < 0] = zeta_pipes_backward
-
-                elif flow_type == 'return':
-                    zeta_pipes[flow_direction > 0] = zeta_pipes_backward
-
-                    zeta_pipes[flow_direction < 0] = zeta_pipes_forward
-
-                else:
-                    raise ValueError("Flow type has to be either inlet or return.")
-
-                return zeta_pipes
-
-            def _calc_loc_pressure_loss_for_flow_type(flow_type):
-                zeta_pipes = _assign_zeta_to_pipes(flow_type)
-
-                if zeta_pipes is None:
-                    return None
-
-                pipes_localized_pressure_losses = {}
-
-                for t in self.thermal_network.timeindex:
-                    pipes_mass_flow = self.results['pipes-mass_flow'].loc[t, :]
-
-                    mass_flow_2 = pipes_mass_flow ** 2
-
-                    mass_flow_2_over_diameter_4 = mass_flow_2.divide(diameter_4)
-
-                    mass_flow_2_over_diameter_4.name = 'mass_flow_2_over_diameter_4'
-
-                    x = constant * zeta_pipes.loc[t, :].multiply(mass_flow_2_over_diameter_4)
-
-                    pipes_localized_pressure_losses.update({t: x})
-
-                pipes_localized_pressure_losses = pd.DataFrame.from_dict(
-                    pipes_localized_pressure_losses,
-                    orient='index'
-                )
-
-                pipes_localized_pressure_losses = pipes_localized_pressure_losses.fillna(0)
-
-                return pipes_localized_pressure_losses
-
-            constant = 8 / (self.rho * np.pi ** 2)
-
-            diameter_4 = self.thermal_network.components.pipes[
-                ['from_node', 'to_node', 'diameter_mm']
-            ]
-
-            diameter_4 = diameter_4.set_index(['from_node', 'to_node'])['diameter_mm']
-
-            diameter_4 = (1e-3 * diameter_4) ** 4
-
-            pipes_localized_pressure_losses_inlet = _calc_loc_pressure_loss_for_flow_type('inlet')
-
-            pipes_localized_pressure_losses_return = _calc_loc_pressure_loss_for_flow_type('return')
-
-            pipes_localized_pressure_losses = sum_ignore_none(
-                    pipes_localized_pressure_losses_inlet, pipes_localized_pressure_losses_return
-            )
+            pipes_localized_pressure_losses = pipes_localized_pressure_losses.fillna(0)
 
             return pipes_localized_pressure_losses
 
-        def _calculate_global_pressure_losses(pipes_pressure_losses):
+        constant = 8 / (self.rho * np.pi ** 2)
 
-            def calculate_path_weights(source_nodes, sink_nodes, graph, weight):
+        diameter_4 = self.thermal_network.components.pipes[
+            ['from_node', 'to_node', 'diameter_mm']
+        ]
 
-                path_weights = {}
+        diameter_4 = diameter_4.set_index(['from_node', 'to_node'])['diameter_mm']
 
-                for sink in sink_nodes:
-                    for source in source_nodes:
+        diameter_4 = (1e-3 * diameter_4) ** 4
 
-                        path_weights[sink] = nx.dijkstra_path_length(
-                            graph,
-                            source=source,
-                            target=sink,
-                            weight=weight
-                        )
+        pipes_localized_pressure_losses_inlet = _calc_loc_pressure_loss_for_flow_type('inlet')
 
-                return path_weights
+        pipes_localized_pressure_losses_return = _calc_loc_pressure_loss_for_flow_type('return')
 
-            def _calculate_paths_pressure_losses():
+        pipes_localized_pressure_losses = sum_ignore_none(
+                pipes_localized_pressure_losses_inlet, pipes_localized_pressure_losses_return
+        )
 
-                sink_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
-                              data['node_type'] == 'consumer']
+        return pipes_localized_pressure_losses
 
-                source_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
-                                data['node_type'] == 'producer']
+    def _calculate_global_pressure_losses(self, pipes_pressure_losses):
 
-                paths_pressure_losses = {}
+        def calculate_path_weights(source_nodes, sink_nodes, graph, weight):
 
-                for t in self.thermal_network.timeindex:
+            path_weights = {}
 
-                    graph = write_edge_data_to_graph(
-                        pipes_pressure_losses.loc[t, :],
-                        self.nx_graph,
-                        var_name='pipes_pressure_losses'
-                    )
+            for sink in sink_nodes:
+                for source in source_nodes:
 
-                    path_weights = calculate_path_weights(
-                        source_nodes,
-                        sink_nodes,
+                    path_weights[sink] = nx.dijkstra_path_length(
                         graph,
-                        'pipes_pressure_losses'
+                        source=source,
+                        target=sink,
+                        weight=weight
                     )
 
-                    paths_pressure_losses[t] = path_weights
+            return path_weights
 
-                paths_pressure_losses = \
-                    pd.DataFrame.from_dict(paths_pressure_losses, orient='index')
+        def _calculate_paths_pressure_losses():
 
-                return paths_pressure_losses
+            sink_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
+                          data['node_type'] == 'consumer']
 
-            paths_pressure_losses = _calculate_paths_pressure_losses()
+            source_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
+                            data['node_type'] == 'producer']
 
-            # Here, we take the path with the maximum pressure losses and assume that the other
-            # consumer's valves are adjusted so that in sum, the pressure losses along all paths are
-            # equal.
+            paths_pressure_losses = {}
 
-            global_pressure_losses = paths_pressure_losses.max(axis=1)
+            for t in self.thermal_network.timeindex:
 
-            return global_pressure_losses
+                graph = write_edge_data_to_graph(
+                    pipes_pressure_losses.loc[t, :],
+                    self.nx_graph,
+                    var_name='pipes_pressure_losses'
+                )
 
-        def _calculate_pump_power(global_pressure_losses):
+                path_weights = calculate_path_weights(
+                    source_nodes,
+                    sink_nodes,
+                    graph,
+                    'pipes_pressure_losses'
+                )
 
-            eta_pump = 1
+                paths_pressure_losses[t] = path_weights
 
-            producers = [
-                node for node, data in self.nx_graph.nodes(data=True)
-                if data['node_type'] == 'producer'
-            ]
+            paths_pressure_losses = \
+                pd.DataFrame.from_dict(paths_pressure_losses, orient='index')
 
-            mass_flow_producers = \
-                self.results['pipes-mass_flow'].loc[:, idx[producers, :]].sum(axis=1)
+            return paths_pressure_losses
 
-            pump_power = mass_flow_producers * global_pressure_losses / (eta_pump * self.rho)
+        paths_pressure_losses = _calculate_paths_pressure_losses()
 
-            return pump_power
+        # Here, we take the path with the maximum pressure losses and assume that the other
+        # consumer's valves are adjusted so that in sum, the pressure losses along all paths are
+        # equal.
 
-        self.results['pipes-mass_flow'] = _calculate_pipes_mass_flow()
+        global_pressure_losses = paths_pressure_losses.max(axis=1)
 
-        reynolds = _calculate_reynolds()
+        return global_pressure_losses
 
-        lamb = _calculate_lambda(reynolds)
+    def _calculate_pump_power(self, global_pressure_losses):
 
-        pipes_dist_pressure_losses = _calculate_pipes_distributed_pressure_losses(lamb)
+        eta_pump = 1
 
-        pipes_loc_pressure_losses = _calculate_pipes_localized_pressure_losses()
+        producers = [
+            node for node, data in self.nx_graph.nodes(data=True)
+            if data['node_type'] == 'producer'
+        ]
+
+        mass_flow_producers = \
+            self.results['pipes-mass_flow'].loc[:, idx[producers, :]].sum(axis=1)
+
+        pump_power = mass_flow_producers * global_pressure_losses / (eta_pump * self.rho)
+
+        return pump_power
+
+    def solve_hydraulic_eqn(self):
+        r"""
+        Solves the hydraulic problem.
+        """
+        self.results['pipes-mass_flow'] = self._calculate_pipes_mass_flow()
+
+        reynolds = self._calculate_reynolds()
+
+        lamb = self._calculate_lambda(reynolds)
+
+        pipes_dist_pressure_losses = self._calculate_pipes_distributed_pressure_losses(lamb)
+
+        pipes_loc_pressure_losses = self._calculate_pipes_localized_pressure_losses()
 
         pipes_total_pressure_losses = sum_ignore_none(
             pipes_dist_pressure_losses, pipes_loc_pressure_losses
         )
 
-        global_pressure_losses = _calculate_global_pressure_losses(pipes_total_pressure_losses)
+        global_pressure_losses = self._calculate_global_pressure_losses(pipes_total_pressure_losses)
 
-        pump_power = _calculate_pump_power(global_pressure_losses)
+        pump_power = self._calculate_pump_power(global_pressure_losses)
 
         self.results['pipes-dist_pressure_losses'] = pipes_dist_pressure_losses
 
@@ -513,7 +512,7 @@ class SimulationModelNumpy(SimulationModel):
 
         self.results['producers-pump_power'] = pump_power
 
-    def _prepare_thermal_eqn(self):
+    def prepare_thermal_eqn(self):
         r"""
         Prepares the input data for the thermal problem.
         """
@@ -528,203 +527,202 @@ class SimulationModelNumpy(SimulationModel):
 
         self.input_data.temp_inlet.loc[:, input_data.columns] = input_data
 
-    def _solve_thermal_eqn(self):
+    def _calculate_exponent_constant(self):
+        r"""
+        Calculates the constant part of the exponent that determines the
+        cooling of the medium in the pipes.
+
+        .. math::
+
+            \frac{- U \pi D L }{c}
+
+        Returns
+        -------
+        exponent_constant : np.matrix
+            Constant part of the exponent
+        """
+
+        heat_transfer_coefficient = nx.adjacency_matrix(
+            self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
+
+        diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
+
+        length = nx.adjacency_matrix(self.nx_graph, weight='length_m').todense()
+
+        exponent_constant = - np.pi \
+            * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length)) \
+            / self.c
+
+        return exponent_constant
+
+    def _calc_temps(self, exponent_constant, known_temp, direction):
+        r"""
+        Calculate temperatures
+
+        .. math::
+
+        \Delta T = exp ^(\frac{U \pi D L }{c}) \cdot exp ^{1}{\dot{m}} \Delta T_{known}
+
+        Parameters
+        ----------
+        exponent_constant : np.array
+            Constant part of the exponent.
+
+        known_temp : pd.DataFrame
+            Known temperatures at producers or consumers.
+
+        direction : +1 or -1
+            For inlet and return flow.
+
+        Returns
+        -------
+        temp_df : pd.DataFrame
+            DataFrame containing temperatures for all nodes.
+        """
+        # TODO: Rethink function layout and naming
+
+        temps = {}
+
+        for t in self.thermal_network.timeindex:
+
+            # Divide exponent matrix by current pipes-mass_flows.
+            data = self.results['pipes-mass_flow'].loc[t, :].copy()
+
+            data = 1 / data
+
+            graph_with_data = write_edge_data_to_graph(
+                data, self.nx_graph, var_name='pipes-mass_flow'
+            )
+
+            inverse_mass_flows = nx.adjacency_matrix(
+                graph_with_data, weight='pipes-mass_flow'
+            ).todense()
+
+            exponent = np.multiply(exponent_constant, inverse_mass_flows)
+
+            matrix = np.exp(exponent)
+
+            # Clear out elements where matrix was zero before exponentiation. This could be
+            # replaced by properly passing `where` to np.multiply in the line above.
+            matrix = np.multiply(matrix, nx.adjacency_matrix(self.nx_graph).todense())
+
+            # Adapt matrix
+            if direction == 1:
+                matrix = matrix.T
+                normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(0)).flatten()
+
+                normalisation = \
+                    np.divide(np.array([1]), normalisation, where=normalisation != 0)
+
+            elif direction == -1:
+                normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(1)).flatten()
+
+                normalisation = \
+                    np.divide(np.array([1]), normalisation, where=normalisation != 0)
+
+            else:
+                raise ValueError("Direction has to be either 1 or -1.")
+
+            normalisation = np.diag(normalisation)
+
+            matrix = np.dot(normalisation, matrix)
+
+            matrix = np.identity(matrix.shape[0]) - matrix
+
+            vector = np.array(known_temp.loc[t])
+
+            vector[vector != 0] -= self.temp_env.loc[t]
+
+            x, _, _, _ = np.linalg.lstsq(
+                matrix,
+                vector,
+                rcond=None
+            )
+
+            temps.update({t: x + self.temp_env.loc[t]})
+
+        temp_df = pd.DataFrame.from_dict(
+            temps,
+            orient='index',
+            columns=self.nx_graph.nodes()
+        )
+
+        return temp_df
+
+    def _set_temp_return_input(self, temp_inlet):
+        r"""
+        Sets the temperature of the return pipes
+        at the consumers.
+
+        T_{cons,r} = T_{cons,i} - T_{cons,drop}
+
+        Parameters
+        ----------
+        temp_inlet : pd.DataFrame
+            Known inlet temperature
+
+        Returns
+        -------
+        temp_return : pd.DataFrame
+            Return temperature with the consumers values set.
+        """
+
+        temp_return = pd.DataFrame(
+            0,
+            columns=self.nx_graph.nodes(),
+            index=self.thermal_network.timeindex
+        )
+
+        temp_drop = self._concat_sequences('temperature_drop')
+
+        temp_return.loc[:, temp_drop.columns] = temp_inlet.loc[:, temp_drop.columns] - temp_drop
+
+        return temp_return
+
+    def _calculate_pipes_heat_losses(self, temp_node):
+        r"""
+        Calculates the pipes' heat losses given the
+        temperatures.
+
+        Parameters
+        ----------
+        temp_node : pd.DataFrame
+            Temperatures at the nodes.
+
+        Returns
+        -------
+        pipes_heat_losses : pd.DataFrame
+            Heat losses in the pipes.
+        """
+
+        pipes_heat_losses = {}
+
+        for i, row in temp_node.iterrows():
+
+            mass_flow = self.results['pipes-mass_flow'].loc[i, :].copy()
+
+            temp_difference = np.abs(np.array(np.dot(row, self.inc_mat)).flatten())
+
+            pipes_heat_losses[i] = self.c * mass_flow.multiply(temp_difference, axis=0)
+
+        pipes_heat_losses = pd.DataFrame.from_dict(pipes_heat_losses, orient='index')
+
+        return pipes_heat_losses
+
+    def solve_thermal_eqn(self):
         r"""
         Solves the thermal problem.
         """
+        exponent_constant = self._calculate_exponent_constant()
 
-        def _calculate_exponent_constant():
-            r"""
-            Calculates the constant part of the exponent that determines the
-            cooling of the medium in the pipes.
+        temp_inlet = self._calc_temps(exponent_constant, self.input_data.temp_inlet, direction=1)
 
-            .. math::
+        temp_return_known = self._set_temp_return_input(temp_inlet)
 
-                \frac{- U \pi D L }{c}
+        temp_return = self._calc_temps(exponent_constant, temp_return_known, direction=-1)
 
-            Returns
-            -------
-            exponent_constant : np.matrix
-                Constant part of the exponent
-            """
-
-            heat_transfer_coefficient = nx.adjacency_matrix(
-                self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
-
-            diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
-
-            length = nx.adjacency_matrix(self.nx_graph, weight='length_m').todense()
-
-            exponent_constant = - np.pi \
-                * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length)) \
-                / self.c
-
-            return exponent_constant
-
-        def _calc_temps(exponent_constant, known_temp, direction):
-            r"""
-            Calculate temperatures
-
-            .. math::
-
-            \Delta T = exp ^(\frac{U \pi D L }{c}) \cdot exp ^{1}{\dot{m}} \Delta T_{known}
-
-            Parameters
-            ----------
-            exponent_constant : np.array
-                Constant part of the exponent.
-
-            known_temp : pd.DataFrame
-                Known temperatures at producers or consumers.
-
-            direction : +1 or -1
-                For inlet and return flow.
-
-            Returns
-            -------
-            temp_df : pd.DataFrame
-                DataFrame containing temperatures for all nodes.
-            """
-            # TODO: Rethink function layout and naming
-
-            temps = {}
-
-            for t in self.thermal_network.timeindex:
-
-                # Divide exponent matrix by current pipes-mass_flows.
-                data = self.results['pipes-mass_flow'].loc[t, :].copy()
-
-                data = 1 / data
-
-                graph_with_data = write_edge_data_to_graph(
-                    data, self.nx_graph, var_name='pipes-mass_flow'
-                )
-
-                inverse_mass_flows = nx.adjacency_matrix(
-                    graph_with_data, weight='pipes-mass_flow'
-                ).todense()
-
-                exponent = np.multiply(exponent_constant, inverse_mass_flows)
-
-                matrix = np.exp(exponent)
-
-                # Clear out elements where matrix was zero before exponentiation. This could be
-                # replaced by properly passing `where` to np.multiply in the line above.
-                matrix = np.multiply(matrix, nx.adjacency_matrix(self.nx_graph).todense())
-
-                # Adapt matrix
-                if direction == 1:
-                    matrix = matrix.T
-                    normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(0)).flatten()
-
-                    normalisation = \
-                        np.divide(np.array([1]), normalisation, where=normalisation != 0)
-
-                elif direction == -1:
-                    normalisation = np.array(nx.adjacency_matrix(self.nx_graph).sum(1)).flatten()
-
-                    normalisation = \
-                        np.divide(np.array([1]), normalisation, where=normalisation != 0)
-
-                else:
-                    raise ValueError("Direction has to be either 1 or -1.")
-
-                normalisation = np.diag(normalisation)
-
-                matrix = np.dot(normalisation, matrix)
-
-                matrix = np.identity(matrix.shape[0]) - matrix
-
-                vector = np.array(known_temp.loc[t])
-
-                vector[vector != 0] -= self.temp_env.loc[t]
-
-                x, _, _, _ = np.linalg.lstsq(
-                    matrix,
-                    vector,
-                    rcond=None
-                )
-
-                temps.update({t: x + self.temp_env.loc[t]})
-
-            temp_df = pd.DataFrame.from_dict(
-                temps,
-                orient='index',
-                columns=self.nx_graph.nodes()
-            )
-
-            return temp_df
-
-        def _set_temp_return_input(temp_inlet):
-            r"""
-            Sets the temperature of the return pipes
-            at the consumers.
-
-            T_{cons,r} = T_{cons,i} - T_{cons,drop}
-
-            Parameters
-            ----------
-            temp_inlet : pd.DataFrame
-                Known inlet temperature
-
-            Returns
-            -------
-            temp_return : pd.DataFrame
-                Return temperature with the consumers values set.
-            """
-
-            temp_return = pd.DataFrame(
-                0,
-                columns=self.nx_graph.nodes(),
-                index=self.thermal_network.timeindex
-            )
-
-            temp_drop = self._concat_sequences('temperature_drop')
-
-            temp_return.loc[:, temp_drop.columns] = temp_inlet.loc[:, temp_drop.columns] - temp_drop
-
-            return temp_return
-
-        def _calculate_pipes_heat_losses(temp_node):
-            r"""
-            Calculates the pipes' heat losses given the
-            temperatures.
-
-            Parameters
-            ----------
-            temp_node : pd.DataFrame
-                Temperatures at the nodes.
-
-            Returns
-            -------
-            pipes_heat_losses : pd.DataFrame
-                Heat losses in the pipes.
-            """
-
-            pipes_heat_losses = {}
-
-            for i, row in temp_node.iterrows():
-
-                mass_flow = self.results['pipes-mass_flow'].loc[i, :].copy()
-
-                temp_difference = np.abs(np.array(np.dot(row, self.inc_mat)).flatten())
-
-                pipes_heat_losses[i] = self.c * mass_flow.multiply(temp_difference, axis=0)
-
-            pipes_heat_losses = pd.DataFrame.from_dict(pipes_heat_losses, orient='index')
-
-            return pipes_heat_losses
-
-        exponent_constant = _calculate_exponent_constant()
-
-        temp_inlet = _calc_temps(exponent_constant, self.input_data.temp_inlet, direction=1)
-
-        temp_return_known = _set_temp_return_input(temp_inlet)
-
-        temp_return = _calc_temps(exponent_constant, temp_return_known, direction=-1)
-
-        pipes_heat_losses = _calculate_pipes_heat_losses(temp_inlet) \
-            + _calculate_pipes_heat_losses(temp_return)
+        pipes_heat_losses = self._calculate_pipes_heat_losses(temp_inlet) \
+            + self._calculate_pipes_heat_losses(temp_return)
 
         global_heat_losses = pipes_heat_losses.sum(axis=1)
 
@@ -740,15 +738,15 @@ class SimulationModelNumpy(SimulationModel):
 
     def prepare(self):
 
-        self._prepare_hydraulic_eqn()
+        self.prepare_hydraulic_eqn()
 
-        self._prepare_thermal_eqn()
+        self.prepare_thermal_eqn()
 
     def solve(self):
 
-        self._solve_hydraulic_eqn()
+        self.solve_hydraulic_eqn()
 
-        self._solve_thermal_eqn()
+        self.solve_thermal_eqn()
 
     def get_results(self):
         return self.results
