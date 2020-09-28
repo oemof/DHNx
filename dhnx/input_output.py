@@ -301,25 +301,21 @@ class OSMNetworkImporter(NetworkImporter):
         else:
             return to_return[0]
 
-    def process(self, graph, footprints):
+    @staticmethod
+    def get_building_midpoints(footprints):
 
-        print('Processing...')
-
-        # get building data
-        areas = footprints.area
-
-        # get building midpoints
         building_midpoints = gpd.GeoDataFrame(footprints.geometry.centroid,
                                               columns=['geometry'])
+
         building_midpoints['x'] = building_midpoints.apply(lambda x: x.geometry.x, 1)
+
         building_midpoints['y'] = building_midpoints.apply(lambda x: x.geometry.y, 1)
+
         building_midpoints = building_midpoints[['x', 'y', 'geometry']]
 
-        graph = self.remove_self_loops(graph)
+        return building_midpoints
 
-        graph = self.remove_duplicate_edges(graph)
-
-        graph = nx.relabel.convert_node_labels_to_integers(graph)
+    def graph_to_component_dfs(self, graph, building_midpoints):
 
         # get nodes and edges from graph
         nodes, edges = self.graph_to_gdfs(graph)
@@ -357,12 +353,40 @@ class OSMNetworkImporter(NetworkImporter):
         pipes['from_node'].replace(rename_nodes, inplace=True)
         pipes['to_node'].replace(rename_nodes, inplace=True)
 
-        print(forks)
-        print(endpoints)
-        print(pipes)
+        component_dfs = {
+            'consumers': consumers,
+            'producers': producers,
+            'forks': forks,
+            'pipes': pipes
+        }
 
-        # TODO: delete self loops
-        return consumers, producers, forks, pipes
+        return component_dfs
+
+    def add_component_data_to_network(self, components):
+
+        for k, v in components.items():
+            self.thermal_network.components[k] = v
+
+        self.thermal_network.is_consistent()
+
+    def process(self, graph, footprints):
+
+        print('Processing...')
+
+        # get building data
+        areas = footprints.area
+
+        graph = self.remove_self_loops(graph)
+
+        graph = self.remove_duplicate_edges(graph)
+
+        graph = nx.relabel.convert_node_labels_to_integers(graph)
+
+        building_midpoints = self.get_building_midpoints(footprints)
+
+        component_dfs = self.graph_to_component_dfs(graph, building_midpoints)
+
+        return component_dfs
 
     def load(self):
 
@@ -379,17 +403,9 @@ class OSMNetworkImporter(NetworkImporter):
         footprints = gpd.read_file(f'data/{file_name}_footprints')
         footprints = ox.project_gdf(footprints)
 
-        consumers, producers, forks, pipes = self.process(graph, footprints)
+        component_dfs = self.process(graph, footprints)
 
-        self.thermal_network.components.consumers = consumers
-
-        self.thermal_network.components.producers = producers
-
-        self.thermal_network.components.forks = forks
-
-        self.thermal_network.components.pipes = pipes
-
-        self.thermal_network.is_consistent()
+        self.add_component_data_to_network(component_dfs)
 
         return self.thermal_network
 
