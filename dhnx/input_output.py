@@ -374,17 +374,10 @@ class OSMNetworkImporter(NetworkImporter):
 
     def load(self):
 
-        # graph = self.download_street_network()
-        #
-        # footprints = self.download_footprints()
+        graph = self.download_street_network()
 
-        # load network and footprints from disk
+        footprints = self.download_footprints()
 
-        # TODO: Delete this in the end
-        file_name = 'Berlin-Adlershof'
-        graph = ox.save_load.load_graphml(f'{file_name}_street_network.graphml')
-        graph = ox.project_graph(graph)
-        footprints = gpd.read_file(f'data/{file_name}_footprints')
         footprints = ox.project_gdf(footprints)
 
         component_dfs = self.process(graph, footprints)
