@@ -316,15 +316,12 @@ class OSMNetworkImporter(NetworkImporter):
         # get nodes and edges from graph
         nodes, edges = self.graph_to_gdfs(graph)
 
-        nodes = nodes.loc[:, ['lat', 'lon', 'geometry']]#.reset_index()
-        # replace_ids = {v: k for k, v in dict(nodes.loc[:, 'index']).items()}
-        #nodes = nodes.drop('index', 1)
+        nodes = nodes.loc[:, ['lat', 'lon', 'geometry']]
 
         edges = edges.loc[:, ['u', 'v', 'geometry']]
-        # edges.loc[:, ['u', 'v']] = edges.loc[:, ['u', 'v']].replace(replace_ids)
 
         endpoints, forks, pipes = connect_points_to_network(
-            building_midpoints, nodes, edges)  # TODO: The newly introduced forks lack ids!
+            building_midpoints, nodes, edges)
 
         pipes = pipes.rename(columns={'u': 'from_node', 'v': 'to_node'})
 
