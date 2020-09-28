@@ -338,11 +338,16 @@ class OSMNetworkImporter(NetworkImporter):
 
         pipes['to_node'].replace(rename_nodes, inplace=True)
 
+        pipes['length_m'] = pipes['geometry'].length
+
         component_dfs = {
             'consumers': consumers,
             'forks': forks,
             'pipes': pipes
         }
+
+        for df in component_dfs.values():
+            df.index.name = 'id'
 
         return component_dfs
 
