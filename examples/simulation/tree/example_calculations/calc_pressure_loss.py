@@ -34,18 +34,19 @@ producers = read_data('producers')
 mass_flow = pd.read_csv(input_data + '/sequences/consumers-mass_flow.csv')
 
 # Constants for calculation
-rho = 971.78        # [kg/m3] TODO: later the density could be variable and calculated with CoolProp
-epsilon = 0.01      # [mm]
-zeta_tee = 2        # [-] Rough estimate of Tee connector: WJ Beek - Transport Phenomena (1999) for rougher pipes 0,75
-zeta_valve = 3.3    # [-] VDI Wärmeatlas für Nennweite von 50 mm
-mu = 0.35           # [mPa*s]
-eta_pump = 0.7      # [-] TODO: Right now made up value. What should it be in model?
-g = 9.81            # [m/s2]
+rho = 971.78                # [kg/m3] TODO: later the density could be variable and calculated with CoolProp
+epsilon = 0.01              # [mm]
+zeta_tee_connect = 0.75     # [-] Rough estimate of Tee connector: WJ Beek - Transport Phenomena (1999)
+zeta_tee_separation = 2     # [-] Rough estimate of Tee connector: WJ Beek - Transport Phenomena (1999)
+zeta_valve = 3.3            # [-] VDI Wärmeatlas für Nennweite von 50 mm
+mu = 0.35                   # [mPa*s]
+eta_pump = 0.7              # [-] TODO: Right now made up value. What should it be in model?
+g = 9.81                    # [m/s2]
 pi = math.pi
 
 # Initialize variables of type dataframe (needed for later calculations)
-v, re, lambda_simp, lambda_adv, dp_diss, dp_loc, dp_loc_tee, dp_loc_valve, dp_hyd, dp = \
-    [pd.DataFrame() for variable in range(10)]
+v, re, lambda_simp, lambda_adv, dp_diss, dp_loc, dp_loc_tee_i, dp_loc_tee_r, dp_loc_valve, dp_hyd, dp = \
+    [pd.DataFrame() for variable in range(11)]
 
 # Adjust mass flows to a dataframe containing all mass flows in correct order
 # Get mass flows of all consumers
@@ -72,16 +73,30 @@ for index, node in enumerate(mass_flow_total):
     # Calculate distributed pressure losses with Darcy-Weissbach-equation
     dp_diss[str(index)] = lambda_simp[str(index)] * rho * edges['lenght_m'].iloc[index] * v[str(index)]**2 /\
                           (2 * (edges['diameter_mm'].iloc[index] / 1000))
-    # Calculate local pressure losses resulted from Tee connector (T-Stück)
-    dp_loc_tee[str(index)] = zeta_tee * v[str(index)] ** 2 * rho / 2
+    # Calculate local pressure losses resulted from separating Tee (T-Stück) -> i - inlet
+    # Localized Pressure losses only occur in the outlet pipes of the tee separator
+    if node == '0':
+        dp_loc_tee_i[str(index)] = 0 * zeta_tee_separation * v[str(index)] ** 2 * rho / 2
+    elif node != '0':
+        dp_loc_tee_i[str(index)] = zeta_tee_separation * v[str(index)] ** 2 * rho / 2
+    # Calculate local pressure losses resulted from connecting Tee (T-Stück) -> r - return
+    # Localized Pressure losses only occur in the outlet pipes of the tee connector
+    if node == '0':
+        dp_loc_tee_r[str(index)] = zeta_tee_connect * v[str(index)] ** 2 * rho / 2
+    elif node != '0':
+        dp_loc_tee_r[str(index)] = 0 * zeta_tee_connect * v[str(index)] ** 2 * rho / 2
     # Calculate local pressure losses resulted from consumer valves
     if node == '0':
         dp_loc_valve[str(index)] = 0 * v[str(index)] ** 2 * rho / 2     # At producer no valve -> zeta = 0
     elif node != '0':
         dp_loc_valve[str(index)] = zeta_valve * v[str(index)] ** 2 * rho / 2
 
+# Calculate distributed pressure losses for inlet and return direction (dp_diss * 2)
+dp_diss = dp_diss * 2
+
 # Calculate sum of local pressure losses
-dp_loc = dp_loc_tee + dp_loc_valve
+dp_loc_tee = dp_loc_tee_i + dp_loc_tee_r
+dp_loc = dp_loc_tee
 
 # Calculate hydrostatic pressure difference
 dp_hyd['0'] = - rho * g * abs(producers['m_over_NHN'][0] - forks['m_over_NHN'][0]) * v['0']**0
@@ -141,8 +156,8 @@ print_parameters()
 
 
 # Save results to csv
-for name, param in parameter.items():
-    param.insert(0, 'snapshot', np.arange(len(mass_flow_total)))
+#for name, param in parameter.items():
+#    param.insert(0, 'snapshot', np.arange(len(mass_flow_total)))
 
 result_name = ['edges-pressure_losses.csv', 'global-pressure_losses.csv', 'producers-pump_power.csv']
 result_list = list(parameter.keys())[-3:]
