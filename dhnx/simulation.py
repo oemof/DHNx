@@ -314,7 +314,7 @@ class SimulationModelNumpy(SimulationModel):
 
                 def func(row, level):
 
-                    res = zeta.loc[row.index.get_level_values(level).values]
+                    res = zeta.reindex(row.index.get_level_values(level).values)
 
                     res.index = row.index
 
