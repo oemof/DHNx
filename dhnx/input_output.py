@@ -170,9 +170,9 @@ class OSMNetworkImporter(NetworkImporter):
     def __init__(self, thermal_network, place, distance):
         super().__init__(thermal_network, None)
 
-        self.place = (52.43034, 13.53806)
+        self.place = place
 
-        self.distance = 300
+        self.distance = distance
 
     def download_street_network(self):
 
