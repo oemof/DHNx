@@ -56,7 +56,7 @@ def thermal_network_to_nx_graph(thermal_network):
     for k, v in nodes.items():
         v.index = [k + '-' + str(id) for id in v.index]
 
-    nodes = pd.concat(nodes.values())
+    nodes = pd.concat(nodes.values(), sort=True)
 
     node_attrs = {node_id: dict(data) for node_id, data in nodes.iterrows()}
 

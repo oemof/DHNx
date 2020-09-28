@@ -185,7 +185,7 @@ class ThermalNetwork():
         for k, v in nodes.items():
             v.index = [k + '-' + str(id) for id in v.index]
 
-        nodes = pd.concat(nodes.values())
+        nodes = pd.concat(nodes.values(), sort=True)
 
         node_indices = nodes.index
 
