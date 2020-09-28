@@ -192,7 +192,7 @@ class SimulationModelNumpy(SimulationModel):
         r"""
         Calculates the Reynolds number.
 
-        ..math::
+        .. math::
 
             Re = \frac{4\dot{m}}{\pi\mu D}
 
@@ -217,7 +217,7 @@ class SimulationModelNumpy(SimulationModel):
         r"""
         Calculates the darcy friction factor.
 
-        ..math::
+        .. math::
 
             \lambda = 0.007 \cdot Re ^ {-0.13} \cdot D ^ {-0.14}
 
@@ -534,7 +534,7 @@ class SimulationModelNumpy(SimulationModel):
 
         .. math::
 
-            \frac{- U \pi D L }{c}
+            exp_{const} = - \frac{U \pi D L }{c}
 
         Returns
         -------
@@ -561,7 +561,9 @@ class SimulationModelNumpy(SimulationModel):
 
         .. math::
 
-        \Delta T = exp ^(\frac{U \pi D L }{c}) \cdot exp ^{1}{\dot{m}} \Delta T_{known}
+            \Delta T =
+                \Delta T_{known} \cdot e^{exp_{const}} \cdot e^{exp_{var}} =
+                \Delta T_{known} \cdot exp(-\frac{U \pi D L }{c}) \cdot exp(\frac{1}{\dot{m}})
 
         Parameters
         ----------
@@ -654,7 +656,9 @@ class SimulationModelNumpy(SimulationModel):
         Sets the temperature of the return pipes
         at the consumers.
 
-        T_{cons,r} = T_{cons,i} - T_{cons,drop}
+        .. math::
+
+            T_{cons,r} = T_{cons,i} - T_{cons,drop}
 
         Parameters
         ----------
