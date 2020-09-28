@@ -328,30 +328,21 @@ class OSMNetworkImporter(NetworkImporter):
 
         pipes = pipes.rename(columns={'u': 'from_node', 'v': 'to_node'})
 
-        # TODO: Assign node type and prepare ids for ThermalNetwork
         forks['node_type'] = 'Fork'
 
-        # choose one of the points to be a producer
-        producer_id = 469
-        endpoints.loc[:, 'node_type'] = 'Consumer'
-        endpoints.loc[[producer_id], 'node_type'] = 'Producer'
+        consumers = endpoints
 
-        pipes['node_type'] = 'Pipe'
-
-        producers = endpoints.loc[[producer_id], :]
-
-        consumers = endpoints.drop(producer_id)
-
+        # Update names of nodes in pipe's from_node/to_node
         rename_nodes = {i: 'forks-' + str(i) for i in forks.index}
+
         rename_nodes.update({i: 'consumers-' + str(i) for i in consumers.index})
-        rename_nodes.update({i: 'producers-' + str(i) for i in producers.index})
 
         pipes['from_node'].replace(rename_nodes, inplace=True)
+
         pipes['to_node'].replace(rename_nodes, inplace=True)
 
         component_dfs = {
             'consumers': consumers,
-            'producers': producers,
             'forks': forks,
             'pipes': pipes
         }
