@@ -167,8 +167,6 @@ class OSMNetworkImporter(NetworkImporter):
 
     Not yet implemented.
     """
-
-
     def __init__(self, thermal_network, place, distance):
         super().__init__(thermal_network, None)
 
@@ -185,8 +183,6 @@ class OSMNetworkImporter(NetworkImporter):
         )
 
         graph = ox.project_graph(graph)
-
-
 
         return graph
 
