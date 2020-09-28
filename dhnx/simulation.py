@@ -412,7 +412,7 @@ class SimulationModelNumpy(SimulationModel):
 
             flow_direction = np.sign(self.results['pipes-mass_flow'])
 
-            zeta_pipes = pd.DataFrame([[1,2,3],[4,5,6],[7,8,9]],
+            zeta_pipes = pd.DataFrame(
                 columns=flow_direction.columns,
                 index=flow_direction.index
             )
