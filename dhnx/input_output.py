@@ -316,7 +316,7 @@ class OSMNetworkImporter(NetworkImporter):
         # get nodes and edges from graph
         nodes, edges = self.graph_to_gdfs(graph)
 
-        nodes = nodes.loc[:, ['x', 'y', 'geometry']]#.reset_index()
+        nodes = nodes.loc[:, ['lat', 'lon', 'geometry']]#.reset_index()
         # replace_ids = {v: k for k, v in dict(nodes.loc[:, 'index']).items()}
         #nodes = nodes.drop('index', 1)
 
