@@ -332,6 +332,8 @@ class OSMNetworkImporter(NetworkImporter):
 
         consumers = endpoints
 
+        consumers['node_type'] = 'Consumer'
+
         # Update names of nodes in pipe's from_node/to_node
         rename_nodes = {i: 'forks-' + str(i) for i in forks.index}
 
