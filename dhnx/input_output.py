@@ -300,14 +300,11 @@ class OSMNetworkImporter(NetworkImporter):
     @staticmethod
     def get_building_midpoints(footprints):
 
-        building_midpoints = gpd.GeoDataFrame(footprints.geometry.centroid,
-                                              columns=['geometry'])
-
-        building_midpoints['x'] = building_midpoints.apply(lambda x: x.geometry.x, 1)
-
-        building_midpoints['y'] = building_midpoints.apply(lambda x: x.geometry.y, 1)
-
-        building_midpoints = building_midpoints[['x', 'y', 'geometry']]
+        building_midpoints = gpd.GeoDataFrame(
+            footprints.geometry.centroid,
+            columns=['geometry'],
+            crs=footprints.geometry.centroid.crs
+        )
 
         return building_midpoints
 
@@ -316,9 +313,15 @@ class OSMNetworkImporter(NetworkImporter):
         # get nodes and edges from graph
         nodes, edges = self.graph_to_gdfs(graph)
 
-        nodes = nodes.loc[:, ['lat', 'lon', 'geometry']]
+        nodes = nodes.loc[:, ['geometry']]
 
         edges = edges.loc[:, ['u', 'v', 'geometry']]
+
+        nodes = nodes.to_crs("epsg:4326")
+
+        edges = edges.to_crs("epsg:4326")
+
+        building_midpoints = building_midpoints.to_crs("epsg:4326")
 
         endpoints, forks, pipes = connect_points_to_network(
             building_midpoints, nodes, edges)
@@ -339,6 +342,10 @@ class OSMNetworkImporter(NetworkImporter):
         pipes['to_node'].replace(rename_nodes, inplace=True)
 
         pipes['length_m'] = pipes['geometry'].length
+
+        for node in [consumers, forks]:
+            node['lat'] = node.geometry.y
+            node['lon'] = node.geometry.x
 
         component_dfs = {
             'consumers': consumers,
