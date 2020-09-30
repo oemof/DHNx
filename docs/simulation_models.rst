@@ -201,6 +201,10 @@ loss per meter :math:`U_{spec} [W/(K m)]`.
     U_{spec} = U \cdot \pi D &\text{\hspace{1cm} for single pipes}\\
     U_{spec} = U \cdot 2 \pi D &\text{\hspace{1cm} for double pipes}
 
+The temperature of the return flow at the fork is calculated assuming ideally mixed flows, where no heat losses occur and the heat capacity is constant. The temperature of the mixed flow :math:`T_{mix}` is calculated for a number :math:`n` of inlet flows, that are ideally mixed, using the following equation:
+
+.. math::
+    T_{mix} = \frac{\sum\limits_{j=1}^n (\dot{m}_n \cdot T_n)}{\dot{m}_{mix}}
 
 References
 ----------
