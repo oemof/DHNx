@@ -130,7 +130,7 @@ In a pipe, flow is laminar if :math:`Re` < 2300 and turbulent if :math:`Re` > 40
 In district heating pipes, flow is usually turbulent. The turbulent flow regime can be further
 distinguished into smooth, intermediate and rough regime depending on the pipe's surface roughness.
 
-In Bordin2015 :math:`\lambda` is calculated using the approximation formula:
+In [1] :math:`\lambda` is calculated using the approximation formula:
 
 .. math::
     \lambda = 0.07 \cdot Re ^{-0.13} \cdot D^{-0.14}.
@@ -208,3 +208,6 @@ The temperature of the return flow at the fork is calculated assuming ideally mi
 
 References
 ----------
+
+.. [1] Chiara Bordin. Mathematical Optimization Applied to Thermal and Electrical Energy Systems. PhD
+    thesis, Università di Bologna, 2015.
