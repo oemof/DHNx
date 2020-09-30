@@ -16,7 +16,7 @@ def sum_ignore_none(*items):
     if not_none:
         sum_ignoring_none = sum(not_none)
 
-        return sum_ignoring_none
-
     else:
-        return None
+        sum_ignoring_none = None
+
+    return sum_ignoring_none

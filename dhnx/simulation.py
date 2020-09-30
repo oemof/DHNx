@@ -179,7 +179,7 @@ class SimulationModelNumpy(SimulationModel):
             DataFrame containing the sequences
         """
         select_scalars = [
-            scalar[name].copy().rename(index=lambda x: component + '-' + str(x))
+            scalar[name].copy().rename(index=lambda x, prefix=component: prefix + '-' + str(x))
             for component, scalar in self.thermal_network.components.items()
             if name in scalar
         ]
@@ -187,10 +187,10 @@ class SimulationModelNumpy(SimulationModel):
         if select_scalars:
             select_scalars = pd.concat(select_scalars, 0)
 
-            return select_scalars
-
         else:
-            return None
+            select_scalars = None
+
+        return select_scalars
 
     def _concat_sequences(self, name):
         r"""
@@ -207,7 +207,7 @@ class SimulationModelNumpy(SimulationModel):
             DataFrame containing the sequences
         """
         select_sequences = [
-            d[name].copy().rename(columns=lambda x: component + '-' + x)
+            d[name].copy().rename(columns=lambda x, prefix=component: prefix + '-' + x)
             for component, d in self.thermal_network.sequences.items()
             if name in d
         ]
@@ -672,7 +672,7 @@ class SimulationModelNumpy(SimulationModel):
 
             matrix = np.dot(normalisation, matrix)
 
-            matrix = np.identity(matrix.shape[0]) - matrix
+            matrix = np.identity(len(matrix)) - matrix
 
             vector = np.array(known_temp.loc[t])
 
