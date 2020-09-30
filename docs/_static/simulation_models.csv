@@ -5,7 +5,7 @@ mean flow velocity; :math:`v`; :math:`m/s`; :math:`1-3 m/s`
 pressure; :math:`p`; :math:`Pa` | :math:`bar`; Nominal pressures PN16 or PN25
 pressure difference; :math:`\Delta p`; :math:`Pa` | :math:`bar`; max. :math:`300\,Pa/m`
 pump power; :math:`P_{el,pump}`; :math:`W`
-temperature; :math:`T`; :math:`^\circ C`; Feed pipe: :math:`70 - 130 ^\circ C`, Return pipe: :math:`50 - 70 ^\circ C`
+temperature; :math:`T`; :math:`^\circ C`; Inlet pipe: :math:`70 - 130 ^\circ C`, Return pipe: :math:`50 - 70 ^\circ C`
 ambient temperature; :math:`T_{env}`; :math:`^\circ C`; :math:`20 ^\circ C`
 heat flow; :math:`\dot{Q}`; :math:`W`;
 **Water properties**;;;

@@ -13,7 +13,7 @@ Scope
 
 The following questions can be addressed using a simulation model:
 
-* How do the heat losses in the network depend on the temperatures of feed and return pipes and
+* How do the heat losses in the network depend on the temperatures of inlet and return pipes and
   ambient temperature?
 * How much energy is necessary for the pumps to overcome the pressure losses in the network?
 * How do these properties behave if the supply temperatures change?
