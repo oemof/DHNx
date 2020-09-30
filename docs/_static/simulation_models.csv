@@ -1,7 +1,7 @@
 Name; Math. symbol;Unit;Common values
 **Variables**;;;
 mass flow; :math:`\dot{m}`; :math:`kg/s`;
-mean flow velocity; :math:`v`; :math:`m/s`; 1-3 m/s
+mean flow velocity; :math:`v`; :math:`m/s`; :math:`1-3 m/s`
 pressure; :math:`p`; Pa or bar; Nominal pressures PN16 or PN25
 pressure difference; :math:`\Delta p`; Pa or bar; max. :math:`300\,Pa/m`
 pump power; :math:`P_{el,pump}`; :math:`W`
