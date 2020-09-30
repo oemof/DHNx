@@ -63,7 +63,7 @@ Usage
    :alt: radial_network_details.svg
    :align: left
 
-   Fig. 1: Schematic
+   Fig. 1: Schematic of a simple district heating network and the relevant variables for simulation.
 
 
 
@@ -170,6 +170,10 @@ the mass flow :math:`\dot{m}` and the pump's efficiency
 .. math::
     P_{el. pump} = \frac{1}{\eta_{el}\eta_{hyd}}\frac{\Delta p }{\rho} \dot{m}
 
+In a network consisting of several strands, the strand with the largest pressure losses in inlet and
+return defines the pressure difference that the pumps have to generate. The underlying assumption is
+that the consumers at the end of all other strands adjust their valve to generate the same pressure
+losses such that the mass flows that are assumed are met.
 
 Thermal equations
 ~~~~~~~~~~~~~~~~~
