@@ -130,7 +130,7 @@ In a pipe, flow is laminar if :math:`Re` < 2300 and turbulent if :math:`Re` > 40
 In district heating pipes, flow is usually turbulent. The turbulent flow regime can be further
 distinguished into smooth, intermediate and rough regime depending on the pipe's surface roughness.
 
-In [1] :math:`\lambda` is calculated using the approximation formula:
+[1] provides the following approximation formula for :math:`\lambda`:
 
 .. math::
     \lambda = 0.07 \cdot Re ^{-0.13} \cdot D^{-0.14}.
@@ -170,7 +170,8 @@ The pumps have to balance the pressure losses inside the pipes. The pump power t
 Thermal equations
 ~~~~~~~~~~~~~~~~~
 
-The temperature spread defines the amount of heat that is transported with a given mass flow:
+The temperature spread between inlet and return flow defines the amount of heat that is transported
+with a given mass flow:
 
 .. math::
     \dot{Q} = \dot{m} \cdot c \cdot \Delta T.
