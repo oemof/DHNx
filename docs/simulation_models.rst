@@ -183,7 +183,7 @@ investment cost of new pipes or increases the thermal power of existing pipes.
 
 Heat losses depend on temperature level, mass flow and pipe insulation.
 Especially the representation of the heat losses depends a lot on the level of detail of a model.
-As mentioned above, the current implementation treats the thermal beaviour as steady state.
+As mentioned above, in the current implementation, the thermal state of the network is assumed to be in steady state conditions.
 The temperature at the outlet is calculated as follows:
 
 .. math::
