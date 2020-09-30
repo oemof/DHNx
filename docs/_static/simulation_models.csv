@@ -12,17 +12,17 @@ heat flow; :math:`\dot{Q}`; :math:`W`;
 density; :math:`\rho`; :math:`kg/m^3`; :math:`971.78\ kg/m^3` at :math:`80^\circ`C
 spec. heat capacity; :math:`c`; :math:`J/(kg K)`:math:`4.18 J/(kgK)`
 dynamic viscosity; :math:`\mu`; :math:`kg/(m \cdot s)`; :math:`0.00035\,kg/(m \cdot s)` at :math:`80^\circ`C and PN16 or PN25 
-darcy friction factor; :math:`\lambda`;-;
-Reynolds number; :math:`Re`;-;
+darcy friction factor; :math:`\lambda`;--;
+Reynolds number; :math:`Re`;--;
 **Parameters**;;;
 pipe's length; :math:`L`; :math:`m`;
 pipe's inner diameter; :math:`D`; :math:`mm`; Nominal diameters DN25 - DN250
-localized pressure loss coefficient; :math:`\zeta`;-; :math:`\zeta_{tee} = 2`, :math:`\zeta_{valve} = 3.3` (for diameter of :math:`50\,mm`)
+localized pressure loss coefficient; :math:`\zeta`;--; :math:`\zeta_{tee} = 2`, :math:`\zeta_{valve} = 3.3` (for diameter of :math:`50\,mm`)
 standard acceleration due to gravity; :math:`g`; :math:`m/s^2`; :math:`9.81 m/s^2`
 altitude difference; math:`\Delta h`; :math:`m`;
 pipe's absolute surface roughness; :math:`\epsilon`; :math:`mm`; :math:`0.01\,mm`
 heat transfer coefficient; :math:`U` (sometimes :math:`k`); :math:`W/(K m^2)`;
 spec. heat loss per meter; :math:`U_{spec}`(sometimes also :math:`U` !); :math:`W/(K m)`; :math:`0.15-0.9\,W/(K m)`
-pump efficiency; :math:`\eta_{pump}`;-; :math:`0.7`
-electric pump efficiency; :math:`\eta_{el}`;-;
-hydraulic pump efficiency; :math:`\eta_{hyd}`;-;
+pump efficiency; :math:`\eta_{pump}`;--; :math:`0.7`
+electric pump efficiency; :math:`\eta_{el}`;--;
+hydraulic pump efficiency; :math:`\eta_{hyd}`;--;
