@@ -31,7 +31,10 @@ class SimulationModelNumpy(SimulationModel):
     r"""
     Implementation of a simulation model using numpy.
     """
-    def __init__(self, thermal_network, rho=971.78, c=4190, mu=0.00035, tolerance=1e-10):
+    def __init__(
+            self, thermal_network,
+            rho=971.78, c=4190, mu=0.00035, eta_pump=1, tolerance=1e-10
+    ):
         super().__init__(thermal_network)
         self.results = {}
 
@@ -52,6 +55,8 @@ class SimulationModelNumpy(SimulationModel):
         self.mu = mu  # kg/(m*s)
 
         self.temp_env = thermal_network.sequences.environment.temp_env.iloc[:, 0]
+
+        self.eta_pump = eta_pump
 
         self.tolerance = tolerance
 
@@ -556,8 +561,6 @@ class SimulationModelNumpy(SimulationModel):
 
     def _calculate_pump_power(self, global_pressure_losses):
 
-        eta_pump = 1
-
         producers = [
             node for node, data in self.nx_graph.nodes(data=True)
             if data['node_type'] == 'producer'
@@ -566,7 +569,7 @@ class SimulationModelNumpy(SimulationModel):
         mass_flow_producers = \
             self.results['pipes-mass_flow'].loc[:, idx[producers, :]].sum(axis=1)
 
-        pump_power = mass_flow_producers * global_pressure_losses / (eta_pump * self.rho)
+        pump_power = mass_flow_producers * global_pressure_losses / (self.eta_pump * self.rho)
 
         return pump_power
 
