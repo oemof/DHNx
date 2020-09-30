@@ -10,7 +10,7 @@ ambient temperature; :math:`T_{env}`; :math:`^\circ C`; :math:`20 ^\circ C`
 heat flow; :math:`\dot{Q}`; :math:`W`;
 **Water properties**;;;
 density; :math:`\rho`; :math:`kg/m^3`; :math:`971.78\ kg/m^3` at :math:`80^\circ C`
-spec. heat capacity; :math:`c`; :math:`J/(kg K)`; :math:`4190\,J/(kgK)` at :math:`80^\circ`C and PN16 or PN25 
+spec. heat capacity; :math:`c`; :math:`J/(kg K)`; :math:`4190\,J/(kgK)` at :math:`80^\circ C` and PN16 or PN25 
 dynamic viscosity; :math:`\mu`; :math:`kg/(m \cdot s)`; :math:`0.00035\,kg/(m \cdot s)` at :math:`80^\circ C` and PN16 or PN25 
 darcy friction factor; :math:`\lambda`;--;
 Reynolds number; :math:`Re`;--;
