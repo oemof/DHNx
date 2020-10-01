@@ -762,6 +762,10 @@ class SimulationModelNumpy(SimulationModel):
         Calculates the pipes' heat losses given the
         temperatures.
 
+        .. math::
+
+            \dot{Q}_{losses} = c \cdot \dot{m} \cdot \Delta T
+
         Parameters
         ----------
         temp_node : pd.DataFrame
