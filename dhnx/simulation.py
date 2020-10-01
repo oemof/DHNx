@@ -260,6 +260,10 @@ class SimulationModelNumpy(SimulationModel):
 
         for t in self.thermal_network.timeindex:
 
+            # The order of columns in self.input_data.mass_flow fit with those of self.inc_mat
+            # because the columns have been generated from the graph's nodes in
+            # prepare_hydraulic_eqn()
+
             x, residuals, _, _ = np.linalg.lstsq(
                 self.inc_mat,
                 self.input_data.mass_flow.loc[t, :],
