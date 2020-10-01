@@ -15,7 +15,7 @@ import pandas as pd
 import networkx as nx
 
 import dhnx
-import helpers
+from . import helpers
 
 
 tmpdir = helpers.extend_basic_path('tmp')
