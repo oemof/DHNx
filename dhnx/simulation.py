@@ -503,6 +503,9 @@ class SimulationModelNumpy(SimulationModel):
         r"""
         Calculates global pressure losses.
 
+        Finds the path with the maximal pressure loss among from the set of
+        paths from the producer to all consumers.
+
         Parameters
         ----------
         pipes_pressure_losses : pd.DataFrame
