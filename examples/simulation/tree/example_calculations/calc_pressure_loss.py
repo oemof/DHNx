@@ -40,7 +40,7 @@ zeta_tee_connect = 0.75     # [-] Rough estimate of Tee connector: WJ Beek - Tra
 zeta_tee_separation = 2     # [-] Rough estimate of Tee connector: WJ Beek - Transport Phenomena (1999)
 zeta_valve = 3.3            # [-] VDI Wärmeatlas für Nennweite von 50 mm
 mu = 0.35                   # [mPa*s]
-eta_pump = 0.7              # [-] TODO: Right now made up value. What should it be in model?
+eta_pump = 1                # [-]
 g = 9.81                    # [m/s2]
 pi = math.pi
 
