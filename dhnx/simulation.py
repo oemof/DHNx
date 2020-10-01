@@ -500,7 +500,19 @@ class SimulationModelNumpy(SimulationModel):
         return pipes_localized_pressure_losses
 
     def _calculate_global_pressure_losses(self, pipes_pressure_losses):
+    r"""
+        Calculates global pressure losses.
 
+        Parameters
+        ----------
+        pipes_pressure_losses : pd.DataFrame
+            Total pressure losses for every time step and pipe [Pa]
+
+        Returns
+        -------
+         global_pressure_losses : pd.DataFrame
+            Global pressure losses [Pa]
+        """
         def calculate_path_weights(source_nodes, sink_nodes, graph, weight):
 
             path_weights = {}
@@ -560,7 +572,23 @@ class SimulationModelNumpy(SimulationModel):
         return global_pressure_losses
 
     def _calculate_pump_power(self, global_pressure_losses):
+        r"""
+        Calculates the pump power.
+        
+        .. math::
 
+            P_{el. pump} = \frac{1}{\eta_{el}\eta_{hyd}}\frac{\Delta p }{\rho} \dot{m}
+
+        Parameters
+        ----------
+        global_pressure_losses : pd.DataFrame
+            Global pressure losses [Pa]
+
+        Returns
+        -------
+         pump_power : pd.Series
+            Pump power [W]
+        """
         producers = [
             node for node, data in self.nx_graph.nodes(data=True)
             if data['node_type'] == 'producer'
