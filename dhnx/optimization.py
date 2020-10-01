@@ -100,6 +100,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     def check_input(self):
         """Check 1:
 
+        Check and make sure, that the dtypes of the columns of the sequences
+        and the indices (=ids) of the forks, pipes, producers and consumers
+        are of type 'str'. (They need to be the same dtye.)
+
+        Check 2:
+
         Firstly, it is checked, if there are any not-allowed connection in the *pipe* data.
         The following connections are not allowed:
 
@@ -108,16 +114,28 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
           * producer -> consumer
           * consumer -> fork
 
+        Secondly, it is checked, if a pipes goes to a consumer, which does not exist.
+
         An error is raised if one of these connection occurs.
-
-        Check 2:
-
-        Check and make sure, that the dtypes of the columns of the sequences
-        and the indices (=ids) of the forks, pipes, producers and consumers
-        are of type 'str'. (They need to be the same dtye.)
         """
 
-        # check pipes
+        # Check 1
+        # make sure that all ids are of type str
+        # sequences
+        sequ_items = self.network.sequences.keys()
+        for it in sequ_items:
+            for v in self.network.sequences[it].values():
+                v.columns.astype('str')
+
+        # components
+        for comp in ['pipes', 'consumers', 'producers', 'forks']:
+            self.network.components[comp].index = \
+                self.network.components[comp].index.astype('str')
+
+        # Check 2
+
+        ids_consumers = self.network.components['consumers'].index
+
         for p, q in self.network.components['pipes'].iterrows():
 
             if (q['from_node'].split('-')[0] == "consumers") and (
@@ -147,18 +165,48 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     "to consumers, or vice versa. This is not allowed!"
                     "".format(p))
 
-        # Check 2
-        # make sure that all ids are of type str
-        # sequences
-        sequ_items = self.network.sequences.keys()
-        for it in sequ_items:
-            for v in self.network.sequences[it].values():
-                v.columns.astype('str')
+            if (q['from_node'].split('-')[0] == "forks") and (
+                    q['to_node'].split('-')[0] == "consumers"):
 
-        # components
-        for comp in ['pipes', 'consumers', 'producers', 'forks']:
-            self.network.components[comp].index = \
-                self.network.components[comp].index.astype('str')
+                cons_id = q['to_node'].split('-')[1]
+
+                if cons_id not in ids_consumers:
+                    raise ValueError(
+                        ""
+                        "The consumer of pipe id {} does not exist!".format(p))
+
+        pipe_to_cons_ids = list(self.network.components['pipes']['to_node'].values)
+        pipe_to_cons_ids = [x.split('-')[1] for x in pipe_to_cons_ids
+                            if x.split('-')[0] == 'consumers']
+
+        for id in list(self.network.components['consumers'].index):
+            if id not in pipe_to_cons_ids:
+                raise ValueError(
+                    "The consumer id {} has no connection the the grid!".format(id))
+
+    def remove_inactive(self):
+        """
+        If the attribute active is present in any of the components
+        columns, or in any the investment options tables,
+        all rows with active == 0 are deleted, and the column active
+        is deleted.
+        """
+        def clean_df(df):
+            if 'active' in df.columns:
+                v_new = df[df['active'] == 1].copy()
+                v_new.drop('active', axis=1, inplace=True)
+                df = v_new
+            return df
+
+        for k, v in self.network.components.items():
+            self.network.components[k] = clean_df(v)
+
+        pipes = self.invest_options['network']['pipes']
+        self.invest_options['network']['pipes'] = clean_df(pipes)
+
+        for node_typ in ['consumers', 'producers']:
+            for k, v in self.invest_options[node_typ].items():
+                self.invest_options[node_typ][k] = clean_df(v)
 
     def complete_exist_data(self):
         """
@@ -170,18 +218,17 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         edges = self.network.components['pipes']
 
         for r, c in edges.iterrows():
-            if c['active']:
-                if c['existing']:
-                    idx = pipe_types[pipe_types['label_3'] == c['hp_type']].index[0]
-                    if pipe_types.at[idx, 'nonconvex'] == 1:
-                        if c['capacity'] > 0:
-                            edges.at[r, 'invest_status'] = 1
-                        elif c['capacity'] == 0:
-                            edges.at[r, 'invest_status'] = 0
-                        else:
-                            print('Something wrong?!')
-                    # else:
-                    #     edges.at[r, 'invest_status'] = None
+            if c['existing']:
+                idx = pipe_types[pipe_types['label_3'] == c['hp_type']].index[0]
+                if pipe_types.at[idx, 'nonconvex'] == 1:
+                    if c['capacity'] > 0:
+                        edges.at[r, 'invest_status'] = 1
+                    elif c['capacity'] == 0:
+                        edges.at[r, 'invest_status'] = 0
+                    else:
+                        print('Something wrong?!')
+                # else:
+                #     edges.at[r, 'invest_status'] = None
 
         self.network.components['pipes'] = edges
 
@@ -198,12 +245,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         """
 
         pipe_types = self.invest_options['network']['pipes'].copy()
-        pipe_types.drop(pipe_types[pipe_types['active'] == 0].index,
-                        inplace=True)
         edges = self.network.components['pipes']
 
         # just take active heatpipes
-        edges_active = edges[edges['active'] == 1]
+        edges_active = edges
 
         # check if pipe type in pipe invest options
         hp_list = list({x for x in edges_active['hp_type'].tolist()
@@ -319,6 +364,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         and does some further checks and completing the attributes of the input pipes data.
         """
 
+        # removes all rows with attribute active == 0 - if 'active given
+        self.remove_inactive()
+
         # initial check of pipes connections
         self.check_input()
 
@@ -326,14 +374,14 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         if 'hp_type' not in list(self.network.components['pipes'].columns):
             self.network.components['pipes']['hp_type'] = None
 
-        # if there is no information about active pipes, all pipes are active
-        if 'active' not in list(self.network.components['pipes'].columns):
-            self.network.components['pipes']['active'] = 1
-
-        # in case the attribute 'active' is not present, it is supposed
-        # that all consumers are active
-        if 'active' not in list(self.network.components['consumers'].columns):
-            self.network.components['consumers']['active'] = 1
+        # # if there is no information about active pipes, all pipes are active
+        # if 'active' not in list(self.network.components['pipes'].columns):
+        #     self.network.components['pipes']['active'] = 1
+        #
+        # # in case the attribute 'active' is not present, it is supposed
+        # # that all consumers are active
+        # if 'active' not in list(self.network.components['consumers'].columns):
+        #     self.network.components['consumers']['active'] = 1
 
         # prepare heat data, whether global simultanity or timeseries
         if 'P_heat_max' not in list(
@@ -521,7 +569,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         df_hp = self.invest_options['network']['pipes']
 
         # list of active heat pipes
-        active_hp = list(df_hp[df_hp['active'] == 1]['label_3'].values)
+        active_hp = list(df_hp['label_3'].values)
 
         for hp in active_hp:
             hp_param = df_hp[df_hp['label_3'] == hp].squeeze()
