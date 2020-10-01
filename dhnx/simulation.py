@@ -253,7 +253,7 @@ class SimulationModelNumpy(SimulationModel):
         Returns
         -------
         pipes_mass_flow : pd.DataFrame
-            Mass flow in the pipes
+            Mass flow in the pipes [kg/s]
         """
 
         pipes_mass_flow = {}
@@ -292,7 +292,7 @@ class SimulationModelNumpy(SimulationModel):
         Returns
         -------
         re : pd.DataFrame
-            Reynoldes number for every timestep and pipe.
+            Reynolds number for every time step and pipe [-]
         """
         pipes_mass_flow = self.results['pipes-mass_flow']
 
@@ -317,12 +317,12 @@ class SimulationModelNumpy(SimulationModel):
         Parameters
         ----------
         re : pd.DataFrame
-            Reynoldes number for every timestep and pipe.
+            Reynolds number for every time step and pipe [-]
 
         Returns
         -------
         lamb : pd.DataFrame
-            Darcy friction factor for every timestep and pipe.
+            Darcy friction factor for every time step and pipe [-]
         """
 
         factor_diameter = self.thermal_network.components.pipes[
@@ -350,12 +350,12 @@ class SimulationModelNumpy(SimulationModel):
         Parameters
         ----------
         lamb : pd.DataFrame
-            Darcy friction factor for every timestep and pipe.
+            Darcy friction factor for every time step and pipe [-]
 
         Returns
         -------
         pipes_pressure_losses : pd.DataFrame
-            DataFrame with distributed pressure losses for every timestep and pipe.
+            DataFrame with distributed pressure losses for every time step and pipe [Pa]
         """
         pipes_mass_flow = self.results['pipes-mass_flow'].copy()
 
@@ -396,7 +396,7 @@ class SimulationModelNumpy(SimulationModel):
         Returns
         -------
         nodes_pressure_losses : pd.DataFrame
-            Pressure losses at the nodes.
+            Localized pressure losses at the nodes [Pa]
         """
         def _assign_zeta_to_pipes(flow_type):
 
