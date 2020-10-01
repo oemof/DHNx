@@ -149,7 +149,9 @@ the localized pressure loss coefficient :math:`\zeta`:
 
 .. math::
     \Delta p_{loc} = \zeta \frac{v^2}{2} \rho
-It is assumed that each fork has a tee and each consumer has a valve installed.
+It is assumed that each fork has a tee installed. According to [2], localized pressure losses occur downstream of the element that causes these losses. The values of the localized pressure loss coefficient :math:`\zeta` were taken from [3]. In case of a tee which splits the stream, :math:`\zeta` is 2. In case the streams join, :math:`\zeta` is 0.75.
+
+It is also assumed that each consumer has a valve installed. Due to the complexity of determining the localized pressure loss coefficients, these losses have not been considered so far.
 
 **Hydrostatic pressure difference**
 
@@ -223,3 +225,5 @@ References
 
 .. [1] Chiara Bordin. Mathematical Optimization Applied to Thermal and Electrical Energy Systems.
     PhD thesis, Università di Bologna, 2015.
+.. [2] Donald Miller. Internal Flow Systems. 2nd ed. Cranfield, Bedford : BHRA (Information Services), 1990.
+.. [3] Beek WJ, Muttzall KM, JW van Heuven. Transport Phenomena. 2nd ed. John Wiley & Sons. Chichester, 1999.
