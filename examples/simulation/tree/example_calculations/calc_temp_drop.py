@@ -26,7 +26,7 @@ temp_drop = pd.read_csv(input_data + '/sequences/consumers-temperature_drop.csv'
 mass_flow = pd.read_csv(input_data + '/sequences/consumers-mass_flow.csv')
 
 # Constants for calculation
-t_env = 20 + 273.15                                                                 # [K]
+t_env = 10 + 273.15                                                                 # [K]
 t_prod_i = pd.DataFrame(data={'t_prod_i': (130 + 273.15)*np.ones(len(mass_flow))})  # [K] Temperature at the producer
 c = 4190                                                                            # [J/kg*K]
 pi = math.pi
