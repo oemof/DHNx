@@ -500,7 +500,7 @@ class SimulationModelNumpy(SimulationModel):
         return pipes_localized_pressure_losses
 
     def _calculate_global_pressure_losses(self, pipes_pressure_losses):
-    r"""
+        r"""
         Calculates global pressure losses.
 
         Parameters
