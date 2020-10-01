@@ -312,7 +312,7 @@ class SimulationModelNumpy(SimulationModel):
 
         .. math::
 
-            \lambda = 0.007 \cdot Re ^ {-0.13} \cdot D ^ {-0.14}
+            \lambda = 0.07 \cdot Re ^ {-0.13} \cdot D ^ {-0.14}
 
         Parameters
         ----------
