@@ -106,10 +106,12 @@ dp_hyd['2'] = - rho * g * abs(forks['m_over_NHN'][0] - consumers['m_over_NHN'].i
 # Calculate total pressure loss
 dp = dp_diss + dp_loc + dp_hyd
 
+# Find the consumer with maximum pressure losses
+max_pressure_losses = max(dp.loc[:, '1':])
+
 # Calculate global pressure loss
 dp_glob = pd.DataFrame(data={'losses': np.zeros(len(mass_flow_total))})
-for index, node in enumerate(dp):
-    dp_glob['losses'] = dp_glob['losses'] + dp[str(index)]
+dp_glob['losses'] = dp_glob['losses'] + dp['0'] + dp[max_pressure_losses]
 
 # Calculate pump power
 p_el_pump = pd.DataFrame(data={'0': np.zeros(len(mass_flow_total))})
