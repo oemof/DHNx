@@ -347,9 +347,13 @@ class SimulationModelNumpy(SimulationModel):
         r"""
         Calculates the pressure losses in the pipes.
 
+        Equal-sized inlet and return pipes are assumed which leads to
+        equal mass flows and pressure losses for both. This introduces
+        the initial factor of 2 in the equation.
+
         .. math::
 
-            \delta p = \lambda \frac{8L}{\rho \pi^2 D^5}\dot{m}^2.
+            \delta p = 2 \cdot \lambda \frac{8L}{\rho \pi^2 D^5}\dot{m}^2.
 
         Parameters
         ----------
@@ -359,7 +363,8 @@ class SimulationModelNumpy(SimulationModel):
         Returns
         -------
         pipes_pressure_losses : pd.DataFrame
-            DataFrame with distributed pressure losses for every time step and pipe [Pa]
+            DataFrame with distributed pressure losses for inlet and return for every
+            time step and pipe [Pa]
         """
         pipes_mass_flow = self.results['pipes-mass_flow'].copy()
 
