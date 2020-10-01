@@ -1,7 +1,7 @@
 Name; Math. symbol;Unit;Common values
 **Variables**;;;
 mass flow; :math:`\dot{m}`; :math:`kg/s`;
-mean flow velocity; :math:`v`; :math:`m/s`; :math:`1-3 m/s`
+mean flow velocity; :math:`v`; :math:`m/s`; :math:`1-3\,m/s`
 pressure; :math:`p`; :math:`Pa` | :math:`bar`; Nominal pressures PN16 or PN25
 pressure difference; :math:`\Delta p`; :math:`Pa` | :math:`bar`; max. :math:`300\,Pa/m`
 pump power; :math:`P_{el,pump}`; :math:`W`
@@ -18,7 +18,7 @@ Reynolds number; :math:`Re`;--;
 pipe's length; :math:`L`; :math:`m`;
 pipe's inner diameter; :math:`D`; :math:`mm`; Nominal diameters DN25 - DN250
 localized pressure loss coefficient; :math:`\zeta`;--; :math:`\zeta_{tee} = 2`, :math:`\zeta_{valve} = 3.3` (for diameter of :math:`50\,mm`)
-standard acceleration due to gravity; :math:`g`; :math:`m/s^2`; :math:`9.81 m/s^2`
+standard acceleration due to gravity; :math:`g`; :math:`m/s^2`; :math:`9.81\,m/s^2`
 altitude difference; :math:`\Delta h`; :math:`m`;
 pipe's absolute surface roughness; :math:`\epsilon`; :math:`mm`; :math:`0.01\,mm`
 heat transfer coefficient; :math:`U` (sometimes :math:`k`); :math:`W/(K m^2)`;
