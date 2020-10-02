@@ -17,9 +17,13 @@ from addict import Dict
 import pandas as pd
 import networkx as nx
 import numpy as np
-from shapely.geometry import Point
-from shapely.geometry import LineString
 
+try:
+    from shapely.geometry import Point
+    from shapely.geometry import LineString
+
+except ImportError:
+    print("Need to install shapely to download from osm.")
 
 try:
     import geopandas as gpd

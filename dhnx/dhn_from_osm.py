@@ -19,8 +19,13 @@ except ImportError:
 
 import pandas as pd
 
-from shapely.ops import nearest_points
-from shapely.geometry import LineString
+try:
+    from shapely.ops import nearest_points
+    from shapely.geometry import LineString
+
+except ImportError:
+    print("Need to install shapely to download from osm.")
+
 
 
 def connect_points_to_network(points, nodes, edges):
