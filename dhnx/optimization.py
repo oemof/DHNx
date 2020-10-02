@@ -669,7 +669,6 @@ def setup_optimise_investment(thermal_network, invest_options, settings=None):
         'bidirectional_pipes': False,
         'dump_path': None,
         'dump_name': 'dump.oemof',
-        'get_invest_results': True,
         'print_logging_info': False,
         'write_lp_file': False,
     }
@@ -696,10 +695,7 @@ def solve_optimisation_investment(model):
         my_es.dump(dpath=model.settings['dump_path'], filename=model.settings['dump_name'])
         print('oemof Energysystem stored in "{}"'.format(model.settings['dump_path']))
 
-    if model.settings['get_invest_results']:
-        edges_results = model.get_results_edges()
-    else:
-        edges_results = None
+    edges_results = model.get_results_edges()
 
     results = {'oemof': model.es.results['main'],
                'oemof_meta': model.es.results['meta'],

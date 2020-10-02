@@ -12,6 +12,5 @@ attribute,type,default,description
 **bidirectional_pipes**,bool,*False*,"Bidirectional pipes leads to bi-directional flow attributes at the heatpipeline components {'min': -1, bidirectional: True}"
 **dump_path**,str,None,"If a dump path is provided, the oemof dump file is stored."
 **dump_name**,str,dump.oemof,Name of dump file
-**get_invest_results**,bool,*True*,Transfer the investment results to the edges of the thermal network after optimisation
 **print_logging_info**,bool,*False*,There are still some helpful print statements.
 **write_lp_file**,bool,*False*,Option of writing lp-file. The lp-file is stored in 'User/.oemof/lp_files/DHNx.lp'
