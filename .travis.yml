@@ -19,8 +19,8 @@ before_install:
 install:
   - pip install -r tests/test_requirements.txt
   - pip install -e .
-# install scipy with conda because installing networkx with pip skips installing scipy.
-  - conda install scipy
+# install scipy explicitly conda because installing networkx with pip skips installing scipy.
+  - pip install scipy
   - pip install pytest-cov
   - pip install coveralls
 
