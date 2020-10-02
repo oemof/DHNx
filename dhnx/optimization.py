@@ -621,10 +621,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         df.at[r, 'hp_type'] = ahp
                         df.at[r, 'capacity'] = c[ahp + '.size']
                         df.at[r, 'direction'] = c[ahp + '.direction']
-                        # if p['nonconvex']:
-                        #     df.at[r, 'invest_status'] = c[ahp + '.status']
-                        # else:
-                        #     df.at[r, 'invest_status'] = None
 
         # use pipes dataframe as base and add results as new columns to it
         df = self.network.components['pipes']
