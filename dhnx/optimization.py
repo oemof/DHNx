@@ -622,11 +622,36 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         df.at[r, 'capacity'] = c[ahp + '.size']
                         df.at[r, 'direction'] = c[ahp + '.direction']
 
+        def recalc_costs_losses():
+
+            df['costs'] = 0
+            df['losses'] = 0
+
+            for r, c in df.iterrows():
+                if c['capacity'] > 0:
+                    hp_lab = c['hp_type']
+                    # select row from heatpipe type table
+                    hp_p = df_hp[df_hp['label_3'] == hp_lab].squeeze()
+                    if hp_p['nonconvex'] == 1:
+                        df.at[r, 'costs'] = c['length[m]'] * (
+                            c['capacity'] * hp_p['capex_pipes'] + hp_p['fix_costs']
+                        )
+                        df.at[r, 'losses'] = c['length[m]'] * (
+                            c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
+                        )
+                    elif hp_p['nonconvex'] == 0:
+                        df.at[r, 'costs'] = c['length[m]'] * \
+                                            c['capacity'] * hp_p['capex_pipes']
+                        # Note, that a constant loss is possible also for convex
+                        df.at[r, 'losses'] = c['length[m]'] * (
+                                c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
+                            )
+
         # use pipes dataframe as base and add results as new columns to it
         df = self.network.components['pipes']
 
         # remove input data
-        df = df[['from_node', 'to_node']]
+        df = df[['from_node', 'to_node', 'length[m]']].copy()
 
         # putting the results of the investments in heatpipes to the pipes:
         df_hp = self.invest_options['network']['pipes']
@@ -641,7 +666,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         catch_up_results()
 
-        return df[['from_node', 'to_node', 'hp_type', 'capacity', 'direction']]
+        recalc_costs_losses()
+
+        return df[['from_node', 'to_node', 'hp_type', 'capacity', 'direction',
+                   'costs', 'losses']]
 
 
 def optimize_operation(thermal_network):

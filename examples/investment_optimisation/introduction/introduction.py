@@ -30,7 +30,8 @@ network.optimize_investment(invest_options=invest_opt)
 
 # get results
 results_edges = network.results.optimization['components']['pipes']
-print(results_edges[['from_node', 'to_node', 'hp_type', 'capacity', 'direction']])
+print(results_edges[['from_node', 'to_node', 'hp_type', 'capacity',
+                     'direction', 'costs', 'losses']])
 
 # print(results_edges[['invest_costs[€]']].sum())
 print('Objective value: ', network.results.optimization['oemof_meta']['objective'])
