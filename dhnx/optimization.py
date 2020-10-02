@@ -374,15 +374,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         if 'hp_type' not in list(self.network.components['pipes'].columns):
             self.network.components['pipes']['hp_type'] = None
 
-        # # if there is no information about active pipes, all pipes are active
-        # if 'active' not in list(self.network.components['pipes'].columns):
-        #     self.network.components['pipes']['active'] = 1
-        #
-        # # in case the attribute 'active' is not present, it is supposed
-        # # that all consumers are active
-        # if 'active' not in list(self.network.components['consumers'].columns):
-        #     self.network.components['consumers']['active'] = 1
-
         # prepare heat data, whether global simultanity or timeseries
         if 'P_heat_max' not in list(
                 self.network.components['consumers'].columns):
