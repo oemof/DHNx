@@ -16,6 +16,10 @@ import os
 from addict import Dict
 import pandas as pd
 import networkx as nx
+import numpy as np
+from shapely.geometry import Point
+from shapely.geometry import LineString
+
 
 try:
     import geopandas as gpd
@@ -30,7 +34,6 @@ except ImportError:
     print("Need to install osmnx to download from osm.")
 
 from dhnx.dhn_from_osm import connect_points_to_network
-
 
 
 logger = logging.getLogger()
@@ -243,10 +246,6 @@ class OSMNetworkImporter(NetworkImporter):
         GeoDataFrame or tuple
             gdf_nodes or gdf_edges or both as a tuple
         """
-        import numpy as np
-        from shapely.geometry import Point
-        from shapely.geometry import LineString
-
         if not (nodes or edges):
             raise ValueError('You must request nodes or edges, or both.')
 
@@ -299,8 +298,8 @@ class OSMNetworkImporter(NetworkImporter):
 
         if len(to_return) > 1:
             return tuple(to_return)
-        else:
-            return to_return[0]
+
+        return to_return[0]
 
     @staticmethod
     def get_building_midpoints(footprints):
@@ -375,9 +374,6 @@ class OSMNetworkImporter(NetworkImporter):
     def process(self, graph, footprints):
 
         print('Processing...')
-
-        # get building data
-        areas = footprints.area
 
         graph = self.remove_self_loops(graph)
 
