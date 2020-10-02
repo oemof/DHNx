@@ -27,7 +27,6 @@ except ImportError:
     print("Need to install shapely to download from osm.")
 
 
-
 def connect_points_to_network(points, nodes, edges):
     r"""
 
