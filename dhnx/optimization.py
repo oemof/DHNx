@@ -581,20 +581,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                               c[hp_lab + '.' + 'size-2'], ' | ')
                     print('----------')
 
-        # use pipes dataframe as base and add results as new columns to it
-        df = self.network.components['pipes']
-
-        # putting the results of the investments in heatpipes to the pipes:
-        df_hp = self.invest_options['network']['pipes']
-
-        # list of active heat pipes
-        active_hp = list(df_hp['label_3'].values)
-
-        for hp in active_hp:
-            hp_param = df_hp[df_hp['label_3'] == hp].squeeze()
-            get_hp_results(hp_param)
-            check_multi_dir_invest(hp)
-
         def write_results_to_edges(pipe_data):
 
             def check_invest_label(hp_type, edge_id):
@@ -613,6 +599,20 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                             df.at[r, 'invest_status'] = c[ahp + '.status']
                         else:
                             df.at[r, 'invest_status'] = None
+
+        # use pipes dataframe as base and add results as new columns to it
+        df = self.network.components['pipes']
+
+        # putting the results of the investments in heatpipes to the pipes:
+        df_hp = self.invest_options['network']['pipes']
+
+        # list of active heat pipes
+        active_hp = list(df_hp['label_3'].values)
+
+        for hp in active_hp:
+            hp_param = df_hp[df_hp['label_3'] == hp].squeeze()
+            get_hp_results(hp_param)
+            check_multi_dir_invest(hp)
 
         write_results_to_edges(df_hp)
 
