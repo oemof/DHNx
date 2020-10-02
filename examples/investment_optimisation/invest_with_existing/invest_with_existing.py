@@ -57,7 +57,7 @@ ind_exist = list(edges[edges['existing'] == 1].index)
 
 # plot existing network
 network_exist = network
-network_exist.components['pipes'] = results_edges.loc[ind_exist]
+network_exist.components['pipes'] = edges.loc[ind_exist]
 
 # plot existing network
 static_map = dhnx.plotting.StaticMap(network_exist)

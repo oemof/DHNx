@@ -502,7 +502,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     # forks-consumers, producers-forks
                     invest = 0
 
-            return invest
+            # the rounding is performed due to numerical issues
+            return round(invest, 6)
 
         def get_invest_status(lab):
 
@@ -579,7 +580,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         def check_multi_dir_invest(hp_lab):
 
             df_double_invest = \
-                df[(df[hp_lab + '.' + 'size-1'] > 0.001) & (df[hp_lab + '.' + 'size-2'] > 0.001)]
+                df[(df[hp_lab + '.' + 'size-1'] > 0) & (df[hp_lab + '.' + 'size-2'] > 0)]
 
             if self.settings['print_logging_info']:
                 print('***')
@@ -610,7 +611,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         "Pipe id {} already has an investment > 0!".format(edge_id))
 
             df['hp_type'] = None
-            df['capacity'] = 0
+            df['capacity'] = float(0)
             df['direction'] = 0
 
             for ahp in active_hp:
@@ -624,8 +625,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         def recalc_costs_losses():
 
-            df['costs'] = 0
-            df['losses'] = 0
+            df['costs'] = float(0)
+            df['losses'] = float(0)
 
             for r, c in df.iterrows():
                 if c['capacity'] > 0:
@@ -649,6 +650,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # use pipes dataframe as base and add results as new columns to it
         df = self.network.components['pipes']
+
+        # only select not existing pipes
+        df = df[df['existing'] == 0].copy()
 
         # remove input data
         df = df[['from_node', 'to_node', 'length[m]']].copy()
