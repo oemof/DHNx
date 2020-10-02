@@ -625,7 +625,7 @@ class SimulationModelNumpy(SimulationModel):
         Returns
         -------
         exponent_constant : np.matrix
-            Constant part of the exponent
+            Constant part of the exponent [kg/s]
         """
 
         heat_transfer_coefficient = nx.adjacency_matrix(
@@ -749,12 +749,12 @@ class SimulationModelNumpy(SimulationModel):
         Parameters
         ----------
         temp_inlet : pd.DataFrame
-            Known inlet temperature
+            Known inlet temperature [°C]
 
         Returns
         -------
         temp_return : pd.DataFrame
-            Return temperature with the consumers values set.
+            Return temperature with the consumers values set [°C]
         """
 
         temp_return = pd.DataFrame(
@@ -781,12 +781,12 @@ class SimulationModelNumpy(SimulationModel):
         Parameters
         ----------
         temp_node : pd.DataFrame
-            Temperatures at the nodes.
+            Temperatures at the nodes [°C]
 
         Returns
         -------
         pipes_heat_losses : pd.DataFrame
-            Heat losses in the pipes.
+            Heat losses in the pipes [W]
         """
 
         pipes_heat_losses = {}
