@@ -586,7 +586,7 @@ class SimulationModelNumpy(SimulationModel):
     def _calculate_pump_power(self, global_pressure_losses):
         r"""
         Calculates the pump power.
-        
+
         .. math::
 
             P_{el. pump} = \frac{1}{\eta_{el}\eta_{hyd}}\frac{\Delta p }{\rho} \dot{m}
