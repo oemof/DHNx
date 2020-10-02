@@ -307,30 +307,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     "".format(r)
                 )
 
-    def complete_exist_data(self):
-        """
-        For all existing pipes, this method completes the attribute *invest_status* of the results
-        dataframe of the pipes. If there is an existing pipe, the *invest_status* is set to 1.
-        """
-
-        pipe_types = self.invest_options['network']['pipes']
-        edges = self.network.components['pipes']
-
-        for r, c in edges.iterrows():
-            if c['existing']:
-                idx = pipe_types[pipe_types['label_3'] == c['hp_type']].index[0]
-                if pipe_types.at[idx, 'nonconvex'] == 1:
-                    if c['capacity'] > 0:
-                        edges.at[r, 'invest_status'] = 1
-                    elif c['capacity'] == 0:
-                        edges.at[r, 'invest_status'] = 0
-                    else:
-                        print('Something wrong?!')
-                # else:
-                #     edges.at[r, 'invest_status'] = None
-
-        self.network.components['pipes'] = edges
-
     def get_pipe_data(self):
         """Adds heat loss and investment costs to pipes dataframe.
 
@@ -476,14 +452,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # check if existing pipes are given
         self.check_existing()
-
-        # get invest_status in order that .get_pipe_data() works proberly for
-        # existing pipes - maybe, needs to be adapted in future
-        self.complete_exist_data()
-
-        # if there is the existing attribute, get the information about
-        # the pipe types (like heat_loss)
-        self.get_pipe_data()    # --> WHY?
 
         # set up oemof energy system
         self.setup_oemof_es()
