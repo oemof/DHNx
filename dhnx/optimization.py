@@ -208,6 +208,68 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             for k, v in self.invest_options[node_typ].items():
                 self.invest_options[node_typ][k] = clean_df(v)
 
+    def prepare_heat_demand(self):
+        """
+        This method performs the pre-processing of the heat demand data, depending on
+        the given optimisation settings.
+
+        - If attribute 'P_heat_max' not given at the consumers, the maximum heat demand
+          is calculated from the timeseries and added the consumers table.
+        - If the optimisation setting 'heat_demand' == scalar, the number of time steps
+          of the optimisation is set to 1, and the 'P_heat_max' values are copied to the
+          consumers heat flow sequences (which is always the input for the optimisation model).
+        - The consumers heat flow sequences are multiplied by the simultaneity factor.
+        - Finally, a sufficient length of the heat demand timeseries is checked.
+
+        Returns
+        -------
+        Updated `.network.components['consumers']` and
+        `.network.sequences['consumers']['heat_flow']`
+        """
+        def check_len_timeseries():
+            """
+            Check, if given number of timesteps of optimization exceeds the length
+            of the given heat demand timeseries.
+            """
+            if self.settings['num_ts'] > \
+                    len(self.network.sequences['consumers'][
+                            'heat_flow'].index):
+                raise ValueError(
+                    'The length of the heat demand timeseries is not sufficient '
+                    'for the given number of {} timesteps.'.format(
+                        self.settings['num_ts']))
+
+        # prepare heat data, whether global simultanity or timeseries
+        if 'P_heat_max' not in list(
+                self.network.components['consumers'].columns):
+            df_max = self.network.sequences['consumers']['heat_flow'].max(). \
+                to_frame(name='P_heat_max')
+
+            self.network.components['consumers'] = \
+                pd.concat([self.network.components['consumers'], df_max],
+                          axis=1, join='outer', sort=False)
+
+        # check, which optimization type should be performed
+        if self.settings['heat_demand'] == 'scalar':
+            # just single timestep optimization, overwrite previous!
+            self.settings['num_ts'] = 1
+
+            # new approach
+            p_max = self.network.components['consumers']['P_heat_max']
+            df_ts = pd.DataFrame(data=[p_max.values],
+                                 columns=list(p_max.index),
+                                 index=pd.Index([0], name='timestep'))
+
+            # heat load is maximum heat load
+            self.network.sequences['consumers']['heat_flow'] = df_ts
+
+        # apply global simultaneity for demand series
+        self.network.sequences['consumers']['heat_flow'] = \
+            self.network.sequences['consumers']['heat_flow'] * \
+            self.settings['simultaneity']
+
+        check_len_timeseries()
+
     def complete_exist_data(self):
         """
         For all existing pipes, this method completes the attribute *invest_status* of the results
@@ -360,7 +422,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
     def setup(self):
         """
-        Calls *check_input()*, *complete_exist_data()*, *get_pipe_data()*, and *setup_oemof_es()*,
+        Calls *remove_inactive()* *check_input()*, *prepare_heat_demand()*,
+        *complete_exist_data()*,
+        *get_pipe_data()*, and *setup_oemof_es()*,
         and does some further checks and completing the attributes of the input pipes data.
         """
 
@@ -370,43 +434,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # initial check of pipes connections
         self.check_input()
 
+        # pre-processes the heat demand data depending on optimisation settings
+        self.prepare_heat_demand()
+
         # create pipes attribute hp_type, if not in the table so far
         if 'hp_type' not in list(self.network.components['pipes'].columns):
             self.network.components['pipes']['hp_type'] = None
-
-        # prepare heat data, whether global simultanity or timeseries
-        if 'P_heat_max' not in list(
-                self.network.components['consumers'].columns):
-
-            df_max = self.network.sequences['consumers']['heat_flow'].max().\
-                to_frame(name='P_heat_max')
-
-            self.network.components['consumers'] = \
-                pd.concat([self.network.components['consumers'], df_max],
-                          axis=1, join='outer', sort=False)
-
-        # check, which optimization type should be performed
-        if self.settings['heat_demand'] == 'scalar':
-
-            # just single timestep optimization, overwrite previous!
-            self.settings['num_ts'] = 1
-
-            # new approach
-            p_max = self.network.components['consumers']['P_heat_max']
-            df_ts = pd.DataFrame(data=[p_max.values],
-                                 columns=list(p_max.index),
-                                 index=pd.Index([0], name='timestep'))
-
-            # heat load is maximum heat load mutiplied with simultaneity
-            self.network.sequences['consumers']['heat_flow'] = df_ts
-
-        if self.settings['num_ts'] > \
-                len(self.network.sequences['consumers']['heat_flow'].index):
-
-            raise ValueError(
-                'The length of the heat demand timeseries is not sufficient '
-                'for the given number of {} timesteps.'.format(
-                    self.settings['num_ts']))
 
         # check whether there the 'existing' attribute is present at the pipes
         if 'existing' not in self.network.components['pipes'].columns:
@@ -416,14 +449,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # existing pipes - maybe, needs to be adapted in future
         self.complete_exist_data()
 
-        # apply global simultaneity for demand series
-        self.network.sequences['consumers']['heat_flow'] = \
-            self.network.sequences['consumers']['heat_flow'] * \
-            self.settings['simultaneity']
-
         # if there is the existing attribute, get the information about
         # the pipe types (like heat_loss)
-        self.get_pipe_data()
+        self.get_pipe_data()    # --> WHY?
 
         # set up oemof energy system
         self.setup_oemof_es()
