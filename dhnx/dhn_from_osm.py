@@ -11,7 +11,12 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-import geopandas as gpd
+try:
+    import geopandas as gpd
+
+except ImportError:
+    print("Need to install geopandas to process osm data.")
+
 import pandas as pd
 
 from shapely.ops import nearest_points

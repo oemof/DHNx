@@ -21,7 +21,6 @@ setup(
         'matplotlib',
         'networkx',
         'pillow',
-        'geopandas',
         'folium',
         'addict',
     ],

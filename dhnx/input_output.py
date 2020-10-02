@@ -15,8 +15,13 @@ import os
 
 from addict import Dict
 import pandas as pd
-import geopandas as gpd
 import networkx as nx
+
+try:
+    import geopandas as gpd
+
+except ImportError:
+    print("Need to install geopandas to download from osm.")
 
 try:
     import osmnx as ox
