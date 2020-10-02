@@ -36,10 +36,7 @@ col_size = [x for x in list(results_edges.columns) if '.size' in x]
 col_size = [x for x in col_size if x.split('.')[1] == 'size']
 
 # get indices which are existing or invested
-ind = []
-for hp in col_size:
-    if len(list(results_edges[results_edges[hp] > 0.001].index)) > 0:
-        ind = ind + list(results_edges[results_edges[hp] > 0.001].index)
+ind = results_edges[results_edges['capacity'] > 0].index
 
 # select invested edges
 network_result = network

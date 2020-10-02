@@ -49,16 +49,11 @@ results_edges = network.results.optimization['components']['pipes']
 print('*Results*')
 print(results_edges)
 
-col_size = [x for x in list(results_edges.columns) if '.size' in x]
-col_size = [x for x in col_size if x.split('.')[1] == 'size']
-
 # get indices which are existing or invested
-ind = []
-for hp in col_size:
-    if len(list(results_edges[results_edges[hp] > 0.001].index)) > 0:
-        ind = ind + list(results_edges[results_edges[hp] > 0.001].index)
+ind = results_edges[results_edges['capacity'] > 0].index
 
-ind_exist = list(results_edges[results_edges['existing'] == 1].index)
+edges = network.components['pipes']
+ind_exist = list(edges[edges['existing'] == 1].index)
 
 # plot existing network
 network_exist = network
@@ -70,7 +65,7 @@ static_map.draw(background_map=False)
 plt.title('Existing pipes')
 plt.show()
 
-ind = ind + ind_exist
+ind = ind
 
 # select xisting or invested edges
 network_result = network
@@ -82,34 +77,34 @@ static_map.draw(background_map=False)
 plt.title('Investment result')
 plt.show()
 
-# recalculate objective value
-print('Objective: ', network.results['optimization']['oemof_meta']['objective'])
-
-col_res = 'heatpipe-milp.size'
-df_invest = results_edges[results_edges[col_res] > 0].copy()
-df_invest['test_costs'] = (df_invest[col_res] * 0.00959 + 236) * df_invest['length[m]']
-costs = df_invest['test_costs'].sum()
-
-print('Re-calculated costs: ', costs)
-print('')
-
-# recalc heat loss
-# Re-calc heat loss
-results = network.results['optimization']['oemof']
-hp = [
-    x for x in results.keys()
-    if x[1] is None
-    if 'heatpipe' in x[0].label[2]
-]
-len(hp)
-len(results_edges.index)
-
-label_list = [x[0].label[3] for x in hp]
-heat_loss_list = [results[x]['sequences']['heat_loss'][0].squeeze() for x in hp]
-heat_loss_total = sum(heat_loss_list)
-
-df_heat_loss = pd.DataFrame([label_list, heat_loss_list]).T
-df_heat_loss.columns = ['label', 'heat_loss']
-
-print('Heat loss nodes: ', df_heat_loss['heat_loss'].sum())
-print('Heat loss recalc: ', results_edges['heat_loss[kW]'].sum())
+# # recalculate objective value
+# print('Objective: ', network.results['optimization']['oemof_meta']['objective'])
+#
+# col_res = 'heatpipe-milp.size'
+# df_invest = results_edges[results_edges[col_res] > 0].copy()
+# df_invest['test_costs'] = (df_invest[col_res] * 0.00959 + 236) * df_invest['length[m]']
+# costs = df_invest['test_costs'].sum()
+#
+# print('Re-calculated costs: ', costs)
+# print('')
+#
+# # recalc heat loss
+# # Re-calc heat loss
+# results = network.results['optimization']['oemof']
+# hp = [
+#     x for x in results.keys()
+#     if x[1] is None
+#     if 'heatpipe' in x[0].label[2]
+# ]
+# len(hp)
+# len(results_edges.index)
+#
+# label_list = [x[0].label[3] for x in hp]
+# heat_loss_list = [results[x]['sequences']['heat_loss'][0].squeeze() for x in hp]
+# heat_loss_total = sum(heat_loss_list)
+#
+# df_heat_loss = pd.DataFrame([label_list, heat_loss_list]).T
+# df_heat_loss.columns = ['label', 'heat_loss']
+#
+# print('Heat loss nodes: ', df_heat_loss['heat_loss'].sum())
+# print('Heat loss recalc: ', results_edges['heat_loss[kW]'].sum())

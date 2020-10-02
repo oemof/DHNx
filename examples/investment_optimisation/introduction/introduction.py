@@ -30,11 +30,10 @@ network.optimize_investment(invest_options=invest_opt)
 
 # get results
 results_edges = network.results.optimization['components']['pipes']
-print(results_edges[['from_node', 'to_node', 'hp_type', 'capacity', 'heat_loss[kW]',
-                     'invest_costs[€]']])
+print(results_edges[['from_node', 'to_node', 'hp_type', 'capacity', 'direction']])
 
-print(results_edges[['invest_costs[€]']].sum())
-print(network.results.optimization['oemof_meta']['objective'])
+# print(results_edges[['invest_costs[€]']].sum())
+print('Objective value: ', network.results.optimization['oemof_meta']['objective'])
 
 # assign new ThermalNetwork with invested pipes
 twn_results = network
