@@ -270,6 +270,43 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         check_len_timeseries()
 
+    def check_existing(self):
+        """
+        Checks if the attributes `existing` and `hp_type` are given in the `pipes` table.
+        If not, the attribute is added, and set to `None` / 0.
+
+        Checks for all existing pipes, if the heatpipe type is given in the pipe type table
+        `.invest_options['network']['pipes']`, and if the capacity is greater than zero.
+        """
+
+        # check whether there the 'existing' attribute is present at the pipes
+        if 'existing' not in self.network.components['pipes'].columns:
+            self.network.components['pipes']['existing'] = 0
+
+        # create pipes attribute hp_type, if not in the table so far
+        if 'hp_type' not in list(self.network.components['pipes'].columns):
+            self.network.components['pipes']['hp_type'] = None
+
+        edges = self.network.components['pipes']
+        pipe_types = self.invest_options['network']['pipes']
+
+        hp_list = list({x for x in edges['hp_type'].tolist()
+                        if isinstance(x, str)})
+
+        for hp in hp_list:
+            if hp not in list(pipe_types['label_3']):
+                raise ValueError(
+                    "Existing heatpipe type {} is not in the list of "
+                    "ACTIVE heatpipe investment options!".format(hp)
+                )
+
+        for r, c in edges[edges['existing'] == 1].iterrows():
+            if c['capacity'] <= 0:
+                raise ValueError(
+                    "The `capacity` of the existing pipe with id {} must be greater than 0!"
+                    "".format(r)
+                )
+
     def complete_exist_data(self):
         """
         For all existing pipes, this method completes the attribute *invest_status* of the results
@@ -437,13 +474,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # pre-processes the heat demand data depending on optimisation settings
         self.prepare_heat_demand()
 
-        # create pipes attribute hp_type, if not in the table so far
-        if 'hp_type' not in list(self.network.components['pipes'].columns):
-            self.network.components['pipes']['hp_type'] = None
-
-        # check whether there the 'existing' attribute is present at the pipes
-        if 'existing' not in self.network.components['pipes'].columns:
-            self.network.components['pipes']['existing'] = 0
+        # check if existing pipes are given
+        self.check_existing()
 
         # get invest_status in order that .get_pipe_data() works proberly for
         # existing pipes - maybe, needs to be adapted in future
