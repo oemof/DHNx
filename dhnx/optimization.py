@@ -672,7 +672,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         recalc_costs_losses()
 
-        return df[['from_node', 'to_node', 'hp_type', 'capacity', 'direction',
+        return df[['from_node', 'to_node', 'length[m]', 'hp_type', 'capacity', 'direction',
                    'costs', 'losses']]
 
 
