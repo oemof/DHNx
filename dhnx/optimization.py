@@ -232,8 +232,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             of the given heat demand timeseries.
             """
             if self.settings['num_ts'] > \
-                    len(self.network.sequences['consumers'][
-                            'heat_flow'].index):
+                    len(self.network.sequences['consumers']['heat_flow'].index):
                 raise ValueError(
                     'The length of the heat demand timeseries is not sufficient '
                     'for the given number of {} timesteps.'.format(
@@ -561,15 +560,16 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     df[[hp_lab + '.' + 'status-1', hp_lab + '.' + 'status-2']].max(axis=1)
 
                 for r, c in df.iterrows():
-                    if df.at[r, hp_lab + '.' + 'status-1'] + df.at[r, hp_lab + '.' + 'status-2'] > 1:
+                    if df.at[r, hp_lab + '.' + 'status-1'] + \
+                            df.at[r, hp_lab + '.' + 'status-2'] > 1:
                         print(
                             "Investment status of pipe id {} is 1 for both dircetions!"
                             " This is not allowed!".format(r)
                         )
-                    if (df.at[r, hp_lab + '.' + 'status-1'] == 1 and
-                            df.at[r, hp_lab + '.' + 'size-1'] == 0) or\
-                            (df.at[r, hp_lab + '.' + 'status-2'] == 1 and
-                            df.at[r, hp_lab + '.' + 'size-2'] == 0):
+                    if (df.at[r, hp_lab + '.' + 'status-1'] == 1 and df.at[
+                        r, hp_lab + '.' + 'size-1'] == 0) or\
+                            (df.at[r, hp_lab + '.' + 'status-2'] == 1 and df.at[
+                                r, hp_lab + '.' + 'size-2'] == 0):
                         print(
                             "Investment status of pipe id {} is 1, and capacity is 0!"
                             "What happend?!".format(r)
@@ -615,7 +615,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df['direction'] = 0
 
             for ahp in active_hp:
-                p = df_hp[df_hp['label_3'] == ahp].squeeze()   # series of heatpipe
+                # p = df_hp[df_hp['label_3'] == ahp].squeeze()   # series of heatpipe
                 for r, c in df.iterrows():
                     if c[ahp + '.size'] > 0:
                         check_invest_label(c['hp_type'], id)
@@ -641,12 +641,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                             c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
                         )
                     elif hp_p['nonconvex'] == 0:
-                        df.at[r, 'costs'] = c['length[m]'] * \
-                                            c['capacity'] * hp_p['capex_pipes']
+                        df.at[r, 'costs'] = c['length[m]'] * c['capacity'] * hp_p['capex_pipes']
                         # Note, that a constant loss is possible also for convex
                         df.at[r, 'losses'] = c['length[m]'] * (
-                                c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
-                            )
+                            c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
+                        )
 
         # use pipes dataframe as base and add results as new columns to it
         df = self.network.components['pipes']

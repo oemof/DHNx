@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import dhnx
-import pandas as pd
 
 # Initialize thermal network
 network = dhnx.network.ThermalNetwork()
