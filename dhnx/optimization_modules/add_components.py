@@ -159,7 +159,7 @@ def add_transformer(it, labels, gd, nodes, busd):
                 # calculation epc
                 if t['annuity']:
                     epc_t = economics.annuity(
-                        capex=t['capex'], n=t['n'], wacc=gd['rate']) * gd['f_invest']
+                        capex=t['capex'], n=t['n'], wacc=gd['rate'])
                 else:
                     epc_t = t['capex']
 
@@ -173,7 +173,7 @@ def add_transformer(it, labels, gd, nodes, busd):
                             variable_costs=t['variable_costs'],
                             summed_max=t['in_1_sum_max'],
                             investment=solph.Investment(
-                                ep_costs=epc_t + t['service'] * gd['f_invest'],
+                                ep_costs=epc_t + t['service'],
                                 maximum=t['max_invest'],
                                 minimum=t['min_invest']))},
                         conversion_factors={
@@ -213,7 +213,7 @@ def add_storage(it, labels, gd, nodes, busd):
 
             if s['annuity']:
                 epc_s = economics.annuity(
-                    capex=s['capex'], n=s['n'], wacc=gd['rate']) * gd['f_invest']
+                    capex=s['capex'], n=s['n'], wacc=gd['rate'])
             else:
                 epc_s = s['capex']
 

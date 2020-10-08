@@ -714,7 +714,6 @@ def setup_optimise_investment(thermal_network, invest_options, settings=None):
         'num_ts': 1,
         'time_res': 1,
         'rate': 0.01,
-        'f_invest': 1,
         'start_date': '1/1/2018',
         'frequence': 'H',
         'solver': 'cbc',

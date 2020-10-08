@@ -29,10 +29,10 @@ def precalc_cost_param(t, q, gd):
     if t['annuity']:
         epc_p = float(economics.annuity(
             capex=t['capex_pipes'] * q['length[m]'],
-            n=t['n_pipes'], wacc=gd['rate'])) * gd['f_invest']
+            n=t['n_pipes'], wacc=gd['rate']))
         epc_fix = float(economics.annuity(
             capex=t['fix_costs'] * q['length[m]'],
-            n=t['n_pipes'], wacc=gd['rate']) * gd['f_invest'])
+            n=t['n_pipes'], wacc=gd['rate'])
     else:
         epc_p = t['capex_pipes'] * q['length[m]']
         epc_fix = t['fix_costs'] * q['length[m]']
