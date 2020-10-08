@@ -1,4 +1,4 @@
 attribute,type,unit,default,description,status,requirement
-**id**,int,n/a,n/a,Unique id,Input,required
+**id**,object,n/a,n/a,Unique id,Input,required
 **active**,bool,n/a,1,Binary indicating that consumer is active,Input,optional
 **P_heat_max**,float,kW,n/a,Maximum heat load of consumer,Input,optional

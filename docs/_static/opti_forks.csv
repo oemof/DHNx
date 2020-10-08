@@ -1,2 +1,2 @@
 attribute,type,unit,default,description,status,requirement
-**id**,int,n/a,n/a,Unique id,Input,required
+**id**,object,n/a,n/a,Unique id,Input,required

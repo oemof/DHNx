@@ -243,7 +243,7 @@ The following table shows an example of a `consumers-heat_flow`:
    :file: _static/opti_consumers-heat_flow_example.csv
    :align: center
 
-The column index must be the consumers `id`.
+The column index must be the consumers `id` (And be careful that the `dtype` also matches!).
 
 Investment and additional options
 """""""""""""""""""""""""""""""""
