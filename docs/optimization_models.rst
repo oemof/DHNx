@@ -305,10 +305,6 @@ everybody is free to choose his own units (energy, mass flow, etc.).
   setting, *P_heat_max* or the demand series is used for the optimization
   (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
   for further information).
-* **annuity**: (0/1). Uses the annualized costs as investment costs. A pre-calculation for the
-  *capex_pipes* and *fix_costs* is performed using *n_pipes* as the investment period. The annual
-  interest rate is defined in the global settings
-  (see :ref:`optimization settings <Optimization settings>`).
 * **l_factor**: Relative thermal loss per length unit (e.g. [kW_loss/(m*kW_installed)].
   Defines the loss factor depending on the installed heat transport capacity of the
   pipe. The *l_factor* is multiplied by the invested capacity in investment case, and by the given
@@ -524,7 +520,7 @@ The geographical attributes *lat* and *lon* are optional, but needed for plottin
 The next table shows the input data of the heat pipeline elements
 (`"invest_data/network/pipes.csv"`):
 
-.. csv-table:: consumers.csv
+.. csv-table:: pipes.csv
    :header-rows: 1
    :file: _static/intro_pipes.csv
    :align: center

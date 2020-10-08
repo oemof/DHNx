@@ -13,9 +13,7 @@ SPDX-License-Identifier: MIT
 
 
 import oemof.solph as solph
-from oemof.tools import economics
 from dhnx.optimization_modules import oemof_heatpipe as oh
-from dhnx.optimization_modules import auxiliary as aux
 
 
 def add_buses(it, labels, nodes, busd):
@@ -59,7 +57,7 @@ def add_buses(it, labels, nodes, busd):
     return nodes, busd
 
 
-def add_sources(on, it, c, labels, gd, nodes, busd):
+def add_sources(on, it, c, labels, nodes, busd):
 
     # check if timeseries are given
     ts_status = False   # status if timeseries for sources is present
@@ -118,7 +116,7 @@ def add_sources(on, it, c, labels, gd, nodes, busd):
     return nodes, busd
 
 
-def add_demand(it, labels, gd, series, nodes, busd):
+def add_demand(it, labels, series, nodes, busd):
 
     for i, de in it.iterrows():
         labels['l_3'] = 'demand'
@@ -138,7 +136,7 @@ def add_demand(it, labels, gd, series, nodes, busd):
     return nodes, busd
 
 
-def add_transformer(it, labels, gd, nodes, busd):
+def add_transformer(it, labels, nodes, busd):
 
     for i, t in it.iterrows():
         labels['l_2'] = None
@@ -156,12 +154,7 @@ def add_transformer(it, labels, gd, nodes, busd):
                 if t['eff_out_1'] == 'series':
                     print('noch nicht angepasst!')
 
-                # calculation epc
-                if t['annuity']:
-                    epc_t = economics.annuity(
-                        capex=t['capex'], n=t['n'], wacc=gd['rate'])
-                else:
-                    epc_t = t['capex']
+                epc_t = t['capex']
 
                 # create
                 nodes.append(
@@ -202,7 +195,7 @@ def add_transformer(it, labels, gd, nodes, busd):
     return nodes, busd
 
 
-def add_storage(it, labels, gd, nodes, busd):
+def add_storage(it, labels, nodes, busd):
 
     for i, s in it.iterrows():
 
@@ -211,11 +204,7 @@ def add_storage(it, labels, gd, nodes, busd):
 
         if s['invest']:
 
-            if s['annuity']:
-                epc_s = economics.annuity(
-                    capex=s['capex'], n=s['n'], wacc=gd['rate'])
-            else:
-                epc_s = s['capex']
+            epc_s = s['capex']
 
             nodes.append(
                 solph.components.GenericStorage(
@@ -257,7 +246,8 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
         # definition of tag3 of label -> type of pipe
         labels['l_3'] = t['label_3']
 
-        epc_p, epc_fix = aux.precalc_cost_param(t, q, gd)
+        epc_p = t['capex_pipes'] * q['length[m]']
+        epc_fix = t['fix_costs'] * q['length[m]']
 
         # Heatpipe with binary variable
         nc = True if t['nonconvex'] else False

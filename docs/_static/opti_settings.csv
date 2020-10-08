@@ -3,7 +3,6 @@ attribute,type,default,description
 **simultaneity**,float,1,Simultaneity or concurrency factor
 **num_ts**,int,1,Number of time steps of optimisation
 **time_res**,float,1,Time resolution
-**rate**,float,0.01,Annual rate of intereset (only if annuity is used at the investments)
 **start_date**,str,'1/1/2018',Startdate for oemof optimisation
 **frequence**,str,'H',Lenght of period
 **solver**,str,'cbc',Name of solver

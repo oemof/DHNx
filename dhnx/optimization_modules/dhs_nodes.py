@@ -262,17 +262,15 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
         for key, item in gen_data.items():
 
             if key == 'source':
-                nodes, busd = ac.add_sources(opti_network, item, c, d_labels, gd, nodes, busd)
+                nodes, busd = ac.add_sources(opti_network, item, c, d_labels, nodes, busd)
 
             if key == 'demand':
-                nodes, busd = ac.add_demand(item, d_labels, gd, series, nodes,
-                                            busd)
+                nodes, busd = ac.add_demand(item, d_labels, series, nodes, busd)
 
             if key == 'transformer':
-                nodes, busd = ac.add_transformer(item, d_labels, gd, nodes,
-                                                 busd)
+                nodes, busd = ac.add_transformer(item, d_labels, nodes, busd)
 
             if key == 'storages':
-                nodes, busd = ac.add_storage(item, d_labels, gd, nodes, busd)
+                nodes, busd = ac.add_storage(item, d_labels, nodes, busd)
 
     return nodes, busd

@@ -713,7 +713,6 @@ def setup_optimise_investment(thermal_network, invest_options, settings=None):
         'heat_demand': 'scalar',
         'num_ts': 1,
         'time_res': 1,
-        'rate': 0.01,
         'start_date': '1/1/2018',
         'frequence': 'H',
         'solver': 'cbc',
