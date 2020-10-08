@@ -647,25 +647,24 @@ class SimulationModelNumpy(SimulationModel):
 
         .. math::
 
-            \Delta T =
-                \Delta T_{known} \cdot e^{exp_{const}} \cdot e^{exp_{var}} =
-                \Delta T_{known} \cdot exp(-\frac{U \pi D L }{c}) \cdot exp(\frac{1}{\dot{m}})
+                T_{out} = T_{env} + (T_{in} - T_{env}) \cdot exp\{exp_{const} \cdot exp_{var}\} =
+                T_{out} = T_{env} + (T_{in} - T_{env}) \cdot exp\{-\frac{U \pi D L}{c \cdot \dot{m}}\}
 
         Parameters
         ----------
         exponent_constant : np.array
-            Constant part of the exponent.
+            Constant part of the exponent [kg/s]
 
         known_temp : pd.DataFrame
-            Known temperatures at producers or consumers.
+            Known temperatures at producers or consumers [°C]
 
         direction : +1 or -1
-            For inlet and return flow.
+            For inlet and return flow [-]
 
         Returns
         -------
         temp_df : pd.DataFrame
-            DataFrame containing temperatures for all nodes.
+            DataFrame containing temperatures for all nodes [°C]
         """
         # TODO: Rethink function layout and naming
 
