@@ -32,9 +32,6 @@ print('Objective Value: ',
 total_costs = (33 * 3.162 + 15 * 1 + 18 * 1 + 18 * 0.5) * 0.5
 print('Costs re-calculation: ', total_costs)
 
-col_size = [x for x in list(results_edges.columns) if '.size' in x]
-col_size = [x for x in col_size if x.split('.')[1] == 'size']
-
 # get indices which are existing or invested
 ind = results_edges[results_edges['capacity'] > 0].index
 
