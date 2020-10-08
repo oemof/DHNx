@@ -123,7 +123,7 @@ optimization:
 .. code-block:: txt
 
     tree
-    ├── edges.csv                       # (required)
+    ├── pipes.csv                       # (required)
     ├── consumers.csv                   # (required)
     ├── forks.csv                       # (required)
     ├── producers.csv                   # (required)
@@ -133,7 +133,9 @@ optimization:
 The attributes, which are required, and which are optional with respect
 to the optimization, are presented in detail in the following:
 
-Edges
+.. _edges_csv :
+
+Pipes
 '''''
 
 .. csv-table::
@@ -278,6 +280,8 @@ consumer.
 The minimum of required data is a specification of the pipe parameters (costs, and losses), a (heat)
 bus and a heat demand at the consumers, and a (heat) bus and a heat source at the producers. The
 detailed attributes are described in the following sections.
+
+.. _invest_pipes :
 
 network/pipes.csv
 ''''''''''''''''''
@@ -445,7 +449,18 @@ heatpipeline components in the Thermalnetwork. You will find the results there:
 .. code-block:: python
 
     # edges-specific investment results (if you select settings['get_invest_results'] = True)
-    results = network.results.optimization['components']['edges']
+    results = network.results.optimization['components']['pipes']
+
+The following tables provides an overview of the results table:
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_results.csv
+   :align: center
+
+You can also check out the detailed results of the oemof model, which are stored at:
+
+.. code-block:: python
 
     # oemof-solph results "main"
     r_oemof_main = network.results.optimization['oemof']
@@ -541,7 +556,7 @@ results:
     network.optimize_investment(invest_options=invest_opt)
 
     # get results
-    results_edges = network.results.optimization['components']['edges']
+    results_edges = network.results.optimization['components']['pipes']
     print(results_edges[['from_node', 'to_node', 'hp_type', 'capacity', 'heat_loss[kW]',
                          'invest_costs[€]']])
 
@@ -564,7 +579,7 @@ an investment (to avoid possible numerical inaccuracy, the criterion is > 0.001)
 
     # assign new ThermalNetwork with invested pipes
     twn_results = network
-    twn_results.components['edges'] = results_edges[results_edges['capacity'] > 0.001]
+    twn_results.components['pipes'] = results_edges[results_edges['capacity'] > 0.001]
 
 Now, lets have a look at the optimisation results, and plot the edges:
 

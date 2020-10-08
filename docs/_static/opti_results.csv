@@ -1,0 +1,10 @@
+attribute,type,unit,description,status
+**id**,object,n/a,Unique id (see  :ref:`pipes of network <edges_csv>`),Input
+**from_node**,object,n/a,Node where Edge begins (see  :ref:`pipes of network <edges_csv>`),Input
+**to_node**,object,n/a,Node where Edge ends (see  :ref:`pipes of network <edges_csv>`),Input
+**length**,float,m,Length of pipe (see  :ref:`pipes of network<edges_csv>`),Input
+**hp_type**,object,n/a,Label of pipe which got selected from :ref:`network/pipes.csv <invest_pipes>`,Result
+**capacity**,float,kW,Installed pipe capacity,Result
+**direction**,float,-1/0/1,Flow direction of pipe: 1 if direction corresponds to the *from_node*/*to_node* notation. -1: opposite direction. 0: no investment. This works only if the setting option *bidirectional_pipes* is set *False*.,Result
+**costs**,float,Eur,Total cost of pipe element.,Result
+**losses**,float,kW,Total losses of pipe element.,Result
