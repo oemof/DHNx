@@ -5,6 +5,6 @@ attribute,type,unit,default,description,status,requirement
 **length**,float,m,n/a,Length of the Edge,Input,required
 **existing**,bool,n/a,0,Binary indicating and existing pipe,Input,optional
 **capacity**,float,kW,0,Capacity for existing pipe,Input,optional
-**pipe_type**,str,n/a,'nan',Type_label of existing pipe,Input,optional
+**hp_type**,str,n/a,'nan',Type_label of existing pipe,Input,optional
 **active**,bool,n/a,1,Binary indicating that edge is available,Input,optional
 **add_fix_costs**,float,Eur/m,0,Additional fix investment costs,Input,optional

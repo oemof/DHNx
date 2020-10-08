@@ -156,19 +156,19 @@ The following optional attributes are introduced by the optimization module:
   *existing* given, all Edges are free for optimization.
 * **capacity**: Capacity of existing pipes.
   If *existing* is *True*, a *capacity* must be given.
-* **pipe_type**: Label of the type of pipe. The *pipe_type* refers to
+* **hp_type**: Label of the type of pipe. The *hp_type* refers to
   a set of parameters of a pipeline component. The parameters for the
-  *pipe_type* must be given in the following table (see `pipe_options`).
-  If *existing* is *True*, a *pipe_type* must be given.
+  *hp_type* must be given in the following table (see :ref:`network/pipes.csv <invest_pipes>`).
+  If *existing* is *True*, a *hp_type* must be given.
 * **active**: Binary indicating that this edge is considered. If no column
   *active* is given, all edges are active. With this attribute, single edges
   can be switched on and off. This can be very useful, if different scenarios
   should be analyzed, e.g. you might like to make a given street/edges unavailable.
-* **add_fix_costs**: Additional fix investment costs. Depending on the street
-  and route of a DHS, the construction costs might differ. With this parameter,
+* **add_fix_costs**: (*not implemented yet*) Additional fix investment costs. Depending on the
+  street and route of a DHS, the construction costs might differ. With this parameter,
   additional fix investment costs (independent of the size of the pipes) can be
   considered for each edge individually. Therefore, you need to apply a
-  nonconvex investment (see `pipe_options`). (*not implemented yet*)
+  nonconvex investment (see :ref:`network/pipes.csv <invest_pipes>`).
 
 Consumers
 '''''''''
