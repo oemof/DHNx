@@ -323,7 +323,6 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 * **capex_pipes**: Variable investment costs depending on the installed heat transport capacity
   (e.g. [€/kW]).
 * **fix_costs**: Fix investment costs independent of the installed capacity (e.g. [€])
-* **n_pipes**: Investment period for the the annualized costs (e.g. [a]).
 
 See the *Heatpipeline* API for further details about the attributes.
 
