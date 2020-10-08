@@ -17,9 +17,7 @@ import pandas as pd
 import oemof.solph as solph
 from oemof.solph import helpers
 
-from .optimization_modules.dhs_nodes import add_nodes_dhs,\
-    add_nodes_houses
-from .optimization_modules import auxiliary as aux
+from .optimization_modules.dhs_nodes import add_nodes_dhs, add_nodes_houses
 from .model import OperationOptimizationModel, InvestOptimizationModel
 
 
