@@ -356,9 +356,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     def setup(self):
         """
         Calls *remove_inactive()* *check_input()*, *prepare_heat_demand()*,
-        *complete_exist_data()*,
-        *get_pipe_data()*, and *setup_oemof_es()*,
-        and does some further checks and completing the attributes of the input pipes data.
+        *complete_exist_data()*, and *setup_oemof_es()*.
         """
 
         # removes all rows with attribute active == 0 - if 'active given
@@ -377,8 +375,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         self.setup_oemof_es()
 
     def solve(self):
-        """Builds the oemof.solph.Model of the energysystem *es*.
-        """
+        """Builds the oemof.solph.Model of the energysystem *es*."""
 
         logging.info('Build the operational model')
         self.om = solph.Model(self.es)
@@ -660,6 +657,20 @@ def setup_optimise_investment(thermal_network, invest_options, settings=None):
 
 
 def solve_optimisation_investment(model):
+    """
+
+    Parameters
+    ----------
+    model : oemof.solph.Model
+        The oemof model, which is optimized.
+
+    Returns
+    -------
+    dict : Results of optimisation. Contains:
+        - 'oemof' : Complete "oemof" results of the energy system optimisation (.results['main']).
+        - 'oemof_meta' : Meta results of oemof solph optimisation.
+        - 'components' : 'pipes' : Investment results of pipes.
+    """
 
     model.solve()
 
