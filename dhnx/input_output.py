@@ -185,6 +185,43 @@ def load_component_attrs(dir_name, available_components):
 
 
 def load_invest_options(path):
+    """
+    This function loads the tables for the investment options.
+
+    The structure must like this:
+
+    .. _folder_structure_invest:
+
+    .. code-block::
+
+        tree
+        ├── network
+        |   └── pipes.csv           # (required)
+        |
+        ├── consumers
+        |   ├── bus.csv             # (required)
+        |   ├── demand.csv          # (required)
+        |   ├── source.csv          # (optional)
+        |   ├── storages.csv        # (optional)
+        |   └── transformer.csv     # (optional)
+        |
+        └── producers
+            ├── bus.csv             # (required)
+            ├── demand.csv          # (optional)
+            ├── source.csv          # (required)
+            ├── storages.csv        # (optional)
+            └── transformer.csv     # (optional)
+
+    Parameters
+    ----------
+    path : str
+        Directory path to the folder with investment data.
+
+    Returns
+    -------
+    dict : A dictionary with the dataframes of the given csv files.
+
+    """
 
     dict = {}
 

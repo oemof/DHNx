@@ -120,7 +120,7 @@ The data for the *ThermalNetwork* must be provided in the structure as defined
 for the .csv reader. The following data is required for applying an
 optimization:
 
-.. code-block:: txt
+.. code-block::
 
     tree
     ├── pipes.csv                       # (required)
@@ -253,25 +253,9 @@ the `optimize_investment()` method of the *ThermalNetwork*, you need to provide
 some additional data providing the investment parameter.
 The following sheme illustrates the structure of the investment input data:
 
-.. code-block:: txt
-
-    tree
-    ├── network
-    |   └── pipes.csv           # (required)
-    |
-    ├── consumers
-    |   ├── bus.csv             # (required)
-    |   ├── demand.csv          # (required)
-    |   ├── source.csv          # (optional)
-    |   ├── storages.csv        # (optional)
-    |   └── transformer.csv     # (optional)
-    |
-    └── producers
-        ├── bus.csv             # (required)
-        ├── demand.csv          # (optional)
-        ├── source.csv          # (required)
-        ├── storages.csv        # (optional)
-        └── transformer.csv     # (optional)
+.. include:: ../dhnx/input_output.py
+  :start-after: .. _folder_structure_invest:
+  :end-before: Parameters
 
 The investment input data provides mainly all remaining parameters of the oemof
 solph components, which are not specific for a single edges, producer or
