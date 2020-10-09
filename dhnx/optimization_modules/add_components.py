@@ -84,6 +84,30 @@ def add_buses(it, labels, nodes, busd):
 
 
 def add_sources(on, it, c, labels, nodes, busd):
+    """
+    The oemof.solph.Source components for the producers and consumers are initialised based on the
+    given tabular information of the investment_options of the OemofInvestOptimizationModel.
+    Time-series can also be used as attribute values for the outflow of the Source.
+    Therefore, a table with the filename 'source_timeseries' must be given.
+
+    Parameters
+    ----------
+    on : OemofInvestOptimizationModel
+    it : DataFrame
+        Table of attributes for Buses for the producers and consumers.
+    c : Series
+        Attributes of specific producer or consumer from the ThermalNetwork.
+    labels : dict
+        Dictonary containing label-tuple.
+    nodes : list
+        All oemof.solph components are added to the list.
+    busd : dict
+        All buses are added to this dictionary.
+
+    Returns
+    -------
+    list, dict : Updates list of nodes and dict of Buses.
+    """
 
     # check if timeseries are given
     ts_status = False   # status if timeseries for sources is present
