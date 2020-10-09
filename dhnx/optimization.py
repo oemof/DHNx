@@ -194,7 +194,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         g = self.network.nx_graph
         if not nx.is_connected(g):
             nx_sum = [len(c) for c in sorted(nx.connected_components(g), key=len, reverse=True)]
-            nx_detail = [c for c in sorted(nx.connected_components(g), key=len, reverse=True)]
+            nx_detail = sorted(nx.connected_components(g), key=len, reverse=True)
             raise ValueError(
                 "Network not connected! There are {} parts, with the following number of nodes: \n"
                 "{} \n"
