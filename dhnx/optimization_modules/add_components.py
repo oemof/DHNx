@@ -207,18 +207,25 @@ def add_demand(it, labels, series, nodes, busd):
 
 
 def add_transformer(it, labels, nodes, busd):
-    """
+    """Adds oemof.solph.Transformer objects to the list of components.
+
+    If attribute `invest` is *True*, an `Investment` attribute is added to the outflow of the
+    Transformer.
 
     Parameters
     ----------
-    it
-    labels
-    nodes
-    busd
+    it : pd.DataFrame
+        Table of transformer attributes of the producers / consumers.
+    labels : dict
+        Dictonary containing specifications for label-tuple.
+    nodes : list
+        All oemof.solph components are added to the list.
+    busd : dict
+        All oemof.solph.Bus objects are given by this dictionary.
 
     Returns
     -------
-
+    list : Updated list of nodes.
     """
 
     for i, t in it.iterrows():
@@ -279,6 +286,25 @@ def add_transformer(it, labels, nodes, busd):
 
 
 def add_storage(it, labels, nodes, busd):
+    """Adds oemof.solph.GenericStorage objects to the list of components.
+
+    If attribute `invest` is *True*, the investment version of the Storage is created.
+
+    Parameters
+    ----------
+    it : pd.DataFrame
+        Table of storage attributes of the producers / consumers.
+    labels : dict
+        Dictonary containing specifications for label-tuple.
+    nodes : list
+        All oemof.solph components are added to the list.
+    busd : dict
+        All oemof.solph.Bus objects are given by this dictionary.
+
+    Returns
+    -------
+    list : Updated list of nodes.
+    """
 
     for i, s in it.iterrows():
 
@@ -321,8 +347,31 @@ def add_storage(it, labels, nodes, busd):
     return nodes
 
 
-# when is this function still used? for old style like precalculation?
 def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
+    """
+    Adds *HeatPipeline* objects with *Investment* attribute to the list of oemof.solph components.
+
+    Parameters
+    ----------
+    it : pd.DataFrame
+        Table of *Heatpipeline* attributes of the district heating grid
+    labels : dict
+        Dictonary containing specifications for label-tuple
+    gd : dict
+        Settings of the investment optimisation of the ThermalNetwork
+    q : pd.Series
+        Specific *Pipe* of ThermalNetwork
+    b_in : oemof.solph.Bus
+        Bus of Inflow
+    b_out : oemof.solph.Bus
+        Bus of Outflow
+    nodes : list
+        All oemof.solph components are added to the list
+
+    Returns
+    -------
+    list : Updated list of nodes.
+    """
 
     for i, t in it.iterrows():
 
@@ -359,6 +408,30 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
 
 
 def add_heatpipes_exist(pipes, labels, gd, q, b_in, b_out, nodes):
+    """
+    Adds *HeatPipeline* objects with fix capacity for existing pipes
+    to the list of oemof.solph components.
+
+    Parameters
+    ----------
+    pipes
+    labels : dict
+        Dictonary containing specifications for label-tuple.
+    gd : dict
+        Settings of the investment optimisation of the ThermalNetwork
+    q : pd.Series
+        Specific *Pipe* of ThermalNetwork
+    b_in : oemof.solph.Bus
+        Bus of Inflow
+    b_out : oemof.solph.Bus
+        Bus of Outflow
+    nodes : list
+        All oemof.solph components are added to the list
+
+    Returns
+    -------
+    list : Updated list of nodes.
+    """
 
     # get index of existing pipe label of pipe data
     ind_pipe = pipes[pipes['label_3'] == q['hp_type']].index[0]
