@@ -47,7 +47,7 @@ def add_buses(it, labels, nodes, busd):
 
     Returns
     -------
-    list, dict : Updates list of nodes and dict of Buses.
+    list, dict : Updated list of nodes and dict of Buses.
     """
 
     for i, b in it.iterrows():
@@ -94,19 +94,19 @@ def add_sources(on, it, c, labels, nodes, busd):
     ----------
     on : OemofInvestOptimizationModel
     it : DataFrame
-        Table of attributes for Buses for the producers and consumers.
+        Table of attributes for Sources for the producers and consumers.
     c : Series
         Attributes of specific producer or consumer from the ThermalNetwork.
     labels : dict
-        Dictonary containing label-tuple.
+        Dictonary containing specifications for label-tuple.
     nodes : list
         All oemof.solph components are added to the list.
     busd : dict
-        All buses are added to this dictionary.
+        All oemof.solph.Bus objects are given by this dictionary.
 
     Returns
     -------
-    list, dict : Updates list of nodes and dict of Buses.
+    list : Updated list of nodes.
     """
 
     # check if timeseries are given
@@ -163,10 +163,30 @@ def add_sources(on, it, c, labels, nodes, busd):
                     busd[(labels['l_1'], cs['label_2'], 'bus',
                           labels['l_4'])]: solph.Flow(**outflow_args)}))
 
-    return nodes, busd
+    return nodes
 
 
 def add_demand(it, labels, series, nodes, busd):
+    """
+    Initialisation of oemof.solph.Sinks which represent demands.
+
+    Parameters
+    ----------
+    it : pd.DataFrame
+        Table of attributes for Sources for the producers and consumers.
+    labels : dict
+        Dictonary containing specifications for label-tuple.
+    series : dict
+        Contain the heat demand time-series of all consumers.
+    nodes : list
+        All oemof.solph components are added to the list.
+    busd : dict
+        All oemof.solph.Bus objects are given by this dictionary.
+
+    Returns
+    -------
+    list : Updated list of nodes.
+    """
 
     for i, de in it.iterrows():
         labels['l_3'] = 'demand'
@@ -183,10 +203,23 @@ def add_demand(it, labels, series, nodes, busd):
                 inputs={busd[(labels['l_1'], labels['l_2'], 'bus',
                               labels['l_4'])]: solph.Flow(**inflow_args)}))
 
-    return nodes, busd
+    return nodes
 
 
 def add_transformer(it, labels, nodes, busd):
+    """
+
+    Parameters
+    ----------
+    it
+    labels
+    nodes
+    busd
+
+    Returns
+    -------
+
+    """
 
     for i, t in it.iterrows():
         labels['l_2'] = None
@@ -242,7 +275,7 @@ def add_transformer(it, labels, nodes, busd):
                             variable_costs=t['variable_costs'])},
                         conversion_factors={b_out_1: t['eff_out_1']}))
 
-    return nodes, busd
+    return nodes
 
 
 def add_storage(it, labels, nodes, busd):
@@ -285,7 +318,7 @@ def add_storage(it, labels, nodes, busd):
                     outflow_conversion_factor=s[
                         'outflow_conversion_factor']))
 
-    return nodes, busd
+    return nodes
 
 
 # when is this function still used? for old style like precalculation?
