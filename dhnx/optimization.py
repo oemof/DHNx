@@ -13,6 +13,7 @@ SPDX-License-Identifier: MIT
 
 import os
 import logging
+import networkx as nx
 import pandas as pd
 import oemof.solph as solph
 from oemof.solph import helpers
@@ -115,6 +116,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         Secondly, it is checked, if a pipes goes to a consumer, which does not exist.
 
+        Check 3
+
+        Checks if graph of network is connected.
+
         An error is raised if one of these connection occurs.
         """
 
@@ -182,6 +187,20 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             if id not in pipe_to_cons_ids:
                 raise ValueError(
                     "The consumer id {} has no connection the the grid!".format(id))
+
+        # Check 3
+        # check if all components of network are connected
+        self.network.nx_graph = self.network.to_nx_graph()
+        g = self.network.nx_graph
+        if not nx.is_connected(g):
+            nx_sum = [len(c) for c in sorted(nx.connected_components(g), key=len, reverse=True)]
+            nx_detail = [c for c in sorted(nx.connected_components(g), key=len, reverse=True)]
+            raise ValueError(
+                "Network not connected! There are {} parts, with the following number of nodes: \n"
+                "{} \n"
+                "These are the separated elements/networks: \n"
+                "{}".format(len(nx_sum), nx_sum, nx_detail)
+            )
 
     def remove_inactive(self):
         """
