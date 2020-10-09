@@ -351,10 +351,9 @@ DHS system. That means, the energy need to be supplied somewhere, which makes so
 necessary. To connect a source in the oemof logic, there needs to be a *oemof.solph.Bus* to which
 the source is connected. The two files *bus.csv* and *source.csv* need to be provided:
 
-.. csv-table:: bus.csv
-   :header-rows: 1
-   :file: _static/opti_consumer_bus.csv
-   :align: center
+.. include:: ../dhnx/optimization_modules/add_components.py
+  :start-after: .. _bus_table:
+  :end-before: Parameters
 
 The *bus.csv* table works analog to the consumers (see :ref:`consumers/. <Consumer invest data>`).
 
