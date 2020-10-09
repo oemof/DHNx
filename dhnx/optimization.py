@@ -16,6 +16,7 @@ import logging
 import pandas as pd
 import oemof.solph as solph
 from oemof.solph import helpers
+from oemof.tools import logger
 
 from .optimization_modules.dhs_nodes import add_nodes_dhs, add_nodes_houses
 from .model import OperationOptimizationModel, InvestOptimizationModel
@@ -319,7 +320,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                                         periods=self.settings['num_ts'],
                                         freq=self.settings['frequence'])
 
-        # logger.define_logging()
+        logger.define_logging(screen_level=logging.INFO)
+
         logging.info('Initialize the energy system')
 
         self.es = solph.EnergySystem(timeindex=date_time_index)
