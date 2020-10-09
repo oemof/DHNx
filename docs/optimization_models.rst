@@ -324,10 +324,9 @@ The minimum requirement for doing an DHS optimisation is to provide an demand at
 Therefore, you need the following two .csv files: *bus.csv* specifies the
 *oemof-solph* *Bus* components, and *demand.csv* defines the *oemof.solph.Sink*.
 
-.. csv-table:: bus.csv
-   :header-rows: 1
-   :file: _static/opti_consumer_bus.csv
-   :align: center
+.. include:: ../dhnx/optimization_modules/add_components.py
+  :start-after: .. _bus_table:
+  :end-before: Parameters
 
 You must provide at least one bus, which has a label
 (*label_2*, see :ref:`Label system <Label system>`), and needs to be *active*. Optionally, you can

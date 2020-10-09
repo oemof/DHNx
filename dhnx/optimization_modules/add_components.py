@@ -18,10 +18,36 @@ from dhnx.optimization_modules import oemof_heatpipe as oh
 
 def add_buses(it, labels, nodes, busd):
     """
-    :param it:  pd.Dataframe containing tabular information for the creation of
-                buses
-    :param labels: dict of label strings
-    :return:
+    This function initialises the oemof.solph.Bus classes of the energysystem based on the given
+    tabular information. Additionally, a sink or a source can be added to every bus and costs for
+    this source (shortage) or sink (excess) can be defined.
+
+    The table must be given as follows:
+
+    .. _bus_table:
+
+    .. table:: Example for table of *Buses*
+
+        +---------+--------+--------+----------+----------------+--------------+
+        | label_2 | active | excess | shortage | shortage costs | excess costs |
+        +=========+========+========+==========+================+==============+
+        | heat    | 1      | 0      | 0        | 99999          | 99999        |
+        +---------+--------+--------+----------+----------------+--------------+
+
+    Parameters
+    ----------
+    it : pd.DateFrame
+        Table of attributes for Buses for the producers and consumers.
+    labels : dict
+        Dictonary containing tag1 and tag4 of label-tuple.
+    nodes : list
+        All oemof.solph components are added to the list.
+    busd : dict
+        All buses are added to this dictionary.
+
+    Returns
+    -------
+    list, dict : Updates list of nodes and dict of Buses.
     """
 
     for i, b in it.iterrows():
@@ -32,7 +58,7 @@ def add_buses(it, labels, nodes, busd):
 
         # check if bus already exists (due to infrastructure)
         if l_bus in busd:
-            print('bus bereits vorhanden:', l_bus)
+            print('Bus bereits vorhanden:', l_bus)
 
         else:
             bus = solph.Bus(label=l_bus)
