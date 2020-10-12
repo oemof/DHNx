@@ -1,6 +1,3 @@
-id,lat,lon,m_over_NHN
-0,51.3470,12.3894,113
-1,51.3390,12.3880,113
-
-
-
+id,lat,lon,m_over_NHN,node_type
+0,51.3470,12.3894,113,consumer
+1,51.3390,12.3880,113,consumer
