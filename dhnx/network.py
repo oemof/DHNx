@@ -13,12 +13,12 @@ SPDX-License-Identifier: MIT
 
 import os
 
-from addict import Dict
 import numpy as np
 import pandas as pd
 
-from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
 from .graph import thermal_network_to_nx_graph
+from .helpers import Dict
+from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
 from .optimization import optimize_operation, optimize_investment
 from .simulation import simulate
 
@@ -70,6 +70,7 @@ class ThermalNetwork():
         self.components = Dict({key: pd.DataFrame() for key in available_components.list_name})
         self.sequences = Dict()
         self.results = Dict()
+        self.timeindex = None
         self.graph = None
 
         if dirname is not None:
@@ -213,6 +214,67 @@ class ThermalNetwork():
 
         return True
 
+    def _list_nested_dict_values(self, d):
+        r"""
+        Unwraps a nested dict and returns a list of all
+        values in the branches of the dictionary.
+
+        Parameters
+        ----------
+        d : dict
+            Nested dictionary
+
+        Returns
+        -------
+        leaves : list
+            List of all values
+        """
+        leaves = []
+        for _, v in d.items():
+            if isinstance(v, dict):
+                leaves.extend(self._list_nested_dict_values(v))
+            else:
+                leaves.append(v)
+        return leaves
+
+    @staticmethod
+    def _are_indices_equal(indices):
+        r"""
+        Compares a list of pd.Index's and asserts
+        that they are equal.
+
+        Parameters
+        ----------
+        indices : list
+            List containing pd.Index
+
+        Returns
+        -------
+        True
+        """
+        if len(indices) == 1:
+            print("Need more than one index to compare.")
+            return True
+
+        for index in indices[1:]:
+            assert indices[0].equals(index)
+
+        return True
+
+    def set_timeindex(self):
+        r"""
+        Takes all sequences and checks if their timeindex is identical.
+        If that is the case, it sets the timeindex attribute of the
+        class.
+        """
+        sequence_dfs = self._list_nested_dict_values(self.sequences)
+
+        indices = [df.index for df in sequence_dfs]
+
+        self._are_indices_equal(indices)
+
+        self.timeindex = indices[0]
+
     def reproject(self, crs):
         pass
 
@@ -222,5 +284,5 @@ class ThermalNetwork():
     def optimize_investment(self):
         self.results.simulation = optimize_investment(self)
 
-    def simulate(self):
-        self.results.simulation = simulate(self)
+    def simulate(self, *args, **kwargs):
+        self.results.simulation = simulate(self, *args, **kwargs)
