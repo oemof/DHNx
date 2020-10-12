@@ -21,12 +21,12 @@ setup(
         'matplotlib',
         'networkx',
         'pillow',
-        'geopandas',
         'folium',
         'addict',
     ],
     extras_require={
         'cartopy': ['cartopy'],
+        'geopandas': ['geopandas'],
         'osmnx': ['osmnx'],
     }
 )
