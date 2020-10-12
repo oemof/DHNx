@@ -15,8 +15,11 @@ import numpy as np
 
 path_file = os.path.dirname(__file__)
 path = os.path.abspath(os.path.join(path_file, os.pardir))
-input_data = os.path.join(path, 'input')
-result_path = os.path.join(path, 'expected_results/sequences')
+input_data = os.path.join(path, 'tree_input')
+result_path = os.path.join(path, 'expected_results_tree', 'sequences')
+
+if not os.path.exists(result_path):
+    os.mkdir(result_path)
 
 
 def read_data(input_value):
