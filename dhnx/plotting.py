@@ -40,7 +40,7 @@ class InteractiveMap():
     """
     def __init__(self, thermal_network):
         self.node_data = self.collect_node_data(thermal_network)
-        self.edge_data = thermal_network.components['edges']
+        self.edge_data = thermal_network.components.pipes
         self.edge_data['value'] = 1
         self.node_id = self.node_data.index
         self.lat = self.node_data['lat']
@@ -220,7 +220,7 @@ class StaticMap():
     def draw(self, bgcolor='w', no_axis=False, background_map=False,
              use_geom=False, edge_color='b', edge_linewidth=2,
              edge_alpha=1, node_size=40, node_color='r', node_alpha=1,
-             node_edgecolor='r', node_zorder=1):
+             edgecolor='r', node_zorder=1):
         """
         This function has been adapted from osmnx plots.plot_graph() function.
         """
@@ -275,7 +275,7 @@ class StaticMap():
                    s=node_size,
                    c=node_color,
                    alpha=node_alpha,
-                   edgecolor=node_edgecolor,
+                   edgecolor=edgecolor,
                    zorder=node_zorder)
 
         if no_axis:

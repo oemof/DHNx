@@ -1,9 +1,9 @@
 component_class,list_name,description
-ThermalNetwork,thermal_networks,"Container for all components belonging to one thermal network"
 ThermalSubNetwork,thermal_sub_networks,"Subsets of a thermal network"
+Environment,environment,"Environment"
 Producer,producers,"Heat producer"
 Consumer,consumers,"Heat consumer"
-Fork,forks,"Node where several edges meet"
+Fork,forks,"Node where several pipes meet"
 TransferStation,transfer_stations,"Transfer station"
 ThermalStorage,thermal_storages,"Thermal storage unit"
-Edge,edges,"Edges representing double pipes (feed and return) that connect nodes"
+Pipe,pipes,"Pipes representing double pipes (feed and return) that connect nodes"

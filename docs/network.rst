@@ -46,7 +46,7 @@ Producers are described with the following attributes:
 Fork
 ====
 
-Forks are the nodes where several edges of the network meet.
+Forks are the nodes where several pipes of the network meet.
 Forks have the attributes described in the following table:
 
 .. csv-table::
@@ -54,12 +54,12 @@ Forks have the attributes described in the following table:
    :file: ../dhnx/component_attrs/forks.csv
 
 
-Edge
+Pipe
 ====
 
-Edges represent the feed and return pipes connecting the different nodes of the network.
+Pipes imply the feed and return pipes connecting the different nodes of the network.
 They are characterized by these attributes:
 
 .. csv-table::
    :header-rows: 1
-   :file: ../dhnx/component_attrs/edges.csv
+   :file: ../dhnx/component_attrs/pipes.csv
