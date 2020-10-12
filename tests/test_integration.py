@@ -15,32 +15,36 @@ import pandas as pd
 import networkx as nx
 
 import dhnx
-import helpers
+from . import helpers
 
 
 tmpdir = helpers.extend_basic_path('tmp')
 
 basedir = os.path.dirname(__file__)
 
-dir_import = os.path.join(basedir, '_files/network_import')
+dir_import_tree = os.path.join(basedir, '_files/tree_network_import')
 
-thermal_network = dhnx.network.ThermalNetwork(dir_import)
+dir_import_looped = os.path.join(basedir, '_files/looped_network_import')
+
+tree_thermal_network = dhnx.network.ThermalNetwork(dir_import_tree)
+
+looped_thermal_network = dhnx.network.ThermalNetwork(dir_import_looped)
 
 
 def test_import_export_csv():
     dir_export = os.path.join(tmpdir, 'network_export')
 
     network = dhnx.network.ThermalNetwork()
-    network = network.from_csv_folder(dir_import)
+    network = network.from_csv_folder(dir_import_looped)
 
     network.to_csv_folder(dir_export)
 
-    helpers.check_if_csv_dirs_equal(dir_import, dir_export)
+    helpers.check_if_csv_dirs_equal(dir_import_looped, dir_export)
 
 
 def test_access_attributes():
 
-    network = dhnx.network.ThermalNetwork(dir_import)
+    network = dhnx.network.ThermalNetwork(dir_import_looped)
 
     assert isinstance(network.available_components, pd.DataFrame)
 
@@ -53,32 +57,32 @@ def test_access_attributes():
 
 def test_get_nx_graph():
 
-    nx_graph = thermal_network.to_nx_graph()
+    nx_graph = looped_thermal_network.to_nx_graph()
 
     assert isinstance(nx_graph, nx.Graph)
 
 
 def test_static_map():
     # plot static map
-    dhnx.plotting.StaticMap(thermal_network)
+    dhnx.plotting.StaticMap(looped_thermal_network)
 
 
 def test_interactive_map():
     # plot interactive map
-    interactive_map = dhnx.plotting.InteractiveMap(thermal_network)
+    interactive_map = dhnx.plotting.InteractiveMap(looped_thermal_network)
     interactive_map.draw()
 
 
 def test_setup_operation_optimization():
 
-    thermal_network.optimize_operation()
+    looped_thermal_network.optimize_operation()
 
 
 def test_setup_investment_optimization():
 
-    thermal_network.optimize_investment()
+    looped_thermal_network.optimize_investment()
 
 
 def test_setup_simulation():
 
-    thermal_network.simulate()
+    tree_thermal_network.simulate()

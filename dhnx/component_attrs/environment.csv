@@ -1,0 +1,2 @@
+attribute,type,unit,default,description,status,requirement
+temp_env,float,deg C or K,n/a,Environment temperature,Input,optional

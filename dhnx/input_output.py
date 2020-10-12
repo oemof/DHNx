@@ -90,7 +90,7 @@ class CSVNetworkImporter(NetworkImporter):
             raise KeyError(f"Component '{list_name}' is not "
                            f"part of the available components.")
 
-        if attr_name not in self.thermal_network.component_attrs:
+        if attr_name not in self.thermal_network.component_attrs[list_name]:
             logger.info("Attribute '%s' is not "
                         "part of the component attributes.", attr_name)
 
@@ -132,6 +132,8 @@ class CSVNetworkImporter(NetworkImporter):
                 raise ImportError(f"Inappropriate filetype of '{name}' for csv import.")
 
         self.thermal_network.is_consistent()
+
+        self.thermal_network.set_timeindex()
 
         return self.thermal_network
 
@@ -430,3 +432,13 @@ def load_component_attrs(dir_name, available_components):
         component_attrs[list_name] = df.T.to_dict()
 
     return Dict(component_attrs)
+
+
+def save_results(results, results_dir):
+
+    if not os.path.exists(results_dir):
+        os.mkdir(results_dir)
+
+    for k, v in results.items():
+        if v is not None:
+            v.to_csv(os.path.join(results_dir, k + '.csv'), header=True)

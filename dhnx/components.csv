@@ -1,5 +1,6 @@
 component_class,list_name,description
 ThermalSubNetwork,thermal_sub_networks,"Subsets of a thermal network"
+Environment,environment,"Environment"
 Producer,producers,"Heat producer"
 Consumer,consumers,"Heat consumer"
 Fork,forks,"Node where several pipes meet"
