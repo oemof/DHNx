@@ -38,25 +38,40 @@ implemented at a later point in time.
 Usage
 -----
 
+To use DHNx for a simulation, you need to provide input data in a defined form. The basic
+requirements are the same for all :class:`ThermalNetwork` s, but some input data is specific to the
+simulation.
+
 .. code-block:: txt
 
     tree
     ├── consumers.csv
-    ├── edges.csv
+    ├── pipes.csv
     ├── forks.csv
     ├── producers.csv
     └── sequences
         ├── consumers-mass_flow.csv
-        └── consumers-temperature_drop.csv
+        ├── consumers-temperature_drop.csv
+        ├── environment-temp_env.csv
+        └── producers-temp_inlet.csv
+
+
+To run a simulation, create a :class:`ThermalNetwork` from the input data and simulate:
 
 .. code-block:: python
 
     import dhnx
 
-    thermal_network = dhnx.network.ThermalNetwork()
+    thermal_network = dhnx.network.ThermalNetwork('path-to-input-data')
 
     thermal_network.simulate()
 
+
+Figure 1 shows a sketch of a simple district heating network that illustrates how the variables that
+are determined in a simulation model run are attributed to different parts of a network. Pipes have
+the attributes mass flows and pressure losses. Temperatures of inlet and return flow are
+attributed to the different nodes. Nodes that connect inlet and return flow, i.e. producers and
+consumers, have mass flows as well.
 
 .. 	figure:: _static/radial_network_details.svg
    :width: 70 %
@@ -149,9 +164,14 @@ the localized pressure loss coefficient :math:`\zeta`:
 
 .. math::
     \Delta p_{loc} = \zeta \frac{v^2}{2} \rho
-It is assumed that each fork has a tee installed. According to [2], localized pressure losses occur downstream of the element that causes these losses. The values of the localized pressure loss coefficient :math:`\zeta` were taken from [3]. In case of a tee which splits the stream, :math:`\zeta` is 2. In case the streams join, :math:`\zeta` is 0.75.
 
-It is also assumed that each consumer has a valve installed. Due to the complexity of determining the localized pressure loss coefficients, these losses have not been considered so far.
+It is assumed that each fork has a tee installed. According to [2], localized pressure losses occur
+downstream of the element that causes these losses. The values of the localized pressure loss
+coefficient :math:`\zeta` were taken from [3]. In case of a tee which splits the stream,
+:math:`\zeta` is 2. In case the streams join, :math:`\zeta` is 0.75.
+
+It is also assumed that each consumer has a valve installed. Due to the complexity of determining
+the localized pressure loss coefficients, these losses have not been considered so far.
 
 **Hydrostatic pressure difference**
 
