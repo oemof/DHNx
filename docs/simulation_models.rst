@@ -77,9 +77,10 @@ heat losses and global pressure losses.
 .. 	figure:: _static/radial_network_details.svg
    :width: 70 %
    :alt: radial_network_details.svg
-   :align: left
+   :align: center
 
    Fig. 1: Schematic of a simple district heating network and the relevant variables for simulation.
+
 
 The above-mentioned variables can be found in the results of a simulation, which come in the
 following structure:
