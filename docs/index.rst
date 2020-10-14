@@ -21,6 +21,7 @@ Welcome to oemof.DHNx's documentation!
    network
    optimization_models
    simulation_models
+   model_coupling
    analyze_and_plot
 
 
