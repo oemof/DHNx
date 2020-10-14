@@ -11,11 +11,20 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-import geopandas as gpd
+try:
+    import geopandas as gpd
+
+except ImportError:
+    print("Need to install geopandas to process osm data.")
+
 import pandas as pd
 
-from shapely.ops import nearest_points
-from shapely.geometry import LineString
+try:
+    from shapely.ops import nearest_points
+    from shapely.geometry import LineString
+
+except ImportError:
+    print("Need to install shapely to download from osm.")
 
 
 def connect_points_to_network(points, nodes, edges):
@@ -38,7 +47,9 @@ def connect_points_to_network(points, nodes, edges):
         Points connected to the network
 
     nodes : geopandas.GeoDataFrame
-        Nodes of the network
+        Original nodes of the network and
+        nearest connecting points on the
+        network's edges.
 
     edges :  geopandas.GeoDataFrame
         Edges of the network.
@@ -60,19 +71,19 @@ def connect_points_to_network(points, nodes, edges):
 
         nearest_point = nearest_points(edges_united, point)[0]
 
-        n_points.append([id_point, point.x, point.y, point])
+        n_points.append([id_point, point])
 
-        n_nearest_points.append([id_nearest_point, nearest_point.x, nearest_point.y, nearest_point])
+        n_nearest_points.append([id_nearest_point, nearest_point])
 
         n_edges.append([id_point, id_nearest_point, LineString([point, nearest_point])])
 
     n_points = gpd.GeoDataFrame(
         n_points,
-        columns=['index', 'x', 'y', 'geometry']).set_index('index')
+        columns=['index', 'geometry']).set_index('index')
 
     n_nearest_points = gpd.GeoDataFrame(
         n_nearest_points,
-        columns=['index', 'x', 'y', 'geometry']).set_index('index')
+        columns=['index', 'geometry']).set_index('index')
 
     n_edges = gpd.GeoDataFrame(n_edges, columns=['u', 'v', 'geometry'])
 
