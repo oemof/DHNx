@@ -69,9 +69,10 @@ To run a simulation, create a :class:`ThermalNetwork` from the input data and si
 
 Figure 1 shows a sketch of a simple district heating network that illustrates how the variables that
 are determined in a simulation model run are attributed to different parts of a network. Pipes have
-the attributes mass flows and pressure losses. Temperatures of inlet and return flow are
-attributed to the different nodes. Nodes that connect inlet and return flow, i.e. producers and
-consumers, have mass flows as well.
+the attributes mass flows, heat losses and pressure losses (distributed and localized). Temperatures
+of inlet and return flow are attributed to the different nodes. Pump power belongs to the producers
+which are assumed to include the pumps. Variables that describe the network as a whole are global
+heat losses and global pressure losses.
 
 .. 	figure:: _static/radial_network_details.svg
    :width: 70 %
@@ -80,8 +81,21 @@ consumers, have mass flows as well.
 
    Fig. 1: Schematic of a simple district heating network and the relevant variables for simulation.
 
+The above-mentioned variables can be found in the results of a simulation, which come in the
+following structure:
 
+.. code-block:: txt
 
+    results
+    ├── global-heat_losses.csv
+    ├── global-pressure_losses.csv
+    ├── nodes-temp_inlet.csv
+    ├── nodes-temp_return.csv
+    ├── pipes-dist_pressure_losses.csv
+    ├── pipes-heat_losses.csv
+    ├── pipes_loc_pressure_losses.csv
+    ├── pipes-mass_flow.csv
+    └── producers-pump_power.csv
 
 
 Underlying Concept
