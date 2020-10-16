@@ -29,8 +29,8 @@ temp_drop = pd.read_csv(input_data + '/sequences/consumers-temperature_drop.csv'
 mass_flow = pd.read_csv(input_data + '/sequences/consumers-mass_flow.csv')
 
 # Constants for calculation
-t_env = 10                                                                 # [K]
-t_prod_i = pd.DataFrame(data={'t_prod_i': 130 * np.ones(len(mass_flow))})  # [K] Temperature at the producer
+t_env = 10                                                                 # [°C]
+t_prod_i = pd.DataFrame(data={'t_prod_i': 130 * np.ones(len(mass_flow))})  # [°C] Temperature at the producer
 c = 4190                                                                   # [J/kg*K]
 pi = math.pi
 
@@ -136,12 +136,12 @@ for index, node in enumerate(mass_flow_total):
 def parameters():
     parameter = {
             'Mass flow [kg/s]': mass_flow_total,
-            'Inlet temperature at producer T_prod_i [K]': t_prod_i,
-            'Return temperature at producer T_prod_r [K]': t_prod_r,
-            'Inlet temperature at fork T_fork_i [K]': t_fork_i,
-            'Return temperature at fork T_fork_r [K]': t_fork_r_mix,
-            'Inlet temperature at consumer T_c_i [K]': t_cons_i,
-            'Return temperature at consumer T_c_out [K]': t_cons_r,
+            'Inlet temperature at producer T_prod_i [°C]': t_prod_i,
+            'Return temperature at producer T_prod_r [°C]': t_prod_r,
+            'Inlet temperature at fork T_fork_i [°C]': t_fork_i,
+            'Return temperature at fork T_fork_r [°C]': t_fork_r_mix,
+            'Inlet temperature at consumer T_c_i [°C]': t_cons_i,
+            'Return temperature at consumer T_c_out [°C]': t_cons_r,
             'Inlet temperature nodes T_nodes_i [°C]': t_nodes_i,
             'Return temperature nodes T_nodes_r [°C]': t_nodes_r,
             'Heat losses Q_loss [W]': Q_loss,
