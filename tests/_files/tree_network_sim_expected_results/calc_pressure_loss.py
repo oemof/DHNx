@@ -37,10 +37,10 @@ producers = read_data('producers')
 mass_flow = pd.read_csv(input_data + '/sequences/consumers-mass_flow.csv')
 
 # Constants for calculation
-rho = 971.78                # [kg/m3] TODO: later the density could be variable and calculated with CoolProp
+rho = 971.78                # [kg/m3] TODO: later density could calculated with CoolProp
 epsilon = 0.01              # [mm]
-zeta_tee_connect = 0.75     # [-] Rough estimate of Tee connector: WJ Beek - Transport Phenomena (1999)
-zeta_tee_separation = 2     # [-] Rough estimate of Tee connector: WJ Beek - Transport Phenomena (1999)
+zeta_tee_connect = 0.75     # [-] Estimate of Tee connector: WJ Beek - Transport Phenomena (1999)
+zeta_tee_separation = 2     # [-] Estimate of Tee connector: WJ Beek - Transport Phenomena (1999)
 zeta_valve = 3.3            # [-] VDI Wärmeatlas für Nennweite von 50 mm
 mu = 0.35                   # [mPa*s]
 eta_pump = 1                # [-]
@@ -48,7 +48,8 @@ g = 9.81                    # [m/s2]
 pi = math.pi
 
 # Initialize variables of type dataframe (needed for later calculations)
-v, re, lambda_simp, lambda_adv, dp_diss, dp_loc, dp_loc_tee_i, dp_loc_tee_r, dp_loc_valve, dp_hyd, dp = \
+v, re, lambda_simp, lambda_adv, dp_diss, dp_loc, \
+dp_loc_tee_i, dp_loc_tee_r, dp_loc_valve, dp_hyd, dp = \
     [pd.DataFrame() for variable in range(11)]
 
 # Adjust mass flows to a dataframe containing all mass flows in correct order
@@ -64,17 +65,21 @@ mass_flow_total = mass_flow_total[['0', '1', '2']]
 
 for index, node in enumerate(mass_flow_total):
     # Calculation of the velocity v
-    v[str(index)] = 4 * mass_flow_total[str(node)] / (rho * pi * (pipes['diameter_mm'].iloc[index] / 1000) ** 2)
+    v[str(index)] = 4 * mass_flow_total[str(node)] \
+                    / (rho * pi * (pipes['diameter_mm'].iloc[index] / 1000) ** 2)
 
     # Calculation of Re number
     re[str(index)] = pipes['diameter_mm'].iloc[index] / 1000 * v[str(index)] * rho / (mu/1000)
     # Calculation of lambda with simple approach
-    lambda_simp[str(index)] = 0.07 * re[str(index)]**-0.13 * (pipes['diameter_mm'].iloc[index] / 1000)**-0.14
+    lambda_simp[str(index)] = 0.07 * re[str(index)]**-0.13 \
+                              * (pipes['diameter_mm'].iloc[index] / 1000)**-0.14
     # Calculation of lambda with advanced approach
-    lambda_adv[str(index)] = 1.325 / np.log(epsilon/(1000*3.7*(pipes['diameter_mm'].iloc[index] / 1000))
+    lambda_adv[str(index)] = 1.325 / \
+                             np.log(epsilon/(1000*3.7*(pipes['diameter_mm'].iloc[index] / 1000))
                                             + 5.74/(re[str(index)]**0.9))**2
     # Calculate distributed pressure losses with Darcy-Weissbach-equation
-    dp_diss[str(index)] = lambda_simp[str(index)] * rho * pipes['length_m'].iloc[index] * v[str(index)]**2 /\
+    dp_diss[str(index)] = lambda_simp[str(index)] * rho * \
+                          pipes['length_m'].iloc[index] * v[str(index)]**2 / \
                           (2 * (pipes['diameter_mm'].iloc[index] / 1000))
     # Calculate local pressure losses resulted from separating Tee (T-Stück) -> i - inlet
     # Localized Pressure losses only occur in the outlet pipes of the tee separator
@@ -90,7 +95,7 @@ for index, node in enumerate(mass_flow_total):
         dp_loc_tee_r[str(index)] = 0 * zeta_tee_connect * v[str(index)] ** 2 * rho / 2
     # Calculate local pressure losses resulted from consumer valves
     if node == '0':
-        dp_loc_valve[str(index)] = 0 * v[str(index)] ** 2 * rho / 2     # At producer no valve -> zeta = 0
+        dp_loc_valve[str(index)] = 0 * v[str(index)] ** 2 * rho / 2   # Producer no valve, zeta = 0
     elif node != '0':
         dp_loc_valve[str(index)] = zeta_valve * v[str(index)] ** 2 * rho / 2
 
@@ -103,8 +108,10 @@ dp_loc = dp_loc_tee
 
 # Calculate hydrostatic pressure difference
 dp_hyd['0'] = - rho * g * abs(producers['m_over_NHN'][0] - forks['m_over_NHN'][0]) * v['0']**0
-dp_hyd['1'] = - rho * g * abs(forks['m_over_NHN'][0] - consumers['m_over_NHN'].iloc[0]) * v['1']**0
-dp_hyd['2'] = - rho * g * abs(forks['m_over_NHN'][0] - consumers['m_over_NHN'].iloc[1]) * v['2']**0
+dp_hyd['1'] = - rho * g * abs(forks['m_over_NHN'][0] - consumers['m_over_NHN'].iloc[0]) * \
+              v['1']**0
+dp_hyd['2'] = - rho * g * abs(forks['m_over_NHN'][0] - consumers['m_over_NHN'].iloc[1]) * \
+              v['2']**0
 
 # Calculate total pressure loss
 dp = dp_diss + dp_loc + dp_hyd
@@ -120,7 +127,8 @@ dp_glob['0'] = dp_glob['0'] + dp['0'] + dp[max_pressure_losses]
 p_el_pump = pd.DataFrame(data={'0': np.zeros(len(mass_flow_total))})
 
 for index, node in enumerate(v):
-    p_el_pump['0'] = p_el_pump['0'] + 1 / eta_pump * dp[str(index)] / rho * mass_flow_total[str(index)]
+    p_el_pump['0'] = p_el_pump['0'] + 1 / eta_pump * dp[str(index)] / rho * \
+                     mass_flow_total[str(index)]
 
 
 # Print results
@@ -164,9 +172,10 @@ print_parameters()
 #for name, param in parameter.items():
 #    param.insert(0, 'snapshot', np.arange(len(mass_flow_total)))
 
-result_name = ['pipes-dist_pressure_losses.csv', 'pipes_loc_pressure_losses.csv', 'global-pressure_losses.csv',
-               'producers-pump_power.csv']
-result_list = [list(parameter.keys())[4]] + [list(parameter.keys())[5]] + list(parameter.keys())[-2:]
+result_name = ['pipes-dist_pressure_losses.csv', 'pipes_loc_pressure_losses.csv',
+               'global-pressure_losses.csv', 'producers-pump_power.csv']
+result_list = [list(parameter.keys())[4]] + \
+              [list(parameter.keys())[5]] + list(parameter.keys())[-2:]
 
 for index, name in enumerate(result_list):
     parameter[name].to_csv(os.path.join(result_path, result_name[index]), index=False)

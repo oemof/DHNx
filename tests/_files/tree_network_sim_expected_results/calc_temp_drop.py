@@ -30,7 +30,7 @@ mass_flow = pd.read_csv(input_data + '/sequences/consumers-mass_flow.csv')
 
 # Constants for calculation
 t_env = 10                                                                 # [°C]
-t_prod_i = pd.DataFrame(data={'t_prod_i': 130 * np.ones(len(mass_flow))})  # [°C] Temperature at the producer
+t_prod_i = pd.DataFrame(data={'t_prod_i': 130 * np.ones(len(mass_flow))})  # [°C]
 c = 4190                                                                   # [J/kg*K]
 pi = math.pi
 
@@ -50,7 +50,8 @@ mass_flow_total = mass_flow_total[['0', '1', '2']]
 
 # Get temperature drop of all consumers
 temp_drop = temp_drop.iloc[:, 1:]
-temp_drop = temp_drop.rename(columns={'0': '1', '1': '2'})  # Rename the columns to pipes naming convention
+# Rename the columns to pipes naming convention
+temp_drop = temp_drop.rename(columns={'0': '1', '1': '2'})
 
 
 def calc_temp_heat_loss(t_in, index):
@@ -104,10 +105,12 @@ for index in list(temp_drop):
     Q_cons[index] = calc_heat_loss(mass_flow_total[index], t_cons_i[index], t_cons_r[index])
 
 # Calculate temperature of mixture at fork return
-# Note with these input values irrelevant because the temperatures coming from the consumers are the same.
+# Note with these input values irrelevant
+# because the temperatures coming from the consumers are the same.
 # Needs to be adapted in case capacity is not constant as assumed
 t_fork_r_mix = pd.DataFrame(data={'0': (mass_flow_total['1'] * t_fork_r['1'] +
-                                        mass_flow_total['2'] * t_fork_r['2']) / mass_flow_total['0']})
+                                        mass_flow_total['2'] * t_fork_r['2']) /
+                                       mass_flow_total['0']})
 
 # Calculate return temperature at producer
 t_prod_r = pd.DataFrame(data={'0': calc_temp_heat_loss(t_fork_r_mix['0'], int('0'))})
