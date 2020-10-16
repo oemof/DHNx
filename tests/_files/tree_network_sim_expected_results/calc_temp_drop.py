@@ -127,9 +127,9 @@ Q_loss_r['0'] = calc_heat_loss(mass_flow_total['0'], t_fork_r_mix['0'], t_prod_r
 Q_loss = Q_loss_i + Q_loss_r
 
 # Calculate global heat losses
-Q_loss_glob = pd.DataFrame(data={'losses': np.zeros(len(mass_flow_total))})
+Q_loss_glob = pd.DataFrame(data={'global_heat_losses': np.zeros(len(mass_flow_total))})
 for index, node in enumerate(mass_flow_total):
-    Q_loss_glob['losses'] = Q_loss_glob['losses'] + Q_loss[str(index)]
+    Q_loss_glob['global_heat_losses'] = Q_loss_glob['global_heat_losses'] + Q_loss[str(index)]
 
 
 # Print results
