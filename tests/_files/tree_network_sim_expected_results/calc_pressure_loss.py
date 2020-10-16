@@ -31,7 +31,7 @@ def read_data(input_value):
 
 # Read input data for every csv component
 consumers = read_data('consumers')
-edges = read_data('edges')
+pipes = read_data('pipes')
 forks = read_data('forks')
 producers = read_data('producers')
 mass_flow = pd.read_csv(input_data + '/sequences/consumers-mass_flow.csv')
@@ -54,7 +54,7 @@ v, re, lambda_simp, lambda_adv, dp_diss, dp_loc, dp_loc_tee_i, dp_loc_tee_r, dp_
 # Adjust mass flows to a dataframe containing all mass flows in correct order
 # Get mass flows of all consumers
 mass_flow_total = mass_flow.iloc[:, 1:]
-# Rename the columns to edges naming convention
+# Rename the columns to pipes naming convention
 mass_flow_total.columns = ['1', '2']
 # Calculate producer mass flow as sum of consumer mass flows
 mass_flow_total['0'] = mass_flow_total['1'] + mass_flow_total['2']
@@ -64,18 +64,18 @@ mass_flow_total = mass_flow_total[['0', '1', '2']]
 
 for index, node in enumerate(mass_flow_total):
     # Calculation of the velocity v
-    v[str(index)] = 4 * mass_flow_total[str(node)] / (rho * pi * (edges['diameter_mm'].iloc[index] / 1000) ** 2)
+    v[str(index)] = 4 * mass_flow_total[str(node)] / (rho * pi * (pipes['diameter_mm'].iloc[index] / 1000) ** 2)
 
     # Calculation of Re number
-    re[str(index)] = edges['diameter_mm'].iloc[index] / 1000 * v[str(index)] * rho / (mu/1000)
+    re[str(index)] = pipes['diameter_mm'].iloc[index] / 1000 * v[str(index)] * rho / (mu/1000)
     # Calculation of lambda with simple approach
-    lambda_simp[str(index)] = 0.07 * re[str(index)]**-0.13 * (edges['diameter_mm'].iloc[index] / 1000)**-0.14
+    lambda_simp[str(index)] = 0.07 * re[str(index)]**-0.13 * (pipes['diameter_mm'].iloc[index] / 1000)**-0.14
     # Calculation of lambda with advanced approach
-    lambda_adv[str(index)] = 1.325 / np.log(epsilon/(1000*3.7*(edges['diameter_mm'].iloc[index] / 1000))
+    lambda_adv[str(index)] = 1.325 / np.log(epsilon/(1000*3.7*(pipes['diameter_mm'].iloc[index] / 1000))
                                             + 5.74/(re[str(index)]**0.9))**2
     # Calculate distributed pressure losses with Darcy-Weissbach-equation
-    dp_diss[str(index)] = lambda_simp[str(index)] * rho * edges['lenght_m'].iloc[index] * v[str(index)]**2 /\
-                          (2 * (edges['diameter_mm'].iloc[index] / 1000))
+    dp_diss[str(index)] = lambda_simp[str(index)] * rho * pipes['length_m'].iloc[index] * v[str(index)]**2 /\
+                          (2 * (pipes['diameter_mm'].iloc[index] / 1000))
     # Calculate local pressure losses resulted from separating Tee (T-Stück) -> i - inlet
     # Localized Pressure losses only occur in the outlet pipes of the tee separator
     if node == '0':
@@ -164,7 +164,7 @@ print_parameters()
 #for name, param in parameter.items():
 #    param.insert(0, 'snapshot', np.arange(len(mass_flow_total)))
 
-result_name = ['edges-pressure_losses.csv', 'global-pressure_losses.csv', 'producers-pump_power.csv']
+result_name = ['pipes-pressure_losses.csv', 'global-pressure_losses.csv', 'producers-pump_power.csv']
 result_list = list(parameter.keys())[-3:]
 
 for index, name in enumerate(result_list):
