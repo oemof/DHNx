@@ -112,7 +112,15 @@ t_fork_r_mix = pd.DataFrame(data={'0': (mass_flow_total['1'] * t_fork_r['1'] +
 # Calculate return temperature at producer
 t_prod_r = pd.DataFrame(data={'0': calc_temp_heat_loss(t_fork_r_mix['0'], int('0'))})
 
-# Calculate heat loss at edge from fork to producer
+# Calculate inlet temperature of nodes
+t_nodes_i = pd.DataFrame(data={'producers-0': t_prod_i['t_prod_i'], 'forks-0': t_fork_i['0'],
+                               'consumers-0': t_cons_i['1'], 'consumers-1': t_cons_i['2']})
+
+# Calculate return temperature of nodes
+t_nodes_r = pd.DataFrame(data={'producers-0': t_prod_r['0'], 'forks-0': t_fork_r_mix['0'],
+                               'consumers-0': t_cons_r['1'], 'consumers-1': t_cons_r['2']})
+
+# Calculate heat loss at pipe from fork to producer
 Q_loss_r['0'] = calc_heat_loss(mass_flow_total['0'], t_fork_r_mix['0'], t_prod_r['0'])
 
 # Calculate total heat losses (inlet and return)
