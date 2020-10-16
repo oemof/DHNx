@@ -164,8 +164,9 @@ print_parameters()
 #for name, param in parameter.items():
 #    param.insert(0, 'snapshot', np.arange(len(mass_flow_total)))
 
-result_name = ['pipes-pressure_losses.csv', 'global-pressure_losses.csv', 'producers-pump_power.csv']
-result_list = list(parameter.keys())[-3:]
+result_name = ['pipes-dist_pressure_losses.csv', 'pipes_loc_pressure_losses.csv', 'global-pressure_losses.csv',
+               'producers-pump_power.csv']
+result_list = [list(parameter.keys())[4]] + [list(parameter.keys())[5]] + list(parameter.keys())[-2:]
 
 for index, name in enumerate(result_list):
     parameter[name].to_csv(os.path.join(result_path, result_name[index]), index=False)
