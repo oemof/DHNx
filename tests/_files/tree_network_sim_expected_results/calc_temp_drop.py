@@ -176,11 +176,10 @@ for name, param in parameter.items():
     param.insert(0, 'snapshot', np.arange(len(mass_flow_total)))
 
 
-result_name = ['producers-temp_return.csv', 'forks-temp_inlet.csv', 'forks-temp_return.csv',
-               'consumers-temp_inlet.csv', 'consumers-temp_return.csv', 'edges-heat_losses.csv',
-               'global-heat_losses.csv']
+result_name = ['pipes-mass_flow.csv', 'nodes-temp_inlet.csv', 'nodes-temp_return.csv',
+               'pipes-heat_losses.csv', 'global-heat_losses.csv']
 
-result_list = list(parameter.keys())[2:9]
+result_list = [list(parameter.keys())[0]] + list(parameter.keys())[7:11]
 
 for index, name in enumerate(result_list):
     parameter[name].to_csv(os.path.join(result_path, result_name[index]), index=False)
