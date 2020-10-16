@@ -275,15 +275,15 @@ def create_object_connections_2(points_objects, dist_lines):
             tol_distance = 2.0
 
             if supply_line_p0.distance(lot_foot) < tol_distance:
-                print('Lotfoot closer that ', tol_distance,
-                      ' to line end point!')
+                print('Lotfoot closer than', tol_distance,
+                      'to line end point!')
                 con_line = LineString([supply_line_p0, house_geo])
                 conn_lines = conn_lines.append(
                     {'geometry': con_line}, ignore_index=True)
 
             elif supply_line_p1.distance(lot_foot) < tol_distance:
-                print('Lotfoot closer that ', tol_distance,
-                      ' to line end point!')
+                print('Lotfoot closer than', tol_distance,
+                      'to line end point!')
                 con_line = LineString([supply_line_p1, house_geo])
                 conn_lines = conn_lines.append(
                     {'geometry': con_line}, ignore_index=True)
