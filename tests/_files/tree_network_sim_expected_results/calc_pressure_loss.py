@@ -113,8 +113,8 @@ dp = dp_diss + dp_loc + dp_hyd
 max_pressure_losses = max(dp.loc[:, '1':])
 
 # Calculate global pressure loss
-dp_glob = pd.DataFrame(data={'losses': np.zeros(len(mass_flow_total))})
-dp_glob['losses'] = dp_glob['losses'] + dp['0'] + dp[max_pressure_losses]
+dp_glob = pd.DataFrame(data={'0': np.zeros(len(mass_flow_total))})
+dp_glob['0'] = dp_glob['0'] + dp['0'] + dp[max_pressure_losses]
 
 # Calculate pump power
 p_el_pump = pd.DataFrame(data={'0': np.zeros(len(mass_flow_total))})
