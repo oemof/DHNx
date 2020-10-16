@@ -142,6 +142,8 @@ def parameters():
             'Return temperature at fork T_fork_r [K]': t_fork_r_mix,
             'Inlet temperature at consumer T_c_i [K]': t_cons_i,
             'Return temperature at consumer T_c_out [K]': t_cons_r,
+            'Inlet temperature nodes T_nodes_i [°C]': t_nodes_i,
+            'Return temperature nodes T_nodes_r [°C]': t_nodes_r,
             'Heat losses Q_loss [W]': Q_loss,
             'Global heat losses Q_loss_glob [W]': Q_loss_glob,
             'Heat transfer at consumers Q [W]': Q_cons,
