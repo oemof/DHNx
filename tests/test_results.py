@@ -12,11 +12,22 @@ tmp_dir = helpers.extend_basic_path('tmp')
 
 def test_tree_simulation():
 
-    input_data = os.path.join(tests_path, '_files', 'tree_network_import')
+    input_data = os.path.join(
+        tests_path,
+        '_files',
+        'tree_network_import')
 
-    expected_results = os.path.join(tests_path, 'tree_network_sim_expected_results', 'sequences')
+    expected_results = os.path.join(
+        tests_path,
+        '_files',
+        'tree_network_sim_expected_results',
+        'sequences'
+    )
 
-    results_path = os.path.join(tmp_dir, 'tree_results')
+    results_path = os.path.join(
+        tmp_dir,
+        'tree_results'
+    )
 
     # Initialize thermal network
     tnw = dhnx.network.ThermalNetwork()
