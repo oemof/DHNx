@@ -28,7 +28,7 @@ of the *ThermalNetwork*:
   locations for the DHS piping system (e.g. street network),
   and the position of consumers?
 * In addition to the first question, what is the cost-optimal expansion
-  of a given DHS system.
+  of a given DHS system?
 * Is it cost-efficient to build a DHS at all, if there a consumer-wise heat
   supply alternatives? (Comparison of central and de-central supply strategies)
 * What is the optimal dispatch of the heat producers? (Case, if there are no
