@@ -45,7 +45,7 @@ def get_all_file_paths(dir):
     return file_paths
 
 
-def check_if_csv_files_equal(csv_file_a, csv_file_b):
+def check_if_csv_files_equal(csv_file_a, csv_file_b, **kwargs):
     r"""
     Compares two csv files.
 
@@ -58,10 +58,10 @@ def check_if_csv_files_equal(csv_file_a, csv_file_b):
     df1 = pd.read_csv(csv_file_a)
     df2 = pd.read_csv(csv_file_b)
 
-    assert_frame_equal(df1, df2)
+    assert_frame_equal(df1, df2, **kwargs)
 
 
-def check_if_csv_dirs_equal(dir_a, dir_b):
+def check_if_csv_dirs_equal(dir_a, dir_b, **kwargs):
     r"""
     Compares the csv files in two directories and asserts that
     they are equal.
@@ -100,7 +100,7 @@ def check_if_csv_dirs_equal(dir_a, dir_b):
 
     for file_a, file_b in zip(files_a, files_b):
         try:
-            check_if_csv_files_equal(file_a, file_b)
+            check_if_csv_files_equal(file_a, file_b, **kwargs)
         except AssertionError:
             diff.append([file_a, file_b])
 
