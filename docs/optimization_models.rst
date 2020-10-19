@@ -23,10 +23,10 @@ Scope
 The following questions can be addressed using the `optimize_investment` method
 of the *ThermalNetwork*:
 
-* What is the cost-optimal topology and dimensioning of a DHS piping system?
-  (Given the locations of potential central heat supply plants, the potential
+* What is the cost-optimal topology and dimensioning of a DHS piping system, 
+  given the locations of potential central heat supply plants, the potential
   locations for the DHS piping system (e.g. street network),
-  and the position of consumers)
+  and the position of consumers?
 * In addition to the first question, what is the cost-optimal expansion
   of a given DHS system.
 * Is it cost-efficient to build a DHS at all, if there a consumer-wise heat
