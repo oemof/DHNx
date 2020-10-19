@@ -154,7 +154,7 @@ The following optional attributes must be given in every *ThermalNetwork*:
 The following optional attributes are introduced by the optimization module:
 
 * **existing**: Binary indicating an existing pipe. If there is no column
-  *existing* given, all Edges are free for optimization.
+  *existing* given, all Pipes are free for optimization.
 * **capacity**: Capacity of existing pipes.
   If *existing* is *True*, a *capacity* must be given.
 * **hp_type**: Label of the type of pipe. The *hp_type* refers to
