@@ -31,7 +31,7 @@ of the *ThermalNetwork*:
   of a given DHS system?
 * Is it cost-efficient to build a DHS at all, if there a consumer-wise heat
   supply alternatives? (Comparison of central and de-central supply strategies)
-* What is the optimal dispatch of the heat producers? (Case, if there are no
+* What is the optimal dispatch of the heat producers? (In case there are no
   expansion options, but just existing DHS pipes)
 * Planned: Streets-wise aggregation option
 
