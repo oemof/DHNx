@@ -407,7 +407,8 @@ The labels are partly given automatically by the oemof-solph model builder:
 Optimization settings
 ~~~~~~~~~~~~~~~~~~~~~
 
-The following table shows all options for the optimisation settings:
+The following table shows all options for the optimisation settings
+(See also  :py:func:`~dhnx.optimization.setup_optimise_investment`):
 
 .. csv-table::
    :header-rows: 1
