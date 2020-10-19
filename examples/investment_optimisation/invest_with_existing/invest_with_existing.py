@@ -14,13 +14,12 @@ set = {'num_ts': 3,
        'solve_kw': {'tee': True},
        'simultaneity': 0.8,
        'bidirectional_pipes': True,
-       'get_invest_results': True,
        'print_logging_info': True,
        }
 
 invest_opt = dhnx.input_output.load_invest_options('invest_options')
 
-network.optimize_investment(settings=set, invest_options=invest_opt)
+network.optimize_investment(**set, invest_options=invest_opt)
 
 # Draw network
 static_map = dhnx.plotting.StaticMap(network)
