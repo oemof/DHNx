@@ -628,7 +628,11 @@ def optimize_operation(thermal_network):
     return results
 
 
-def setup_optimise_investment(thermal_network, invest_options, settings=None):
+def setup_optimise_investment(
+        thermal_network, invest_options, heat_demand='scalar', num_ts=1, time_res=1,
+        start_date='1/1/2018', frequence='H', solver='cbc', solve_kw={'tee': True},
+        simultaneity=1, bidirectional_pipes=False, dump_path=None, dump_name='dump.oemof',
+        print_logging_info=False, write_lp_file=False):
     """
     Function for setting up the oemof solph operational Model.
 
@@ -636,43 +640,59 @@ def setup_optimise_investment(thermal_network, invest_options, settings=None):
     ----------
     thermal_network : ThermalNetwork
         See the ThermalNetwork class.
-    settings : dict
-        Dictionary holding the optimisation settings.
     invest_options : dict
         Dictionary holding the investment options for the district heating system.
+    heat_demand : str
+        If 'scalar', peak heat load is used as heat consumers’ heat demand. If
+        something else, the given heat load time-series is used.
+    num_ts : int
+        Number of time steps of optimisation.
+    time_res : float
+        Time resolution.
+    start_date : str or datetime-like
+        Startdate for oemof optimisation.
+    frequence : str or DateOffset
+        Lenght of period.
+    solver : str
+        Name of solver.
+    solve_kw : dict
+        Solver kwargs.
+    simultaneity : float
+        Simultaneity factor.
+    bidirectional_pipes : bool
+        Bidirectional pipes leads to bi-directional flow attributes at the heatpipeline components
+        {‘min’: -1, bidirectional: True}.
+    dump_path : str
+        If a dump path is provided, the oemof dump file is stored.
+    dump_name : str
+        Name of dump file.
+    print_logging_info : bool
+        Additional logging info is printed.
+    write_lp_file : bool
+        Linear program file is stored (‘User/.oemof/lp_files/DHNx.lp’).
 
     Returns
     -------
-    model : oemof.solph.Model
-        The oemof.solph.Model is build.
-
+    oemof.solph.Model : The oemof.solph.Model is build.
     """
 
-    setting_default = {
-        'heat_demand': 'scalar',
-        'num_ts': 1,
-        'time_res': 1,
-        'start_date': '1/1/2018',
-        'frequence': 'H',
-        'solver': 'cbc',
-        'solve_kw': {'tee': True},
-        'simultaneity': 1,
-        'bidirectional_pipes': False,
-        'dump_path': None,
-        'dump_name': 'dump.oemof',
-        'print_logging_info': False,
-        'write_lp_file': False,
+    settings = {
+        'heat_demand': heat_demand,
+        'num_ts': num_ts,
+        'time_res': time_res,
+        'start_date': start_date,
+        'frequence': frequence,
+        'solver': solver,
+        'solve_kw': solve_kw,
+        'simultaneity': simultaneity,
+        'bidirectional_pipes': bidirectional_pipes,
+        'dump_path': dump_path,
+        'dump_name': dump_name,
+        'print_logging_info': print_logging_info,
+        'write_lp_file': write_lp_file,
     }
 
-    if settings is not None:
-        given_keys = [x for x in settings.keys()
-                      if x in setting_default.keys()]
-
-        for key in given_keys:
-            setting_default[key] = settings[key]
-
-    model = OemofInvestOptimizationModel(thermal_network, setting_default,
-                                         invest_options)
+    model = OemofInvestOptimizationModel(thermal_network, settings, invest_options)
 
     return model
 

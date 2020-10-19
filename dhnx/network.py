@@ -220,10 +220,10 @@ class ThermalNetwork():
     def optimize_operation(self):
         self.results.operation = optimize_operation(self)
 
-    def optimize_investment(self, invest_options, settings=None):
+    def optimize_investment(self, invest_options, **kwargs):
 
         oemof_opti_model = setup_optimise_investment(
-            self, invest_options, settings
+            self, invest_options, **kwargs
         )
 
         self.results.optimization = solve_optimisation_investment(
