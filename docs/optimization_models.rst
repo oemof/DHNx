@@ -109,7 +109,7 @@ a line layer representing the potential places for the DHS-trenches, and three p
 producers, the consumers, and the potential forks of the DHS system. All geometry information of
 the network system is passed by an *id* for each element. Thus, the line layer connects all points
 and provides the spatial relation with the attributes *from_node*, *to_node*, and *length*. If you
-prepare the data, be careful that every consumer is connected to an edge/line, and every piping
+prepare the data, be careful that every consumer is connected to an pipe, and every piping
 network system is connected to at least one producer.
 
 .. _TN_Input :
@@ -161,14 +161,14 @@ The following optional attributes are introduced by the optimization module:
   a set of parameters of a pipeline component. The parameters for the
   *hp_type* must be given in the following table (see :ref:`network/pipes.csv <invest_pipes>`).
   If *existing* is *True*, a *hp_type* must be given.
-* **active**: Binary indicating that this edge is considered. If no column
-  *active* is given, all edges are active. With this attribute, single edges
+* **active**: Binary indicating that this pipe is considered. If no column
+  *active* is given, all pipes are active. With this attribute, single pipes
   can be switched on and off. This can be very useful, if different scenarios
-  should be analyzed, e.g. you might like to make a given street/edges unavailable.
+  should be analyzed, e.g. you might like to make a given street/pipes unavailable.
 * **add_fix_costs**: (*not implemented yet*) Additional fix investment costs. Depending on the
   street and route of a DHS, the construction costs might differ. With this parameter,
   additional fix investment costs (independent of the size of the pipes) can be
-  considered for each edge individually. Therefore, you need to apply a
+  considered for each pipe individually. Therefore, you need to apply a
   nonconvex investment (see :ref:`network/pipes.csv <invest_pipes>`).
 
 Consumers
@@ -259,7 +259,7 @@ The following sheme illustrates the structure of the investment input data:
   :end-before: Parameters
 
 The investment input data provides mainly all remaining parameters of the oemof
-solph components, which are not specific for a single edges, producer or
+solph components, which are not specific for a single pipe, producer or
 consumer.
 
 The minimum of required data is a specification of the pipe parameters (costs, and losses), a (heat)
@@ -280,7 +280,7 @@ the minimal required data you need to provide:
    :align: center
 
 Each row represents an investment option. Note this investment option creates an oemof-solph
-*Heatpipeline* component for each active edge. The units are given es examples. There are no units
+*Heatpipeline* component for each active pipe. The units are given es examples. There are no units
 implemented, everybody needs to care about consistent units in his own model. At the same time,
 everybody is free to choose his own units (energy, mass flow, etc.).
 
@@ -297,7 +297,7 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 * **l_factor**: Relative thermal loss per length unit (e.g. [kW_loss/(m*kW_installed)].
   Defines the loss factor depending on the installed heat transport capacity of the
   pipe. The *l_factor* is multiplied by the invested capacity in investment case, and by the given
-  *capacity* for a specific edge in case of existing DHS pipes.
+  *capacity* for a specific pipe in case of existing DHS pipes.
 * **l_factor_fix**: Absolute thermal loss per length unit (e.g. [kW/m]).
   In case of *nonconvex* is 1, the *l_factor_fix* is zero if no investement in a specific pipe
   element is done. Be careful, if *nonconvex* is 0, this creates a fixed thermal loss.
@@ -390,7 +390,7 @@ The labels are partly given automatically by the oemof-solph model builder:
 
 * **tag1: general classification**: This tag is given automatically depending on the spatial
   belonging. *Tag1* can be either *consumers* (consumer point layer), *producers*
-  (producer point layer) or *infrastructure* (edges and forks layer).
+  (producer point layer) or *infrastructure* (pipes and forks layer).
   See :ref:`Thermal Network <TN_Input>`.
 * **tag2: commodity**: This tag specifies the commodity, e.g. all buses and transformer
   (heatpipelines) of the DHS pipeline system have automatically the *heat* as *tag2*. For a
@@ -431,7 +431,7 @@ heatpipeline components in the Thermalnetwork. You will find the results there:
 
 .. code-block:: python
 
-    # edges-specific investment results (if you select settings['get_invest_results'] = True)
+    # pipe-specific investment results
     results = network.results.optimization['components']['pipes']
 
 The following tables provides an overview of the results table:
@@ -530,7 +530,7 @@ to make sure that the total heat load of all consumers (including losses) can be
 Additionally, we assume a heat loss of 0.00001 kW/m. The parameters of the district heating pipes
 need to be pre-calculated depending on the piping system and technical data sheet of the
 manufacturer. (In future, some pre-calculation function might be added.)
-The length of each edge, the costs and the losses are related to, must be given in the *edges.csv*
+The length of each pipe, the costs and the losses are related to, must be given in the *pipes.csv*
 table of the :ref:`Thermal Network Input <TN_Input>`). Next, we optimise the network and get the
 results:
 
@@ -539,36 +539,36 @@ results:
     network.optimize_investment(invest_options=invest_opt)
 
     # get results
-    results_edges = network.results.optimization['components']['pipes']
-    print(results_edges[['from_node', 'to_node', 'hp_type', 'capacity', 'heat_loss[kW]',
+    results_pipes = network.results.optimization['components']['pipes']
+    print(results_pipes[['from_node', 'to_node', 'hp_type', 'capacity', 'heat_loss[kW]',
                          'invest_costs[€]']])
 
 Since we do not have any other costs than investment costs, we can check if our results have been
 correctly processed by comparing the objective of the optimisation problem with the sum of the
-investment costs of the single edges, which should be the same:
+investment costs of the single pipes, which should be the same:
 
 .. code-block:: python
 
     # sum of the investment costs of all pipes
-    print(results_edges[['invest_costs[€]']].sum())
+    print(results_pipes[['invest_costs[€]']].sum())
 
     # objective value of optimisation problem
     print(network.results.optimization['oemof_meta']['objective'])
 
-Next, we can transfer the results to a *ThermalNetwork*, which contains only the edges with
+Next, we can transfer the results to a *ThermalNetwork*, which contains only the pipes with
 an investment (to avoid possible numerical inaccuracy, the criterion is > 0.001):
 
 .. code-block:: python
 
     # assign new ThermalNetwork with invested pipes
     twn_results = network
-    twn_results.components['pipes'] = results_edges[results_edges['capacity'] > 0.001]
+    twn_results.components['pipes'] = results_pipes[results_pipes['capacity'] > 0.001]
 
-Now, lets have a look at the optimisation results, and plot the edges:
+Now, lets have a look at the optimisation results, and plot the pipes:
 
 .. code-block:: python
 
-    # plot invested edges
+    # plot invested pipes
     static_map_2 = dhnx.plotting.StaticMap(twn_results)
     static_map_2.draw(background_map=False)
     plt.title('Given network')
