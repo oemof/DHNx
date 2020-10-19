@@ -65,6 +65,7 @@ The optimization of a given *ThermalNetwork* is executed by:
     import dhnx
 
     tnw = dhnx.network.ThermalNetwork()
+    
     tnw = network.from_csv_folder('path/to/thermal_network')
 
     invest_opt = dhnx.input_output.load_invest_options('path/to/invest_options')
