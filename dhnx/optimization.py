@@ -401,9 +401,14 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         logging.info('Build the operational model')
         self.om = solph.Model(self.es)
 
+        if self.settings['solve_kw'] is None:
+            s_kw = {"tee": True}
+        else:
+            s_kw = self.settings['solve_kw']
+
         logging.info('Solve the optimization problem')
         self.om.solve(solver=self.settings['solver'],
-                      solve_kwargs=self.settings['solve_kw'])
+                      solve_kwargs=s_kw)
 
         if self.settings['write_lp_file']:
             filename = os.path.join(
@@ -630,7 +635,7 @@ def optimize_operation(thermal_network):
 
 def setup_optimise_investment(
         thermal_network, invest_options, heat_demand='scalar', num_ts=1, time_res=1,
-        start_date='1/1/2018', frequence='H', solver='cbc', solve_kw={'tee': True},
+        start_date='1/1/2018', frequence='H', solver='cbc', solve_kw=None,
         simultaneity=1, bidirectional_pipes=False, dump_path=None, dump_name='dump.oemof',
         print_logging_info=False, write_lp_file=False):
     """
