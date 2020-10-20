@@ -180,7 +180,8 @@ for index, node in enumerate(v):
 
 # Print results
 def parameters():
-    parameter = {
+    r"""
+    param_dict = {
         "Velocity v [m/s]": v,
         "Reynolds Re [-]": re,
         "Lambda λ (simple approach) [-]": lambda_simp,
@@ -194,7 +195,7 @@ def parameters():
         "Global pressure losses ∆p_glob [kg/ms2]": dp_glob,
         "Total electrical energy pump P_el [W]": p_el_pump,
     }
-    return parameter
+    return param_dict
 
 
 parameter = parameters()
@@ -231,5 +232,5 @@ result_list = (
     + list(parameter.keys())[-2:]
 )
 
-for index, name in enumerate(result_list):
-    parameter[name].to_csv(os.path.join(result_path, result_name[index]), index=False)
+for index, value in enumerate(result_list):
+    parameter[value].to_csv(os.path.join(result_path, result_name[index]), index=False)
