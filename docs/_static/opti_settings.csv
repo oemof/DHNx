@@ -6,7 +6,7 @@ attribute,type,default,description
 **start_date**,str,'1/1/2018',Startdate for oemof optimisation
 **frequence**,str,'H',Lenght of period
 **solver**,str,'cbc',Name of solver
-**solve_kw**,dict,{'tee': False},Solver kwargs
+**solve_kw**,dict,{'tee': True},Solver kwargs
 **bidirectional_pipes**,bool,*False*,"Bidirectional pipes leads to bi-directional flow attributes at the heatpipeline components {'min': -1, bidirectional: True}"
 **dump_path**,str,None,"If a dump path is provided, the oemof dump file is stored."
 **dump_name**,str,dump.oemof,Name of dump file
