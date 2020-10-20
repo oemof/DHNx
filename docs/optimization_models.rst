@@ -175,8 +175,7 @@ The following attributes of the *ThermalNetwork* must be given:
 
 * **id**: see :ref:`Thermal Network <thermal_network_label>`
 
-The following attributes are additional attributes of the optimization module.
-These attributes are optional for the optimisation:
+The following attributes are additional attributes of the optimization module, and optional:
 
 .. csv-table::
    :header-rows: 1
@@ -196,16 +195,16 @@ These attributes are optional for the optimisation:
 Producers
 '''''''''
 
+The following attributes of the *ThermalNetwork* must be given:
+
+* **id**: see :ref:`Thermal Network <thermal_network_label>`
+
+The following attributes are additional attributes of the optimization module, and optional:
+
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_producers.csv
    :align: center
-
-The following optional attributes must be given in every *ThermalNetwork*:
-
-* **id**: see :ref:`Thermal Network <thermal_network_label>`
-
-The following optional attributes are introduced by the optimization module:
 
 * **active**: Binary indicating that producer is active. If no column
   *active* is given, all producers are active. With this attribute, single
@@ -215,16 +214,11 @@ The following optional attributes are introduced by the optimization module:
 Forks
 ''''''
 
-.. csv-table::
-   :header-rows: 1
-   :file: _static/opti_forks.csv
-   :align: center
-
-The following optional attributes must be given in every *ThermalNetwork*:
+The following attributes of the *ThermalNetwork* must be given:
 
 * **id**: see :ref:`Thermal Network <thermal_network_label>`
 
-For Forks, no additional required or optional attributes are added by the
+For Forks, no additional required or optional attributes are needed by the
 optimization module.
 
 Consumers-heat_flow
@@ -242,7 +236,8 @@ The following table shows an example of a `consumers-heat_flow`:
    :file: _static/opti_consumers-heat_flow_example.csv
    :align: center
 
-The column index must be the consumers `id` (And be careful that the `dtype` also matches!).
+The column index must be the consumers `id` (And be careful that the `dtype` also matches
+the *id* of the consumers!).
 
 Investment and additional options
 """""""""""""""""""""""""""""""""
