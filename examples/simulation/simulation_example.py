@@ -1,36 +1,20 @@
-import matplotlib.pyplot as plt
-import os
-
 import dhnx
 
-# Initialize 2 thermal networks
-tree_network = dhnx.network.ThermalNetwork()
-looped_network = dhnx.network.ThermalNetwork()
+# Initialize a thermal networks
+thermal_network = dhnx.network.ThermalNetwork()
 
 # Load data from csv
-tree_network.from_csv_folder('tree/')
-looped_network.from_csv_folder('single_loop/')
+input_data_dir = 'tree'
 
-# Plot
-tree_graph_plot = dhnx.plotting.StaticMap(tree_network)
-tree_graph_plot.draw(background_map=False)
+thermal_network.from_csv_folder(input_data_dir)
 
-looped_graph_plot = dhnx.plotting.StaticMap(looped_network)
-looped_graph_plot.draw(background_map=False)
-plt.show()
+# Create simulation model and save results
+thermal_network.simulate(results_dir='tree_results')
 
-# Create simulation model
-tree_network.simulate()
-looped_network.simulate()
-
-if not os.path.exists('results'):
-    os.mkdir('results')
-
-# Plot and save results
+# Print results
 print('================================================================')
-for k, v in tree_network.results.items():
+for k, v in thermal_network.results['simulation'].items():
     print(k)
     print('----------------------------------------------------------------')
     print(v, '\n')
     print('================================================================')
-    v.to_csv(f'results/{k}.csv')

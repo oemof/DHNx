@@ -27,7 +27,7 @@ def thermal_network_to_nx_graph(thermal_network):
     nx_graph : nx:MultiDigraph
         networkx graph of thermal_network
     """
-    nx_graph = nx.MultiDiGraph()  # TODO: Check if this line can be removed.
+    nx_graph = nx.DiGraph()  # TODO: Check if this line can be removed.
 
     edges = thermal_network.components['pipes'].copy()
 
@@ -42,12 +42,12 @@ def thermal_network_to_nx_graph(thermal_network):
         'from_node',
         'to_node',
         edge_attr=edge_attr,
-        create_using=thermal_network.graph
+        create_using=nx_graph
     )
 
     nodes = {
         list_name: thermal_network.components[list_name].copy() for list_name in [
-            'consumers',
+            'consumers',  # TODO: Do not hard code these here
             'producers',
             'forks'
         ]
@@ -56,7 +56,7 @@ def thermal_network_to_nx_graph(thermal_network):
     for k, v in nodes.items():
         v.index = [k + '-' + str(id) for id in v.index]
 
-    nodes = pd.concat(nodes.values())
+    nodes = pd.concat(nodes.values(), sort=True)
 
     node_attrs = {node_id: dict(data) for node_id, data in nodes.iterrows()}
 
@@ -78,3 +78,39 @@ def nx_graph_to_thermal_network(nx_graph):
     thermal_network : ThermalNetwork
     """
     raise NotImplementedError('This feature is not implemented yet.')
+
+
+def write_edge_data_to_graph(series, graph_in, var_name=None):
+    r"""
+    Writes data describing the edges to the graph. Data has to
+    be a pd.Series labeled with the (from, to). If the series has
+    a name, the data will be stored in the graph under that name.
+    If not, `var_name` has to be provided.
+
+    Parameters
+    ----------
+    series
+    graph_in
+    var_name
+
+    Returns
+    -------
+
+    """
+    graph = graph_in.copy()
+
+    assert isinstance(series, pd.Series), \
+        "Have to pass a pandas Series."
+
+    if var_name:
+        pass
+    elif series.name:
+        var_name = series.name
+    else:
+        raise ValueError(r"Have to either pass Series with name or provide var_name.")
+
+    for index, value in series.iteritems():
+
+        graph.edges[index][var_name] = value
+
+    return graph

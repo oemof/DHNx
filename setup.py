@@ -21,13 +21,13 @@ setup(
         'matplotlib',
         'networkx',
         'pillow',
-        'geopandas',
         'folium',
         'addict',
         'oemof.solph >= 0.4.0',
     ],
     extras_require={
         'cartopy': ['cartopy'],
+        'geopandas': ['geopandas'],
         'osmnx': ['osmnx'],
     }
 )
