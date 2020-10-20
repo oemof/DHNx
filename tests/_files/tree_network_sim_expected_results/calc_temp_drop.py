@@ -1,3 +1,5 @@
+# -*- coding: utf-8
+
 """
 This script calculates the heat transfer at the consumer
 for a simple tree network.
@@ -17,7 +19,7 @@ if not os.path.exists(result_path):
 
 
 def read_data(input_value):
-    """
+    r"""
     This function is reading the data of a csv with a name given as input value
     """
     return pd.read_csv(os.path.join(input_data, input_value + ".csv"), index_col=0)
@@ -56,12 +58,21 @@ temp_drop = temp_drop.rename(columns={"0": "1", "1": "2"})
 
 
 def calc_temp_heat_loss(t_in, pos):
-    """
+    r"""
     This function calculates the pipe's outlet temperature
     out of the inlet temperature due to heat losses
-    :param t_in:
-    :param index:
-    :return: t_out
+
+    Parameters
+    ----------
+    t_in : Series
+           Temperature entering the pipe
+    pos : int
+          Position of node
+
+    Returns
+    -------
+    t_out : Series
+            Temperature leaving the pipe
     """
     t_out = t_env + (t_in - t_env) * np.exp(
         -pipes["heat_transfer_coefficient_W/mK"].iloc[pos]
@@ -75,15 +86,23 @@ def calc_temp_heat_loss(t_in, pos):
 
 
 def calc_heat_loss(m, t_in, t_out):
-    """
+    r"""
     This function calculates heat losses
 
     Needs to be adapted in case heat capacity is not constant as assumed
 
-    :param m: mass flow [kg/s]
-    :param t_in: inlet temperature [K]
-    :param t_out: outlet temperature [K]
-    :return: heat flow [W]
+    Parameters
+    ----------
+    m : Series
+        Mass flow [kg/s]
+    t_in : Series
+           Inlet temperature [K]
+    t_out : Series
+            Outlet temperature [K]
+
+    Returns
+    -------
+    Heat flow [W]
     """
     return m * c * (t_in - t_out)
 
@@ -168,7 +187,14 @@ for index, node in enumerate(mass_flow_total):
 
 # Print results
 def parameters():
-    parameter = {
+    r"""
+    Writes results in Dictionary
+
+    Returns
+    -------
+    parameter : dict
+                Dictionary with results
+    """
     param_dict = {
         "Mass flow [kg/s]": mass_flow_total,
         "Inlet temperature at producer T_prod_i [°C]": t_prod_i,
@@ -190,6 +216,9 @@ parameter = parameters()
 
 
 def print_parameters():
+    r"""
+    Prints the parameters
+    """
     dash = "-" * 60
 
     print("\n" + dash)
