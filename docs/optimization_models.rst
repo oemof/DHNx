@@ -1,12 +1,12 @@
 .. _optimization_models_label:
 
 ~~~~~~~~~~~~~~~~~~~
-Optimization models
+Optimisation models
 ~~~~~~~~~~~~~~~~~~~
 
-Generally, this library should allow the optimization of district heating grids
+Generally, this library should allow the optimisation of district heating grids
 with various configurations settings and different approaches.
-The optimization methods of this library are tools to assist the
+The optimisation methods of this library are tools to assist the
 planning process of DHS projects and to analyze the economic feasibility of DHS
 for a given district, community or city - either by focusing on the DHS itself,
 or by also considering the overall energy system of a district, which could not
@@ -36,11 +36,11 @@ of the *ThermalNetwork*:
 * Planned: Streets-wise aggregation option
 
 To answer these questions, at the moment,
-the LP and MILP optimization library oemof.solph is used.
+the LP and MILP optimisation library oemof.solph is used.
 Other approaches, e.g. heuristic approaches, might follow.
 
 The following sections will give an overview about the general usage/workflow,
-(the necessary input data, the different optimization settings and options,
+(the necessary input data, the different optimisation settings and options,
 the results), and second, the underlying mathematical description.
 
 Usage
@@ -50,7 +50,7 @@ Links to the subsections:
 
 * :ref:`Overview`
 * :ref:`Input Data`
-* :ref:`Optimization settings`
+* :ref:`Label systematic <Label system>`
 * :ref:`Results`
 
 .. _Overview:
@@ -58,7 +58,7 @@ Links to the subsections:
 Overview
 ~~~~~~~~
 
-The optimization of a given *ThermalNetwork* is executed by:
+The optimisation of a given *ThermalNetwork* is executed by:
 
 .. code-block:: python
 
@@ -70,16 +70,10 @@ The optimization of a given *ThermalNetwork* is executed by:
 
     invest_opt = dhnx.input_output.load_invest_options('path/to/invest_options')
 
-    settgs = {
-        'keyword1': value1,
-        'keyword2': value2,
-    }
+    tnw.optimize_investment(invest_options=invest_opt)
 
-    tnw.optimize_investment(settings=settgs, invest_options=invest_opt)
-
-For executing an optimization, you must provide the optimization `settings`
-and the `invest_options` additional to the previous data, which defines a
-*ThermalNetwork*. Both are explained in the following section.
+For executing an optimisation, you must provide the `invest_options` additional to the previous
+data, which defines a *ThermalNetwork*. Both are explained in the following section.
 
 .. _Input Data:
 
@@ -92,12 +86,12 @@ provided as `invest_options` and as `settings`.
 
 The following figure provides an overview of the input data:
 
-.. 	figure:: _static/optimization_input_data.svg
+.. 	figure:: _static/DHNx_Input_data.svg
    :width: 100 %
    :alt: optimization_input_data.svg
    :align: center
 
-   Fig. 1: Optimization Input Data
+   Fig. 1: Optimisation Input Data
 
 The structure of the input data might look a bit confusing at the beginning, but provides a lot of
 options for building up complex district heating models. There are two groups of data:
@@ -119,7 +113,7 @@ ThermalNetwork
 
 The data for the *ThermalNetwork* must be provided in the structure as defined
 for the .csv reader. The following data is required for applying an
-optimization:
+optimisation:
 
 .. code-block::
 
@@ -132,7 +126,7 @@ optimization:
         └── consumers-heat_flow.csv
 
 The attributes, which are required, and which are optional with respect
-to the optimization, are presented in detail in the following:
+to the optimisation, are presented in detail in the following:
 
 .. _edges_csv :
 
@@ -147,7 +141,7 @@ The following attributes of the *ThermalNetwork* must be given:
 * **to_node**: see :ref:`Thermal Network <thermal_network_label>`
 * **length**: see :ref:`Thermal Network <thermal_network_label>`
 
-The following attributes are additional attributes of the optimization module.
+The following attributes are additional attributes of the optimisation module.
 These attributes are optional for the optimisation:
 
 .. csv-table::
@@ -156,7 +150,7 @@ These attributes are optional for the optimisation:
    :align: center
 
 * **existing**: Binary indicating an existing pipe. If there is no column
-  *existing* given, all Pipes are free for optimization.
+  *existing* given, all Pipes are free for optimisation.
 * **capacity**: Capacity of existing pipes.
   If *existing* is *True*, a *capacity* must be given.
 * **hp_type**: Label of the type of pipe. The *hp_type* refers to
@@ -175,7 +169,7 @@ The following attributes of the *ThermalNetwork* must be given:
 
 * **id**: see :ref:`Thermal Network <thermal_network_label>`
 
-The following attributes are additional attributes of the optimization module, and optional:
+The following attributes are additional attributes of the optimisation module, and optional:
 
 .. csv-table::
    :header-rows: 1
@@ -188,8 +182,8 @@ The following attributes are additional attributes of the optimization module, a
   different connection quotes).
 * **P_heat_max**: Maximum heat load of consumer. If no column
   *P_heat_max* is given, the maximum heat load is calculated from the heat
-  demand series (see `consumers-heat_flow.csv`). Depending on the optimization
-  setting, *P_heat_max* or the demand series is used for the optimization (see
+  demand series (see `consumers-heat_flow.csv`). Depending on the optimisation
+  setting, *P_heat_max* or the demand series is used for the optimisation (see
   :ref:`Optimization settings` for further information).
 
 Producers
@@ -199,7 +193,7 @@ The following attributes of the *ThermalNetwork* must be given:
 
 * **id**: see :ref:`Thermal Network <thermal_network_label>`
 
-The following attributes are additional attributes of the optimization module, and optional:
+The following attributes are additional attributes of the optimisation module, and optional:
 
 .. csv-table::
    :header-rows: 1
@@ -219,7 +213,7 @@ The following attributes of the *ThermalNetwork* must be given:
 * **id**: see :ref:`Thermal Network <thermal_network_label>`
 
 For Forks, no additional required or optional attributes are needed by the
-optimization module.
+optimisation module.
 
 Consumers-heat_flow
 '''''''''''''''''''
@@ -283,8 +277,8 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 * **nonconvex**: (0/1). Choose whether a convex or a nonconvex investment should be performed. This leads
   to a different meaning of the minimum heat transport capacity (*cap_min*). See
   *P_heat_max* is given, the maximum heat load is calculated from the heat
-  demand series (see `consumers-heat_flow.csv`). Depending on the optimization
-  setting, *P_heat_max* or the demand series is used for the optimization
+  demand series (see `consumers-heat_flow.csv`). Depending on the optimisation
+  setting, *P_heat_max* or the demand series is used for the optimisation
   (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
   for further information).
 * **l_factor**: Relative thermal loss per length unit (e.g. [kW_loss/(m*kW_installed)].
@@ -363,6 +357,26 @@ couple of options for adding additional attributes of the *oemof.solph.FLow* to 
 Generally, with this structure at every producer and consumer multiple oemof components, like
 *transformer* and *storages* can be already added.
 
+
+.. _Optimization settings:
+
+Optimisation settings
+"""""""""""""""""""""
+
+The following table shows all options for the optimisation settings
+(See also  :py:func:`~dhnx.optimization.setup_optimise_investment`):
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_settings.csv
+   :align: center
+
+Some more explanation:
+
+* **heat_demand**: If you set *heat_demand* to `'scalar'`, *num_ts* is automatically 1. If you
+  want to use the time series, simple type anything else than `'scalar'`.
+
+
 .. _Label system:
 
 Label systematic
@@ -393,25 +407,6 @@ The labels are partly given automatically by the oemof-solph model builder:
   generated automatically (this is the case for *demand.csv*, *source.csv* and *bus.csv*),
   or is the specific *label_3* of the *pipes.csv*, *transformer.csv* or *storages.csv*.
 * **tag4: id**: The last tag shows the specific spatial position and is generated automatically.
-
-
-.. _Optimization settings:
-
-Optimization settings
-~~~~~~~~~~~~~~~~~~~~~
-
-The following table shows all options for the optimisation settings
-(See also  :py:func:`~dhnx.optimization.setup_optimise_investment`):
-
-.. csv-table::
-   :header-rows: 1
-   :file: _static/opti_settings.csv
-   :align: center
-
-Some more explanation:
-
-* **heat_demand**: If you set *heat_demand* to `'scalar'`, *num_ts* is automatically 1. If you
-  want to use the time series, simple type anything else than `'scalar'`.
 
 
 .. _Results:
