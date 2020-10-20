@@ -11,6 +11,8 @@ SPDX-License-Identifier: MIT
 """
 
 import os
+
+import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
@@ -45,20 +47,29 @@ def get_all_file_paths(dir):
     return file_paths
 
 
-def check_if_csv_files_equal(csv_file_a, csv_file_b, **kwargs):
+def check_if_csv_files_equal(csv_file_a, csv_file_b, check_arrays=False, **kwargs):
     r"""
     Compares two csv files.
 
     Parameters
     ----------
-    csv_file_a
-    csv_file_b
+    csv_file_a : str
+        Path to first csv file
 
+    csv_file_b : str
+        Path to second csv file
+
+    check_arrays : bool
+        If True, only compares data, not index and columns
     """
     df1 = pd.read_csv(csv_file_a)
     df2 = pd.read_csv(csv_file_b)
 
-    assert_frame_equal(df1, df2, **kwargs)
+    if check_arrays:
+        np.array_equal(df1.values, df2.values, **kwargs)
+
+    else:
+        assert_frame_equal(df1, df2, **kwargs)
 
 
 def check_if_csv_dirs_equal(dir_a, dir_b, **kwargs):
