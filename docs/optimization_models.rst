@@ -72,7 +72,7 @@ The optimisation of a given *ThermalNetwork* is executed by:
 
     tnw.optimize_investment(invest_options=invest_opt)
 
-For executing an optimisation, you must provide :ref:`investment options <add_invest_options>`
+For executing an optimisation, you must provide :ref:`investment options<add_invest_options>`
 additional to the previous
 data, which defines a *ThermalNetwork*. Both are explained in the following section.
 
@@ -84,7 +84,7 @@ Input Data
 In this section, it is firstly revised, what input data is exactly necessary
 from the *ThemalNetwork* class, and then explained, what data needs to be
 provided as :ref:`investment options <add_invest_options>`, and what
-:ref:`optimisation settings`<Optimization settings> you can apply.
+:ref:`optimisation settings<Optimization settings>` you can apply.
 
 The following figure provides an overview of the input data:
 
