@@ -140,7 +140,7 @@ Pipes
 '''''
 
 The basis for the district heating system optimisation is a table of potential pipes.
-The following attributes or the *ThermalNetwork* must be given:
+The following attributes of the *ThermalNetwork* must be given:
 
 * **id**: see :ref:`Thermal Network <thermal_network_label>`
 * **from_node**: see :ref:`Thermal Network <thermal_network_label>`
@@ -171,16 +171,17 @@ These attributes are optional for the optimisation:
 Consumers
 '''''''''
 
+The following attributes of the *ThermalNetwork* must be given:
+
+* **id**: see :ref:`Thermal Network <thermal_network_label>`
+
+The following attributes are additional attributes of the optimization module.
+These attributes are optional for the optimisation:
+
 .. csv-table::
    :header-rows: 1
    :file: _static/opti_consumers.csv
    :align: center
-
-The following optional attributes must be given in every *ThermalNetwork*:
-
-* **id**: see :ref:`Thermal Network <thermal_network_label>`
-
-The following optional attributes are introduced by the optimization module:
 
 * **active**: Binary indicating that consumer-xy is considered. If no column
   *active* is given, all consumers are active. With this attribute, single
