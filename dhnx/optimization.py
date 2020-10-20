@@ -190,17 +190,17 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # Check 3
         # check if all components of network are connected
-        # self.thermal_network.nx_graph = self.thermal_network.to_nx_graph()
-        # g = self.thermal_network.nx_graph
-        # if not nx.is_connected(g):
-        #     nx_sum = [len(c) for c in sorted(nx.connected_components(g), key=len, reverse=True)]
-        #     nx_detail = sorted(nx.connected_components(g), key=len, reverse=True)
-        #     raise ValueError(
-        #         "Network not connected! There are {} parts, with the following number of nodes: \n"
-        #         "{} \n"
-        #         "These are the separated elements/networks: \n"
-        #         "{}".format(len(nx_sum), nx_sum, nx_detail)
-        #     )
+        self.thermal_network.nx_graph = self.thermal_network.to_nx_graph()
+        g = nx.Graph(self.thermal_network.nx_graph)
+        if not nx.is_connected(g):
+            nx_sum = [len(c) for c in sorted(nx.connected_components(g), key=len, reverse=True)]
+            nx_detail = sorted(nx.connected_components(g), key=len, reverse=True)
+            raise ValueError(
+                "Network not connected! There are {} parts, with the following number of nodes: \n"
+                "{} \n"
+                "These are the separated elements/networks: \n"
+                "{}".format(len(nx_sum), nx_sum, nx_detail)
+            )
 
     def remove_inactive(self):
         """
