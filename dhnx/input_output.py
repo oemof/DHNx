@@ -442,7 +442,7 @@ def load_invest_options(path):
 
     .. _folder_structure_invest:
 
-    .. code-block::
+    .. code-block:: txt
 
         tree
         ├── network
