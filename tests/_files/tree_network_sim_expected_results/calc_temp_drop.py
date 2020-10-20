@@ -55,7 +55,7 @@ temp_drop = temp_drop.iloc[:, 1:]
 temp_drop = temp_drop.rename(columns={"0": "1", "1": "2"})
 
 
-def calc_temp_heat_loss(t_in, index):
+def calc_temp_heat_loss(t_in, pos):
     """
     This function calculates the pipe's outlet temperature
     out of the inlet temperature due to heat losses
@@ -64,12 +64,12 @@ def calc_temp_heat_loss(t_in, index):
     :return: t_out
     """
     t_out = t_env + (t_in - t_env) * np.exp(
-        -pipes["heat_transfer_coefficient_W/mK"].iloc[index]
+        -pipes["heat_transfer_coefficient_W/mK"].iloc[pos]
         * pi
-        * pipes["diameter_mm"].iloc[index]
+        * pipes["diameter_mm"].iloc[pos]
         / 1000
-        * pipes["length_m"].iloc[index]
-        / (c * mass_flow_total[str(index)])
+        * pipes["length_m"].iloc[pos]
+        / (c * mass_flow_total[str(pos)])
     )
     return t_out
 
@@ -169,6 +169,7 @@ for index, node in enumerate(mass_flow_total):
 # Print results
 def parameters():
     parameter = {
+    param_dict = {
         "Mass flow [kg/s]": mass_flow_total,
         "Inlet temperature at producer T_prod_i [°C]": t_prod_i,
         "Return temperature at producer T_prod_r [°C]": t_prod_r,
@@ -182,7 +183,7 @@ def parameters():
         "Global heat losses Q_loss_glob [W]": Q_loss_glob,
         "Heat transfer at consumers Q [W]": Q_cons,
     }
-    return parameter
+    return param_dict
 
 
 parameter = parameters()
@@ -205,8 +206,8 @@ print_parameters()
 
 
 # Save results to csv
-for name, param in parameter.items():
-    param.insert(0, "snapshot", np.arange(len(mass_flow_total)))
+for value, params in parameter.items():
+    params.insert(0, "snapshot", np.arange(len(mass_flow_total)))
 
 
 result_name = [
@@ -219,5 +220,5 @@ result_name = [
 
 result_list = [list(parameter.keys())[0]] + list(parameter.keys())[7:11]
 
-for index, name in enumerate(result_list):
-    parameter[name].to_csv(os.path.join(result_path, result_name[index]), index=False)
+for index, value in enumerate(result_list):
+    parameter[value].to_csv(os.path.join(result_path, result_name[index]), index=False)
