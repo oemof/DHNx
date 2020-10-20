@@ -3,7 +3,7 @@ import dhnx
 
 # Initialize thermal network
 network = dhnx.network.ThermalNetwork()
-network = network.from_csv_folder('network')
+network = network.from_csv_folder('twn_data')
 
 # general optimisation settings
 set = {'num_ts': 3,
@@ -17,7 +17,7 @@ set = {'num_ts': 3,
        'print_logging_info': True,
        }
 
-invest_opt = dhnx.input_output.load_invest_options('invest_options')
+invest_opt = dhnx.input_output.load_invest_options('invest_data')
 
 network.optimize_investment(**set, invest_options=invest_opt)
 
