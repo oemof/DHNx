@@ -52,7 +52,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     d_labels['l_2'] = 'heat'
     d_labels['l_3'] = 'bus'
 
-    for n, o in opti_network.network.components['forks'].iterrows():
+    for n, o in opti_network.thermal_network.components['forks'].iterrows():
         d_labels['l_4'] = 'forks-' + str(n)
         d_labels['l_1'] = 'infrastructure'
         l_bus = oh.Label(d_labels['l_1'], d_labels['l_2'], d_labels['l_3'],
@@ -62,7 +62,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
         busd[l_bus] = bus
 
     # add heatpipes for all lines
-    for p, q in opti_network.network.components['pipes'].iterrows():
+    for p, q in opti_network.thermal_network.components['pipes'].iterrows():
 
         pipe_data = opti_network.invest_options['network']['pipes']
 
@@ -246,10 +246,10 @@ def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
     """
 
     gen_data = opti_network.invest_options[label_1]     # genic data for all houses
-    series = opti_network.network.sequences[label_1]    # sequences
+    series = opti_network.thermal_network.sequences[label_1]    # sequences
     d_labels = {}
 
-    for r, c in opti_network.network.components[label_1].iterrows():
+    for r, c in opti_network.thermal_network.components[label_1].iterrows():
 
         # heat bus is always necessary
         d_labels['l_1'] = label_1

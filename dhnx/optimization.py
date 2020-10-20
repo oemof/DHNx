@@ -126,21 +126,21 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # Check 1
         # make sure that all ids are of type str
         # sequences
-        sequ_items = self.network.sequences.keys()
+        sequ_items = self.thermal_network.sequences.keys()
         for it in sequ_items:
-            for v in self.network.sequences[it].values():
+            for v in self.thermal_network.sequences[it].values():
                 v.columns.astype('str')
 
         # components
         for comp in ['pipes', 'consumers', 'producers', 'forks']:
-            self.network.components[comp].index = \
-                self.network.components[comp].index.astype('str')
+            self.thermal_network.components[comp].index = \
+                self.thermal_network.components[comp].index.astype('str')
 
         # Check 2
 
-        ids_consumers = self.network.components['consumers'].index
+        ids_consumers = self.thermal_network.components['consumers'].index
 
-        for p, q in self.network.components['pipes'].iterrows():
+        for p, q in self.thermal_network.components['pipes'].iterrows():
 
             if (q['from_node'].split('-')[0] == "consumers") and (
                     q['to_node'].split('-')[0] == "consumers"):
@@ -179,28 +179,28 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         ""
                         "The consumer of pipe id {} does not exist!".format(p))
 
-        pipe_to_cons_ids = list(self.network.components['pipes']['to_node'].values)
+        pipe_to_cons_ids = list(self.thermal_network.components['pipes']['to_node'].values)
         pipe_to_cons_ids = [x.split('-')[1] for x in pipe_to_cons_ids
                             if x.split('-')[0] == 'consumers']
 
-        for id in list(self.network.components['consumers'].index):
+        for id in list(self.thermal_network.components['consumers'].index):
             if id not in pipe_to_cons_ids:
                 raise ValueError(
                     "The consumer id {} has no connection the the grid!".format(id))
 
         # Check 3
         # check if all components of network are connected
-        self.network.nx_graph = self.network.to_nx_graph()
-        g = self.network.nx_graph
-        if not nx.is_connected(g):
-            nx_sum = [len(c) for c in sorted(nx.connected_components(g), key=len, reverse=True)]
-            nx_detail = sorted(nx.connected_components(g), key=len, reverse=True)
-            raise ValueError(
-                "Network not connected! There are {} parts, with the following number of nodes: \n"
-                "{} \n"
-                "These are the separated elements/networks: \n"
-                "{}".format(len(nx_sum), nx_sum, nx_detail)
-            )
+        # self.thermal_network.nx_graph = self.thermal_network.to_nx_graph()
+        # g = self.thermal_network.nx_graph
+        # if not nx.is_connected(g):
+        #     nx_sum = [len(c) for c in sorted(nx.connected_components(g), key=len, reverse=True)]
+        #     nx_detail = sorted(nx.connected_components(g), key=len, reverse=True)
+        #     raise ValueError(
+        #         "Network not connected! There are {} parts, with the following number of nodes: \n"
+        #         "{} \n"
+        #         "These are the separated elements/networks: \n"
+        #         "{}".format(len(nx_sum), nx_sum, nx_detail)
+        #     )
 
     def remove_inactive(self):
         """
@@ -216,8 +216,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 df = v_new
             return df
 
-        for k, v in self.network.components.items():
-            self.network.components[k] = clean_df(v)
+        for k, v in self.thermal_network.components.items():
+            self.thermal_network.components[k] = clean_df(v)
 
         pipes = self.invest_options['network']['pipes']
         self.invest_options['network']['pipes'] = clean_df(pipes)
@@ -250,7 +250,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             of the given heat demand timeseries.
             """
             if self.settings['num_ts'] > \
-                    len(self.network.sequences['consumers']['heat_flow'].index):
+                    len(self.thermal_network.sequences['consumers']['heat_flow'].index):
                 raise ValueError(
                     'The length of the heat demand timeseries is not sufficient '
                     'for the given number of {} timesteps.'.format(
@@ -258,12 +258,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         # prepare heat data, whether global simultanity or timeseries
         if 'P_heat_max' not in list(
-                self.network.components['consumers'].columns):
-            df_max = self.network.sequences['consumers']['heat_flow'].max(). \
+                self.thermal_network.components['consumers'].columns):
+            df_max = self.thermal_network.sequences['consumers']['heat_flow'].max(). \
                 to_frame(name='P_heat_max')
 
-            self.network.components['consumers'] = \
-                pd.concat([self.network.components['consumers'], df_max],
+            self.thermal_network.components['consumers'] = \
+                pd.concat([self.thermal_network.components['consumers'], df_max],
                           axis=1, join='outer', sort=False)
 
         # check, which optimization type should be performed
@@ -272,17 +272,17 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             self.settings['num_ts'] = 1
 
             # new approach
-            p_max = self.network.components['consumers']['P_heat_max']
+            p_max = self.thermal_network.components['consumers']['P_heat_max']
             df_ts = pd.DataFrame(data=[p_max.values],
                                  columns=list(p_max.index),
                                  index=pd.Index([0], name='timestep'))
 
             # heat load is maximum heat load
-            self.network.sequences['consumers']['heat_flow'] = df_ts
+            self.thermal_network.sequences['consumers']['heat_flow'] = df_ts
 
         # apply global simultaneity for demand series
-        self.network.sequences['consumers']['heat_flow'] = \
-            self.network.sequences['consumers']['heat_flow'] * \
+        self.thermal_network.sequences['consumers']['heat_flow'] = \
+            self.thermal_network.sequences['consumers']['heat_flow'] * \
             self.settings['simultaneity']
 
         check_len_timeseries()
@@ -297,14 +297,14 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         """
 
         # check whether there the 'existing' attribute is present at the pipes
-        if 'existing' not in self.network.components['pipes'].columns:
-            self.network.components['pipes']['existing'] = 0
+        if 'existing' not in self.thermal_network.components['pipes'].columns:
+            self.thermal_network.components['pipes']['existing'] = 0
 
         # create pipes attribute hp_type, if not in the table so far
-        if 'hp_type' not in list(self.network.components['pipes'].columns):
-            self.network.components['pipes']['hp_type'] = None
+        if 'hp_type' not in list(self.thermal_network.components['pipes'].columns):
+            self.thermal_network.components['pipes']['hp_type'] = None
 
-        edges = self.network.components['pipes']
+        edges = self.thermal_network.components['pipes']
         pipe_types = self.invest_options['network']['pipes']
 
         hp_list = list({x for x in edges['hp_type'].tolist()
@@ -593,7 +593,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         )
 
         # use pipes dataframe as base and add results as new columns to it
-        df = self.network.components['pipes']
+        df = self.thermal_network.components['pipes']
 
         # only select not existing pipes
         df = df[df['existing'] == 0].copy()
