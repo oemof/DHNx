@@ -9,8 +9,8 @@ The assumption of three fittings has been made:
 
 """
 import os
-import pandas as pd
 import math
+import pandas as pd
 import numpy as np
 
 path_file = os.path.dirname(__file__)
