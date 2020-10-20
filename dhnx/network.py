@@ -267,14 +267,20 @@ class ThermalNetwork():
         Takes all sequences and checks if their timeindex is identical.
         If that is the case, it sets the timeindex attribute of the
         class.
+        If there are no sequences given, the timeindex will keep the default value.
         """
         sequence_dfs = self._list_nested_dict_values(self.sequences)
 
-        indices = [df.index for df in sequence_dfs]
+        if sequence_dfs:
 
-        self._are_indices_equal(indices)
+            indices = [df.index for df in sequence_dfs]
 
-        self.timeindex = indices[0]
+            self._are_indices_equal(indices)
+
+            self.timeindex = indices[0]
+
+        else:
+            print("No sequences found to create timeindex from")
 
     def reproject(self, crs):
         pass
