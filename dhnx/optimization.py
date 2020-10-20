@@ -510,10 +510,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                             "Investment status of pipe id {} is 1 for both dircetions!"
                             " This is not allowed!".format(r)
                         )
-                    if (df.at[r, hp_lab + '.' + 'status-1'] == 1 and df.at[
-                        r, hp_lab + '.' + 'size-1'] == 0) or\
-                            (df.at[r, hp_lab + '.' + 'status-2'] == 1 and df.at[
-                                r, hp_lab + '.' + 'size-2'] == 0):
+                    if (df.at[r, hp_lab + '.' + 'status-1'] == 1 and
+                            df.at[r, hp_lab + '.' + 'size-1'] == 0) or\
+                                (df.at[r, hp_lab + '.' + 'status-2'] == 1 and df.at[
+                                    r, hp_lab + '.' + 'size-2'] == 0):
                         print(
                             "Investment status of pipe id {} is 1, and capacity is 0!"
                             "What happend?!".format(r)
