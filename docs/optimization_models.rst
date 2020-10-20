@@ -72,7 +72,8 @@ The optimisation of a given *ThermalNetwork* is executed by:
 
     tnw.optimize_investment(invest_options=invest_opt)
 
-For executing an optimisation, you must provide the `invest_options` additional to the previous
+For executing an optimisation, you must provide :ref:`investment options <add_invest_options>`
+additional to the previous
 data, which defines a *ThermalNetwork*. Both are explained in the following section.
 
 .. _Input Data:
@@ -82,7 +83,8 @@ Input Data
 
 In this section, it is firstly revised, what input data is exactly necessary
 from the *ThemalNetwork* class, and then explained, what data needs to be
-provided as `invest_options` and as `settings`.
+provided as :ref:`investment options <add_invest_options>`, and what
+:ref:`optimisation settings`<Optimization settings> you can apply.
 
 The following figure provides an overview of the input data:
 
@@ -94,10 +96,13 @@ The following figure provides an overview of the input data:
    Fig. 1: Optimisation Input Data
 
 The structure of the input data might look a bit confusing at the beginning, but provides a lot of
-options for building up complex district heating models. There are two groups of data:
-geo-referenced data and parameters for the investment optimisation (with might include other
-oemof-solph related data). All data needs to be provided in csv files. This means the geo-referenced
-data does not need to be geo-referenced for this model at all, but probably in many cases, it is the
+options for building up complex district heating models.
+There are two groups of data: Firstly, data that describes the components
+and the connectivity of the network, required by the ThermalNetwork class.
+Secondly, data that is necessary for the investment optimization.
+For now, all data needs to be provided in csv files. This means that you do not need to provide a
+geo-reference for applying an district heating network optimisation model at all.
+Probably, in many cases, it is the
 export of four geo-referenced layers (e.g. geopandasdataframe, shp-file, or any other), which are
 a line layer representing the potential places for the DHS-trenches, and three point layers for the
 producers, the consumers, and the potential forks of the DHS system. All geometry information of
@@ -232,6 +237,8 @@ The following table shows an example of a `consumers-heat_flow`:
 
 The column index must be the consumers `id` (And be careful that the `dtype` also matches
 the *id* of the consumers!).
+
+.. _add_invest_options :
 
 Investment and additional options
 """""""""""""""""""""""""""""""""
