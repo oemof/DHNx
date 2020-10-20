@@ -1,8 +1,4 @@
 attribute,type,unit,default,description,status,requirement
-**id**,object,n/a,n/a,Unique id,Input,required
-**from_node**,object,n/a,n/a,Node where Edge begins,Input,required
-**to_node**,object,n/a,n/a,Node where Edge ends,Input,required
-**length**,float,m,n/a,Length of the Edge,Input,required
 **existing**,bool,n/a,0,Binary indicating and existing pipe,Input,optional
 **capacity**,float,kW,0,Capacity for existing pipe,Input,optional
 **hp_type**,object,n/a,'nan',Type_label of existing pipe,Input,optional

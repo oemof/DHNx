@@ -139,19 +139,21 @@ to the optimization, are presented in detail in the following:
 Pipes
 '''''
 
-.. csv-table::
-   :header-rows: 1
-   :file: _static/opti_edges.csv
-   :align: center
-
-The following optional attributes must be given in every *ThermalNetwork*:
+The basis for the district heating system optimisation is a table of potential pipes.
+The following attributes or the *ThermalNetwork* must be given:
 
 * **id**: see :ref:`Thermal Network <thermal_network_label>`
 * **from_node**: see :ref:`Thermal Network <thermal_network_label>`
 * **to_node**: see :ref:`Thermal Network <thermal_network_label>`
 * **length**: see :ref:`Thermal Network <thermal_network_label>`
 
-The following optional attributes are introduced by the optimization module:
+The following attributes are additional attributes of the optimization module.
+These attributes are optional for the optimisation:
+
+.. csv-table::
+   :header-rows: 1
+   :file: _static/opti_edges.csv
+   :align: center
 
 * **existing**: Binary indicating an existing pipe. If there is no column
   *existing* given, all Pipes are free for optimization.
@@ -162,14 +164,9 @@ The following optional attributes are introduced by the optimization module:
   *hp_type* must be given in the following table (see :ref:`network/pipes.csv <invest_pipes>`).
   If *existing* is *True*, a *hp_type* must be given.
 * **active**: Binary indicating that this pipe is considered. If no column
-  *active* is given, all pipes are active. With this attribute, single pipes
+  *active* is given, all pipe-options are active. With this attribute, single pipes
   can be switched on and off. This can be very useful, if different scenarios
   should be analyzed, e.g. you might like to make a given street/pipes unavailable.
-* **add_fix_costs**: (*not implemented yet*) Additional fix investment costs. Depending on the
-  street and route of a DHS, the construction costs might differ. With this parameter,
-  additional fix investment costs (independent of the size of the pipes) can be
-  considered for each pipe individually. Therefore, you need to apply a
-  nonconvex investment (see :ref:`network/pipes.csv <invest_pipes>`).
 
 Consumers
 '''''''''
