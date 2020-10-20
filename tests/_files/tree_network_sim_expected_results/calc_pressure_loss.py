@@ -1,3 +1,5 @@
+# -*- coding: utf-8
+
 """
 This script calculates the pressure losses and the needed power for the pump
 in a simple tree network.
@@ -6,7 +8,6 @@ The assumption of three fittings has been made:
 1. Tee connector at the fork
 2. Valve at the consumer 1
 3. Valve at the consumer 2
-
 """
 import os
 import math
@@ -23,7 +24,7 @@ if not os.path.exists(result_path):
 
 
 def read_data(input_value):
-    """
+    r"""
     This function is reading the data of a csv with a name given as input value
     """
     return pd.read_csv(os.path.join(input_data, input_value + ".csv"), index_col=0)
@@ -181,6 +182,13 @@ for index, node in enumerate(v):
 # Print results
 def parameters():
     r"""
+    Writes results in Dictionary
+
+    Returns
+    -------
+    parameter : dict
+                Dictionary with results
+    """
     param_dict = {
         "Velocity v [m/s]": v,
         "Reynolds Re [-]": re,
@@ -202,6 +210,9 @@ parameter = parameters()
 
 
 def print_parameters():
+    r"""
+    Prints the parameters
+    """
     dash = "-" * 60
     print("\n" + dash)
     print("Results at producer (0), consumer 1 (1) and consumer 2 (2)")
