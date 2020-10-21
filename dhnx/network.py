@@ -254,7 +254,7 @@ class ThermalNetwork():
         True
         """
         if len(indices) == 1:
-            print("Need more than one index to compare.")
+            print("Only one sequence given. Need more than one time-index to compare.")
             return True
 
         for index in indices[1:]:
