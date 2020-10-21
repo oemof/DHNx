@@ -15,6 +15,7 @@ set = {'num_ts': 3,
        'simultaneity': 0.8,
        'bidirectional_pipes': True,
        'print_logging_info': True,
+       'heat_demand': 'series',
        }
 
 invest_opt = dhnx.input_output.load_invest_options('invest_data')

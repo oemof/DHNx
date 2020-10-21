@@ -380,8 +380,9 @@ The following table shows all options for the optimisation settings
 
 Some more explanation:
 
-* **heat_demand**: If you set *heat_demand* to `'scalar'`, *num_ts* is automatically 1. If you
-  want to use the time series, simple type anything else than `'scalar'`.
+* **heat_demand**: If you set *heat_demand* to `'scalar'`, *num_ts* is automatically 1, and
+  the peak heat load is used as heat demand for the consumers. If you want to use a time series as
+  heat demand, apply `'series'`.
 
 
 .. _Label system:

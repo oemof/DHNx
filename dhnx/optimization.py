@@ -649,8 +649,8 @@ def setup_optimise_investment(
     invest_options : dict
         Dictionary holding the investment options for the district heating system.
     heat_demand : str
-        If 'scalar', peak heat load is used as heat consumers’ heat demand. If
-        something else, the given heat load time-series is used.
+        'scalar': Peak heat load is used as heat consumers’ heat demand.
+        'series': Heat load time-series is used.
     num_ts : int
         Number of time steps of optimisation.
     time_res : float
@@ -681,6 +681,10 @@ def setup_optimise_investment(
     -------
     oemof.solph.Model : The oemof.solph.Model is build.
     """
+    if not heat_demand in ['scalar', 'series']:
+        raise ValueError(
+            'The settings attribute *heat_demand* must be "scalar" or "series"!'
+        )
 
     settings = {
         'heat_demand': heat_demand,

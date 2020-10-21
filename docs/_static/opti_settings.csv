@@ -1,5 +1,5 @@
 attribute,type,default,description
-**heat_demand**,str,'scalar',Peak heat load or time-series is used as heat consumers' heat demand
+**heat_demand**,str,'scalar','scalar' or 'series'. 'scalar': Peak heat load. 'series': time-series is used as heat demand.
 **simultaneity**,float,1,Simultaneity or concurrency factor
 **num_ts**,int,1,Number of time steps of optimisation
 **time_res**,float,1,Time resolution
