@@ -1,0 +1,2 @@
+label_3,active,nonconvex,l_factor,l_factor_fix,cap_max,cap_min,capex_pipes,fix_costs
+heatpipe-milp,1,1,0.0000021,0.0069226,100000,10,0.00959,236

@@ -434,6 +434,61 @@ def load_component_attrs(dir_name, available_components):
     return Dict(component_attrs)
 
 
+def load_invest_options(path):
+    """
+    This function loads the tables for the investment options.
+
+    The structure must like this:
+
+    .. _folder_structure_invest:
+
+    .. code-block:: txt
+
+        tree
+        ├── network
+        |   └── pipes.csv           # (required)
+        |
+        ├── consumers
+        |   ├── bus.csv             # (required)
+        |   ├── demand.csv          # (required)
+        |   ├── source.csv          # (optional)
+        |   ├── storages.csv        # (optional)
+        |   └── transformer.csv     # (optional)
+        |
+        └── producers
+            ├── bus.csv             # (required)
+            ├── demand.csv          # (optional)
+            ├── source.csv          # (required)
+            ├── storages.csv        # (optional)
+            └── transformer.csv     # (optional)
+
+    Parameters
+    ----------
+    path : str
+        Directory path to the folder with investment data.
+
+    Returns
+    -------
+    dict : A dictionary with the dataframes of the given csv files.
+
+    """
+
+    dict = {}
+
+    for name in os.listdir(path):
+
+        dict_sub = {}
+
+        for sub in os.listdir(os.path.join(path, name)):
+            key = sub.split('.csv')[0]
+            val = pd.read_csv(os.path.join(path, name, sub))
+            dict_sub.update([(key, val)])
+
+        dict.update([(name, dict_sub)])
+
+    return dict
+
+
 def save_results(results, results_dir):
 
     if not os.path.exists(results_dir):

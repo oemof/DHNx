@@ -1,7 +1,0 @@
-id,from_node,to_node,length[m],heat_flow_max,investment_cost[Eur/m],temperature_inlet,temperature_return
-0,producers-0,forks-0,200,3,2000,sequences/pipes/temperature_inlet,sequences/pipes/temperature_return
-5,forks-0,forks-1,100,3,2000,sequences/pipes/temperature_inlet,sequences/pipes/temperature_return
-6,forks-0,forks-2,100,3,2000,sequences/pipes/temperature_inlet,sequences/pipes/temperature_return
-9,forks-1,forks-2,100,3,2000,sequences/pipes/temperature_inlet,sequences/pipes/temperature_return
-10,forks-1,consumers-0,100,3,2000,sequences/pipes/temperature_inlet,sequences/pipes/temperature_return
-13,forks-2,consumers-1,100,3,2000,sequences/pipes/temperature_inlet,sequences/pipes/temperature_return

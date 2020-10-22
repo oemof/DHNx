@@ -11,8 +11,8 @@ SPDX-License-Identifier: MIT
 
 import os
 
-import pandas as pd
 import networkx as nx
+import pandas as pd
 
 import dhnx
 from . import helpers
@@ -29,6 +29,14 @@ dir_import_looped = os.path.join(basedir, '_files/looped_network_import')
 tree_thermal_network = dhnx.network.ThermalNetwork(dir_import_tree)
 
 looped_thermal_network = dhnx.network.ThermalNetwork(dir_import_looped)
+
+dir_import_invest = os.path.join(basedir, '_files/investment/')
+
+tn_invest = dhnx.network.ThermalNetwork(dir_import_invest + 'network')
+
+invest_opt = dhnx.input_output.load_invest_options(
+    dir_import_invest + 'invest_options'
+)
 
 
 def test_import_export_csv():
@@ -80,7 +88,7 @@ def test_setup_operation_optimization():
 
 def test_setup_investment_optimization():
 
-    looped_thermal_network.optimize_investment()
+    dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
 
 
 def test_setup_simulation():

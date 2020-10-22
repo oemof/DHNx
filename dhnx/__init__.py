@@ -4,3 +4,4 @@ from . import plotting
 from . import model
 from . import simulation
 from . import dhn_from_osm
+from . import optimization

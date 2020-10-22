@@ -1,0 +1,14 @@
+attribute,type,default,description
+**heat_demand**,str,'scalar','scalar' or 'series'. 'scalar': Peak heat load. 'series': time-series is used as heat demand.
+**simultaneity**,float,1,Simultaneity or concurrency factor
+**num_ts**,int,1,Number of time steps of optimisation
+**time_res**,float,1,Time resolution
+**start_date**,str,'1/1/2018',Startdate for oemof optimisation
+**frequence**,str,'H',Lenght of period
+**solver**,str,'cbc',Name of solver
+**solve_kw**,dict,{'tee': True},Solver kwargs
+**bidirectional_pipes**,bool,*False*,"Bidirectional pipes leads to bi-directional flow attributes at the heatpipeline components {'min': -1, bidirectional: True}"
+**dump_path**,str,None,"If a dump path is provided, the oemof dump file is stored."
+**dump_name**,str,dump.oemof,Name of dump file
+**print_logging_info**,bool,*False*,There are still some helpful print statements.
+**write_lp_file**,bool,*False*,Option of writing lp-file. The lp-file is stored in 'User/.oemof/lp_files/DHNx.lp'

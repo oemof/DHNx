@@ -17,9 +17,10 @@ import numpy as np
 import pandas as pd
 
 from .graph import thermal_network_to_nx_graph
+from .optimization import optimize_operation, setup_optimise_investment, \
+    solve_optimisation_investment
 from .helpers import Dict
 from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
-from .optimization import optimize_operation, optimize_investment
 from .simulation import simulate
 
 dir_name = os.path.dirname(__file__)
@@ -253,7 +254,7 @@ class ThermalNetwork():
         True
         """
         if len(indices) == 1:
-            print("Need more than one index to compare.")
+            print("Only one sequence given. Need more than one time-index to compare.")
             return True
 
         for index in indices[1:]:
@@ -266,14 +267,20 @@ class ThermalNetwork():
         Takes all sequences and checks if their timeindex is identical.
         If that is the case, it sets the timeindex attribute of the
         class.
+        If there are no sequences given, the timeindex will keep the default value.
         """
         sequence_dfs = self._list_nested_dict_values(self.sequences)
 
-        indices = [df.index for df in sequence_dfs]
+        if sequence_dfs:
 
-        self._are_indices_equal(indices)
+            indices = [df.index for df in sequence_dfs]
 
-        self.timeindex = indices[0]
+            self._are_indices_equal(indices)
+
+            self.timeindex = indices[0]
+
+        else:
+            print("No sequences found to create timeindex from")
 
     def reproject(self, crs):
         pass
@@ -281,8 +288,15 @@ class ThermalNetwork():
     def optimize_operation(self):
         self.results.operation = optimize_operation(self)
 
-    def optimize_investment(self):
-        self.results.simulation = optimize_investment(self)
+    def optimize_investment(self, invest_options, **kwargs):
+
+        oemof_opti_model = setup_optimise_investment(
+            self, invest_options, **kwargs
+        )
+
+        self.results.optimization = solve_optimisation_investment(
+            oemof_opti_model
+        )
 
     def simulate(self, *args, **kwargs):
         self.results.simulation = simulate(self, *args, **kwargs)
