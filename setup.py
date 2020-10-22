@@ -12,7 +12,7 @@ setup(
     name='dhnx',
     version='0.0.1',
     description='Simulation and optimization of district heating and cooling networks',
-    author='Jann Launer',
+    author="oemof developer group",
     author_email='jann.launer@rl-institut.de',
     long_description=read('README.rst'),
     packages=['dhnx'],
