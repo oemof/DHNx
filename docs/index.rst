@@ -31,6 +31,7 @@ Welcome to oemof.DHNx's documentation!
 
    whats_new
    api
+   authors
 
 
 Indices and tables
