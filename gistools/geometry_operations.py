@@ -222,58 +222,6 @@ def split_multilinestr_to_linestr(gdf_lines_streets_new):
     return gdf_lines_streets_new
 
 
-def cut_loose_ends(gdf_line_net, gdf_line_gen, gdf_line_houses):
-    """Recursively cut loose ends.
-
-    This functionality is also included in ``weld_segments()``.
-    """
-    gdf_line_net_last = gdf_line_net
-    gdf_line_net_new = _cut_loose_ends(gdf_line_net, gdf_line_gen,
-                                       gdf_line_houses)
-    # Now do this recursively, until the problem cannot be simplified further
-    while len(gdf_line_net_new) < len(gdf_line_net_last):
-        print('Cutting loose ends... reduced from {} to {} lines'.format(
-            len(gdf_line_net_last), len(gdf_line_net_new)))
-        gdf_line_net_last = gdf_line_net_new
-        gdf_line_net_new = _cut_loose_ends(gdf_line_net_new, gdf_line_gen,
-                                           gdf_line_houses)
-    return gdf_line_net_new
-
-
-def _cut_loose_ends(gdf_line_net, gdf_line_gen, gdf_line_houses):
-    """Cut loose ends by keeping only what connects to other lines.
-
-    This functionality is also included in ``weld_segments()``.
-    """
-    gdf_line_net_new = gpd.GeoDataFrame(geometry=[])
-    for i, b in gdf_line_net.iterrows():
-        geom = b.geometry
-
-        # Keep lines that are connected to generator or house
-        mask_gen = [geom.touches(g) for g in gdf_line_gen.geometry]
-        mask_houses = [geom.touches(g) for g in gdf_line_houses.geometry]
-        if any(mask_gen) or any(mask_houses):
-            gdf_line_net_new = gdf_line_net_new.append(b, ignore_index=True)
-            continue
-
-        # Find the neighbours of the current line segment
-        mask_neighbours = [geom.touches(g) for g in gdf_line_net.geometry]
-        neighbours = gdf_line_net[mask_neighbours]
-
-        # If all of the neighbours intersect with each other, it is the
-        # last segement before an intersection, which can be removed
-        for neighbour in neighbours.geometry:
-            if all([neighbour.intersects(g) for g in neighbours.geometry]):
-                neighbours = gpd.GeoDataFrame(geometry=[])
-
-        if len(neighbours) <= 1:
-            continue  # This is an unused end segment, which we can discard
-        else:  # Keep anything with more than one neighbour
-            gdf_line_net_new = gdf_line_net_new.append(b, ignore_index=True)
-
-    return gdf_line_net_new
-
-
 def weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                   debug_plotting=False):
     """Weld continuous line segments together and cut loose ends.
@@ -285,17 +233,21 @@ def weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
     to a single MultiLine object. Points that connect to Generators and
     Houses are not simplified. Loose ends are shortened where possible.
 
-    Args:
-        gdf_line_net (GeoDataFrame): Potential pipe network.
+    Parameters
+    ----------
+    gdf_line_net : GeoDataFrame
+        Potential pipe network.
+    gdf_line_gen : GeoDataFrame
+        Generators that need to be connected.
+    gdf_line_houses : GeoDataFrame
+        Houses that need to be connected.
+    debug_plotting : bool, optional
+        Plot the selection process.
 
-        gdf_line_gen (GeoDataFrame): Generators that need to be connected.
-
-        gdf_line_houses (GeoDataFrame): Houses that need to be connected.
-
-        debug_plotting (bool, optional): Plot the selection process.
-
-    Returns:
-        gdf_line_net_new (GeoDataFrame): Simplified potential pipe network.
+    Returns
+    -------
+    gdf_line_net_new : GeoDataFrame
+        Simplified potential pipe network.
 
     """
     gdf_line_net_last = gdf_line_net
@@ -319,22 +271,28 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
     to a single MultiLine object. Points that connect to Generators and
     Houses are not simplified. Loose ends are shortened where possible.
 
-    Args:
-        gdf_line_net (GeoDataFrame): Potential pipe network.
+    Parameters
+    ----------
+    gdf_line_net : GeoDataFrame
+        Potential pipe network.
+    gdf_line_gen : GeoDataFrame
+        Generators that need to be connected.
+    gdf_line_houses : GeoDataFrame
+        Houses that need to be connected.
+    debug_plotting : bool, optional
+        Plot the selection process.
 
-        gdf_line_gen (GeoDataFrame): Generators that need to be connected.
-
-        gdf_line_houses (GeoDataFrame): Houses that need to be connected.
-
-        debug_plotting (bool, optional): Plot the selection process.
-
-    Returns:
-        gdf_line_net_new (GeoDataFrame): Simplified potential pipe network.
+    Returns
+    -------
+    gdf_line_net_new : GeoDataFrame
+        Simplified potential pipe network.
 
     """
     gdf_line_net_new = gpd.GeoDataFrame(geometry=[])
     gdf_merged_all = gpd.GeoDataFrame(geometry=[])
     gdf_deleted = gpd.GeoDataFrame(geometry=[])
+    # Merge generator and houses line DataFrames to 'external' lines
+    gdf_line_ext = pd.concat([gdf_line_gen, gdf_line_houses])
 
     for i, b in gdf_line_net.iterrows():
         def debug_plot(neighbours, color='red'):
@@ -342,27 +300,15 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             if debug_plotting:
                 fig, ax = plt.subplots(1, 1, dpi=300)
                 gdf_line_net.plot(ax=ax, color='blue')
-                gdf_line_gen.plot(ax=ax, color='green')
-                gdf_line_houses.plot(ax=ax, color='green')
+                gdf_line_ext.plot(ax=ax, color='green')
                 if len(neighbours) > 0:  # Prevent empty plot warning
                     neighbours.plot(ax=ax, color='orange')
                 gpd.GeoDataFrame(geometry=[geom]).plot(ax=ax, color=color)
 
         geom = b.geometry  # The current line segment
 
-        if any([geom.within(g) for g in gdf_merged_all.geometry]):
+        if any_check(geom, gdf_merged_all, how='within'):
             # Drop this object, because it is contained within a merged object
-            continue  # Continue with the next line segment
-
-        # Find out if current segment connects to a generator or a house
-        mask_gen = [geom.touches(g) for g in gdf_line_gen.geometry]
-        mask_houses = [geom.touches(g) for g in gdf_line_houses.geometry]
-        mask_new = [geom.overlaps(g) for g in gdf_line_net_new.geometry]
-
-        if any(mask_gen) or any(mask_houses) or any(mask_new):
-            # Keep this segment unchanged, because it is connected to a
-            # generator, a house or "new" geometry (which is kept)
-            gdf_line_net_new = gdf_line_net_new.append(b, ignore_index=True)
             continue  # Continue with the next line segment
 
         # Find all neighbours of the current segment
@@ -372,13 +318,36 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         # last segement before an intersection, which can be removed
         for neighbour in neighbours.geometry:
             if all([neighbour.intersects(g) for g in neighbours.geometry]):
-                neighbours = gpd.GeoDataFrame(geometry=[])
+                # Treat as if there was only one neighbour (like end segment)
+                neighbours = gpd.GeoDataFrame(geometry=[neighbour])
+                break
 
         if len(neighbours) <= 1:
-            # Skip: This is an unused end segment, which we can discard to
-            # simplify the network
-            debug_plot(neighbours, color='white')
-            gdf_deleted = gdf_deleted.append(b, ignore_index=True)
+            # This is a potentially unused end segment
+            unused = True
+
+            # Test if one end touches a 'external' line, while the other
+            # end touches touches a network line segment
+            p1 = geom.boundary[0]
+            p2 = geom.boundary[-1]
+            p1_neighbours = [p1.intersects(g) for g in neighbours.geometry]
+            p2_neighbours = [p2.intersects(g) for g in neighbours.geometry]
+            if (any_check(p1, gdf_line_ext, how='touches') and
+               p2_neighbours.count(True) > 0):
+                unused = False
+            elif (any_check(p2, gdf_line_ext, how='touches') and
+                  p1_neighbours.count(True) > 0):
+                unused = False
+
+            if unused:
+                # If truly unused, we can discard it to simplify the network
+                debug_plot(neighbours, color='white')
+                gdf_deleted = gdf_deleted.append(b, ignore_index=True)
+            else:
+                # Keep it, if it touches a generator or a house
+                debug_plot(neighbours, color='black')
+                gdf_line_net_new = gdf_line_net_new.append(
+                    b, ignore_index=True)
             continue  # Continue with the next line segment
 
         elif len(neighbours) > 2:
@@ -407,16 +376,29 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         # Before merging, we need to futher clean up the list of neighbours
         neighbours_list = []
         for neighbour in neighbours.geometry:
-            if any([neighbour.equals(g) for g in gdf_deleted.geometry]):
+            if any_check(neighbour, gdf_deleted, how='equals'):
                 continue  # Do not use neighbour that has already been deleted
-            elif any([neighbour.within(g) for g in gdf_line_net_new.geometry]):
+            elif any_check(neighbour, gdf_line_net_new, how='within'):
                 continue  # Prevent creating dublicates
-            elif any([neighbour.touches(g) for g in neighbours.geometry]):
+            elif any_check(neighbour, gdf_line_ext, how='intersects'):
+                mask = [neighbour.intersects(g) for g in gdf_line_ext.geometry]
+                houses = gdf_line_ext[mask]
+                # Neighbour intersects with external, but geom does not
+                if all([geom.disjoint(g) for g in houses.geometry]):
+                    neighbours_list.append(neighbour)
+                else:  # No not merge neighbour intersecting with external
+                    continue
+            elif any_check(neighbour, neighbours, how='touches'):
                 neighbours_list = []  # The two neighbours touch
                 break  # This is a intersection that cannot be simplified
             else:  # Choose neighbour for merging
                 neighbours_list.append(neighbour)
         neighbours = gpd.GeoDataFrame(geometry=neighbours_list)
+
+        if len(neighbours) == 0:
+            # If no neighbours are left now, continue with next line segment
+            gdf_line_net_new = gdf_line_net_new.append(b, ignore_index=True)
+            continue
 
         # Create list of all elements that should be merged
         lines = [geom] + list(neighbours.geometry)
@@ -443,3 +425,56 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         gdf_merged_all = gdf_merged_all.append(gdf_merged, ignore_index=True)
 
     return gdf_line_net_new
+
+
+def any_check(geom_test, gdf, how):
+    """Improve speed for an 'any()' test on a list comprehension.
+
+    Replace a statement like...
+
+    .. code::
+
+        if any([geom_test.touches(g) for g in gdf.geometry]):
+
+    ... with the following:
+
+    .. code::
+
+        if any_check(geom_test, gdf, how='touches'):
+
+    Instead of iterating through all of 'g in gdf.geometry', return
+    'True' after the first match.
+
+    Parameters
+    ----------
+    geom_test : Shapely object
+        Object which's function 'how' is called.
+    gdf : GeoDataFrame
+        All geometries in gdf are passed to 'how'.
+    how : str
+        Shapely object function like equals, almost_equals,
+        contains, crosses, disjoint, intersects, touches, within.
+
+    Returns
+    -------
+    bool
+        True if any call of function 'how' is True.
+
+    """
+    for g in gdf.geometry:
+        method_to_call = getattr(geom_test, how)
+        result = method_to_call(g)
+        if result:  # Return once the first result is True
+            return True
+    return False
+
+
+def check_crs(gdf):
+    """Convert CRS to EPSG:4647 - ETRS89 / UTM zone 32N (zE-N).
+
+    This is the (only?) Coordinate Reference System that gives the correct
+    results for distance calculations.
+    """
+    if gdf.crs.to_epsg() != 4647:
+        gdf.to_crs(epsg=4647, inplace=True)
+    return gdf
