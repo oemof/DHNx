@@ -681,7 +681,7 @@ def setup_optimise_investment(
     -------
     oemof.solph.Model : The oemof.solph.Model is build.
     """
-    if not heat_demand in ['scalar', 'series']:
+    if heat_demand not in ['scalar', 'series']:
         raise ValueError(
             'The settings attribute *heat_demand* must be "scalar" or "series"!'
         )
