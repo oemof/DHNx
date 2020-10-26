@@ -629,7 +629,7 @@ class SimulationModelNumpy(SimulationModel):
         """
 
         heat_transfer_coefficient = nx.adjacency_matrix(
-            self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
+            self.nx_graph, weight='heat_transfer_coefficient').todense()
 
         diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter').todense()
 
