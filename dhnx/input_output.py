@@ -108,6 +108,8 @@ class CSVNetworkImporter(NetworkImporter):
 
                 self.thermal_network.components[list_name] = self.load_component_table(list_name)
 
+                self.thermal_network.set_defaults()
+
             elif os.path.isdir(os.path.join(self.basedir, name)):
 
                 assert name in ['sequences'], f"Unknown directory name. Directory '{name}' " \

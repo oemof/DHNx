@@ -114,6 +114,20 @@ class ThermalNetwork():
 
         return nx_graph
 
+    def set_defaults(self):
+        r"""
+        Sets default values on component DataFrames.
+
+        Returns
+        -------
+        None
+        """
+
+        for component, data in self.components.items():
+            for default_name, default_value in default_attrs[component].items():
+
+                data[default_name] = default_value
+
     def add(self, class_name, id, **kwargs):
         r"""
         Adds a row with id to the component DataFrame specified by class_name.
