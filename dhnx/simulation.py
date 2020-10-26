@@ -301,9 +301,9 @@ class SimulationModelNumpy(SimulationModel):
         pipes_mass_flow = self.results['pipes-mass_flow']
 
         diameter = \
-            self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
+            self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter']]
 
-        diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter_mm']
+        diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter']
 
         reynolds = 4 * pipes_mass_flow.divide(diameter, axis='columns') \
             / (np.pi * self.mu)
@@ -330,11 +330,11 @@ class SimulationModelNumpy(SimulationModel):
         """
 
         factor_diameter = self.thermal_network.components.pipes[
-            ['from_node', 'to_node', 'diameter_mm']
+            ['from_node', 'to_node', 'diameter']
         ]
 
         factor_diameter = (
-            1e-3 * factor_diameter.set_index(['from_node', 'to_node'])['diameter_mm']
+            1e-3 * factor_diameter.set_index(['from_node', 'to_node'])['diameter']
         ) ** -0.14
 
         lamb = 0.07 * reynolds ** -0.13
@@ -375,11 +375,11 @@ class SimulationModelNumpy(SimulationModel):
         length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length']]
 
         diameter = \
-            self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
+            self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter']]
 
         length = length.set_index(['from_node', 'to_node'])['length']
 
-        diameter = diameter.set_index(['from_node', 'to_node'])['diameter_mm']
+        diameter = diameter.set_index(['from_node', 'to_node'])['diameter']
 
         diameter_5 = (1e-3 * diameter) ** 5
 
@@ -491,10 +491,10 @@ class SimulationModelNumpy(SimulationModel):
         constant = 8 / (self.rho * np.pi ** 2)
 
         diameter_4 = self.thermal_network.components.pipes[
-            ['from_node', 'to_node', 'diameter_mm']
+            ['from_node', 'to_node', 'diameter']
         ]
 
-        diameter_4 = diameter_4.set_index(['from_node', 'to_node'])['diameter_mm']
+        diameter_4 = diameter_4.set_index(['from_node', 'to_node'])['diameter']
 
         diameter_4 = (1e-3 * diameter_4) ** 4
 
@@ -631,7 +631,7 @@ class SimulationModelNumpy(SimulationModel):
         heat_transfer_coefficient = nx.adjacency_matrix(
             self.nx_graph, weight='heat_transfer_coefficient_W/mK').todense()
 
-        diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
+        diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter').todense()
 
         length = nx.adjacency_matrix(self.nx_graph, weight='length').todense()
 
