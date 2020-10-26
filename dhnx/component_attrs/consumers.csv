@@ -1,6 +1,6 @@
 attribute,type,unit,default,description,status,requirement
 id,int,n/a,n/a,Unique id,Input,required
-component_type,str,Consumer,Component type,Input,optional
+component_type,str,--,Consumer,Component type,Input,optional
 lat,float,n/a,n/a,Geographic latitude,Input,optional
 lon,float,n/a,n/a,Geographic longitude,Input,optional
 mass_flow,float,kg/s,n/a,Mass flow,Input,optional
