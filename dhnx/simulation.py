@@ -372,12 +372,12 @@ class SimulationModelNumpy(SimulationModel):
 
         constant = 8 * lamb / (self.rho * np.pi**2)
 
-        length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length_m']]
+        length = self.thermal_network.components.pipes[['from_node', 'to_node', 'length']]
 
         diameter = \
             self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter_mm']]
 
-        length = length.set_index(['from_node', 'to_node'])['length_m']
+        length = length.set_index(['from_node', 'to_node'])['length']
 
         diameter = diameter.set_index(['from_node', 'to_node'])['diameter_mm']
 
@@ -633,7 +633,7 @@ class SimulationModelNumpy(SimulationModel):
 
         diameter = 1e-3 * nx.adjacency_matrix(self.nx_graph, weight='diameter_mm').todense()
 
-        length = nx.adjacency_matrix(self.nx_graph, weight='length_m').todense()
+        length = nx.adjacency_matrix(self.nx_graph, weight='length').todense()
 
         exponent_constant = - np.pi \
             * np.multiply(heat_transfer_coefficient, np.multiply(diameter, length)) \

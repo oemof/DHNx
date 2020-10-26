@@ -353,7 +353,7 @@ class OSMNetworkImporter(NetworkImporter):
 
         pipes['to_node'].replace(rename_nodes, inplace=True)
 
-        pipes['length_m'] = pipes['geometry'].length
+        pipes['length'] = pipes['geometry'].length
 
         for node in [consumers, forks]:
             node['lat'] = node.geometry.y

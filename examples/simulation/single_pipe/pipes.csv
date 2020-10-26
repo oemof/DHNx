@@ -1,2 +1,2 @@
-id,from_node,to_node,length_m,diameter_mm,heat_transfer_coefficient_W/mK,roughness_mm
+id,from_node,to_node,length,diameter_mm,heat_transfer_coefficient_W/mK,roughness_mm
 0,producers-0,consumers-0,200,125,0.21,0.4
