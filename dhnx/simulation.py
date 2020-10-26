@@ -544,10 +544,10 @@ class SimulationModelNumpy(SimulationModel):
         def _calculate_paths_pressure_losses():
 
             sink_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
-                          data['node_type'] == 'consumer']
+                          data['component_type'] == 'consumer']
 
             source_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
-                            data['node_type'] == 'producer']
+                            data['component_type'] == 'producer']
 
             paths_pressure_losses = {}
 
@@ -603,7 +603,7 @@ class SimulationModelNumpy(SimulationModel):
         """
         producers = [
             node for node, data in self.nx_graph.nodes(data=True)
-            if data['node_type'] == 'producer'
+            if data['component_type'] == 'producer'
         ]
 
         mass_flow_producers = \

@@ -45,7 +45,7 @@ class InteractiveMap():
         self.node_id = self.node_data.index
         self.lat = self.node_data['lat']
         self.lon = self.node_data['lon']
-        self.node_type = self.node_data['node_type']
+        self.component_type = self.node_data['component_type']
         self._add_colors()
 
     @staticmethod
@@ -70,7 +70,7 @@ class InteractiveMap():
 
         self.node_data = (
             self.node_data
-            .assign(node_color=self.node_data['node_type'])
+            .assign(node_color=self.node_data['component_type'])
             .replace({'node_color': color}))
 
         return self.node_data['node_color']

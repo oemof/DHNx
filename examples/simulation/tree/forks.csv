@@ -1,2 +1,2 @@
-id,lat,lon,node_type,zeta_inlet,zeta_return
+id,lat,lon,component_type,zeta_inlet,zeta_return
 0,51.3430,12.3764,split,2,0.75
