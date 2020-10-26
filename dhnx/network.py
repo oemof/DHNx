@@ -39,7 +39,7 @@ required_attrs = {
 default_attrs = {
     list_name: {
         attr: specs.default for attr, specs in attrs.items()
-        if not np.isnan(specs.default)
+        if not pd.isnull(specs.default)
     } for list_name, attrs in component_attrs.items()
 }
 
