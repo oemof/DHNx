@@ -1,4 +1,4 @@
-id,from_node,to_node,length[m],existing,capacity,hp_type
+id,from_node,to_node,length,existing,capacity,hp_type
 0,producers-0,forks-0,200,0,0,
 1,producers-0,forks-1,200,0,0,
 2,producers-0,forks-2,2,0,0,
