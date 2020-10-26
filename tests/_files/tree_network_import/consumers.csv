@@ -1,6 +1,6 @@
-id,lat,lon,component_type
-0,51.3470,12.3894,Consumer
-1,51.3390,12.3880,Consumer
+id,lat,lon,m_over_NHN,component_type
+0,51.3470,12.3894,113,Consumer
+1,51.3390,12.3880,113,Consumer
 
 
 

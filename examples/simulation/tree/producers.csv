@@ -1,2 +1,2 @@
-id,lat,lon,component_type
-0,51.3430,12.3600,producer
+id,lat,lon,m_over_NHN,component_type
+0,51.3430,12.3600,113,producer

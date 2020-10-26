@@ -1,2 +1,2 @@
-id,lat,lon,component_type,zeta_inlet,zeta_return
-0,51.3430,12.3764,split,2,0.75
+id,lat,lon,component_type,zeta_inlet,zeta_return,m_over_NHN
+0,51.3430,12.3764,split,2,0.75,113
