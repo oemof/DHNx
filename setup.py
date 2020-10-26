@@ -24,6 +24,7 @@ setup(
         'folium',
         'addict',
         'oemof.solph >= 0.4.0',
+        'scipy >= 1.5',
     ],
     extras_require={
         'cartopy': ['cartopy'],
