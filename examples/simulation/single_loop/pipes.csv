@@ -1,4 +1,4 @@
-id,from_node,to_node,length,diameter,heat_transfer_coefficient,roughness_mm
+id,from_node,to_node,length,diameter,heat_transfer_coefficient,roughness
 0,producers-0,forks-0,200,125,0.21,0.4
 1,forks-0,forks-1,100,40,0.21,0.4
 2,forks-0,forks-2,100,40,0.21,0.4
