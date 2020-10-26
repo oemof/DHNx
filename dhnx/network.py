@@ -13,7 +13,6 @@ SPDX-License-Identifier: MIT
 
 import os
 
-import numpy as np
 import pandas as pd
 
 from .graph import thermal_network_to_nx_graph

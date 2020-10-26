@@ -11,8 +11,6 @@ SPDX-License-Identifier: MIT
 
 import os
 
-import numpy as np
-
 import dhnx
 
 
