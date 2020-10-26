@@ -1,3 +1,5 @@
+__version__ = "0.0.1"
+
 from . import input_output
 from . import network
 from . import plotting
