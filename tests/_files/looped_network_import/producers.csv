@@ -1,2 +1,2 @@
-id,lat,lon
-0,51.343,12.36
+id,lat,lon,component_type
+0,51.343,12.36,Producer
