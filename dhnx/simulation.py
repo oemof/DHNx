@@ -762,7 +762,7 @@ class SimulationModelNumpy(SimulationModel):
             index=self.thermal_network.timeindex
         )
 
-        temp_drop = self._concat_sequences('temperature_drop')
+        temp_drop = self._concat_sequences('delta_temp_drop')
 
         temp_return.loc[:, temp_drop.columns] = temp_inlet.loc[:, temp_drop.columns] - temp_drop
 
