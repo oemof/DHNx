@@ -214,6 +214,7 @@ class StaticMap():
         lat = [pos[1] for pos in self.positions.values()]
         extent = np.array([np.min(lon), np.max(lon), np.min(lat), np.max(lat)])
         delta = [extent[1] - extent[0], extent[3] - extent[2]]
+        extent = extent.astype(float)
         extent += 0.1 * np.array([-delta[0], delta[0], -delta[1], delta[1]])
         return extent
 
