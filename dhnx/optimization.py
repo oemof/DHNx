@@ -407,8 +407,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             s_kw = self.settings['solve_kw']
 
         logging.info('Solve the optimization problem')
-        self.om.solve(solver=self.settings['solver'],
-                      solve_kwargs=s_kw)
+        self.om.solve(
+            solver=self.settings['solver'],
+            solve_kwargs=s_kw,
+            cmdline_options=self.settings.get('solver_cmdline_options', {}))
 
         if self.settings['write_lp_file']:
             filename = os.path.join(
@@ -635,9 +637,10 @@ def optimize_operation(thermal_network):
 
 
 def setup_optimise_investment(
-        thermal_network, invest_options, heat_demand='scalar', num_ts=1, time_res=1,
-        start_date='1/1/2018', frequence='H', solver='cbc', solve_kw=None,
-        simultaneity=1, bidirectional_pipes=False, dump_path=None, dump_name='dump.oemof',
+        thermal_network, invest_options, heat_demand='scalar', num_ts=1,
+        time_res=1, start_date='1/1/2018', frequence='H', solver='cbc',
+        solve_kw=None, solver_cmdline_options=None, simultaneity=1,
+        bidirectional_pipes=False, dump_path=None, dump_name='dump.oemof',
         print_logging_info=False, write_lp_file=False):
     """
     Function for setting up the oemof solph operational Model.
@@ -663,6 +666,8 @@ def setup_optimise_investment(
         Name of solver.
     solve_kw : dict
         Solver kwargs.
+    solver_cmdline_options : dict
+        Dictionary with command line options for solver.
     simultaneity : float
         Simultaneity factor.
     bidirectional_pipes : bool
@@ -686,6 +691,9 @@ def setup_optimise_investment(
             'The settings attribute *heat_demand* must be "scalar" or "series"!'
         )
 
+    if solver_cmdline_options is None:
+        solver_cmdline_options = {}
+
     settings = {
         'heat_demand': heat_demand,
         'num_ts': num_ts,
@@ -694,6 +702,7 @@ def setup_optimise_investment(
         'frequence': frequence,
         'solver': solver,
         'solve_kw': solve_kw,
+        'solver_cmdline_options': solver_cmdline_options,
         'simultaneity': simultaneity,
         'bidirectional_pipes': bidirectional_pipes,
         'dump_path': dump_path,
