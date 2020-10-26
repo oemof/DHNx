@@ -1,4 +1,4 @@
-id,lat,lon,node_type
-0,51.343,12.3764,split
-1,51.3445,12.38,split
-2,51.3415,12.38,split
+id,lat,lon,component_type
+0,51.343,12.3764,Fork
+1,51.3445,12.38,Fork
+2,51.3415,12.38,Fork

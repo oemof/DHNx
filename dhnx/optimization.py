@@ -581,16 +581,16 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     # select row from heatpipe type table
                     hp_p = df_hp[df_hp['label_3'] == hp_lab].squeeze()
                     if hp_p['nonconvex'] == 1:
-                        df.at[r, 'costs'] = c['length[m]'] * (
+                        df.at[r, 'costs'] = c['length'] * (
                             c['capacity'] * hp_p['capex_pipes'] + hp_p['fix_costs']
                         )
-                        df.at[r, 'losses'] = c['length[m]'] * (
+                        df.at[r, 'losses'] = c['length'] * (
                             c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
                         )
                     elif hp_p['nonconvex'] == 0:
-                        df.at[r, 'costs'] = c['length[m]'] * c['capacity'] * hp_p['capex_pipes']
+                        df.at[r, 'costs'] = c['length'] * c['capacity'] * hp_p['capex_pipes']
                         # Note, that a constant loss is possible also for convex
-                        df.at[r, 'losses'] = c['length[m]'] * (
+                        df.at[r, 'losses'] = c['length'] * (
                             c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
                         )
 
@@ -601,7 +601,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         df = df[df['existing'] == 0].copy()
 
         # remove input data
-        df = df[['from_node', 'to_node', 'length[m]']].copy()
+        df = df[['from_node', 'to_node', 'length']].copy()
 
         # putting the results of the investments in heatpipes to the pipes:
         df_hp = self.invest_options['network']['pipes']
@@ -618,7 +618,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         recalc_costs_losses()
 
-        return df[['from_node', 'to_node', 'length[m]', 'hp_type', 'capacity', 'direction',
+        return df[['from_node', 'to_node', 'length', 'hp_type', 'capacity', 'direction',
                    'costs', 'losses']]
 
 

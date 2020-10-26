@@ -1,5 +1,6 @@
 attribute,type,unit,default,description,status,requirement
 id,int,n/a,n/a,Unique id,Input,required
+component_type,str,--,Pipe,Component type,Input,optional
 from_node,int,n/a,n/a,Node where Pipe begins,Input,required
 to_node,int,n/a,n/a,Node where Pipe ends,Input,required
 length,float,m,n/a,Length of the Pipe,Input,optional

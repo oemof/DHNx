@@ -51,7 +51,7 @@ simulation.
     ├── producers.csv
     └── sequences
         ├── consumers-mass_flow.csv
-        ├── consumers-temperature_drop.csv
+        ├── consumers-delta_temp_drop.csv
         ├── environment-temp_env.csv
         └── producers-temp_inlet.csv
 

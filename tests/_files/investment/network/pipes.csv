@@ -1,4 +1,4 @@
-id,from_node,to_node,length[m],
+id,from_node,to_node,length,
 0,producers-0,forks-0,4,
 1,producers-0,forks-1,3.162,
 5,forks-0,forks-1,1.414,

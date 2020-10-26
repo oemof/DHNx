@@ -378,8 +378,8 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
         # definition of tag3 of label -> type of pipe
         labels['l_3'] = t['label_3']
 
-        epc_p = t['capex_pipes'] * q['length[m]']
-        epc_fix = t['fix_costs'] * q['length[m]']
+        epc_p = t['capex_pipes'] * q['length']
+        epc_fix = t['fix_costs'] * q['length']
 
         # Heatpipe with binary variable
         nc = True if t['nonconvex'] else False
@@ -400,8 +400,8 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
                     ep_costs=epc_p, maximum=t['cap_max'],
                     minimum=t['cap_min'], nonconvex=nc, offset=epc_fix,
                 ))},
-            heat_loss_factor=t['l_factor'] * q['length[m]'],
-            heat_loss_factor_fix=t['l_factor_fix'] * q['length[m]'],
+            heat_loss_factor=t['l_factor'] * q['length'],
+            heat_loss_factor_fix=t['l_factor_fix'] * q['length'],
         ))
 
     return nodes
@@ -439,8 +439,8 @@ def add_heatpipes_exist(pipes, labels, gd, q, b_in, b_out, nodes):
     # get label of pipe
     labels['l_3'] = t['label_3']
 
-    hlf = t['l_factor'] * q['length[m]']
-    hlff = t['l_factor_fix'] * q['length[m]']
+    hlf = t['l_factor'] * q['length']
+    hlff = t['l_factor_fix'] * q['length']
 
     flow_bi_args = {
         'bidirectional': True, 'min': -1} \

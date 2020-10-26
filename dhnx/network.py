@@ -13,7 +13,6 @@ SPDX-License-Identifier: MIT
 
 import os
 
-import numpy as np
 import pandas as pd
 
 from .graph import thermal_network_to_nx_graph
@@ -39,7 +38,7 @@ required_attrs = {
 default_attrs = {
     list_name: {
         attr: specs.default for attr, specs in attrs.items()
-        if not np.isnan(specs.default)
+        if not pd.isnull(specs.default)
     } for list_name, attrs in component_attrs.items()
 }
 
@@ -113,6 +112,20 @@ class ThermalNetwork():
         nx_graph = thermal_network_to_nx_graph(self)
 
         return nx_graph
+
+    def set_defaults(self):
+        r"""
+        Sets default values on component DataFrames.
+
+        Returns
+        -------
+        None
+        """
+
+        for component, data in self.components.items():
+            for default_name, default_value in default_attrs[component].items():
+
+                data[default_name] = default_value
 
     def add(self, class_name, id, **kwargs):
         r"""

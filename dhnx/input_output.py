@@ -108,6 +108,8 @@ class CSVNetworkImporter(NetworkImporter):
 
                 self.thermal_network.components[list_name] = self.load_component_table(list_name)
 
+                self.thermal_network.set_defaults()
+
             elif os.path.isdir(os.path.join(self.basedir, name)):
 
                 assert name in ['sequences'], f"Unknown directory name. Directory '{name}' " \
@@ -338,11 +340,11 @@ class OSMNetworkImporter(NetworkImporter):
 
         pipes = pipes.rename(columns={'u': 'from_node', 'v': 'to_node'})
 
-        forks['node_type'] = 'Fork'
+        forks['component_type'] = 'Fork'
 
         consumers = endpoints
 
-        consumers['node_type'] = 'Consumer'
+        consumers['component_type'] = 'Consumer'
 
         # Update names of nodes in pipe's from_node/to_node
         rename_nodes = {i: 'forks-' + str(i) for i in forks.index}
@@ -353,7 +355,7 @@ class OSMNetworkImporter(NetworkImporter):
 
         pipes['to_node'].replace(rename_nodes, inplace=True)
 
-        pipes['length_m'] = pipes['geometry'].length
+        pipes['length'] = pipes['geometry'].length
 
         for node in [consumers, forks]:
             node['lat'] = node.geometry.y
