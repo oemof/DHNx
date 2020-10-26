@@ -639,7 +639,7 @@ def optimize_operation(thermal_network):
 def setup_optimise_investment(
         thermal_network, invest_options, heat_demand='scalar', num_ts=1,
         time_res=1, start_date='1/1/2018', frequence='H', solver='cbc',
-        solve_kw=None, solver_cmdline_options={}, simultaneity=1,
+        solve_kw=None, solver_cmdline_options=None, simultaneity=1,
         bidirectional_pipes=False, dump_path=None, dump_name='dump.oemof',
         print_logging_info=False, write_lp_file=False):
     """
@@ -690,6 +690,9 @@ def setup_optimise_investment(
         raise ValueError(
             'The settings attribute *heat_demand* must be "scalar" or "series"!'
         )
+
+    if solver_cmdline_options is None:
+        solver_cmdline_options = {}
 
     settings = {
         'heat_demand': heat_demand,
