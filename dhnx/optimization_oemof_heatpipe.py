@@ -22,7 +22,6 @@ from oemof.solph.plumbing import sequence
 from oemof.solph import Investment
 
 
-
 class Label(namedtuple('solph_label', ['tag1', 'tag2', 'tag3', 'tag4'])):
     __slots__ = ()
 
