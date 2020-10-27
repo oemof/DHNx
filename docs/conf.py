@@ -63,7 +63,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'oemof.DHNx'
+project = u'DHNx'
 copyright = u'2020, oemof developer group'
 author = u'oemof developer group'
 
@@ -260,7 +260,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'oemof', u'oemof.DHNx documentation',
+    ('index', 'oemof', u'DHNx documentation',
      [u'oemof developer group'], 1)
 ]
 
@@ -274,7 +274,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'oemof.DHNx', u'oemof.DHNx documentation',
+    ('index', 'DHNx', u'DHNx documentation',
      u'Author', 'oemof developer group', 'An open toolbox for district heating '
      + 'and cooling network optimization and simulation models.',
      ''),
@@ -296,7 +296,7 @@ texinfo_documents = [
 # -- Options for Epub output ----------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'oemof.DHNx'
+epub_title = u'DHNx'
 epub_author = u'oemof developer group'
 epub_publisher = u'oemof developer group'
 epub_copyright = u'2020, oemof developer group'
