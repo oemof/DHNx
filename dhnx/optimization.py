@@ -19,7 +19,7 @@ import oemof.solph as solph
 from oemof.solph import helpers
 from oemof.tools import logger
 
-from .optimization_modules.dhs_nodes import add_nodes_dhs, add_nodes_houses
+from .optimization_dhs_nodes import add_nodes_dhs, add_nodes_houses
 from .model import OperationOptimizationModel, InvestOptimizationModel
 
 

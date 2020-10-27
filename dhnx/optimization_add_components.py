@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT
 
 
 import oemof.solph as solph
-from dhnx.optimization_modules import oemof_heatpipe as oh
+import dhnx.optimization_oemof_heatpipe as oh
 
 
 def add_buses(it, labels, nodes, busd):
