@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name='dhnx',
-    version='0.0.1',
+    version='0.0.1rc1',
     description='Simulation and optimization of district heating and cooling networks',
     author="oemof developer group",
     author_email='jann.launer@rl-institut.de, johannes-roeder@uni-bremen.de',
