@@ -10,15 +10,17 @@ available from its original location:
 
 SPDX-License-Identifier: MIT
 """
+# pylint: skip-file
+import warnings
+from collections import namedtuple
 
 from pyomo.core.base.block import SimpleBlock
 from pyomo.environ import (Set, NonNegativeReals, Var, Constraint)
-import warnings
 
 from oemof.solph.network import Transformer
 from oemof.solph.plumbing import sequence
 from oemof.solph import Investment
-from collections import namedtuple
+
 
 
 class Label(namedtuple('solph_label', ['tag1', 'tag2', 'tag3', 'tag4'])):
@@ -142,11 +144,10 @@ class HeatPipeline(Transformer):
     def constraint_group(self):
         if self._invest_group is True:
             return HeatPipelineInvestBlock
-        else:
-            return HeatPipelineBlock
+        return HeatPipelineBlock
 
 
-class HeatPipelineBlock(SimpleBlock):
+class HeatPipelineBlock(SimpleBlock):  # pylint: disable=too-many-ancestors
     r"""Block representing a pipeline of a district heating system.
     :class:`~oemof.solph.custom.HeatPipeline`
 
@@ -206,7 +207,7 @@ class HeatPipelineBlock(SimpleBlock):
 
         m = self.parent_block()
 
-        self.HEATPIPES = Set(initialize=[n for n in group])
+        self.HEATPIPES = Set(initialize=list(group))
         self.CONVEX_HEATPIPES = Set(initialize=[
             n for n in group if n.outputs[list(n.outputs.keys())[0]].nonconvex is None])
         self.NONCONVEX_HEATPIPES = Set(initialize=[
@@ -264,7 +265,7 @@ class HeatPipelineBlock(SimpleBlock):
                                    rule=_relation_rule)
 
 
-class HeatPipelineInvestBlock(SimpleBlock):
+class HeatPipelineInvestBlock(SimpleBlock):  # pylint: disable=too-many-ancestors
     r"""Block representing a pipeline of a district heating system.
     :class:`~oemof.solph.custom.HeatPipeline`
 
@@ -325,7 +326,7 @@ class HeatPipelineInvestBlock(SimpleBlock):
         m = self.parent_block()
 
         # Defining Sets
-        self.INVESTHEATPIPES = Set(initialize=[n for n in group])
+        self.INVESTHEATPIPES = Set(initialize=list(group))
         self.CONVEX_INVESTHEATPIPES = Set(initialize=[
             n for n in group if n.outputs[list(n.outputs.keys())[0]].investment.nonconvex is False])
         self.NONCONVEX_INVESTHEATPIPES = Set(initialize=[
@@ -397,7 +398,7 @@ class HeatPipelineInvestBlock(SimpleBlock):
         self.relation_with_demand = Constraint(
             self.INVESTHEATPIPES_WITH_DEMAND, m.TIMESTEPS, rule=_relation_rule_with_demand)
 
-        def _inflow_outflow_invest_coupling_rule(block, n):
+        def _inflow_outflow_invest_coupling_rule(block, n):  # pylint: disable=unused-argument
             """Rule definition of constraint connecting the inflow
             `InvestmentFlow.invest of pipe with invested outflow `invest`
             by nominal_storage_capacity__inflow_ratio

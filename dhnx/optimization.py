@@ -350,7 +350,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # add houses and generation
         for typ in ['consumers', 'producers']:
             self.nodes, self.buses = add_nodes_houses(
-                self, self.settings, self.nodes, self.buses, typ)
+                self, self.nodes, self.buses, typ)
 
         logging.info('Producers, Consumers Nodes appended.')
 

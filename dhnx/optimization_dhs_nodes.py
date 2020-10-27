@@ -53,7 +53,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     d_labels['l_2'] = 'heat'
     d_labels['l_3'] = 'bus'
 
-    for n, o in opti_network.thermal_network.components['forks'].iterrows():
+    for n, _ in opti_network.thermal_network.components['forks'].iterrows():
         d_labels['l_4'] = 'forks-' + str(n)
         d_labels['l_1'] = 'infrastructure'
         l_bus = oh.Label(d_labels['l_1'], d_labels['l_2'], d_labels['l_3'],
@@ -205,7 +205,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     return nodes, busd
 
 
-def add_nodes_houses(opti_network, gd, nodes, busd, label_1):
+def add_nodes_houses(opti_network, nodes, busd, label_1):
     """
     For each *consumers*/*producers* of the *ThermalNetwork* of the
     *OemofInvestOptimisationModel*, the oemof-solph components for the *consumers*/*producers*
