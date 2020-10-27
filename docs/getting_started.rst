@@ -4,7 +4,7 @@
 Getting started
 ~~~~~~~~~~~~~~~
 
-oemof.DHNx is a toolbox for optimization and simulation of district heating and cooling systems.
+DHNx is a toolbox for optimization and simulation of district heating and cooling systems.
 
 .. contents:: `Contents`
     :depth: 1
@@ -24,14 +24,11 @@ If you have a working Python3 environment, use pypi to install the latest oemof 
     pip install dhnx
 
 
-Installing the latest (dev) version
------------------------------------
-
-Clone DHNx from github:
+For Installing the latest (dev) version, clone DHNx from github:
 
 ::
 
-    git clone git@github.com:oemof/oemof-DHNx.git
+    git clone https://github.com/oemof/DHNx.git
 
 
 Now you can install it your local version of DHNx using pip:
