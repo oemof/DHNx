@@ -14,6 +14,15 @@ oemof.DHNx is a toolbox for optimization and simulation of district heating and 
 Using oemof.DHNx
 ================
 
+Installation
+------------
+
+If you have a working Python3 environment, use pypi to install the latest oemof version:
+
+::
+
+    pip install dhnx
+
 
 Installing the latest (dev) version
 -----------------------------------
