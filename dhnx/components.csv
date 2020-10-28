@@ -1,0 +1,6 @@
+component_class,list_name,description
+Environment,environment,"Environment"
+Producer,producers,"Heat producer"
+Consumer,consumers,"Heat consumer"
+Fork,forks,"Node where several pipes meet"
+Pipe,pipes,"Pipes representing double pipes (feed and return) that connect nodes"

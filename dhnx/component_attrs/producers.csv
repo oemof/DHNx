@@ -1,0 +1,8 @@
+attribute,type,unit,default,description,status,requirement
+id,int,n/a,n/a,Unique id,Input,required
+component_type,str,--,Producer,Component type,Input,optional
+lat,float,n/a,n/a,Geographic latitude,Input,optional
+lon,float,n/a,n/a,Geographic longitude,Input,optional
+temp_inlet,float/sequence,deg C or K,n/a,Inlet temperature at producer,Input,optional
+zeta_inlet,float,--,n/a,Localized pressure loss coefficient for inlet flow,Input,optional
+zeta_return,float,--,n/a,Localized pressure loss coefficient for return flow,Input,optional

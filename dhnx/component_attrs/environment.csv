@@ -1,0 +1,3 @@
+attribute,type,unit,default,description,status,requirement
+component_type,str,--,Environment,Component type,Input,optional
+temp_env,float/sequence,deg C or K,n/a,Environment temperature,Input,optional

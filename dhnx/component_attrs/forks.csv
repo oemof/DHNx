@@ -1,0 +1,7 @@
+attribute,type,unit,default,description,status,requirement
+id,int,n/a,n/a,Unique id,Input,required
+component_type,str,--,Fork,Component type,Input,optional
+lat,float,n/a,n/a,Geographic latitude,Input,optional
+lon,float,n/a,n/a,Geographic longitude,Input,optional
+zeta_inlet,float,--,n/a,Localized pressure loss coefficient for inlet flow,Input,optional
+zeta_return,float,--,n/a,Localized pressure loss coefficient for return flow,Input,optional

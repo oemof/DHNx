@@ -1,0 +1,9 @@
+attribute,type,unit,default,description,status,requirement
+id,int,n/a,n/a,Unique id,Input,required
+component_type,str,--,Pipe,Component type,Input,optional
+from_node,int,n/a,n/a,Node where Pipe begins,Input,required
+to_node,int,n/a,n/a,Node where Pipe ends,Input,required
+length,float,m,n/a,Length of the Pipe,Input,optional
+diameter,float,mm,n/a,Inner diameter of the pipes,Input,optional
+heat_transfer_coeff,float,W/(m*K),n/a,Heat transfer coefficient,Input,optional
+roughness,float,mm,n/a,Roughness of pipes,Input,optional

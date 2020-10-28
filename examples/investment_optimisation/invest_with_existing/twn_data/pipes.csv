@@ -1,0 +1,11 @@
+id,from_node,to_node,length,existing,capacity,hp_type
+0,producers-0,forks-0,200,0,0,
+1,producers-0,forks-1,200,0,0,
+2,producers-0,forks-2,2,0,0,
+5,forks-0,forks-1,100,0,0,
+6,forks-0,forks-2,100,0,0,
+7,forks-0,consumers-0,100,0,0,
+8,forks-0,consumers-1,100,0,0,
+9,forks-1,forks-2,100,1,100,heatpipe-milp
+10,forks-1,consumers-0,100,0,0,
+12,forks-2,consumers-0,150,0,0,
