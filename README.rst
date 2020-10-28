@@ -1,4 +1,4 @@
-|badge_travis| |badge_coverage| |zenodo|
+|badge_travis| |badge_coverage| |readthedocs| |zenodo|
 
 ~~~~
 DHNx
@@ -96,3 +96,7 @@ SOFTWARE.
 
 .. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4147049.svg
    :target: https://doi.org/10.5281/zenodo.4147049
+
+.. |readthedocs| image:: https://readthedocs.org/projects/dhnx/badge/?version=latest
+    :target: https://dhnx.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
