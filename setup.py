@@ -15,7 +15,14 @@ setup(
     author="oemof developer group",
     author_email='jann.launer@rl-institut.de, johannes-roeder@uni-bremen.de',
     long_description=read('README.rst'),
+    long_description_content_type="text/x-rst",
     packages=['dhnx'],
+    package_data={
+            'dhnx': [
+                "*.csv",
+                os.path.join("component_attrs", "*.csv"),
+            ]
+    },
     install_requires=[
         'pandas >= 0.18.0',
         'matplotlib',
