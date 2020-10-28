@@ -1,4 +1,4 @@
-|badge_travis| |badge_coverage|
+|badge_travis| |badge_coverage| |zenodo|
 
 ~~~~
 DHNx
@@ -53,6 +53,13 @@ Everybody is welcome to contribute to the development of DHNx. The `developer
 guidelines of oemof <https://oemof.readthedocs.io/en/stable/developing_oemof.html>`_
 are in most parts equally applicable to DHNx.
 
+
+Citing
+======
+
+We use the zenodo project to get a DOI for each version.
+`Search zenodo for the right citation of your DHNx version <https://zenodo.org/search?page=1&size=20&q=dhnx>`_.
+
 License
 =======
 
@@ -86,3 +93,6 @@ SOFTWARE.
 .. |badge_travis| image:: https://api.travis-ci.org/oemof/DHNx.svg?branch=dev
     :target: https://travis-ci.org/oemof/DHNx
     :alt: Build status
+
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4147049.svg
+   :target: https://doi.org/10.5281/zenodo.4147049
