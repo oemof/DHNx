@@ -40,7 +40,7 @@ Now you can install it your local version of DHNx using pip:
 Examples
 --------
 
-Examples are provided `here <https://github.com/oemof/DHNx/blob/dev/examples>`_. Also,
+Examples are provided `here <https://github.com/oemof/DHNx/tree/master/examples>`_. Also,
 have a look at the :ref:`examples_label` section for some more explanation.
 
 
