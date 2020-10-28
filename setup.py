@@ -18,10 +18,10 @@ setup(
     long_description_content_type="text/x-rst",
     packages=['dhnx'],
     package_data={
-            'dhnx': [
+        'dhnx': [
                 "*.csv",
                 os.path.join("component_attrs", "*.csv"),
-            ]
+        ],
     },
     install_requires=[
         'pandas >= 0.18.0',
