@@ -1,4 +1,4 @@
-v0.0.1 (23.10.2020)
+v0.0.1 (28.10.2020)
 ==========================
 
 First release by the oemof developing group.
@@ -8,5 +8,6 @@ Contributors
 
 * Jann Launer
 * Johannes Röder
+* Joris Zimmermann
 * Marie-Claire Gering
 * oakca

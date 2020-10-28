@@ -19,7 +19,7 @@ import oemof.solph as solph
 from oemof.solph import helpers
 from oemof.tools import logger
 
-from .optimization_modules.dhs_nodes import add_nodes_dhs, add_nodes_houses
+from .optimization_dhs_nodes import add_nodes_dhs, add_nodes_houses
 from .model import OperationOptimizationModel, InvestOptimizationModel
 
 
@@ -350,7 +350,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # add houses and generation
         for typ in ['consumers', 'producers']:
             self.nodes, self.buses = add_nodes_houses(
-                self, self.settings, self.nodes, self.buses, typ)
+                self, self.nodes, self.buses, typ)
 
         logging.info('Producers, Consumers Nodes appended.')
 

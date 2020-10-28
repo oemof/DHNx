@@ -18,7 +18,13 @@ district heating/cooling systems.
 Quickstart
 ==========
 
-Install DHNx by cloning DHNx to your computer and running
+If you have a working Python3 environment, use pypi to install the latest DHNx version:
+
+.. code:: bash
+
+    pip install dhnx
+
+Install the developer version of DHNx by cloning DHNx to your computer and running
 
 .. code:: bash
 
@@ -52,7 +58,7 @@ License
 
 MIT License
 
-Copyright (c) 2019 oemof developing group
+Copyright (c) 2020 oemof developing group
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

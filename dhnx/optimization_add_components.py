@@ -13,7 +13,7 @@ SPDX-License-Identifier: MIT
 
 
 import oemof.solph as solph
-from dhnx.optimization_modules import oemof_heatpipe as oh
+import dhnx.optimization_oemof_heatpipe as oh
 
 
 def add_buses(it, labels, nodes, busd):
@@ -50,7 +50,7 @@ def add_buses(it, labels, nodes, busd):
     list, dict : Updated list of nodes and dict of Buses.
     """
 
-    for i, b in it.iterrows():
+    for _, b in it.iterrows():
 
         labels['l_3'] = 'bus'
         labels['l_2'] = b['label_2']
@@ -121,7 +121,7 @@ def add_sources(on, it, c, labels, nodes, busd):
     idx = flow_attr.index('label_2')
     flow_attr = flow_attr[idx + 1:]
 
-    for i, cs in it.iterrows():
+    for _, cs in it.iterrows():
         labels['l_3'] = 'source'
         labels['l_2'] = cs['label_2']
 
@@ -188,7 +188,7 @@ def add_demand(it, labels, series, nodes, busd):
     list : Updated list of nodes.
     """
 
-    for i, de in it.iterrows():
+    for _, de in it.iterrows():
         labels['l_3'] = 'demand'
         labels['l_2'] = de['label_2']
         # set static inflow values
@@ -228,7 +228,7 @@ def add_transformer(it, labels, nodes, busd):
     list : Updated list of nodes.
     """
 
-    for i, t in it.iterrows():
+    for _, t in it.iterrows():
         labels['l_2'] = None
         labels['l_3'] = t['label_3']
 
@@ -306,7 +306,7 @@ def add_storage(it, labels, nodes, busd):
     list : Updated list of nodes.
     """
 
-    for i, s in it.iterrows():
+    for _, s in it.iterrows():
 
         label_storage = oh.Label(labels['l_1'], s['bus'], s['label'], labels['l_4'])
         label_bus = busd[(labels['l_1'], s['bus'], 'bus', labels['l_4'])]
@@ -373,7 +373,7 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
     list : Updated list of nodes.
     """
 
-    for i, t in it.iterrows():
+    for _, t in it.iterrows():
 
         # definition of tag3 of label -> type of pipe
         labels['l_3'] = t['label_3']
@@ -382,7 +382,7 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
         epc_fix = t['fix_costs'] * q['length']
 
         # Heatpipe with binary variable
-        nc = True if t['nonconvex'] else False
+        nc = bool(t['nonconvex'])
 
         # bidirectional heatpipelines yes or no
         flow_bi_args = {
