@@ -19,8 +19,8 @@ setup(
     packages=['dhnx'],
     package_data={
         'dhnx': [
-                "*.csv",
-                os.path.join("component_attrs", "*.csv"),
+            "*.csv",
+            os.path.join("component_attrs", "*.csv"),
         ],
     },
     install_requires=[
