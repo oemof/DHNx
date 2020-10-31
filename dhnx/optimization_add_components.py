@@ -347,7 +347,7 @@ def add_storage(it, labels, nodes, busd):
     return nodes
 
 
-def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
+def add_heatpipes(it, labels, bidi, q, b_in, b_out, nodes):
     """
     Adds *HeatPipeline* objects with *Investment* attribute to the list of oemof.solph components.
 
@@ -357,8 +357,8 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
         Table of *Heatpipeline* attributes of the district heating grid
     labels : dict
         Dictonary containing specifications for label-tuple
-    gd : dict
-        Settings of the investment optimisation of the ThermalNetwork
+    bidi : bool
+        Settings for creating bidirectional heatpipelines
     q : pd.Series
         Specific *Pipe* of ThermalNetwork
     b_in : oemof.solph.Bus
@@ -387,7 +387,7 @@ def add_heatpipes(it, labels, gd, q, b_in, b_out, nodes):
         # bidirectional heatpipelines yes or no
         flow_bi_args = {
             'bidirectional': True, 'min': -1}\
-            if gd['bidirectional_pipes'] else {}
+            if bidi else {}
 
         nodes.append(oh.HeatPipeline(
             label=oh.Label(labels['l_1'], labels['l_2'],
