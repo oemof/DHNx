@@ -298,14 +298,16 @@ class SimulationModelNumpy(SimulationModel):
         re : pd.DataFrame
             Reynolds number for every time step and pipe [-]
         """
-        pipes_mass_flow = self.results['pipes-mass_flow']
+        abs_pipes_mass_flow = self.results['pipes-mass_flow'].copy()
+
+        abs_pipes_mass_flow = abs(abs_pipes_mass_flow)
 
         diameter = \
             self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter']]
 
         diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter']
 
-        reynolds = 4 * pipes_mass_flow.divide(diameter, axis='columns') \
+        reynolds = 4 * abs_pipes_mass_flow.divide(diameter, axis='columns') \
             / (np.pi * self.mu)
 
         return reynolds
