@@ -16,7 +16,7 @@ import geopandas as gpd
 from shapely.geometry import Point, LineString, shape
 from shapely.ops import cascaded_union, nearest_points
 from shapely import affinity
-from gistools import geometry_operations as go
+from dhnx.gistools import geometry_operations as go
 
 
 def line_of_point(point, gdf_lines):
