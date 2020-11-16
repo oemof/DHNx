@@ -26,7 +26,7 @@ Documentation
 Bug fixes
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Avoid bidirectional flow at consumers connections in any case.
 
 Known issues
 ^^^^^^^^^^^^^^^^^^^^
@@ -46,4 +46,4 @@ Other changes
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Johannes Röder
