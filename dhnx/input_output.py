@@ -401,7 +401,7 @@ class OSMNetworkImporter(NetworkImporter):
 
         footprints = self.download_footprints()
 
-        footprints = ox.project_gdf(footprints)
+        # footprints = ox.project_gdf(footprints)
 
         component_dfs = self.process(graph, footprints)
 
