@@ -1,31 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-General description
--------------------
-...will follow.
+General description ... will follow.
 
-Data
-----
-- line layer (.shp)
-- point layer 1 (.shp)
-- point layer 2 (.shp) (optional)
+This file is part of project dhnx (). It's copyrighted
+by the contributors recorded in the version control history of the file,
+available from its original location: https://github.com/oemof/DHNx
 
-Installation requirements
--------------------------
-This example requires:
-
-    geopandas
-
-
-Copyright (c) 2019 Johannes Röder <johannes.roeder@uni-bremen.de>
-
-SPDX-License-Identifier: GPL-3.0-or-later
+SPDX-License-Identifier: MIT
 """
-__copyright__ = "Johannes Röder <johannes.roeder@uni-bremen.de>"
-__license__ = "GPLv3"
-
-
 import os
 import numpy as np
 import pandas as pd

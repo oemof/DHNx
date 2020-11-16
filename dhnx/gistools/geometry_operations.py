@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-General description
--------------------
-Some functions for connect_points application.
+General description ... will follow.
 
+This file is part of project dhnx (). It's copyrighted
+by the contributors recorded in the version control history of the file,
+available from its original location: https://github.com/oemof/DHNx
 
-Copyright (c) 2019 Johannes Röder <johannes.roeder@uni-bremen.de>
-
-SPDX-License-Identifier: GPL-3.0-or-later
+SPDX-License-Identifier: MIT
 """
-__copyright__ = "Johannes Röder <johannes.roeder@uni-bremen.de>"
-__license__ = "GPLv3"
-
-
 import geopandas as gpd
 import pandas as pd
 import shapely
