@@ -21,6 +21,7 @@ setup(
         'dhnx': [
             "*.csv",
             os.path.join("component_attrs", "*.csv"),
+            os.path.join("gistools", "*.py"),
         ],
     },
     install_requires=[
