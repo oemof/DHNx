@@ -327,11 +327,9 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             p2 = geom.boundary[-1]
             p1_neighbours = [p1.intersects(g) for g in neighbours.geometry]
             p2_neighbours = [p2.intersects(g) for g in neighbours.geometry]
-            if (any_check(p1, gdf_line_ext, how='touches') and
-               p2_neighbours.count(True) > 0):
+            if any_check(p1, gdf_line_ext, how='touches') and p2_neighbours.count(True) > 0:
                 unused = False
-            elif (any_check(p2, gdf_line_ext, how='touches') and
-                  p1_neighbours.count(True) > 0):
+            elif any_check(p2, gdf_line_ext, how='touches') and p1_neighbours.count(True) > 0:
                 unused = False
 
             if unused:
