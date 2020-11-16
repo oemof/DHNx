@@ -195,7 +195,7 @@ class OSMNetworkImporter(NetworkImporter):
         print('Downloading street network...')
 
         graph = ox.graph_from_point(
-            center_point=self.place, distance=self.distance
+            center_point=self.place, dist=self.distance
         )
 
         graph = ox.project_graph(graph)
@@ -207,7 +207,7 @@ class OSMNetworkImporter(NetworkImporter):
         print('Downloading footprints...')
 
         footprints = ox.footprints.footprints_from_point(
-            point=self.place, distance=self.distance
+            point=self.place, dist=self.distance
         )
 
         footprints = footprints.drop(labels='nodes', axis=1)
