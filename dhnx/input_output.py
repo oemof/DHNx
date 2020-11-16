@@ -268,7 +268,7 @@ class OSMNetworkImporter(NetworkImporter):
                                                         axis=1)
                 gdf_nodes.set_geometry('geometry', inplace=True)
             gdf_nodes.crs = G.graph['crs']
-            gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
+            # gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
 
             to_return.append(gdf_nodes)
 
@@ -300,7 +300,7 @@ class OSMNetworkImporter(NetworkImporter):
             # create a GeoDataFrame from the list of edges and set the CRS
             gdf_edges = gpd.GeoDataFrame(edges)
             gdf_edges.crs = G.graph['crs']
-            gdf_edges.gdf_name = '{}_edges'.format(G.graph['name'])
+            # gdf_edges.gdf_name = '{}_edges'.format(G.graph['name'])
 
             to_return.append(gdf_edges)
 
