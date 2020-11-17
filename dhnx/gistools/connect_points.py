@@ -9,14 +9,10 @@ available from its original location: https://github.com/oemof/DHNx
 
 SPDX-License-Identifier: MIT
 """
-import os
 import numpy as np
-import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point, LineString, shape
 from shapely.ops import cascaded_union, nearest_points
-from shapely import affinity
-from dhnx.gistools import geometry_operations as go
 
 
 def line_of_point(point, gdf_lines):
@@ -34,8 +30,7 @@ def line_of_point(point, gdf_lines):
 
     if ind == 99999:
         return Warning('No line found which has point on it!')
-    else:
-        return ind
+    return ind
 
 
 def point_to_array(point):
@@ -131,10 +126,10 @@ def create_object_connections_2(points_objects, dist_lines):
         mergedlines = cascaded_union(all_lines)
 
         # new nearest point method  ############ #########
-        np = nearest_points(mergedlines, house_geo)[0]
+        n_p = nearest_points(mergedlines, house_geo)[0]
 
         # get index of line which is closest to the house
-        line_index = line_of_point(np, dist_lines)
+        line_index = line_of_point(n_p, dist_lines)
 
         # get geometry of supply line
         supply_line = dist_lines.loc[line_index, 'geometry']
