@@ -186,7 +186,7 @@ def create_object_connections(points_objects, dist_lines, radius, accuracy):
             count_not_connected += 1
             indices_not_connected.append(index)
 
-        print(index+1, ' of ', num_houses, 'connections calculated.')
+        print(index + 1, ' of ', num_houses, 'connections calculated.')
 
     print('Number of not-connected objects: ', count_not_connected)
     print('Indices of not-connected objects: ', indices_not_connected)
