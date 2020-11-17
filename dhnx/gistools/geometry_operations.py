@@ -31,7 +31,7 @@ def create_nodes(lines):
 
     nodes = gpd.GeoDataFrame(geometry=[], crs=lines.crs)
 
-    for i, r in lines.iterrows():
+    for i, _ in lines.iterrows():
         geom = lines.iloc[i]['geometry']
         p_0 = Point(geom.boundary[0])
         p_1 = Point(geom.boundary[-1])
@@ -50,8 +50,7 @@ def create_nodes(lines):
     nodes = nodes.drop_duplicates(["geometry"])
 
     # create shapely geometry again
-    nodes["geometry"] = nodes["geometry"].apply(
-        lambda geom: wkt.loads(geom))
+    nodes["geometry"] = nodes["geometry"].apply(lambda geom: wkt.loads(geom))
 
     # reset index
     nodes = nodes.reset_index(drop=True)
@@ -139,7 +138,7 @@ def mls_to_ls(geom):
 def gdf_to_df(gdf):
 
     df = pd.DataFrame(
-        gdf[[col for col in gdf.columns if col != gdf._geometry_column_name]])
+        gdf[[col for col in gdf.columns if col != 'geometry']])
 
     return df
 
@@ -289,11 +288,11 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
     # Merge generator and houses line DataFrames to 'external' lines
     gdf_line_ext = pd.concat([gdf_line_gen, gdf_line_houses])
 
-    for i, b in gdf_line_net.iterrows():
+    for _, b in gdf_line_net.iterrows():
         def debug_plot(neighbours, color='red'):
             """Plot base map, current segment (with color) and neighbours."""
             if debug_plotting:
-                fig, ax = plt.subplots(1, 1, dpi=300)
+                _, ax = plt.subplots(1, 1, dpi=300)
                 gdf_line_net.plot(ax=ax, color='blue')
                 gdf_line_ext.plot(ax=ax, color='green')
                 if len(neighbours) > 0:  # Prevent empty plot warning
