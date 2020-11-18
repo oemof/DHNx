@@ -107,7 +107,7 @@ def cut_line_at_points(line_str, point_list):
     return lines
 
 
-def create_object_connections_2(points_objects, dist_lines):
+def create_object_connections(points_objects, dist_lines):
 
     # empty geopandas dataframe for house connections
     conn_lines = gpd.GeoDataFrame()
@@ -327,8 +327,8 @@ def process_geometry(lines=None, producers=None, consumers=None,
     consumers['type'] = 'H'
 
     # Add lines to consumers and producers
-    lines_consumers, lines = create_object_connections_2(consumers, lines)
-    lines_producers, lines = create_object_connections_2(producers, lines)
+    lines_consumers, lines = create_object_connections(consumers, lines)
+    lines_producers, lines = create_object_connections(producers, lines)
 
     # Weld continuous line segments together and cut loose ends
     lines = go.weld_segments(
