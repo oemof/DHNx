@@ -250,7 +250,7 @@ def create_object_connections(points, lines, tol_distance=2):
 
 def check_geometry_type(gdf, types):
     """
-    Checks, if a geodataframe has the only the given geometry types in its GeoSeries.
+    Checks, if a geodataframe has only the given geometry types in its GeoSeries.
 
     Parameters
     ----------
