@@ -335,8 +335,22 @@ def process_geometry(lines=None, producers=None, consumers=None,
     lines_consumers, lines = create_object_connections_2(consumers, lines)
     lines_producers, lines = create_object_connections_2(producers, lines)
 
+    # Weld continuous line segments together and cut loose ends
+    lines = go.weld_segments(
+        lines, lines_producers, lines_consumers,
+        # debug_plotting=True,
+    )
+
+    # add additoinal line identifier
+    lines_producers['type'] = 'GL'  # GL for generation line
+    lines['type'] = 'DL'  # DL for distribution line
+    lines_consumers['type'] = 'HL'  # HL for house line
+
+    # generate forks point layer
+    forks = go.create_nodes(lines)
 
     
+
 
     # from matplotlib import pyplot as plt
     # fig, ax = plt.subplots()
