@@ -312,13 +312,12 @@ def process_geometry(lines=None, producers=None, consumers=None,
     check_geometry_type(lines, types=['LineString'])
     [check_geometry_type(gdf, types=['Polygon', 'Point']) for gdf in [producers, consumers]]
 
-    # split multilinestrings
-    lines = go.split_multilinestr_to_linestr(lines)
+    # # split multilinestrings
+    # lines = go.split_multilinestr_to_linestr(lines)
 
     # check and convert crs if it is not already the `projected_crs`
     [go.check_crs(gdf, crs=projected_crs) for gdf in [lines, producers, consumers]]
 
-    # create points from polygons
     for layer in [producers, consumers]:
         layer = create_points_from_polygons(layer, method=method)
         layer.reset_index(inplace=True, drop=True)
@@ -326,6 +325,12 @@ def process_geometry(lines=None, producers=None, consumers=None,
         layer['lat'] = layer['geometry'].apply(lambda x: x.y)
         layer['lon'] = layer['geometry'].apply(lambda x: x.x)
 
+    producers['id_full'] = 'producers-' + producers.index.astype('str')
+    producers['type'] = 'G'
+    consumers['id_full'] = 'consumers-' + consumers.index.astype('str')
+    consumers['type'] = 'H'
+
+    
 
 
     return thermal_network_geometry_input
