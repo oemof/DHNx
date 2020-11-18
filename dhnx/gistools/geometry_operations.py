@@ -221,7 +221,7 @@ def weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
     """Weld continuous line segments together and cut loose ends.
 
     This is a public function that recursively calls the internal function
-    weld_line_segments_(), until the problem cannot be simplified futher.
+    weld_line_segments_(), until the problem cannot be simplified further.
 
     Find all lines that only connect to one other line and connect those
     to a single MultiLine object. Points that connect to Generators and
@@ -282,9 +282,9 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         Simplified potential pipe network.
 
     """
-    gdf_line_net_new = gpd.GeoDataFrame(geometry=[])
-    gdf_merged_all = gpd.GeoDataFrame(geometry=[])
-    gdf_deleted = gpd.GeoDataFrame(geometry=[])
+    gdf_line_net_new = gpd.GeoDataFrame(geometry=[], crs=gdf_line_net.crs)
+    gdf_merged_all = gpd.GeoDataFrame(geometry=[], crs=gdf_line_net.crs)
+    gdf_deleted = gpd.GeoDataFrame(geometry=[], crs=gdf_line_net.crs)
     # Merge generator and houses line DataFrames to 'external' lines
     gdf_line_ext = pd.concat([gdf_line_gen, gdf_line_houses])
 
