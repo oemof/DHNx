@@ -241,6 +241,20 @@ def check_geometry_type(gdf, types):
 
 
 def create_points_from_polygons(gdf, method='midpoint'):
+    """
+    Converts the geometry of a polygon layer to a point layer.
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+    method : str
+        Method to create a point from a polygon.
+
+    Returns
+    -------
+    geopandas.GeoDataFrame : GeoDataFrame with a point geometry.
+
+    """
 
     if gdf['geometry'].values[0].type == 'Point':
         return gdf
