@@ -216,7 +216,9 @@ def create_object_connections(points_objects, dist_lines):
     print('Number of not-connected objects: ', count_not_connected)
     print('Indices of not-connected objects: ', indices_not_connected)
 
-    return conn_lines, dist_lines
+    connection_lines = gpd.GeoDataFrame(conn_lines, crs=dist_lines.crs)
+
+    return connection_lines, dist_lines
 
 
 def check_geometry_type(gdf, types):
