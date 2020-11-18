@@ -321,6 +321,10 @@ def process_geometry(lines=None, producers=None, consumers=None,
     # create points from polygons
     for layer in [producers, consumers]:
         layer = create_points_from_polygons(layer, method=method)
+        layer.reset_index(inplace=True, drop=True)
+        layer.index.name = 'id'
+        layer['lat'] = layer['geometry'].apply(lambda x: x.y)
+        layer['lon'] = layer['geometry'].apply(lambda x: x.x)
 
 
 
