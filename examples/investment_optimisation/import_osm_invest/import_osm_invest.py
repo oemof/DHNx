@@ -16,9 +16,9 @@ Contributors:
 - Joris Zimmermann
 - Johannes Röder
 """
-import os
+# import os
 import numpy as np
-import pandas as pd
+# import pandas as pd
 import osmnx as ox
 import shapely
 import matplotlib.pyplot as plt
@@ -36,8 +36,8 @@ streets = dict({
         'residential',
         'service',
         'unclassified',
-        ]
-    })
+    ]
+})
 
 # select the building types you want to import
 # see: https://wiki.openstreetmap.org/wiki/Key:building
@@ -51,8 +51,8 @@ buildings = dict({
         'residential',
         'retail',
         'semidetached_house'
-        ]
-    })
+    ]
+})
 
 # Define a bounding box polygon from a list of lat/lon coordinates
 bbox = [(9.1008896, 54.1954005),
