@@ -128,6 +128,9 @@ network = dhnx.network.ThermalNetwork()
 for k, v in tn_input.items():
     network.components[k] = v
 
+# check if ThermalNetwork is consistent
+network.is_consistent()
+
 # load the specification of the oemof-solph components
 invest_opt = dhnx.input_output.load_invest_options('invest_data')
 
