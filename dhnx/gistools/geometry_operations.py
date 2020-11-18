@@ -342,7 +342,7 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                     b, ignore_index=True)
             continue  # Continue with the next line segment
 
-        elif len(neighbours) > 2:
+        if len(neighbours) > 2:
             # This segment has more than two neighbours. This means it is
             # part of an intersection, which we do not simplify futher.
             # However, we can check if either endpoint of the current segment
@@ -361,7 +361,7 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                 debug_plot(neighbours, color='green')
                 continue  # Continue with the next line segment
 
-        elif len(neighbours) == 2:
+        if len(neighbours) == 2:
             # There are excactly two separate neighbours that can be merged
             pass  # Run the rest of the loop
 
@@ -370,9 +370,9 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         for neighbour in neighbours.geometry:
             if any_check(neighbour, gdf_deleted, how='equals'):
                 continue  # Do not use neighbour that has already been deleted
-            elif any_check(neighbour, gdf_line_net_new, how='within'):
+            if any_check(neighbour, gdf_line_net_new, how='within'):
                 continue  # Prevent creating dublicates
-            elif any_check(neighbour, gdf_line_ext, how='intersects'):
+            if any_check(neighbour, gdf_line_ext, how='intersects'):
                 mask = [neighbour.intersects(g) for g in gdf_line_ext.geometry]
                 houses = gdf_line_ext[mask]
                 # Neighbour intersects with external, but geom does not

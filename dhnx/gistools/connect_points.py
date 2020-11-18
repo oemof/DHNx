@@ -288,14 +288,14 @@ def create_points_from_polygons(gdf, method='midpoint'):
 
     if gdf['geometry'].values[0].type == 'Point':
         return gdf
-    else:
-        if method == 'midpoint':
-            gdf['geometry'] = gdf['geometry'].centroid
-            return gdf
-        else:
-            raise ValueError(
-                'No other method than >midpoint< implemented!'
-            )
+
+    if method == 'midpoint':
+        gdf['geometry'] = gdf['geometry'].centroid
+        return gdf
+
+    raise ValueError(
+        'No other method than >midpoint< implemented!'
+    )
 
 
 def process_geometry(lines=None, producers=None, consumers=None,
@@ -338,7 +338,8 @@ def process_geometry(lines=None, producers=None, consumers=None,
 
     # check whether the expected geometry is used for geo dataframes
     check_geometry_type(lines, types=['LineString'])
-    [check_geometry_type(gdf, types=['Polygon', 'Point']) for gdf in [producers, consumers]]
+    for gdf in [producers, consumers]:
+        check_geometry_type(gdf, types=['Polygon', 'Point'])
 
     # # split multilinestrings to single lines with only 1 starting and 1 ending point
     lines = go.split_multilinestr_to_linestr(lines)
