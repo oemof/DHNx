@@ -312,13 +312,14 @@ def process_geometry(lines=None, producers=None, consumers=None,
     check_geometry_type(lines, types=['LineString'])
     [check_geometry_type(gdf, types=['Polygon', 'Point']) for gdf in [producers, consumers]]
 
-    # # split multilinestrings
-    # lines = go.split_multilinestr_to_linestr(lines)
+    # # split multilinestrings to single lines with only 1 starting and 1 ending point
+    lines = go.split_multilinestr_to_linestr(lines)
 
     # check and convert crs if it is not already the `projected_crs`
-    [go.check_crs(gdf, crs=projected_crs) for gdf in [lines, producers, consumers]]
+    lines = go.check_crs(lines, crs=projected_crs)
 
     for layer in [producers, consumers]:
+        layer = go.check_crs(layer, crs=projected_crs)
         layer = create_points_from_polygons(layer, method=method)
         layer.reset_index(inplace=True, drop=True)
         layer.index.name = 'id'
@@ -330,7 +331,21 @@ def process_geometry(lines=None, producers=None, consumers=None,
     consumers['id_full'] = 'consumers-' + consumers.index.astype('str')
     consumers['type'] = 'H'
 
+    # Add lines to consumers and producers
+    lines_consumers, lines = create_object_connections_2(consumers, lines)
+    lines_producers, lines = create_object_connections_2(producers, lines)
+
+
     
+
+    # from matplotlib import pyplot as plt
+    # fig, ax = plt.subplots()
+    # consumers.plot(ax=ax, color='green')
+    # producers.plot(ax=ax, color='red')
+    # lines.plot(ax=ax, color='blue')
+    # lines_consumers.plot(ax=ax, color='orange')
+    # lines_producers.plot(ax=ax, color='pink')
+    # plt.show()
 
 
     return thermal_network_geometry_input
