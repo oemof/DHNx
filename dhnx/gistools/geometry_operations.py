@@ -461,12 +461,14 @@ def any_check(geom_test, gdf, how):
     return False
 
 
-def check_crs(gdf):
+def check_crs(gdf, crs=4647):
     """Convert CRS to EPSG:4647 - ETRS89 / UTM zone 32N (zE-N).
 
     This is the (only?) Coordinate Reference System that gives the correct
     results for distance calculations.
+
+
     """
-    if gdf.crs.to_epsg() != 4647:
-        gdf.to_crs(epsg=4647, inplace=True)
+    if gdf.crs.to_epsg() != crs:
+        gdf.to_crs(epsg=crs, inplace=True)
     return gdf

@@ -13,7 +13,7 @@ import numpy as np
 import geopandas as gpd
 from shapely.geometry import Point, LineString, shape
 from shapely.ops import cascaded_union, nearest_points
-
+import dhnx.gistools.geometry_operations as go
 
 def line_of_point(point, gdf_lines):
     """
@@ -218,11 +218,31 @@ def create_object_connections_2(points_objects, dist_lines):
     return conn_lines, dist_lines
 
 
+def check_geometry_type():
+    pass
+
+
+def create_points_from_polygons(gdf, method='midpoint'):
+
+    if gdf['geometry'].values[0].type == 'Point':
+        return gdf
+    else:
+        if method == 'midpoint':
+            gdf['geometry'] = gdf['geometry'].centroid
+            return gdf
+        else:
+            raise ValueError(
+                'No other method than >midpoint< implemented!'
+            )
+
+
 def process_geometry(lines=None, producers=None, consumers=None,
-                     method='midpoint', multi_connections=True):
+                     method='midpoint', multi_connections=False, projected_crs=4647):
     """
     This function connects the consumers and producers to the line network, and prepares the
     attributes of the geopandas.GeoDataFrames for importing as dhnx.ThermalNetwork.
+
+    The ids of the lines are overwritten.
 
     Parameters
     ----------
@@ -237,6 +257,10 @@ def process_geometry(lines=None, producers=None, consumers=None,
         Method for creating the point if polygons are given for the consumers and producers.
     multi_connections : bool
         Setting if a building should be connected to multiple streets.
+    projected_crs : EPSG integer code
+        EPSG Coordinate reference system number (eg 4647),
+        which is used for the geometry operations.
+        A projected crs must be used!
 
     Returns
     -------
@@ -251,5 +275,17 @@ def process_geometry(lines=None, producers=None, consumers=None,
         'producers': None,
         'pipes': None,
     }
+
+    # check whether the expected geometry is used for geo dataframes
+    check_geometry_type()
+
+    # check and convert crs if it is not already the `projected_crs`
+    [go.check_crs(gdf, crs=projected_crs) for gdf in [lines, producers, consumers]]
+
+    # create points from polygons
+    for layer in [producers, consumers]:
+        layer = create_points_from_polygons(layer, method=method)
+
+
 
     return thermal_network_geometry_input
