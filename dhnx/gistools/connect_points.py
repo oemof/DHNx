@@ -218,8 +218,26 @@ def create_object_connections_2(points_objects, dist_lines):
     return conn_lines, dist_lines
 
 
-def check_geometry_type():
-    pass
+def check_geometry_type(gdf, types):
+    """
+    Checks, if a geodataframe has the only the given geometry types in its GeoSeries.
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        DataFrame to be checked.
+    types : list
+        List of types allowed for GeoDataFrame.
+
+    """
+    actual_types = set(gdf['geometry'].type)
+
+    for type in actual_types:
+        if type not in types:
+            raise TypeError(
+                "Your input geometry has the wrong type. "
+                "Expected: {}. Got: {}".format(types, type)
+            )
 
 
 def create_points_from_polygons(gdf, method='midpoint'):
@@ -277,7 +295,8 @@ def process_geometry(lines=None, producers=None, consumers=None,
     }
 
     # check whether the expected geometry is used for geo dataframes
-    check_geometry_type()
+    check_geometry_type(lines, types=['LineString'])
+    [check_geometry_type(gdf, types=['Polygon', 'Point']) for gdf in [producers, consumers]]
 
     # check and convert crs if it is not already the `projected_crs`
     [go.check_crs(gdf, crs=projected_crs) for gdf in [lines, producers, consumers]]
