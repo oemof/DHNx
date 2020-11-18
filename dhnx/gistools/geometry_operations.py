@@ -170,11 +170,11 @@ def split_linestring(linestring):
     return l_segments
 
 
-def split_multilinestr_to_linestr(gdf_lines_streets_new):
+def split_multilinestr_to_linestr(gdf_lines):
 
     new_lines = gpd.GeoDataFrame()
 
-    for i, b in gdf_lines_streets_new.iterrows():
+    for i, b in gdf_lines.iterrows():
 
         geom = b['geometry']
 
@@ -195,7 +195,7 @@ def split_multilinestr_to_linestr(gdf_lines_streets_new):
                     new_lines = new_lines.append(
                         new_row, ignore_index=True, sort=False)
 
-                gdf_lines_streets_new.drop(index=i, inplace=True)
+                gdf_lines.drop(index=i, inplace=True)
 
         elif len(geom.coords) > 2:
 
@@ -208,12 +208,12 @@ def split_multilinestr_to_linestr(gdf_lines_streets_new):
                 new_lines = new_lines.append(
                     new_row, ignore_index=True, sort=False)
 
-            gdf_lines_streets_new.drop(index=i, inplace=True)
+            gdf_lines.drop(index=i, inplace=True)
 
-    gdf_lines_streets_new = gdf_lines_streets_new.append(
+    gdf_lines = gdf_lines.append(
         new_lines, ignore_index=True, sort=False)
 
-    return gdf_lines_streets_new
+    return gdf_lines
 
 
 def weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
