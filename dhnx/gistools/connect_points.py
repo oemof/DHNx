@@ -10,6 +10,7 @@ available from its original location: https://github.com/oemof/DHNx
 SPDX-License-Identifier: MIT
 """
 import numpy as np
+import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Point, LineString, shape
 from shapely.ops import cascaded_union, nearest_points
@@ -301,12 +302,6 @@ def process_geometry(lines=None, producers=None, consumers=None,
            'producers', 'pipes'.
 
     """
-    thermal_network_geometry_input = {
-        'forks': None,
-        'consumers': None,
-        'producers': None,
-        'pipes': None,
-    }
 
     # check whether the expected geometry is used for geo dataframes
     check_geometry_type(lines, types=['LineString'])
@@ -341,7 +336,7 @@ def process_geometry(lines=None, producers=None, consumers=None,
         # debug_plotting=True,
     )
 
-    # add additoinal line identifier
+    # add additional line identifier
     lines_producers['type'] = 'GL'  # GL for generation line
     lines['type'] = 'DL'  # DL for distribution line
     lines_consumers['type'] = 'HL'  # HL for house line
@@ -349,8 +344,32 @@ def process_geometry(lines=None, producers=None, consumers=None,
     # generate forks point layer
     forks = go.create_nodes(lines)
 
-    
+    # concat lines
+    lines_all = pd.concat([lines, lines_consumers, lines_producers], sort=False)
+    lines_all.reset_index(inplace=True, drop=True)
+    lines_all.index.name = 'id'
 
+    # concat point layer
+    points_all = pd.concat([
+        consumers[['id_full', 'geometry']],
+        producers[['id_full', 'geometry']],
+        forks[['id_full', 'geometry']]],
+        sort=False
+    )
+    points_all['geo_wkt'] = points_all['geometry'].apply(lambda x: x.wkt)
+    points_all.set_index('geo_wkt', drop=True, inplace=True)
+
+    # add from_node, to_node to lines layer
+    lines_all = go.insert_node_ids(lines_all, points_all)
+
+    lines_all['length'] = lines_all.length
+    print("Total line length is {:.0f} m".format(lines_all['length'].sum()))
+
+    # Convert all MultiLineStrings to LineStrings
+    lines_all['geometry'] = lines_all['geometry'].apply(lambda x: go.mls_to_ls(x))
+
+    # ## check for near points
+    go.check_double_points(points_all, id_column='id_full')
 
     # from matplotlib import pyplot as plt
     # fig, ax = plt.subplots()
@@ -361,5 +380,9 @@ def process_geometry(lines=None, producers=None, consumers=None,
     # lines_producers.plot(ax=ax, color='pink')
     # plt.show()
 
-
-    return thermal_network_geometry_input
+    return {
+        'forks': forks,
+        'consumers': consumers,
+        'producers': producers,
+        'pipes': lines_all,
+    }
