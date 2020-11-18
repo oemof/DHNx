@@ -216,3 +216,40 @@ def create_object_connections_2(points_objects, dist_lines):
     print('Indices of not-connected objects: ', indices_not_connected)
 
     return conn_lines, dist_lines
+
+
+def process_geometry(lines=None, producers=None, consumers=None,
+                     method='midpoint', multi_connections=True):
+    """
+    This function connects the consumers and producers to the line network, and prepares the
+    attributes of the geopandas.GeoDataFrames for importing as dhnx.ThermalNetwork.
+
+    Parameters
+    ----------
+    lines : geopandas.GeoDataFrame
+        Potential routes for the DHS. Expected geometry Linestrings or MultilineStrings.
+        The graph of this line network should be connected.
+    consumers : geopandas.GeoDataFrame
+        Location of demand/consumers. Expected geometry: Polygons or Points.
+    producers : geopandas.GeoDataFrame
+        Location of supply sites. Expected geometry: Polygons or Points.
+    method : str
+        Method for creating the point if polygons are given for the consumers and producers.
+    multi_connections : bool
+        Setting if a building should be connected to multiple streets.
+
+    Returns
+    -------
+    dict : Dictionary with 4 geopandas.GeoDataFrames: The keys of the Dict are
+           equal to the components of the dhnx.ThermalNetwork: 'forks', 'consumers',
+           'producers', 'pipes'.
+
+    """
+    thermal_network_geometry_input = {
+        'forks': None,
+        'consumers': None,
+        'producers': None,
+        'pipes': None,
+    }
+
+    return thermal_network_geometry_input
