@@ -108,15 +108,26 @@ def cut_line_at_points(line_str, point_list):
     return lines
 
 
-def create_object_connections(points, lines):
+def create_object_connections(points, lines, tol_distance=2):
     """Connects points to a line network.
+
+    Generally, the next line is used for connection the point.
+    Depending on the geometry, there are 3 ways, the connection is created:
+    - lot food point is outside the line
+    - lot food point is on the line
+    - lot food point is on the line, but the line ending is closer than 2 [m].
+      In that case the end of line is used as connection point.
 
     Parameters
     ----------
     points : geopandas.GeoDataFrame
         Points which should be connected to the line. GeoDataFrame with Points as geometry.
     lines : geopandas.GeoDataFrame
-        The line-network to which the Points should be connected.
+        The line-network to which the Points should be connected. The line geometry needs to
+        consists of simple lines based on one starting and one ending point. LineStrings
+        which contain more than 2 points are not allowed.
+    tol_distance : float
+        Tolerance distance for choosing the end of the line instead of the lot.
 
     Returns
     -------
@@ -159,7 +170,7 @@ def create_object_connections(points, lines):
 
         if next_line_point.distance(lot_foot) > 1e-8:
 
-            print('Lot außerhalb')
+            print('Lot outside of line')
 
             con_line = LineString([next_line_point, house_geo])
 
@@ -185,7 +196,6 @@ def create_object_connections(points, lines):
             supply_line_p1 = Point(list(l_string.coords)[1])
 
             # check distance from end points of lines to lot foot
-            tol_distance = 2.0
 
             if supply_line_p0.distance(lot_foot) < tol_distance:
                 print('Lotfoot closer than', tol_distance,
@@ -289,7 +299,8 @@ def create_points_from_polygons(gdf, method='midpoint'):
 
 
 def process_geometry(lines=None, producers=None, consumers=None,
-                     method='midpoint', multi_connections=False, projected_crs=4647):
+                     method='midpoint', projected_crs=4647,
+                     tol_distance=2):
     """
     This function connects the consumers and producers to the line network, and prepares the
     attributes of the geopandas.GeoDataFrames for importing as dhnx.ThermalNetwork.
@@ -313,6 +324,9 @@ def process_geometry(lines=None, producers=None, consumers=None,
         EPSG Coordinate reference system number (eg 4647),
         which is used for the geometry operations.
         A projected crs must be used!
+    tol_distance : float
+        Tolerance distance at connection the points to the line network
+        for choosing the end of the line instead of the lot.
 
     Returns
     -------
@@ -346,8 +360,8 @@ def process_geometry(lines=None, producers=None, consumers=None,
     consumers['type'] = 'H'
 
     # Add lines to consumers and producers
-    lines_consumers, lines = create_object_connections(consumers, lines)
-    lines_producers, lines = create_object_connections(producers, lines)
+    lines_consumers, lines = create_object_connections(consumers, lines, tol_distance=tol_distance)
+    lines_producers, lines = create_object_connections(producers, lines, tol_distance=tol_distance)
 
     # Weld continuous line segments together and cut loose ends
     lines = go.weld_segments(
