@@ -16,6 +16,7 @@ from shapely.geometry import Point, LineString, shape
 from shapely.ops import cascaded_union, nearest_points
 import dhnx.gistools.geometry_operations as go
 
+
 def line_of_point(point, gdf_lines):
     """
     :param point:
@@ -108,6 +109,22 @@ def cut_line_at_points(line_str, point_list):
 
 
 def create_object_connections(points_objects, dist_lines):
+    """
+
+    Parameters
+    ----------
+    points_objects : geopandas.GeoDataFrame
+        Points which should be connected to the line. GeoDataFrame with Points as geometry.
+    dist_lines : geopandas.GeoDataFrame
+        The line-network to which the Points should be connected.
+
+    Returns
+    -------
+    geopandas.GeoDataFrame : The newly created connection lines
+    geopandas.GeoDataFrame : The updated dist_lines (some lines are split.
+        All lines should only touch at the line endings.
+
+    """
 
     # empty geopandas dataframe for house connections
     conn_lines = gpd.GeoDataFrame()
