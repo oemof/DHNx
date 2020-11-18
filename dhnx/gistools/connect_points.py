@@ -108,20 +108,20 @@ def cut_line_at_points(line_str, point_list):
     return lines
 
 
-def create_object_connections(points_objects, dist_lines):
-    """
+def create_object_connections(points, lines):
+    """Connects points to a line network.
 
     Parameters
     ----------
-    points_objects : geopandas.GeoDataFrame
+    points : geopandas.GeoDataFrame
         Points which should be connected to the line. GeoDataFrame with Points as geometry.
-    dist_lines : geopandas.GeoDataFrame
+    lines : geopandas.GeoDataFrame
         The line-network to which the Points should be connected.
 
     Returns
     -------
     geopandas.GeoDataFrame : The newly created connection lines
-    geopandas.GeoDataFrame : The updated dist_lines (some lines are split.
+    geopandas.GeoDataFrame : The updated lines (some lines are split.
         All lines should only touch at the line endings.
 
     """
@@ -132,25 +132,25 @@ def create_object_connections(points_objects, dist_lines):
     # counter for not connected houses
     count_not_connected = 0
     indices_not_connected = []
-    num_houses = len(points_objects)
+    num_houses = len(points)
 
     # iterate over all houses
-    for index, row in points_objects.iterrows():
+    for index, row in points.iterrows():
 
         house_geo = row['geometry']
 
         # the same with the original lines
-        all_lines = dist_lines['geometry']
+        all_lines = lines['geometry']
         mergedlines = cascaded_union(all_lines)
 
         # new nearest point method  ############ #########
         n_p = nearest_points(mergedlines, house_geo)[0]
 
         # get index of line which is closest to the house
-        line_index = line_of_point(n_p, dist_lines)
+        line_index = line_of_point(n_p, lines)
 
         # get geometry of supply line
-        supply_line = dist_lines.loc[line_index, 'geometry']
+        supply_line = lines.loc[line_index, 'geometry']
 
         # caculate lot foot
         lot_foot = calc_lot_foot(supply_line, house_geo)
@@ -213,13 +213,13 @@ def create_object_connections(points_objects, dist_lines):
 
                     # drop original line element
                     # gdf_line_net = gdf_line_net.drop([line_index])
-                    dist_lines.drop([line_index], inplace=True)
+                    lines.drop([line_index], inplace=True)
 
                     # add neu line elements to the geo-dataframe
-                    dist_lines = dist_lines.append({'geometry': split_lines[0]},
-                                                   ignore_index=True)
-                    dist_lines = dist_lines.append({'geometry': split_lines[1]},
-                                                   ignore_index=True)
+                    lines = lines.append({'geometry': split_lines[0]},
+                                         ignore_index=True)
+                    lines = lines.append({'geometry': split_lines[1]},
+                                         ignore_index=True)
 
                     # add line-to-house to geo-df
                     conn_lines = conn_lines.append(
@@ -229,13 +229,13 @@ def create_object_connections(points_objects, dist_lines):
                     count_not_connected += 1
                     indices_not_connected.append(index)
 
-    print(len(points_objects.index), ' of ', num_houses, 'connections calculated.')
+    print(len(points.index), ' of ', num_houses, 'connections calculated.')
     print('Number of not-connected objects: ', count_not_connected)
     print('Indices of not-connected objects: ', indices_not_connected)
 
-    connection_lines = gpd.GeoDataFrame(conn_lines, crs=dist_lines.crs)
+    connection_lines = gpd.GeoDataFrame(conn_lines, crs=lines.crs)
 
-    return connection_lines, dist_lines
+    return connection_lines, lines
 
 
 def check_geometry_type(gdf, types):
