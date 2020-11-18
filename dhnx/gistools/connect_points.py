@@ -115,7 +115,7 @@ def create_object_connections(points, lines, tol_distance=2):
     Depending on the geometry, there are 3 ways, the connection is created:
     - lot food point is outside the line
     - lot food point is on the line
-    - lot food point is on the line, but the line ending is closer than 2 [m].
+    - lot food point is on the line, but the line ending is closer than `tol_distance`.
       In that case the end of line is used as connection point.
 
     Parameters
