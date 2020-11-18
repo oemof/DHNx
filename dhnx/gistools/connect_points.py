@@ -373,15 +373,6 @@ def process_geometry(lines=None, producers=None, consumers=None,
     # ## check for near points
     go.check_double_points(points_all, id_column='id_full')
 
-    # from matplotlib import pyplot as plt
-    # fig, ax = plt.subplots()
-    # consumers.plot(ax=ax, color='green')
-    # producers.plot(ax=ax, color='red')
-    # lines.plot(ax=ax, color='blue')
-    # lines_consumers.plot(ax=ax, color='orange')
-    # lines_producers.plot(ax=ax, color='pink')
-    # plt.show()
-
     return {
         'forks': forks,
         'consumers': consumers,
