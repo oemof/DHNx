@@ -43,11 +43,15 @@ def line_of_point(point, gdf_lines):
 
 
 def point_to_array(point):
-    """
-    :return:
-    Converts the point geometry of a geopandas information into an numpy array.
-    :param point: point which should be converted into a numpy array.
-    :return: numpy array
+    """Returns the coordinates of a point as numpy.array
+
+    Parameters
+    ----------
+    point : shapely.geometry.Point
+
+    Returns
+    -------
+    numpy.array()
     """
 
     return np.array([point.x, point.y])
