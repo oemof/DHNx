@@ -143,6 +143,11 @@ def create_object_connections(points, lines, tol_distance=2):
         All lines should only touch at the line endings.
 
     """
+    # check linestrings
+    for r, c in lines.iterrows():
+        if len(c['geometry'].coords) > 2:
+            raise ValueError("The Linestrings must consists of simple lines,"
+                             " with only two coordinates!")
 
     # empty geopandas dataframe for house connections
     conn_lines = gpd.GeoDataFrame()
@@ -188,16 +193,7 @@ def create_object_connections(points, lines, tol_distance=2):
 
             # check if end point of line is close
 
-            # for that, check first, if multilinestring, then convert to line
-            # string
-            if supply_line.type == 'MultiLineString':
-                l_string = supply_line[0]
-            else:
-                l_string = supply_line
-
-            if len(l_string.coords) > 2:
-                print("There went something wrong, Linestring with more than"
-                      " 2 points!")
+            l_string = supply_line
 
             supply_line_p0 = Point(list(l_string.coords)[0])
             supply_line_p1 = Point(list(l_string.coords)[1])
