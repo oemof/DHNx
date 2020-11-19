@@ -18,10 +18,17 @@ import dhnx.gistools.geometry_operations as go
 
 
 def line_of_point(point, gdf_lines):
-    """
-    :param point:
-    :param gdf_lines:
-    :return: Returns index of line, where point is on.
+    """Gets index of geometry of a GeoDataFrame, a point is located next to,
+      with a distance lower than 1e-8.
+
+    Parameters
+    ----------
+    point : shapely.geometry.Point
+    gdf_lines : geopandas.GeoDataFrame
+
+    Returns
+    -------
+    int, float or str : Index of GeoDataFrame or Warning, if no geometry found.
     """
     ind = None
 
