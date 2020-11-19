@@ -55,9 +55,16 @@ def point_to_array(point):
 
 def calc_lot_foot(line, point):
     """
-    :param line:
-    :param point:
-    :return: lot foot point on the line of the point
+    Calculates the lot foot point.
+
+    Parameters
+    ----------
+    line : shapely.geometry.LineString
+    point : shapely.geometry.Point
+
+    Returns
+    -------
+    shapely.geometry.Point
     """
 
     s_1 = shape(line).boundary[0]
