@@ -23,14 +23,14 @@ def line_of_point(point, gdf_lines):
     :param gdf_lines:
     :return: Returns index of line, where point is on.
     """
-    ind = 99999
+    ind = None
 
     for k, l in gdf_lines.iterrows():
 
         if l['geometry'].distance(point) < 1e-8:
             ind = k
 
-    if ind == 99999:
+    if not ind:
         return Warning('No line found which has point on it!')
     return ind
 
