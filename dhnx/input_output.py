@@ -206,8 +206,10 @@ class OSMNetworkImporter(NetworkImporter):
 
         print('Downloading footprints...')
 
-        footprints = ox.footprints.footprints_from_point(
-            point=self.place, dist=self.distance
+        footprints = ox.geometries_from_point(
+            center_point=self.place,
+            dist=self.distance,
+            tags={'building': True},
         )
 
         footprints = footprints.drop(labels='nodes', axis=1)
