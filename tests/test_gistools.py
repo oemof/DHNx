@@ -23,3 +23,8 @@ def test_linestring_error():
         gdf_line = gpd.GeoDataFrame(geometry=[line])
         gdf_point = gpd.GeoDataFrame(geometry=[point])
         cp.create_object_connections(gdf_point, gdf_line)
+
+def test_lot_foot_calc():
+    point = Point([(0.5, 1)])
+    line = LineString([(0, 0), (1, 1)])
+    assert cp.calc_lot_foot(line, point) == Point([(0.75, 0.75)])
