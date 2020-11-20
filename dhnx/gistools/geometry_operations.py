@@ -68,21 +68,26 @@ def create_forks(lines):
 
 def insert_node_ids(lines, nodes):
     """
+    Creates the columns `from_node`, `to_node` and inserts
+    the node ids (eg. forks-3, consumers-5).
+    The updated "line"-GeoDataFrame is returned.
 
-    :param lines:
-    :param nodes:
-    :return:
+    Parameters
+    ----------
+    lines : geopandas.GeoDataFrame
+    nodes : geopandas.GeoDataFrame
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
     """
 
     # add id to gdf_lines for starting and ending node
     # point as wkt
-    lines['b0_wkt'] = \
-        lines["geometry"].apply(lambda geom: geom.boundary[0].wkt)
-    lines['b1_wkt'] = \
-        lines["geometry"].apply(lambda geom: geom.boundary[-1].wkt)
+    lines['b0_wkt'] = lines["geometry"].apply(lambda geom: geom.boundary[0].wkt)
+    lines['b1_wkt'] = lines["geometry"].apply(lambda geom: geom.boundary[-1].wkt)
 
-    lines['from_node'] = lines['b0_wkt'].apply(lambda x: nodes.at[x,
-                                                                  'id_full'])
+    lines['from_node'] = lines['b0_wkt'].apply(lambda x: nodes.at[x, 'id_full'])
     lines['to_node'] = lines['b1_wkt'].apply(lambda x: nodes.at[x, 'id_full'])
 
     lines.drop(axis=1, inplace=True, labels=['b0_wkt', 'b1_wkt'])
