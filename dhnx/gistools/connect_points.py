@@ -12,7 +12,7 @@ SPDX-License-Identifier: MIT
 import numpy as np
 import pandas as pd
 import geopandas as gpd
-from shapely.geometry import Point, LineString, shape
+from shapely.geometry import Point, LineString, shape, MultiPoint
 from shapely.ops import cascaded_union, nearest_points
 import dhnx.gistools.geometry_operations as go
 
@@ -129,7 +129,7 @@ def cut_line_at_points(line_str, point_list):
 def create_object_connections(points, lines, tol_distance=2):
     """Connects points to a line network.
 
-    Generally, the next line is used for connection the point.
+    Generally, the nearest point of the next line is used as connection the point.
     Depending on the geometry, there are 3 ways, the connection is created:
     - lot food point is outside the line
     - lot food point is on the line
@@ -163,11 +163,6 @@ def create_object_connections(points, lines, tol_distance=2):
     # empty geopandas dataframe for house connections
     conn_lines = gpd.GeoDataFrame()
 
-    # counter for not connected houses
-    count_not_connected = 0
-    indices_not_connected = []
-    num_houses = len(points)
-
     # iterate over all houses
     for index, row in points.iterrows():
 
@@ -186,76 +181,60 @@ def create_object_connections(points, lines, tol_distance=2):
         # get geometry of supply line
         supply_line = lines.loc[line_index, 'geometry']
 
-        # caculate lot foot
-        lot_foot = calc_lot_foot(supply_line, house_geo)
+        # get end points of line
+        supply_line_p0 = Point(list(supply_line.coords)[0])
+        supply_line_p1 = Point(list(supply_line.coords)[1])
+        supply_line_points = [supply_line_p0, supply_line_p1]
+        supply_line_mulitpoints = MultiPoint(supply_line_points)
 
-        next_line_point = nearest_points(supply_line, lot_foot)[0]
+        if n_p in supply_line_points:
+            # case that nearest point is a line ending
 
-        if next_line_point.distance(lot_foot) > 1e-8:
+            print('Connect buildings... id {}: '
+                  'Connected to supply line ending (nearest point)'.format(index))
 
-            print('Lot outside of line')
+            con_line = LineString([n_p, house_geo])
 
-            con_line = LineString([next_line_point, house_geo])
+            conn_lines = conn_lines.append({'geometry': con_line}, ignore_index=True)
 
-            conn_lines = conn_lines.append(
-                {'geometry': con_line}, ignore_index=True)
+        else:
 
-        else:   # case that the lot point is on the next supply line
+            dist_to_endings = [x.distance(n_p) for x in supply_line_points]
 
-            # check if end point of line is close
+            if min(dist_to_endings) >= tol_distance:
+                # line is split, no line ending is close to the nearest point
+                # this also means the original supply line needs to be deleted
 
-            l_string = supply_line
+                print('Connect buildings... id {}: Supply line split'.format(index))
 
-            supply_line_p0 = Point(list(l_string.coords)[0])
-            supply_line_p1 = Point(list(l_string.coords)[1])
+                con_line = LineString([n_p, house_geo])
 
-            # check distance from end points of lines to lot foot
+                conn_lines = conn_lines.append({'geometry': con_line}, ignore_index=True)
 
-            if supply_line_p0.distance(lot_foot) < tol_distance:
-                print('Lotfoot closer than', tol_distance,
-                      'to line end point!')
-                con_line = LineString([supply_line_p0, house_geo])
-                conn_lines = conn_lines.append(
-                    {'geometry': con_line}, ignore_index=True)
+                lines.drop([line_index], inplace=True)
 
-            elif supply_line_p1.distance(lot_foot) < tol_distance:
-                print('Lotfoot closer than', tol_distance,
-                      'to line end point!')
-                con_line = LineString([supply_line_p1, house_geo])
-                conn_lines = conn_lines.append(
-                    {'geometry': con_line}, ignore_index=True)
+                lines = lines.append(
+                    {'geometry': LineString([supply_line_p0, n_p])},
+                    ignore_index=True
+                )
+                lines = lines.append(
+                    {'geometry': LineString([n_p, supply_line_p1])},
+                    ignore_index=True
+                )
 
             else:
-                # create lot => line to house
-                lot = LineString([lot_foot, house_geo])
+                # case that one or both line endings are closer than tolerance
+                # thus, the next line ending is chosen
+                print('Connect buildings... id {}: Connected to Supply line ending '
+                      'due to tolerance'.format(index))
 
-                # check if lot foot point is on the supply line
-                if supply_line.distance(lot_foot) < 1e-8:
+                conn_point = nearest_points(supply_line_mulitpoints, n_p)[0]
 
-                    # divide supply line at lot foot point
-                    split_lines = cut_line_at_points(supply_line, [lot_foot])
+                con_line = LineString([conn_point, house_geo])
 
-                    # drop original line element
-                    # gdf_line_net = gdf_line_net.drop([line_index])
-                    lines.drop([line_index], inplace=True)
+                conn_lines = conn_lines.append({'geometry': con_line}, ignore_index=True)
 
-                    # add neu line elements to the geo-dataframe
-                    lines = lines.append({'geometry': split_lines[0]},
-                                         ignore_index=True)
-                    lines = lines.append({'geometry': split_lines[1]},
-                                         ignore_index=True)
-
-                    # add line-to-house to geo-df
-                    conn_lines = conn_lines.append(
-                        {'geometry': lot}, ignore_index=True)
-
-                else:
-                    count_not_connected += 1
-                    indices_not_connected.append(index)
-
-    print(len(points.index), ' of ', num_houses, 'connections calculated.')
-    print('Number of not-connected objects: ', count_not_connected)
-    print('Indices of not-connected objects: ', indices_not_connected)
+    print('Connection of buildings completed.')
 
     connection_lines = gpd.GeoDataFrame(conn_lines, crs=lines.crs)
 
