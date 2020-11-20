@@ -16,9 +16,8 @@ except ImportError:
     print("Need to install geopandas to process geometry data.")
 
 try:
-    from shapely import wkt
-    from shapely.ops import cascaded_union, nearest_points, linemerge
-    from shapely.geometry import Point, LineString, MultiLineString, shape, MultiPoint
+    from shapely.ops import cascaded_union, nearest_points
+    from shapely.geometry import Point, LineString, shape, MultiPoint
 except ImportError:
     print("Need to install shapely to process geometry.")
 
@@ -143,7 +142,7 @@ def create_object_connections(points, lines, tol_distance=1):
 
     """
     # check linestrings
-    for r, c in lines.iterrows():
+    for _, c in lines.iterrows():
         if len(c['geometry'].coords) > 2:
             raise ValueError("The Linestrings must consists of simple lines,"
                              " with only two coordinates!")

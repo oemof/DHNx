@@ -145,7 +145,7 @@ def check_double_points(gdf, radius=0.001, id_column=None):
             else:
                 print_name = c[id_column]
 
-            print('Node {} has a near neighbour!',
+            print('Node {} has a near neighbour! '
                   'Distance {}'.format(print_name, point.distance(x2)))
 
             count += 1
