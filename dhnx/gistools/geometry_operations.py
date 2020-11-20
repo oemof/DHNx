@@ -143,14 +143,6 @@ def gdf_to_df(gdf):
     return df
 
 
-def pair(list):
-
-    '''Iterate over pairs in a list -> pair of points '''
-
-    for i in range(1, len(list)):
-        yield list[i - 1], list[i]
-
-
 def split_multilinestr_to_linestr(gdf_input):
     """Simplifies GeoDataFrames with LineStrings as geometry.
 
