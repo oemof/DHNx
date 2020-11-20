@@ -151,25 +151,6 @@ def pair(list):
         yield list[i - 1], list[i]
 
 
-def split_linestring(linestring):
-    """
-
-    :param linestring:
-    :return: a list of LineStrings
-    """
-
-    l_segments = []
-
-    for seg_start, seg_end in pair(linestring.coords):
-        line_start = Point(seg_start)
-        line_end = Point(seg_end)
-        segment = LineString([line_start.coords[0], line_end.coords[0]])
-        # print(segment)
-        l_segments.append(segment)
-
-    return l_segments
-
-
 def split_multilinestr_to_linestr(gdf_input):
     """Simplifies GeoDataFrames with LineStrings as geometry.
 
