@@ -278,7 +278,7 @@ def create_points_from_polygons(gdf, method='midpoint'):
     )
 
 
-def process_geometry(lines=None, producers=None, consumers=None,
+def process_geometry(lines, consumers, producers,
                      method='midpoint', projected_crs=4647,
                      tol_distance=2):
     """
