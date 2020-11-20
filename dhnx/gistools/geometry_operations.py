@@ -171,6 +171,19 @@ def split_linestring(linestring):
 
 
 def split_multilinestr_to_linestr(gdf_lines):
+    """Simplifies GeoDataFrames with LineStrings as geometry.
+
+    The LineStrings (whether LineStrings, or MulitLineStings) are split into
+    LineStrings with only two coordinates, one starting and one ending point.
+
+    Parameters
+    ----------
+    gdf_lines : geopandas.GeoDataFrame
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+    """
 
     new_lines = gpd.GeoDataFrame()
 
