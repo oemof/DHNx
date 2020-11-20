@@ -136,6 +136,7 @@ def mls_to_ls(geom):
 
 
 def gdf_to_df(gdf):
+    """Converts a GeoDataFrame to a pandas.DataFrame by deleting the geometry column."""
 
     df = pd.DataFrame(
         gdf[[col for col in gdf.columns if col != 'geometry']])
