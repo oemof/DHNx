@@ -414,7 +414,7 @@ def process_geometry(lines=None, producers=None, consumers=None,
     print("Total line length is {:.0f} m".format(lines_all['length'].sum()))
 
     # Convert all MultiLineStrings to LineStrings
-    lines_all['geometry'] = lines_all['geometry'].apply(lambda x: go.mls_to_ls(x))
+    check_geometry_type(lines_all, types=['LineString'])
 
     # ## check for near points
     go.check_double_points(points_all, id_column='id_full')
