@@ -20,13 +20,19 @@ import matplotlib.pyplot as plt
 
 def create_forks(lines):
     """
-    :param lines: geopandas.DataFrame with LineStrings of distribution
-                        lines
-    :return:    nodes: geopandas.DataFrames containing all nodes of Line-Layer
-                    with an identifier column 'K123';
-                lines: return line dataframe of input with new columns
-                    'id_start' and 'id_end' holding the ids of the nodes of
-                    start-point and end-point of line;
+    Creates a forks(nodes) GeoDataFrame from a "line"-GeoDataFrame
+    based on the end-points of each LineString.
+
+    Also, an index for every fork is given, and the columns 'full-id' (="forks-" + index"),
+    'lat' and 'lon', which results from the geometry, are added to the GeoDataFrame.
+
+    Parameters
+    ----------
+    lines : geopandas.GeoDataFrame
+
+    Returns
+    -------
+    geopandas.GeoDataFrame : GeoDataFrame with Points as geometry.
     """
 
     nodes = gpd.GeoDataFrame(geometry=[], crs=lines.crs)
