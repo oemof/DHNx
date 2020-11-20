@@ -35,7 +35,7 @@ def create_forks(lines):
     geopandas.GeoDataFrame : GeoDataFrame with Points as geometry.
     """
 
-    nodes = gpd.GeoDataFrame(geometry=[], crs=lines.crs)
+    nodes = gpd.GeoDataFrame()
 
     for _, j in lines.iterrows():
         geom = j['geometry']
@@ -43,6 +43,8 @@ def create_forks(lines):
         p_1 = Point(geom.boundary[-1])
         nodes = nodes.append({'geometry': p_0}, ignore_index=True)
         nodes = nodes.append({'geometry': p_1}, ignore_index=True)
+
+    nodes.crs = lines.crs
 
     # transform geometry into wkt
     nodes["geometry"] = nodes["geometry"].apply(lambda geom: geom.wkt)
