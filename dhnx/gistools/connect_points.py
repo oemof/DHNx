@@ -96,36 +96,6 @@ def calc_lot_foot(line, point):
     return lot_foot_point
 
 
-def cut_line_at_points(line_str, point_list):
-    """
-    :param line_str: line to be cut
-    :param point_list: list of points the line is cut with
-    :return: list of line pieces
-    """
-    if line_str.type == 'MultiLineString':
-        line_str = line_str[0]
-
-    # First coords of line (start + end)
-    coords = [line_str.coords[0], line_str.coords[-1]]
-
-    # Add the coords from the points
-    coords += [list(p.coords)[0] for p in point_list]
-
-    # Calculate the distance along the line for each point
-    dists = [line_str.project(Point(p)) for p in coords]
-
-    # sort the coords based on the distances
-    # see http://stackoverflow.com/questions/6618515/
-    # sorting-list-based-on-values-from-another-list
-    coords = [p for (d, p) in sorted(zip(dists, coords))]
-
-    # generate the Lines
-    lines = [LineString([coords[i], coords[i + 1]])
-             for i in range(len(coords) - 1)]
-
-    return lines
-
-
 def create_object_connections(points, lines, tol_distance=1):
     """Connects points to a line network.
 
