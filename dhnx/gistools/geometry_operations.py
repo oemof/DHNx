@@ -170,11 +170,14 @@ def split_linestring(linestring):
     return l_segments
 
 
-def split_multilinestr_to_linestr(gdf_lines):
+def split_multilinestr_to_linestr(gdf_input):
     """Simplifies GeoDataFrames with LineStrings as geometry.
 
     The LineStrings (whether LineStrings, or MulitLineStings) are split into
     LineStrings with only two coordinates, one starting and one ending point.
+
+    The other values of the GeoDataFrame are copied to the new rows
+    for each row, who's geometry is split.
 
     Parameters
     ----------
@@ -184,33 +187,39 @@ def split_multilinestr_to_linestr(gdf_lines):
     -------
     geopandas.GeoDataFrame
     """
+    gdf_lines = gdf_input.copy()
 
     new_lines = gpd.GeoDataFrame()
 
+    # first: split MultiLineString into LineStrings
     for i, b in gdf_lines.iterrows():
 
         geom = b['geometry']
 
         if geom.type == 'MultiLineString':
 
-            li = []
+            multilinestrings = []
             for line in geom:
-                li.append(line)  # li has always just one element?!
+                multilinestrings.append(line)
 
-            # check if LineString has more than 2 points
-            if len(li[0].coords) > 2:
+            for multiline in multilinestrings:
+                new_row = b.copy()
+                new_row['geometry'] = multiline
+                new_lines = new_lines.append(
+                    new_row, ignore_index=True, sort=False)
 
-                l_sequ = split_linestring(li[0])
+            gdf_lines.drop(index=i, inplace=True)
 
-                for s in l_sequ:
-                    new_row = b.copy()
-                    new_row['geometry'] = gpd.tools.collect(s, multi=True)
-                    new_lines = new_lines.append(
-                        new_row, ignore_index=True, sort=False)
+    gdf_lines = gdf_lines.append(
+        new_lines, ignore_index=True, sort=False)
 
-                gdf_lines.drop(index=i, inplace=True)
+    # second: split LineStrings into single Linestrings
+    new_lines = gpd.GeoDataFrame()
+    for i, b in gdf_lines.iterrows():
 
-        elif len(geom.coords) > 2:
+        geom = b['geometry']
+
+        if len(geom.coords) > 2:
 
             num_new_lines = len(geom.coords) - 1
 
