@@ -31,17 +31,12 @@ def create_nodes(lines):
 
     nodes = gpd.GeoDataFrame(geometry=[], crs=lines.crs)
 
-    for i, _ in lines.iterrows():
-        geom = lines.iloc[i]['geometry']
+    for _, j in lines.iterrows():
+        geom = j['geometry']
         p_0 = Point(geom.boundary[0])
         p_1 = Point(geom.boundary[-1])
         nodes = nodes.append({'geometry': p_0}, ignore_index=True)
         nodes = nodes.append({'geometry': p_1}, ignore_index=True)
-
-    # drop duplicates
-
-    # length before deleting douples
-    length_1 = len(nodes)
 
     # transform geometry into wkt
     nodes["geometry"] = nodes["geometry"].apply(lambda geom: geom.wkt)
@@ -50,19 +45,15 @@ def create_nodes(lines):
     nodes = nodes.drop_duplicates(["geometry"])
 
     # create shapely geometry again
-    nodes["geometry"] = nodes["geometry"].apply(lambda geom: wkt.loads(geom))
+    nodes["geometry"] = nodes["geometry"].apply(lambda geom: wkt.loads(geom))  # pylint: disable=unnecessary-lambda
 
-    # reset index
+    # set index for forks
     nodes = nodes.reset_index(drop=True)
     nodes['id'] = nodes.index
     nodes['id_full'] = 'forks-' + nodes['id'].apply(str)
     nodes['lat'] = nodes['geometry'].apply(lambda x: x.y)
     nodes['lon'] = nodes['geometry'].apply(lambda x: x.x)
     nodes.set_index('id', drop=True, inplace=True)
-
-    # print the number of deleted points
-    length_2 = len(nodes)
-    print('Deleted duplicate points:', length_1 - length_2)
 
     return nodes
 
