@@ -125,16 +125,6 @@ def check_double_points(gdf, radius=0.001, id_column='id'):
     return l_ids
 
 
-def mls_to_ls(geom):
-
-    if geom.type == 'MultiLineString':
-        if len(geom) > 1:
-            print('There is a REAL MultiLineString')
-        geom = geom[0]
-
-    return geom
-
-
 def gdf_to_df(gdf):
     """Converts a GeoDataFrame to a pandas.DataFrame by deleting the geometry column."""
 
