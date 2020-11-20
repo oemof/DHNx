@@ -126,15 +126,22 @@ def cut_line_at_points(line_str, point_list):
     return lines
 
 
-def create_object_connections(points, lines, tol_distance=2):
+def create_object_connections(points, lines, tol_distance=1):
     """Connects points to a line network.
 
     Generally, the nearest point of the next line is used as connection the point.
-    Depending on the geometry, there are 3 ways, the connection is created:
-    - lot food point is outside the line
-    - lot food point is on the line
-    - lot food point is on the line, but the line ending is closer than `tol_distance`.
-      In that case the end of line is used as connection point.
+    Depending on the geometry, there are 3 options, the connection is created:
+    - nearest point is line ending => the connection line starts from this line ending
+    - nearest point is on the next line:
+        a) line endings are outside the tolerance => line is split and the nearest point
+           is used as connection point
+        b) line endings are within the tolerance distance => the next line ending is
+           used as connection point
+
+    The tolerance distance avoids the generation of short line elements.
+    This is for example the case if two buildings are directly opposite of the street.
+    Using simply the nearest point method could result in very short lines.
+
 
     Parameters
     ----------
@@ -145,7 +152,7 @@ def create_object_connections(points, lines, tol_distance=2):
         consists of simple lines based on one starting and one ending point. LineStrings
         which contain more than 2 points are not allowed.
     tol_distance : float
-        Tolerance distance for choosing the end of the line instead of the lot.
+        Tolerance distance for choosing the end of the line instead of the nearest point.
 
     Returns
     -------
