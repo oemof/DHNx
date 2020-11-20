@@ -18,7 +18,7 @@ from shapely.geometry import Point, LineString
 import matplotlib.pyplot as plt
 
 
-def create_nodes(lines):
+def create_forks(lines):
     """
     :param lines: geopandas.DataFrame with LineStrings of distribution
                         lines
