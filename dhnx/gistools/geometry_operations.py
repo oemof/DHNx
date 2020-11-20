@@ -9,12 +9,21 @@ available from its original location: https://github.com/oemof/DHNx
 
 SPDX-License-Identifier: MIT
 """
-import geopandas as gpd
+
+try:
+    import geopandas as gpd
+
+except ImportError:
+    print("Need to install geopandas to process osm data.")
+
+try:
+    from shapely import wkt
+    from shapely.ops import cascaded_union, nearest_points, linemerge
+    from shapely.geometry import Point, LineString, MultiLineString
+except ImportError:
+    print("Need to install shapely to process geometry.")
+
 import pandas as pd
-import shapely
-from shapely import wkt
-from shapely.ops import cascaded_union, nearest_points
-from shapely.geometry import Point, LineString
 import matplotlib.pyplot as plt
 
 
@@ -405,7 +414,7 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         lines = [geom] + list(neighbours.geometry)
         try:  # Works when all elements are LineStrings
             # Combine lines into a multi-linestring
-            multi_line = shapely.geometry.MultiLineString(lines)
+            multi_line = MultiLineString(lines)
         except NotImplementedError:  # Fails if there is a MultiLineString
             lines_ = []  # Create a new list of lines, without MultiLineStrings
             for line in lines:
@@ -414,10 +423,10 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                 else:  # Linestring
                     lines_.append(line)
             # Now combine all of those into MultiLineString
-            multi_line = shapely.geometry.MultiLineString(lines_)
+            multi_line = MultiLineString(lines_)
 
         # Merge the MultiLineString into a single object
-        merged_line = shapely.ops.linemerge(multi_line)
+        merged_line = linemerge(multi_line)
         gdf_merged = gpd.GeoDataFrame(geometry=[merged_line])
         debug_plot(neighbours)  # Plot the segments before the merge
         debug_plot(gdf_merged, color='orange')  # ...and after the merge
