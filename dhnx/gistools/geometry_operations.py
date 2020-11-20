@@ -91,14 +91,24 @@ def insert_node_ids(lines, nodes):
     return lines
 
 
-def check_double_points(gdf, radius=0.001, id_column='id'):
+def check_double_points(gdf, radius=0.001, id_column=None):
+    """Check for points, which are close to each other.
 
-    """
+    In case, two points are close, the index of the points are printed.
 
-    :param gdf:
-    :param radius:
-    :param id_column:
-    :return:
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        GeoDataFrame with Points as geometry.
+    radius : float
+        Maximum distance.
+    id_column : str or None
+        Column name which should be printed in case of near points.
+        If None, the index is printed.
+
+    Returns
+    -------
+    list : Indices of "near" points.
     """
 
     l_ids = []
@@ -114,13 +124,22 @@ def check_double_points(gdf, radius=0.001, id_column='id'):
         x2 = nearest_points(point, other_points)[1]
 
         if point.distance(x2) <= radius:
-            l_ids.append(c[id_column])
-            print('Node ', c[id_column], ' has a near neighbour!',
-                  'Distance ', point.distance(x2))
+            l_ids.append(r)
+
+            if id_column is None:
+                print_name = r
+            else:
+                print_name = c[id_column]
+
+            print('Node {} has a near neighbour!',
+                  'Distance {}'.format(print_name, point.distance(x2)))
+
             count += 1
 
-    print('')
-    print('Number of duplicated points: ', count)
+    if count > 0:
+        print('Number of duplicated points: ', count)
+    else:
+        print('Check passed: No points with a distance closer than {}'.format(radius))
 
     return l_ids
 
