@@ -82,7 +82,7 @@ gdf_poly_houses['P_heat_max'] = \
     np.random.randint(10, 50, size=len(gdf_poly_houses))
 
 # plot the given geometry
-fig, ax = plt.subplots(1, 1, dpi=300)
+fig, ax = plt.subplots()
 gdf_lines_streets.plot(ax=ax, color='blue')
 gdf_poly_gen.plot(ax=ax, color='orange')
 gdf_poly_houses.plot(ax=ax, color='green')
