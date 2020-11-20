@@ -390,7 +390,7 @@ def process_geometry(lines=None, producers=None, consumers=None,
     lines_consumers['type'] = 'HL'  # HL for house line
 
     # generate forks point layer
-    forks = go.create_nodes(lines)
+    forks = go.create_forks(lines)
 
     # concat lines
     lines_all = pd.concat([lines, lines_consumers, lines_producers], sort=False)
