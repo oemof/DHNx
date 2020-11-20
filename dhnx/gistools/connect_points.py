@@ -9,11 +9,22 @@ available from its original location: https://github.com/oemof/DHNx
 
 SPDX-License-Identifier: MIT
 """
+try:
+    import geopandas as gpd
+
+except ImportError:
+    print("Need to install geopandas to process geometry data.")
+
+try:
+    from shapely import wkt
+    from shapely.ops import cascaded_union, nearest_points, linemerge
+    from shapely.geometry import Point, LineString, MultiLineString, shape, MultiPoint
+except ImportError:
+    print("Need to install shapely to process geometry.")
+
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Point, LineString, shape, MultiPoint
-from shapely.ops import cascaded_union, nearest_points
+
 import dhnx.gistools.geometry_operations as go
 
 

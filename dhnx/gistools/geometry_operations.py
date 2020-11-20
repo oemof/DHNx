@@ -14,7 +14,7 @@ try:
     import geopandas as gpd
 
 except ImportError:
-    print("Need to install geopandas to process osm data.")
+    print("Need to install geopandas to process geometry data.")
 
 try:
     from shapely import wkt
