@@ -62,7 +62,8 @@ def create_forks(lines):
     nodes = nodes.drop_duplicates(["geometry_wkt"])
 
     # create shapely geometry again
-    nodes["geometry"] = nodes["geometry_wkt"].apply(lambda geom: wkt.loads(geom))  # pylint: disable=unnecessary-lambda
+    nodes["geometry"] = nodes["geometry_wkt"].apply(
+        lambda geom: wkt.loads(geom))  # pylint: disable=unnecessary-lambda
 
     # set index for forks
     nodes = nodes.reset_index(drop=True)

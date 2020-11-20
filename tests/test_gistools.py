@@ -17,6 +17,7 @@ from shapely.geometry import Point
 from dhnx.gistools import connect_points as cp
 from dhnx.gistools import geometry_operations as go
 
+
 def test_linestring_error():
     with pytest.raises(ValueError, match=r"The Linestrings must consists of simple lines"):
         line = LineString([(0, 0), (1, 2 / 3), (2, 0)])
@@ -25,10 +26,12 @@ def test_linestring_error():
         gdf_point = gpd.GeoDataFrame(geometry=[point])
         cp.create_object_connections(gdf_point, gdf_line)
 
+
 def test_lot_foot_calc():
     point = Point([(0.5, 1)])
     line = LineString([(0, 0), (1, 1)])
     assert cp.calc_lot_foot(line, point) == Point([(0.75, 0.75)])
+
 
 def test_split_linestring():
     line1 = LineString([(0, 0), (1, 3), (2, 0)])
