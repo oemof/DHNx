@@ -47,7 +47,7 @@ def line_of_point(point, gdf_lines):
         if l['geometry'].distance(point) < 1e-8:
             ind = k
 
-    if not ind:
+    if ind is None:
         return Warning('No line found which has point on it!')
     return ind
 
@@ -317,9 +317,9 @@ def process_geometry(lines, consumers, producers,
     """
 
     # check whether the expected geometry is used for geo dataframes
-    check_geometry_type(lines, types=['LineString'])
+    check_geometry_type(lines, types=['LineString', 'MultiLineString'])
     for gdf in [producers, consumers]:
-        check_geometry_type(gdf, types=['Polygon', 'Point'])
+        check_geometry_type(gdf, types=['Polygon', 'Point', 'MultiPolygon'])
 
     # # split multilinestrings to single lines with only 1 starting and 1 ending point
     lines = go.split_multilinestr_to_linestr(lines)
