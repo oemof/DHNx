@@ -332,6 +332,8 @@ def process_geometry(lines, consumers, producers,
         layer = create_points_from_polygons(layer, method=method)
         layer.reset_index(inplace=True, drop=True)
         layer.index.name = 'id'
+        if 'id' in layer.columns:
+            layer.drop(['id'], axis=1, inplace=True)
         layer['lat'] = layer['geometry'].apply(lambda x: x.y)
         layer['lon'] = layer['geometry'].apply(lambda x: x.x)
 
@@ -362,6 +364,8 @@ def process_geometry(lines, consumers, producers,
     lines_all = pd.concat([lines, lines_consumers, lines_producers], sort=False)
     lines_all.reset_index(inplace=True, drop=True)
     lines_all.index.name = 'id'
+    if 'id' in lines_all.columns:
+        lines_all.drop(['id'], axis=1, inplace=True)
 
     # concat point layer
     points_all = pd.concat([
