@@ -1,2 +1,2 @@
-from dhnx.gistools import connect_points
-from dhnx.gistools import geometry_operations
+from . import connect_points
+from . import geometry_operations

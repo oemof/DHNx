@@ -24,7 +24,7 @@ except ImportError:
 import numpy as np
 import pandas as pd
 
-import dhnx.gistools.geometry_operations as go
+from . import geometry_operations as go
 
 
 def line_of_point(point, gdf_lines):
