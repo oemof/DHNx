@@ -145,8 +145,8 @@ settings = dict(solver='cbc',
                 solver_cmdline_options={
                     # 'allowableGap': 1e-5,  # (absolute gap) default: 1e-10
                     # 'ratioGap': 0.2,  # (0.2 = 20% gap) default: 0
-                    # 'seconds': 60*1,  # (maximum runtime) default: 1e+100
-                    },
+                    # 'seconds': 60 * 1,  # (maximum runtime) default: 1e+100
+                },
                 )
 
 # perform the investment optimisation
