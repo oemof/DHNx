@@ -119,7 +119,7 @@ plt.show()
 #     val.to_file(os.path.join(path_geo, key + '.geojson'), driver='GeoJSON')
 
 
-# Part III: Initialise the ThermalNetwork and perform the Optimisation #############
+# Part III: Initialise the ThermalNetwork and perform the Optimisation #######
 
 # initialize a ThermalNetwork
 network = dhnx.network.ThermalNetwork()
@@ -134,8 +134,23 @@ network.is_consistent()
 # load the specification of the oemof-solph components
 invest_opt = dhnx.input_output.load_invest_options('invest_data')
 
+
+# optionally, define some settings for the solver. Especially increasing the
+# solution tolerance with 'ratioGap' or setting a maximum runtime in 'seconds'
+# helps if large networks take too long to solve
+settings = dict(solver='cbc',
+                solve_kw={
+                    'tee': True,  # print solver output
+                },
+                solver_cmdline_options={
+                    # 'allowableGap': 1e-5,  # (absolute gap) default: 1e-10
+                    # 'ratioGap': 0.2,  # (0.2 = 20% gap) default: 0
+                    # 'seconds': 60*1,  # (maximum runtime) default: 1e+100
+                    },
+                )
+
 # perform the investment optimisation
-network.optimize_investment(invest_options=invest_opt)
+network.optimize_investment(invest_options=invest_opt, **settings)
 
 
 # Part IV: Check the results #############
@@ -147,9 +162,9 @@ results_edges = network.results.optimization['components']['pipes']
 
 print(results_edges[['costs']].sum())
 print('Objective value: ', network.results.optimization['oemof_meta']['objective'])
-# (The costs of the objective value and the investment costs of the DHS pipelines
-#  are the same, since no additional costs (e.g. for energy sources) are considered
-#  in this example.)
+# (The costs of the objective value and the investment costs of the DHS
+# pipelines are the same, since no additional costs (e.g. for energy sources)
+# are considered in this example.)
 
 # add the investment results to the geoDataFrame
 gdf_pipes = network.components['pipes']
