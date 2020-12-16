@@ -175,8 +175,9 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 d_labels['l_4'] = start + '-' + end
 
                 nodes = ac.add_heatpipes(
-                    pipe_data, d_labels, gd['bidirectional_pipes'], q['length'], b_in, b_out,
-                    nodes)
+                    pipe_data, d_labels, gd['bidirectional_pipes'], q['length'],
+                    b_in, b_out, nodes,
+                )
 
             elif (q['from_node'].split('-')[0] == 'forks') and (
                     q['to_node'].split('-')[0] == 'forks'):
