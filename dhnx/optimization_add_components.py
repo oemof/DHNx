@@ -347,7 +347,7 @@ def add_storage(it, labels, nodes, busd):
     return nodes
 
 
-def add_heatpipes(it, labels, bidi, q, b_in, b_out, nodes):
+def add_heatpipes(it, labels, bidirectional, q, b_in, b_out, nodes):
     """
     Adds *HeatPipeline* objects with *Investment* attribute to the list of oemof.solph components.
 
@@ -387,7 +387,7 @@ def add_heatpipes(it, labels, bidi, q, b_in, b_out, nodes):
         # bidirectional heatpipelines yes or no
         flow_bi_args = {
             'bidirectional': True, 'min': -1}\
-            if bidi else {}
+            if bidirectional else {}
 
         nodes.append(oh.HeatPipeline(
             label=oh.Label(labels['l_1'], labels['l_2'],
