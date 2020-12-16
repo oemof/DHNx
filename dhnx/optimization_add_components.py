@@ -347,7 +347,7 @@ def add_storage(it, labels, nodes, busd):
     return nodes
 
 
-def add_heatpipes(it, labels, bidirectional, q, b_in, b_out, nodes):
+def add_heatpipes(it, labels, bidirectional, length, b_in, b_out, nodes):
     """
     Adds *HeatPipeline* objects with *Investment* attribute to the list of oemof.solph components.
 
@@ -359,8 +359,8 @@ def add_heatpipes(it, labels, bidirectional, q, b_in, b_out, nodes):
         Dictonary containing specifications for label-tuple
     bidirectional : bool
         Settings for creating bidirectional heatpipelines
-    q : pd.Series
-        Specific *Pipe* of ThermalNetwork
+    length : float
+        Length of pipeline
     b_in : oemof.solph.Bus
         Bus of Inflow
     b_out : oemof.solph.Bus
@@ -378,8 +378,8 @@ def add_heatpipes(it, labels, bidirectional, q, b_in, b_out, nodes):
         # definition of tag3 of label -> type of pipe
         labels['l_3'] = t['label_3']
 
-        epc_p = t['capex_pipes'] * q['length']
-        epc_fix = t['fix_costs'] * q['length']
+        epc_p = t['capex_pipes'] * length
+        epc_fix = t['fix_costs'] * length
 
         # Heatpipe with binary variable
         nc = bool(t['nonconvex'])
@@ -400,8 +400,8 @@ def add_heatpipes(it, labels, bidirectional, q, b_in, b_out, nodes):
                     ep_costs=epc_p, maximum=t['cap_max'],
                     minimum=t['cap_min'], nonconvex=nc, offset=epc_fix,
                 ))},
-            heat_loss_factor=t['l_factor'] * q['length'],
-            heat_loss_factor_fix=t['l_factor_fix'] * q['length'],
+            heat_loss_factor=t['l_factor'] * length,
+            heat_loss_factor_fix=t['l_factor_fix'] * length,
         ))
 
     return nodes
