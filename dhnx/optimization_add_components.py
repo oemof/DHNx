@@ -357,7 +357,7 @@ def add_heatpipes(it, labels, bidi, q, b_in, b_out, nodes):
         Table of *Heatpipeline* attributes of the district heating grid
     labels : dict
         Dictonary containing specifications for label-tuple
-    bidi : bool
+    bidirectional : bool
         Settings for creating bidirectional heatpipelines
     q : pd.Series
         Specific *Pipe* of ThermalNetwork
