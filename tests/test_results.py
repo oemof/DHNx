@@ -2,10 +2,7 @@ import os
 
 import dhnx
 
-import sys
-print(os.path.abspath(os.path.dirname(__file__)))
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-import helpers
+from . import helpers
 
 # define paths
 tests_path = os.path.abspath(os.path.dirname(__file__))
