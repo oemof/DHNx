@@ -298,14 +298,16 @@ class SimulationModelNumpy(SimulationModel):
         re : pd.DataFrame
             Reynolds number for every time step and pipe [-]
         """
-        pipes_mass_flow = self.results['pipes-mass_flow']
+        abs_pipes_mass_flow = self.results['pipes-mass_flow'].copy()
+
+        abs_pipes_mass_flow = abs(abs_pipes_mass_flow)
 
         diameter = \
             self.thermal_network.components.pipes[['from_node', 'to_node', 'diameter']]
 
         diameter = 1e-3 * diameter.set_index(['from_node', 'to_node'])['diameter']
 
-        reynolds = 4 * pipes_mass_flow.divide(diameter, axis='columns') \
+        reynolds = 4 * abs_pipes_mass_flow.divide(diameter, axis='columns') \
             / (np.pi * self.mu)
 
         return reynolds
@@ -541,6 +543,46 @@ class SimulationModelNumpy(SimulationModel):
 
             return path_weights
 
+        def _change_graph_dir(graph, direction):
+            r"""
+            Takes a nx.DiGraph and returns a new graph
+            with adapted edge directions according to the
+            direction specified.
+
+            Parameters
+            ----------
+            graph : nx.DiGraph
+                Directed graph
+
+            direction : pd.Series
+                Series with the edges as index and
+                1 or -1 as values, indicating the
+                direction
+
+            Returns
+            -------
+            dir_graph : nx.DiGraph
+                Graph with adapted directions
+            """
+            def _get_tuple(e):
+                return tuple(e[:2])
+
+            def _swap_tuple(e):
+                return tuple((*e[:2][::-1], e[2]))
+
+            dir_edges = [
+                e
+                if direction.loc[_get_tuple(e)] > 0
+                else _swap_tuple(e)
+                for e in graph.edges(data=True)
+            ]
+
+            dir_graph = nx.DiGraph()
+
+            dir_graph.add_edges_from(dir_edges)
+
+            return dir_graph
+
         def _calculate_paths_pressure_losses():
 
             sink_nodes = [node for node, data in self.nx_graph.nodes(data=True) if
@@ -551,6 +593,8 @@ class SimulationModelNumpy(SimulationModel):
 
             paths_pressure_losses = {}
 
+            flow_direction = np.sign(self.results['pipes-mass_flow'])
+
             for t in self.thermal_network.timeindex:
 
                 graph = write_edge_data_to_graph(
@@ -559,10 +603,12 @@ class SimulationModelNumpy(SimulationModel):
                     var_name='pipes_pressure_losses'
                 )
 
+                flow_dir_graph = _change_graph_dir(graph, flow_direction.loc[t, :])
+
                 path_weights = calculate_path_weights(
                     source_nodes,
                     sink_nodes,
-                    graph,
+                    flow_dir_graph,
                     'pipes_pressure_losses'
                 )
 
