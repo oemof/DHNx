@@ -263,8 +263,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 to_frame(name='P_heat_max')
 
             self.thermal_network.components['consumers'] = \
-                pd.concat([self.thermal_network.components['consumers'], df_max],
-                          axis=1, join='outer', sort=False)
+                self.thermal_network.components['consumers'].join(df_max)
 
         # check, which optimization type should be performed
         if self.settings['heat_demand'] == 'scalar':
