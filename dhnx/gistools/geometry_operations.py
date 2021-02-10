@@ -25,6 +25,7 @@ except ImportError:
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import logging
 
 
 def create_forks(lines):
@@ -494,4 +495,6 @@ def check_crs(gdf, crs=4647):
     """
     if gdf.crs.to_epsg() != crs:
         gdf.to_crs(epsg=crs, inplace=True)
+        logging.info('CRS of GeoDataFrame converted to EPSG:{0}'.format(crs))
+
     return gdf
