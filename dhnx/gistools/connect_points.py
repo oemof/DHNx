@@ -117,10 +117,10 @@ def create_object_connections(points, lines, tol_distance=1):
     Depending on the geometry, there are 3 options, the connection is created:
     - nearest point is line ending => the connection line starts from this line ending
     - nearest point is on the next line:
-        a) line endings are outside the tolerance => line is split and the nearest point
-           is used as connection point
-        b) line endings are within the tolerance distance => the next line ending is
-           used as connection point
+      a) line endings are outside the tolerance => line is split and the nearest point
+      is used as connection point
+      b) line endings are within the tolerance distance => the next line ending is
+      used as connection point
 
     The tolerance distance avoids the generation of short line elements.
     This is for example the case if two buildings are directly opposite of the street.
