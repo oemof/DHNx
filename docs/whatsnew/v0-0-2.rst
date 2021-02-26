@@ -28,7 +28,11 @@ Documentation
 Bug fixes
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Avoid bidirectional flow at consumers connections in any case.
+* Fixed error of simulation being dependend on the definition of the direction of an edge. When
+swapping the direction of an edge in a simple example, wrong results were the consequence. This
+has been fixed such that the simulation does not depend on the edge direction, but the actual mass
+flow.
 
 Known issues
 ^^^^^^^^^^^^^^^^^^^^
