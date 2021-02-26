@@ -16,16 +16,19 @@ Contributors:
 - Joris Zimmermann
 - Johannes Röder
 """
-# import os
 import numpy as np
-# import pandas as pd
 import osmnx as ox
 import shapely
 import matplotlib.pyplot as plt
 
-import dhnx
+import logging
+from oemof.tools import logger
+
+from dhnx.network import ThermalNetwork
+from dhnx.input_output import load_invest_options
 from dhnx.gistools.connect_points import process_geometry
 
+logger.define_logging(screen_level=logging.INFO)
 
 # Part I: Get OSM data #############
 
@@ -122,7 +125,7 @@ plt.show()
 # Part III: Initialise the ThermalNetwork and perform the Optimisation #######
 
 # initialize a ThermalNetwork
-network = dhnx.network.ThermalNetwork()
+network = ThermalNetwork()
 
 # add the pipes, forks, consumer, and producers to the ThermalNetwork
 for k, v in tn_input.items():
@@ -132,7 +135,7 @@ for k, v in tn_input.items():
 network.is_consistent()
 
 # load the specification of the oemof-solph components
-invest_opt = dhnx.input_output.load_invest_options('invest_data')
+invest_opt = load_invest_options('invest_data')
 
 
 # optionally, define some settings for the solver. Especially increasing the
