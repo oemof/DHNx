@@ -28,7 +28,10 @@ from dhnx.network import ThermalNetwork
 from dhnx.input_output import load_invest_options
 from dhnx.gistools.connect_points import process_geometry
 
-logger.define_logging(screen_level=logging.INFO)
+logger.define_logging(
+    screen_level=logging.INFO,
+    logfile="dhnx.log"
+)
 
 # Part I: Get OSM data #############
 
@@ -143,7 +146,7 @@ invest_opt = load_invest_options('invest_data')
 # helps if large networks take too long to solve
 settings = dict(solver='cbc',
                 solve_kw={
-                    'tee': True,  # print solver output
+                    'tee': False,  # print solver output
                 },
                 solver_cmdline_options={
                     # 'allowableGap': 1e-5,  # (absolute gap) default: 1e-10
