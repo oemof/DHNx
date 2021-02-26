@@ -9,6 +9,8 @@ This file is part of project dhnx (). It's copyrighted
 by the contributors recorded in the version control history of the file,
 available from its original location: https://github.com/oemof/DHNx
 
+This module is not fully tested yet, so use it with care.
+
 SPDX-License-Identifier: MIT
 """
 try:
