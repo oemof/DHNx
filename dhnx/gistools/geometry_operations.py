@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-General description ... will follow.
+This modules holds functions for geometry operations, that are needed for
+the geometry processing module `connect_points.py`.
 
 This file is part of project dhnx (). It's copyrighted
 by the contributors recorded in the version control history of the file,

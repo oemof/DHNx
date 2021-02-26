@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """
-General description ... will follow.
+This module holds functions for processing the geometry for setting up
+the geometry of a ThermalNetwork based on a street geometry and a table of
+buildings.
 
 This file is part of project dhnx (). It's copyrighted
 by the contributors recorded in the version control history of the file,
