@@ -48,4 +48,6 @@ Other changes
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Johannes Röder
+* Joris Zimmermann
+* Uwe Krien
