@@ -16,6 +16,14 @@ network
     :show-inheritance:
 
 
+gistools
+========
+.. automodule:: dhnx.gistools.connect_points
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 model
 =====
 
