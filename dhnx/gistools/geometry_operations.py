@@ -149,15 +149,16 @@ def check_double_points(gdf, radius=0.001, id_column=None):
             else:
                 print_name = c[id_column]
 
-            print('Node {} has a near neighbour! '
+            logging.info('Node {} has a near neighbour! '
                   'Distance {}'.format(print_name, point.distance(x2)))
 
             count += 1
 
     if count > 0:
-        print('Number of duplicated points: ', count)
+        logging.info('Number of duplicated points: ', count)
     else:
-        print('Check passed: No points with a distance closer than {}'.format(radius))
+        logging.info(
+            'Check passed: No points with a distance closer than {}'.format(radius))
 
     return l_ids
 
@@ -276,7 +277,7 @@ def weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                                       gdf_line_houses, debug_plotting)
     # Now do all of this recursively
     while len(gdf_line_net_new) < len(gdf_line_net_last):
-        print('Welding lines... reduced from {} to {} lines'.format(
+        logging.info('Welding lines... reduced from {} to {} lines'.format(
             len(gdf_line_net_last), len(gdf_line_net_new)))
         gdf_line_net_last = gdf_line_net_new
         gdf_line_net_new = _weld_segments(gdf_line_net_new, gdf_line_gen,

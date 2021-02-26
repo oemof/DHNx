@@ -27,6 +27,7 @@ except ImportError:
 
 import numpy as np
 import pandas as pd
+import logging
 
 from . import geometry_operations as go
 
@@ -181,7 +182,7 @@ def create_object_connections(points, lines, tol_distance=1):
         if n_p in supply_line_points:
             # case that nearest point is a line ending
 
-            print('Connect buildings... id {}: '
+            logging.info('Connect buildings... id {}: '
                   'Connected to supply line ending (nearest point)'.format(index))
 
             con_line = LineString([n_p, house_geo])
@@ -196,7 +197,8 @@ def create_object_connections(points, lines, tol_distance=1):
                 # line is split, no line ending is close to the nearest point
                 # this also means the original supply line needs to be deleted
 
-                print('Connect buildings... id {}: Supply line split'.format(index))
+                logging.info(
+                    'Connect buildings... id {}: Supply line split'.format(index))
 
                 con_line = LineString([n_p, house_geo])
 
@@ -216,8 +218,9 @@ def create_object_connections(points, lines, tol_distance=1):
             else:
                 # case that one or both line endings are closer than tolerance
                 # thus, the next line ending is chosen
-                print('Connect buildings... id {}: Connected to Supply line ending '
-                      'due to tolerance'.format(index))
+                logging.info(
+                    'Connect buildings... id {}: Connected to Supply line ending '
+                    'due to tolerance'.format(index))
 
                 conn_point = nearest_points(supply_line_mulitpoints, n_p)[0]
 
@@ -225,7 +228,7 @@ def create_object_connections(points, lines, tol_distance=1):
 
                 conn_lines = conn_lines.append({'geometry': con_line}, ignore_index=True)
 
-    print('Connection of buildings completed.')
+    logging.info('Connection of buildings completed.')
 
     connection_lines = gpd.GeoDataFrame(conn_lines, crs=lines.crs)
 
@@ -385,7 +388,8 @@ def process_geometry(lines, consumers, producers,
     lines_all = go.insert_node_ids(lines_all, points_all)
 
     lines_all['length'] = lines_all.length
-    print("Total line length is {:.0f} m".format(lines_all['length'].sum()))
+    logging.info(
+        "Total line length is {:.0f} m".format(lines_all['length'].sum()))
 
     # Convert all MultiLineStrings to LineStrings
     check_geometry_type(lines_all, types=['LineString'])
