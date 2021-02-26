@@ -182,8 +182,10 @@ def create_object_connections(points, lines, tol_distance=1):
         if n_p in supply_line_points:
             # case that nearest point is a line ending
 
-            logging.info('Connect buildings... id {}: '
-                  'Connected to supply line ending (nearest point)'.format(index))
+            logging.info(
+                'Connect buildings... id {}: '
+                'Connected to supply line ending (nearest point)'.format(index)
+            )
 
             con_line = LineString([n_p, house_geo])
 
