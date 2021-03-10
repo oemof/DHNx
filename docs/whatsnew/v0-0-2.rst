@@ -11,7 +11,9 @@ API changes
 New features
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Geometry processing modules (```dhnx.gistools```) for creating the ThermalNetwork structure
+  (pipes, forks, consumers, producers) from user-defined geo-referenced
+  input data. This could also be an import from osmnx.
 
 New components/constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -51,3 +53,5 @@ Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
 * Johannes Röder
+* Joris Zimmermann
+* Uwe Krien

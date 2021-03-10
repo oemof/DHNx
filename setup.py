@@ -16,7 +16,10 @@ setup(
     author_email='jann.launer@rl-institut.de, johannes-roeder@uni-bremen.de',
     long_description=read('README.rst'),
     long_description_content_type="text/x-rst",
-    packages=['dhnx'],
+    packages=[
+        'dhnx',
+        'dhnx.gistools',
+    ],
     package_data={
         'dhnx': [
             "*.csv",

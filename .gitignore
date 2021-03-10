@@ -8,3 +8,4 @@ _build
 jupyter_notebooks
 */import_export_plot/data_csv_output/
 */import_osmnx/data/
+cache/
