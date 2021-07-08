@@ -37,6 +37,15 @@ Now you can install it your local version of DHNx using pip:
 
     pip install -e <path/to/DHNx/root/dir>
 
+.. note::
+    DHNx uses geopandas as extra requirement for some functions related
+    to the processing of spatial data. On Windows machines, you might
+    encounter troubles installing geopandas via ``pip install geopandas``.
+    Try to install geopandas in an empty environment with
+    ``conda install geopandas``.
+    Also check `geopandas.org <https://geopandas.org/getting_started/install.html>`_.
+
+
 Examples
 --------
 
