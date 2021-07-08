@@ -60,6 +60,11 @@ Citing
 We use the zenodo project to get a DOI for each version.
 `Search zenodo for the right citation of your DHNx version <https://zenodo.org/search?page=1&size=20&q=dhnx>`_.
 
+If you want to refer specifically to the district heating network optimization
+part of DHNx, you can also cite
+`https://doi.org/10.5278/ijsepm.6248 <https://doi.org/10.5278/ijsepm.6248>`_.
+
+
 License
 =======
 
