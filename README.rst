@@ -28,9 +28,16 @@ Install the developer version of DHNx by cloning DHNx to your computer and runni
 
 .. code:: bash
 
-    pip install -e DHNx
+    pip install -e <path to DHNx>
 
 in your virtualenv.
+
+.. note::
+    DHNx uses *geopandas* as extra requirement for some functions related
+    to the processing of spatial data. On Windows machines, you might
+    encounter troubles installing *geopandas* via ```pip```. Try to install
+    geopandas in an empty environment with ```conda install geopandas```.
+    Also see `geopandas.org <https://geopandas.org/getting_started/install.html>`_.
 
 Check out the
 `examples <https://github.com/oemof-heat/DHNx/tree/dev/examples>`_ to get started.
