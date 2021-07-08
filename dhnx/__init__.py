@@ -1,4 +1,4 @@
-__version__ = "0.0.2"
+__version__ = "0.0.2rc1"
 
 from . import input_output
 from . import network
