@@ -1,11 +1,11 @@
-﻿v0.0.2 (???)
+﻿v0.0.2 (07/2021)
 ==========================
 
 
 API changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* nothing new
 
 
 New features
@@ -18,12 +18,12 @@ New features
 New components/constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* something
+* nothing new
 
 Documentation
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* nothing new
 
 Bug fixes
 ^^^^^^^^^^^^^^^^^^^^
@@ -37,17 +37,19 @@ flow.
 Known issues
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Simulation: Calculations rely on defined pipe direction
+* OSMNetworkImporter not properly working
+
 
 Testing
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* nothing new
 
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* nothing new
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
