@@ -19,6 +19,7 @@ setup(
     packages=[
         'dhnx',
         'dhnx.gistools',
+        'dhnx.optimization',
     ],
     package_data={
         'dhnx': [
