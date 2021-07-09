@@ -134,7 +134,7 @@ class InteractiveMap():
 
         arrows = []
 
-        #creating each "arrow" and appending them to our arrows list
+        # creating each "arrow" and appending them to our arrows list
         for points in zip(arrow_lats, arrow_lons):
             arrows.append(
                 fol.RegularPolygonMarker(
