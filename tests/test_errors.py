@@ -73,7 +73,7 @@ def test_prod_prod():
     with pytest.raises(ValueError, match=r"goes from producers to producers."):
         tn_invest_wrong_1 = copy.deepcopy(tn_invest)
         tn_invest_wrong_1.components['pipes'].at[0, 'to_node'] = 'producers-0'
-        dhnx.optimization.setup_optimise_investment(tn_invest_wrong_1, invest_opt)
+        dhnx.optimization_models.setup_optimise_investment(tn_invest_wrong_1, invest_opt)
 
 
 def test_cons_cons():
@@ -81,7 +81,7 @@ def test_cons_cons():
     with pytest.raises(ValueError, match=r"goes from consumer to consumer"):
         tn_invest_wrong_2 = copy.deepcopy(tn_invest)
         tn_invest_wrong_2.components['pipes'].at[10, 'from_node'] = 'consumers-0'
-        dhnx.optimization.setup_optimise_investment(tn_invest_wrong_2, invest_opt)
+        dhnx.optimization_models.setup_optimise_investment(tn_invest_wrong_2, invest_opt)
 
 
 def test_prod_cons():
@@ -89,4 +89,4 @@ def test_prod_cons():
     with pytest.raises(ValueError, match=r"goes from producers directly to consumers, or vice "):
         tn_invest_wrong_3 = copy.deepcopy(tn_invest)
         tn_invest_wrong_3.components['pipes'].at[0, 'to_node'] = 'consumers-0'
-        dhnx.optimization.setup_optimise_investment(tn_invest_wrong_3, invest_opt)
+        dhnx.optimization_models.setup_optimise_investment(tn_invest_wrong_3, invest_opt)
