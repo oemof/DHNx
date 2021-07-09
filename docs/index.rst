@@ -19,6 +19,7 @@ Welcome to DHNx's documentation!
    :caption: User's guide
 
    network
+   geometry_preparation
    optimization_models
    simulation_models
    model_coupling

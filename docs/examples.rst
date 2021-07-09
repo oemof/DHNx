@@ -17,7 +17,7 @@ Create a thermal network
 
     thermal_network.add('Consumer', id=0, lat=50, lon=10)
 
-    thermal_network.add('Pipe', id=0, from_node='producer-0', to_node='consumer-0')
+    thermal_network.add('Pipe', id=0, from_node='producers-0', to_node='consumers-0')
 
     print(thermal_network)
 

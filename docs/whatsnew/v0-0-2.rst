@@ -1,0 +1,59 @@
+﻿v0.0.2 (07/2021)
+==========================
+
+
+API changes
+^^^^^^^^^^^^^^^^^^^^
+
+* nothing new
+
+
+New features
+^^^^^^^^^^^^^^^^^^^^
+
+* Geometry processing modules (```dhnx.gistools```) for creating the ThermalNetwork structure
+  (pipes, forks, consumers, producers) from user-defined geo-referenced
+  input data. This could also be an import from osmnx.
+
+New components/constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* nothing new
+
+Documentation
+^^^^^^^^^^^^^^^^^^^^
+
+* nothing new
+
+Bug fixes
+^^^^^^^^^^^^^^^^^^^^
+
+* Avoid bidirectional flow at consumers connections in any case.
+* Fixed error of simulation being dependend on the definition of the direction of an edge. When
+swapping the direction of an edge in a simple example, wrong results were the consequence. This
+has been fixed such that the simulation does not depend on the edge direction, but the actual mass
+flow.
+
+Known issues
+^^^^^^^^^^^^^^^^^^^^
+
+* Simulation: Calculations rely on defined pipe direction
+* OSMNetworkImporter not properly working
+
+
+Testing
+^^^^^^^^^^^^^^^^^^^^
+
+* nothing new
+
+Other changes
+^^^^^^^^^^^^^^^^^^^^
+
+* nothing new
+
+Contributors
+^^^^^^^^^^^^^^^^^^^^
+
+* Johannes Röder
+* Joris Zimmermann
+* Uwe Krien

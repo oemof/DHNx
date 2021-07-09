@@ -10,13 +10,16 @@ def read(fname):
 
 setup(
     name='dhnx',
-    version='0.0.1',
+    version='0.0.2',
     description='Simulation and optimization of district heating and cooling networks',
     author="oemof developer group",
     author_email='jann.launer@rl-institut.de, johannes-roeder@uni-bremen.de',
     long_description=read('README.rst'),
     long_description_content_type="text/x-rst",
-    packages=['dhnx'],
+    packages=[
+        'dhnx',
+        'dhnx.gistools',
+    ],
     package_data={
         'dhnx': [
             "*.csv",
@@ -36,6 +39,6 @@ setup(
     extras_require={
         'cartopy': ['cartopy'],
         'geopandas': ['geopandas'],
-        'osmnx': ['osmnx'],
+        'osmnx': ['osmnx >= 0.16.1'],
     }
 )

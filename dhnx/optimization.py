@@ -17,7 +17,6 @@ import networkx as nx
 import pandas as pd
 import oemof.solph as solph
 from oemof.solph import helpers
-from oemof.tools import logger
 
 from .optimization_dhs_nodes import add_nodes_dhs, add_nodes_houses
 from .model import OperationOptimizationModel, InvestOptimizationModel
@@ -263,8 +262,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 to_frame(name='P_heat_max')
 
             self.thermal_network.components['consumers'] = \
-                pd.concat([self.thermal_network.components['consumers'], df_max],
-                          axis=1, join='outer', sort=False)
+                self.thermal_network.components['consumers'].join(df_max)
 
         # check, which optimization type should be performed
         if self.settings['heat_demand'] == 'scalar':
@@ -338,8 +336,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         date_time_index = pd.date_range(self.settings['start_date'],
                                         periods=self.settings['num_ts'],
                                         freq=self.settings['frequence'])
-
-        logger.define_logging(screen_level=logging.INFO)
 
         logging.info('Initialize the energy system')
 

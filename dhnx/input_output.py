@@ -195,7 +195,7 @@ class OSMNetworkImporter(NetworkImporter):
         print('Downloading street network...')
 
         graph = ox.graph_from_point(
-            center_point=self.place, distance=self.distance
+            center_point=self.place, dist=self.distance
         )
 
         graph = ox.project_graph(graph)
@@ -206,8 +206,10 @@ class OSMNetworkImporter(NetworkImporter):
 
         print('Downloading footprints...')
 
-        footprints = ox.footprints.footprints_from_point(
-            point=self.place, distance=self.distance
+        footprints = ox.geometries_from_point(
+            center_point=self.place,
+            dist=self.distance,
+            tags={'building': True},
         )
 
         footprints = footprints.drop(labels='nodes', axis=1)
@@ -268,7 +270,7 @@ class OSMNetworkImporter(NetworkImporter):
                                                         axis=1)
                 gdf_nodes.set_geometry('geometry', inplace=True)
             gdf_nodes.crs = G.graph['crs']
-            gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
+            gdf_nodes.gdf_name = '{}_nodes'.format(G.name)
 
             to_return.append(gdf_nodes)
 
@@ -300,7 +302,7 @@ class OSMNetworkImporter(NetworkImporter):
             # create a GeoDataFrame from the list of edges and set the CRS
             gdf_edges = gpd.GeoDataFrame(edges)
             gdf_edges.crs = G.graph['crs']
-            gdf_edges.gdf_name = '{}_edges'.format(G.graph['name'])
+            gdf_edges.gdf_name = '{}_edges'.format(G.name)
 
             to_return.append(gdf_edges)
 
@@ -400,8 +402,6 @@ class OSMNetworkImporter(NetworkImporter):
         graph = self.download_street_network()
 
         footprints = self.download_footprints()
-
-        footprints = ox.project_gdf(footprints)
 
         component_dfs = self.process(graph, footprints)
 
