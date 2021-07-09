@@ -8,7 +8,7 @@ thermal_network = dhnx.network.ThermalNetwork()
 thermal_network.from_csv_folder('data_csv_input')
 
 # save thermal network to csv
-thermal_network.to_csv_folder('data_csv_output')
+# thermal_network.to_csv_folder('data_csv_output')
 
 # get graph of thermal network
 graph = thermal_network.to_nx_graph()
