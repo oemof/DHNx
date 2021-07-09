@@ -21,7 +21,7 @@ New components/constraints
 Documentation
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Fix/add complete API documentation of gistools and optimization modules
 
 Bug fixes
 ^^^^^^^^^^^^^^^^^^^^
@@ -42,9 +42,9 @@ Testing
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Refactor internal structure of optimization modules
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
-* somebody
+* Johannes Röder
