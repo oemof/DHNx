@@ -80,7 +80,7 @@ gdf_lines_streets.drop(columns=['nodes'], inplace=True)
 np.random.seed(42)
 id_generator = np.random.randint(len(gdf_poly_houses))
 gdf_poly_gen = gdf_poly_houses.iloc[[id_generator]].copy()
-gdf_poly_houses.drop(index=id_generator, inplace=True)
+gdf_poly_houses.drop(index=gdf_poly_houses.index[id_generator], inplace=True)
 
 # The houses need a maximum thermal power. For this example, we set it
 # to a random value between 10 and 50 kW for all houses
