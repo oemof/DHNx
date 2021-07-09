@@ -45,22 +45,22 @@ class HeatPipeline(Transformer):
         Heat loss per length unit as fraction of the nominal power. Can also be
         defined by a series.
 
-    See also :py:class:`~oemof.solph.network.Transformer`.
 
     Note
     ----
-    This component is experimental. Use it with care.
+    This component is experimental. Use it with care. See also
+    :py:class:`~oemof.solph.network.Transformer`.
 
 
     The following sets, variables, constraints and objective parts are created
-     * :py:class:`~oemof.solph.custom.HeatPipelineBlock` (if no
+     * :py:class:`~dhnx.optimization.oemof_heatpipe.HeatPipelineBlock` (if no
        Investment object present)
-     * :py:class:`~oemof.solph.custom.HeatPipelineInvestBlock` (if
+     * :py:class:`~dhnx.optimization.oemof_heatpipe.HeatPipelineInvestBlock` (if
        Investment object present)
 
     Examples
     --------
-    example
+    # TODO : example
 
     """
 
@@ -148,19 +148,18 @@ class HeatPipeline(Transformer):
 
 class HeatPipelineBlock(SimpleBlock):  # pylint: disable=too-many-ancestors
     r"""Block representing a pipeline of a district heating system.
-    :class:`~oemof.solph.custom.HeatPipeline`
+    :class:`~dhnx.optimization.oemof_heatpipe.HeatPipeline`
 
     **The following constraints are created:**
 
+    # TODO : Check and fix equations!
+
     .. _HeatPipelineBlock-equations:
 
-    .. math::
-        &
-        (1) \dot{Q}_{out}(t) = \dot{Q}_{in}(t) \cdot
-        \frac{\eta_{out}}{\eta_{in}} - \dot{Q}_{loss}(t)\\
-        &
-        (2) \dot{Q}_{loss}(t) = f_{loss}(t) \cdot l \cdot \dot{Q}_{nominal}
-        &
+    .. math:: \dot{Q}_{out}(t) = \dot{Q}_{in}(t) \cdot
+        \frac{\eta_{out}}{\eta_{in}} - \dot{Q}_{loss}(t)
+
+    .. math:: \dot{Q}_{loss}(t) = f_{loss}(t) \cdot l \cdot \dot{Q}_{nominal}
 
     The symbols used are defined as follows
     (with Variables (V) and Parameters (P)):
@@ -270,15 +269,14 @@ class HeatPipelineInvestBlock(SimpleBlock):  # pylint: disable=too-many-ancestor
 
     **The following constraints are created:**
 
+    # TODO : Check and fix equations!
+
     .. _HeatPipelineInvestBlock-equations:
 
-    .. math::
-        &
-        (1) \dot{Q}_{out}(t) = \dot{Q}_{in}(t) \cdot
-        \frac{\eta_{out}}{\eta_{in}} - \dot{Q}_{loss}(t)\\
-        &
-        (2) \dot{Q}_{loss}(t) = f_{loss}(t) \cdot l \cdot \dot{Q}_{nominal}
-        &
+    .. math:: \dot{Q}_{out}(t) = \dot{Q}_{in}(t) \cdot
+        \frac{\eta_{out}}{\eta_{in}} - \dot{Q}_{loss}(t)
+
+    .. math:: \dot{Q}_{loss}(t) = f_{loss}(t) \cdot l \cdot \dot{Q}_{nominal}
 
     The symbols used are defined as follows
     (with Variables (V) and Parameters (P)):
@@ -301,7 +299,6 @@ class HeatPipelineInvestBlock(SimpleBlock):  # pylint: disable=too-many-ancestor
         ":math:`f_{loss}(t)`", ":py:obj:`heat_loss_factor`", "P", "Specific
         heat loss factor for pipeline"
         ":math:`l`", ":py:obj:`length`", "P", "Length of heating pipeline"
-
 
     """
 
