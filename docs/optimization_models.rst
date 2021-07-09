@@ -319,7 +319,7 @@ The minimum requirement for doing an DHS optimisation is to provide an demand at
 Therefore, you need the following two .csv files: *bus.csv* specifies the
 *oemof-solph* *Bus* components, and *demand.csv* defines the *oemof.solph.Sink*.
 
-.. include:: ../dhnx/optimization_add_components.py
+.. include:: ../dhnx/optimization/add_components.py
   :start-after: .. _bus_table:
   :end-before: Parameters
 
@@ -346,7 +346,7 @@ DHS system. That means, the energy need to be supplied somewhere, which makes so
 necessary. To connect a source in the oemof logic, there needs to be a *oemof.solph.Bus* to which
 the source is connected. The two files *bus.csv* and *source.csv* need to be provided:
 
-.. include:: ../dhnx/optimization_add_components.py
+.. include:: ../dhnx/optimization/add_components.py
   :start-after: .. _bus_table:
   :end-before: Parameters
 
