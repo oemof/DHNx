@@ -18,8 +18,8 @@ import pandas as pd
 import oemof.solph as solph
 from oemof.solph import helpers
 
-from .optimization_dhs_nodes import add_nodes_dhs, add_nodes_houses
-from .model import OperationOptimizationModel, InvestOptimizationModel
+from dhnx.optimization.dhs_nodes import add_nodes_dhs, add_nodes_houses
+from dhnx.model import OperationOptimizationModel, InvestOptimizationModel
 
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):

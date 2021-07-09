@@ -6,7 +6,9 @@ from . import plotting
 from . import model
 from . import simulation
 from . import dhn_from_osm
-from . import optimization
-from . import optimization_add_components
-from . import optimization_dhs_nodes
-from . import optimization_oemof_heatpipe
+from .gistools import connect_points
+from .gistools import geometry_operations
+from .optimization import add_components
+from .optimization import dhs_nodes
+from .optimization import oemof_heatpipe
+from .optimization import optimization_models
