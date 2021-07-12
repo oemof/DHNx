@@ -59,7 +59,7 @@ class ThermalNetwork():
     Examples
     --------
     >>> from dhnx.network import ThermalNetwork
-    >>> tnw = ThermalNetwork('csv_folder')
+    >>> tnw = ThermalNetwork()
     >>> tnw.is_consistent()
     True
     """
