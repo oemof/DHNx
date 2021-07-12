@@ -36,7 +36,7 @@ jobs:
       run: tox
 
     - name: Check test coverage
-      run: coverage report -m --fail-under=${{ matrix.vcs == 'bzr' && 89 || 90 }}
+      run: coverage report -m --fail-under=${{ matrix.vcs == 'bzr' && 24 || 25 }}
 
     - name: Report to coveralls
       run: coveralls
