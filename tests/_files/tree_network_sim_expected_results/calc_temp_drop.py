@@ -27,7 +27,7 @@ def read_data(input_value):
 
 # Read input data for every csv component
 pipes = read_data("pipes")
-temp_drop = pd.read_csv(input_data + "/sequences/consumers-temperature_drop.csv")
+temp_drop = pd.read_csv(input_data + "/sequences/consumers-delta_temp_drop.csv")
 mass_flow = pd.read_csv(input_data + "/sequences/consumers-mass_flow.csv")
 
 # Constants for calculation
@@ -75,11 +75,11 @@ def calc_temp_heat_loss(t_in, pos):
             Temperature leaving the pipe
     """
     t_out = t_env + (t_in - t_env) * np.exp(
-        -pipes["heat_transfer_coefficient_W/mK"].iloc[pos]
+        -pipes["heat_transfer_coefficient"].iloc[pos]
         * pi
-        * pipes["diameter_mm"].iloc[pos]
+        * pipes["diameter"].iloc[pos]
         / 1000
-        * pipes["length_m"].iloc[pos]
+        * pipes["length"].iloc[pos]
         / (c * mass_flow_total[str(pos)])
     )
     return t_out

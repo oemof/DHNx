@@ -83,24 +83,24 @@ for index, node in enumerate(mass_flow_total):
     v[str(index)] = (
         4
         * mass_flow_total[str(node)]
-        / (rho * pi * (pipes["diameter_mm"].iloc[index] / 1000) ** 2)
+        / (rho * pi * (pipes["diameter"].iloc[index] / 1000) ** 2)
     )
 
     # Calculation of Re number
     re[str(index)] = (
-        pipes["diameter_mm"].iloc[index] / 1000 * v[str(index)] * rho / (mu / 1000)
+        pipes["diameter"].iloc[index] / 1000 * v[str(index)] * rho / (mu / 1000)
     )
     # Calculation of lambda with simple approach
     lambda_simp[str(index)] = (
         0.07
         * re[str(index)] ** -0.13
-        * (pipes["diameter_mm"].iloc[index] / 1000) ** -0.14
+        * (pipes["diameter"].iloc[index] / 1000) ** -0.14
     )
     # Calculation of lambda with advanced approach
     lambda_adv[str(index)] = (
         1.325
         / np.log(
-            epsilon / (1000 * 3.7 * (pipes["diameter_mm"].iloc[index] / 1000))
+            epsilon / (1000 * 3.7 * (pipes["diameter"].iloc[index] / 1000))
             + 5.74 / (re[str(index)] ** 0.9)
         )
         ** 2
@@ -109,9 +109,9 @@ for index, node in enumerate(mass_flow_total):
     dp_diss[str(index)] = (
         lambda_simp[str(index)]
         * rho
-        * pipes["length_m"].iloc[index]
+        * pipes["length"].iloc[index]
         * v[str(index)] ** 2
-        / (2 * (pipes["diameter_mm"].iloc[index] / 1000))
+        / (2 * (pipes["diameter"].iloc[index] / 1000))
     )
     # Calculate local pressure losses resulted from separating Tee (T-Stück) -> i - inlet
     # Localized Pressure losses only occur in the outlet pipes of the tee separator
