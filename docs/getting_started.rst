@@ -63,5 +63,5 @@ systems. If you want to contribute, fork the project at github, develop your fea
 on a new branch and finally open a pull request to merge your contribution to DHNx.
 
 As DHNx is part of the oemof developer group we use the same developer rules.
-You will find more information
-`here <https://oemof.readthedocs.io/en/latest/contributing.html>`_.
+You will find more information in the
+`oemof meta documentation <https://oemof.readthedocs.io/en/latest/contributing.html>`_.
