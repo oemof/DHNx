@@ -1,5 +1,5 @@
 import dhnx
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 place = (52.43034, 13.53806)
