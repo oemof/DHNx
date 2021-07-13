@@ -9,10 +9,12 @@ The assumption of three fittings has been made:
 2. Valve at the consumer 1
 3. Valve at the consumer 2
 """
-import os
+
 import math
-import pandas as pd
+import os
+
 import numpy as np
+import pandas as pd
 
 path_file = os.path.dirname(__file__)
 path = os.path.abspath(os.path.join(path_file, os.pardir, os.pardir, os.pardir))

@@ -4,10 +4,11 @@
 This script calculates the heat transfer at the consumer
 for a simple tree network.
 """
-import os
 import math
-import pandas as pd
+import os
+
 import numpy as np
+import pandas as pd
 
 path_file = os.path.dirname(__file__)
 path = os.path.abspath(os.path.join(path_file, os.pardir, os.pardir, os.pardir))
