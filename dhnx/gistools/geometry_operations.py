@@ -21,14 +21,19 @@ except ImportError:
 
 try:
     from shapely import wkt
-    from shapely.ops import cascaded_union, nearest_points, linemerge
-    from shapely.geometry import Point, LineString, MultiLineString
+    from shapely.geometry import LineString
+    from shapely.geometry import MultiLineString
+    from shapely.geometry import Point
+    from shapely.ops import cascaded_union
+    from shapely.ops import linemerge
+    from shapely.ops import nearest_points
 except ImportError:
     print("Need to install shapely to process geometry.")
 
-import pandas as pd
-import matplotlib.pyplot as plt
 import logging
+
+import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def create_forks(lines):

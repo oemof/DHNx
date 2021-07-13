@@ -18,11 +18,11 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
-from .model import SimulationModel
-from .helpers import Dict, sum_ignore_none
 from .graph import write_edge_data_to_graph
+from .helpers import Dict
+from .helpers import sum_ignore_none
 from .input_output import save_results
-
+from .model import SimulationModel
 
 idx = pd.IndexSlice
 

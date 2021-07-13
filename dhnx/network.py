@@ -16,10 +16,13 @@ import os
 import pandas as pd
 
 from .graph import thermal_network_to_nx_graph
-from .optimization import optimize_operation, setup_optimise_investment, \
-    solve_optimisation_investment
 from .helpers import Dict
-from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
+from .input_output import CSVNetworkExporter
+from .input_output import CSVNetworkImporter
+from .input_output import load_component_attrs
+from .optimization import optimize_operation
+from .optimization import setup_optimise_investment
+from .optimization import solve_optimisation_investment
 from .simulation import simulate
 
 dir_name = os.path.dirname(__file__)

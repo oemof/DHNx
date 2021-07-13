@@ -10,15 +10,15 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-from collections import namedtuple
 import logging
+from collections import namedtuple
 
 import folium as fol
-from folium.features import DivIcon
-import matplotlib.pyplot as plt
 import matplotlib.collections as collections
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from folium.features import DivIcon
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -26,8 +26,8 @@ logger.setLevel(logging.INFO)
 cartopy_installed = True
 
 try:
-    from cartopy.io.img_tiles import Stamen
     from cartopy import crs as ccrs
+    from cartopy.io.img_tiles import Stamen
 
 except ImportError:
     logging.info("Cartopy is not installed. Background maps will not be drawn.")

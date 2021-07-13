@@ -20,14 +20,19 @@ except ImportError:
     print("Need to install geopandas to process geometry data.")
 
 try:
-    from shapely.ops import cascaded_union, nearest_points
-    from shapely.geometry import Point, LineString, shape, MultiPoint
+    from shapely.geometry import LineString
+    from shapely.geometry import MultiPoint
+    from shapely.geometry import Point
+    from shapely.geometry import shape
+    from shapely.ops import cascaded_union
+    from shapely.ops import nearest_points
 except ImportError:
     print("Need to install shapely to process geometry.")
 
+import logging
+
 import numpy as np
 import pandas as pd
-import logging
 
 from . import geometry_operations as go
 

@@ -20,8 +20,8 @@ except ImportError:
 import pandas as pd
 
 try:
-    from shapely.ops import nearest_points
     from shapely.geometry import LineString
+    from shapely.ops import nearest_points
 
 except ImportError:
     print("Need to install shapely to download from osm.")
