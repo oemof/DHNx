@@ -567,12 +567,25 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         df.at[r, 'direction'] = c[ahp + '.direction']
 
         def recalc_costs_losses():
+            """
+            Calculates the investment costs and thermal losses for each
+            pipeline of the district heating network.
+            (This recalculation also serves as check for comparing the
+            total pipeline costs with the objective value of oemof.solph
+            optimisation model)
+
+            Only investment results with a capacity of > 0.001 are considered.
+            This avoids errors for the comparison with the objective value, if
+            nonconvex investments are used with a soft optimality gap.
+            (A weak optimality gap could lead to very small capacities although
+            the status variable is zero.)
+            """
 
             df['costs'] = float(0)
             df['losses'] = float(0)
 
             for r, c in df.iterrows():
-                if c['capacity'] > 0:
+                if c['capacity'] > 0.001:
                     hp_lab = c['hp_type']
                     # select row from heatpipe type table
                     hp_p = df_hp[df_hp['label_3'] == hp_lab].squeeze()
