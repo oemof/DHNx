@@ -589,7 +589,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df['losses'] = float(0)
 
             for r, c in df.iterrows():
-                if c['capacity'] > 0.001:
+                if c['capacity'] > 0:
                     hp_lab = c['hp_type']
                     # select row from heatpipe type table
                     hp_p = df_hp[df_hp['label_3'] == hp_lab].squeeze()
