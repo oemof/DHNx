@@ -579,7 +579,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
             Note
             ----
-            With nonconvex investments (with binary vairables) it could happen
+            With nonconvex investments (with binary variables) it could happen
             that very low results of the decision variable occur (although
             there is a minimum investment threshold), and that
             the status variable could have values of almost 0 and almost 1.
