@@ -556,6 +556,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df['hp_type'] = None
             df['capacity'] = float(0)
             df['direction'] = 0
+            df['status'] = int(0)
 
             for ahp in active_hp:
                 # p = df_hp[df_hp['label_3'] == ahp].squeeze()   # series of heatpipe
@@ -565,6 +566,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         df.at[r, 'hp_type'] = ahp
                         df.at[r, 'capacity'] = c[ahp + '.size']
                         df.at[r, 'direction'] = c[ahp + '.direction']
+                        if ahp + '.status' in c.index:
+                            df.at[r, 'status'] = round(c[ahp + '.status'])
 
         def recalc_costs_losses():
             """
@@ -578,7 +581,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             This avoids errors for the comparison with the objective value, if
             nonconvex investments are used with a soft optimality gap.
             (A weak optimality gap could lead to very small capacities although
-            the status variable is zero.)
+            the status variable is zero. Also, the status variable could
+            have values of almost 0 and almost 1.)
             """
 
             df['costs'] = float(0)
@@ -590,10 +594,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     # select row from heatpipe type table
                     hp_p = df_hp[df_hp['label_3'] == hp_lab].squeeze()
                     if hp_p['nonconvex'] == 1:
-                        df.at[r, 'costs'] = c['length'] * (
+                        df.at[r, 'costs'] = c['status'] * c['length'] * (
                             c['capacity'] * hp_p['capex_pipes'] + hp_p['fix_costs']
                         )
-                        df.at[r, 'losses'] = c['length'] * (
+                        df.at[r, 'losses'] = c['status'] * c['length'] * (
                             c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
                         )
                     elif hp_p['nonconvex'] == 0:
