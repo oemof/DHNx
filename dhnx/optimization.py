@@ -556,7 +556,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df['hp_type'] = None
             df['capacity'] = float(0)
             df['direction'] = 0
-            df['status'] = int(0)
+            df['status'] = float(0)
 
             for ahp in active_hp:
                 # p = df_hp[df_hp['label_3'] == ahp].squeeze()   # series of heatpipe
@@ -567,22 +567,26 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         df.at[r, 'capacity'] = c[ahp + '.size']
                         df.at[r, 'direction'] = c[ahp + '.direction']
                         if ahp + '.status' in c.index:
-                            df.at[r, 'status'] = round(c[ahp + '.status'])
+                            df.at[r, 'status'] = c[ahp + '.status']
 
         def recalc_costs_losses():
             """
             Calculates the investment costs and thermal losses for each
             pipeline of the district heating network.
-            (This recalculation also serves as check for comparing the
+            (This recalculation could also serve as check for comparing the
             total pipeline costs with the objective value of oemof.solph
             optimisation model)
 
-            Only investment results with a capacity of > 0.001 are considered.
-            This avoids errors for the comparison with the objective value, if
-            nonconvex investments are used with a soft optimality gap.
-            (A weak optimality gap could lead to very small capacities although
-            the status variable is zero. Also, the status variable could
-            have values of almost 0 and almost 1.)
+            Note
+            ----
+            With nonconvex investments (with binary vairables) it could happen
+            that very low results of the decision variable occur (although
+            there is a minimum investment threshold), and that
+            the status variable could have values of almost 0 and almost 1.
+            This cost re-calculation does not round any of this results, and
+            transfers the results as they into a DataFrame containing all
+            pipes of the district heating network.
+
             """
 
             df['costs'] = float(0)
