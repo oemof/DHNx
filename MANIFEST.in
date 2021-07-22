@@ -1,6 +1,6 @@
 graft docs
 graft dhnx
-# graft ci
+graft ci
 graft tests
 graft examples
 
@@ -16,6 +16,6 @@ include VERSION
 # include pytest.ini
 
 include tox.ini
-# include *.yml
+include *.yml
 
 global-exclude *.py[cod] __pycache__/* *.so *.dylib
