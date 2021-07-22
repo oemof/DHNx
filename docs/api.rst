@@ -18,6 +18,7 @@ network
 
 gistools
 ========
+
 .. automodule:: dhnx.gistools.connect_points
     :members:
     :undoc-members:
