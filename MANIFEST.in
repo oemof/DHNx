@@ -5,7 +5,7 @@ graft tests
 graft examples
 
 # include .bumpversion.cfg
-# include .coveragerc
+include .coveragerc
 # include .editorconfig
 
 include AUTHORS.rst
