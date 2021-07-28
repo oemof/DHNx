@@ -44,9 +44,9 @@ Other changes
 
 * Improve processing of optimisation results by returning
   raw (un-rounded) solver results for each pipeline
-  
+
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
-* somebody
+* Johannes Röder
