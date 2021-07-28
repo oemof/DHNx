@@ -20,4 +20,5 @@ htmlcov
 # examples
 examples/import_export_plot/data_csv_output/*
 examples/import_osmnx/osm_network/*
+examples/simulation/tree_results/*
 */cache/*
