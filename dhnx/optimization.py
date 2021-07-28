@@ -602,13 +602,14 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     hp_p = df_hp[df_hp['label_3'] == hp_lab].squeeze()
                     if hp_p['nonconvex'] == 1:
                         df.at[r, 'costs'] = c['length'] * (
-                            c['capacity'] * hp_p['capex_pipes'] +
+                            c['capacity'] * hp_p['capex_pipes'] +  # noqa: W504
                             hp_p['fix_costs'] * c['status']
                         )
                         df.at[r, 'losses'] = c['length'] * (
-                            c['capacity'] * hp_p['l_factor'] +
+                            c['capacity'] * hp_p['l_factor'] +  # noqa: W504
                             hp_p['l_factor_fix'] * c['status']
                         )
+
                     elif hp_p['nonconvex'] == 0:
                         df.at[r, 'costs'] = c['length'] * c['capacity'] * hp_p['capex_pipes']
                         # Note, that a constant loss is possible also for convex
