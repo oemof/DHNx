@@ -41,6 +41,6 @@ setup(
         'cartopy': ['cartopy'],
         'geopandas': ['geopandas'],
         'osmnx': ['osmnx >= 0.16.1'],
-        "all": ["geopandas", "osmnx", "cartopy"],
+        "tests": ["geopandas", "osmnx"],
     }
 )
