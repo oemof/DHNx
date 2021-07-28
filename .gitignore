@@ -6,7 +6,6 @@
 results/
 _build
 jupyter_notebooks
-*/import_export_plot/data_csv_output/
 */import_osmnx/data/
 cache/
 dist/
@@ -19,3 +18,6 @@ dist/
 nosetests.xml
 coverage.xml
 htmlcov
+
+# examples
+examples/import_export_plot/data_csv_output/*
