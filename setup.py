@@ -41,7 +41,6 @@ setup(
         'cartopy': ['cartopy'],
         'geopandas': ['geopandas'],
         'osmnx': ['osmnx >= 0.16.1'],
-        "dev": ["pytest", "sphinx", "sphinx_rtd_theme", "geopandas"],
-        "tests": ["pytest", "sphinx", "sphinx_rtd_theme", "geopandas", "tox"],
+        "all": ["geopandas", "osmnx", "cartopy"],
     }
 )
