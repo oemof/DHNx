@@ -6,8 +6,6 @@
 results/
 _build
 jupyter_notebooks
-*/import_osmnx/data/
-cache/
 dist/
 
 # Unit test / coverage reports
@@ -21,3 +19,5 @@ htmlcov
 
 # examples
 examples/import_export_plot/data_csv_output/*
+examples/import_osmnx/osm_network/*
+*/cache/*
