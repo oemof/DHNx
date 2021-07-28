@@ -13,7 +13,6 @@ import os
 
 import dhnx
 
-
 basedir = os.path.dirname(__file__)
 
 dir_import = os.path.join(basedir, '_files/looped_network_import')

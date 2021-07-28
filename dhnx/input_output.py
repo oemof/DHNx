@@ -13,14 +13,14 @@ SPDX-License-Identifier: MIT
 import logging
 import os
 
-from addict import Dict
-import pandas as pd
 import networkx as nx
 import numpy as np
+import pandas as pd
+from addict import Dict
 
 try:
-    from shapely.geometry import Point
     from shapely.geometry import LineString
+    from shapely.geometry import Point
 
 except ImportError:
     print("Need to install shapely to download from osm.")
@@ -38,7 +38,6 @@ except ImportError:
     print("Need to install osmnx to download from osm.")
 
 from dhnx.dhn_from_osm import connect_points_to_network
-
 
 logger = logging.getLogger()
 

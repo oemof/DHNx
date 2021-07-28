@@ -1,7 +1,7 @@
-import dhnx
+from dhnx.network import ThermalNetwork
 
 # Initialize a thermal networks
-thermal_network = dhnx.network.ThermalNetwork()
+thermal_network = ThermalNetwork()
 
 # Load data from csv
 input_data_dir = 'tree'

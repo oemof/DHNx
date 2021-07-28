@@ -9,9 +9,11 @@ available from its original location oemof/oemof/tools/helpers.py
 
 SPDX-License-Identifier: MIT
 """
-import pytest
+
 import geopandas as gpd
-from shapely.geometry import LineString, MultiLineString
+import pytest
+from shapely.geometry import LineString
+from shapely.geometry import MultiLineString
 from shapely.geometry import Point
 
 from dhnx.gistools import connect_points as cp
