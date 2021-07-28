@@ -3,7 +3,7 @@ API Documentation
 ~~~~~~~~~~~~~~~~~
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :glob:
 
 
@@ -18,6 +18,7 @@ network
 
 gistools
 ========
+
 .. automodule:: dhnx.gistools.connect_points
     :members:
     :undoc-members:

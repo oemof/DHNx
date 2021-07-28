@@ -11,15 +11,18 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-import os
 import logging
+import os
+
 import networkx as nx
-import pandas as pd
 import oemof.solph as solph
+import pandas as pd
 from oemof.solph import helpers
 
-from .optimization_dhs_nodes import add_nodes_dhs, add_nodes_houses
-from .model import OperationOptimizationModel, InvestOptimizationModel
+from .model import InvestOptimizationModel
+from .model import OperationOptimizationModel
+from .optimization_dhs_nodes import add_nodes_dhs
+from .optimization_dhs_nodes import add_nodes_houses
 
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):

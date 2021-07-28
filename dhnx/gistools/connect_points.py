@@ -20,14 +20,19 @@ except ImportError:
     print("Need to install geopandas to process geometry data.")
 
 try:
-    from shapely.ops import cascaded_union, nearest_points
-    from shapely.geometry import Point, LineString, shape, MultiPoint
+    from shapely.geometry import LineString
+    from shapely.geometry import MultiPoint
+    from shapely.geometry import Point
+    from shapely.geometry import shape
+    from shapely.ops import cascaded_union
+    from shapely.ops import nearest_points
 except ImportError:
     print("Need to install shapely to process geometry.")
 
+import logging
+
 import numpy as np
 import pandas as pd
-import logging
 
 from . import geometry_operations as go
 
@@ -116,10 +121,14 @@ def create_object_connections(points, lines, tol_distance=1):
 
     Generally, the nearest point of the next line is used as connection the point.
     Depending on the geometry, there are 3 options, the connection is created:
+
     - nearest point is line ending => the connection line starts from this line ending
+
     - nearest point is on the next line:
+
       a) line endings are outside the tolerance => line is split and the nearest point
       is used as connection point
+
       b) line endings are within the tolerance distance => the next line ending is
       used as connection point
 

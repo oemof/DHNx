@@ -1,0 +1,21 @@
+graft docs
+graft dhnx
+graft ci
+graft tests
+graft examples
+
+# include .bumpversion.cfg
+include .coveragerc
+# include .editorconfig
+
+include AUTHORS.rst
+include LICENSE
+include README.rst
+# include *.md
+include VERSION
+# include pytest.ini
+
+include tox.ini
+include *.yml
+
+global-exclude *.py[cod] __pycache__/* *.so *.dylib

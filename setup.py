@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from setuptools import setup
 import os
+
+from setuptools import setup
 
 
 def read(fname):
@@ -40,5 +41,6 @@ setup(
         'cartopy': ['cartopy'],
         'geopandas': ['geopandas'],
         'osmnx': ['osmnx >= 0.16.1'],
+        "tests": ["geopandas", "osmnx"],
     }
 )
