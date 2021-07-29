@@ -42,9 +42,12 @@ Testing
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Improve processing of optimisation results by returning
+  raw (un-rounded) solver results for each pipeline
+* Use tox for CI automation
+
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
-* somebody
+* Johannes Röder

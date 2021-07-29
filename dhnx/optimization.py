@@ -559,6 +559,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df['hp_type'] = None
             df['capacity'] = float(0)
             df['direction'] = 0
+            df['status'] = float(0)
 
             for ahp in active_hp:
                 # p = df_hp[df_hp['label_3'] == ahp].squeeze()   # series of heatpipe
@@ -568,37 +569,47 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         df.at[r, 'hp_type'] = ahp
                         df.at[r, 'capacity'] = c[ahp + '.size']
                         df.at[r, 'direction'] = c[ahp + '.direction']
+                        if ahp + '.status' in c.index:
+                            df.at[r, 'status'] = c[ahp + '.status']
 
         def recalc_costs_losses():
             """
             Calculates the investment costs and thermal losses for each
             pipeline of the district heating network.
-            (This recalculation also serves as check for comparing the
+            (This recalculation could also serve as check for comparing the
             total pipeline costs with the objective value of oemof.solph
             optimisation model)
 
-            Only investment results with a capacity of > 0.001 are considered.
-            This avoids errors for the comparison with the objective value, if
-            nonconvex investments are used with a soft optimality gap.
-            (A weak optimality gap could lead to very small capacities although
-            the status variable is zero.)
+            Note
+            ----
+            With nonconvex investments (with binary variables) it could happen
+            that very low results of the decision variable occur (although
+            there is a minimum investment threshold), and that
+            the status variable could have values of almost 0 and almost 1.
+            This cost re-calculation does not round any of this results, and
+            transfers the results as they into a DataFrame containing all
+            pipes of the district heating network.
+
             """
 
             df['costs'] = float(0)
             df['losses'] = float(0)
 
             for r, c in df.iterrows():
-                if c['capacity'] > 0.001:
+                if c['capacity'] > 0:
                     hp_lab = c['hp_type']
                     # select row from heatpipe type table
                     hp_p = df_hp[df_hp['label_3'] == hp_lab].squeeze()
                     if hp_p['nonconvex'] == 1:
                         df.at[r, 'costs'] = c['length'] * (
-                            c['capacity'] * hp_p['capex_pipes'] + hp_p['fix_costs']
+                            c['capacity'] * hp_p['capex_pipes'] +  # noqa: W504
+                            hp_p['fix_costs'] * c['status']
                         )
                         df.at[r, 'losses'] = c['length'] * (
-                            c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
+                            c['capacity'] * hp_p['l_factor'] +  # noqa: W504
+                            hp_p['l_factor_fix'] * c['status']
                         )
+
                     elif hp_p['nonconvex'] == 0:
                         df.at[r, 'costs'] = c['length'] * c['capacity'] * hp_p['capex_pipes']
                         # Note, that a constant loss is possible also for convex
