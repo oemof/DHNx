@@ -16,10 +16,14 @@ import os
 import pandas as pd
 
 from .graph import thermal_network_to_nx_graph
-from .optimization.optimization_models import optimize_operation, setup_optimise_investment, \
-    solve_optimisation_investment
+
 from .helpers import Dict
-from .input_output import CSVNetworkImporter, CSVNetworkExporter, load_component_attrs
+from .input_output import CSVNetworkExporter
+from .input_output import CSVNetworkImporter
+from .input_output import load_component_attrs
+from .optimization.optimization_models import optimize_operation
+from .optimization.optimization_models import setup_optimise_investment
+from .optimization.optimization_models import solve_optimisation_investment
 from .simulation import simulate
 
 dir_name = os.path.dirname(__file__)
@@ -59,7 +63,7 @@ class ThermalNetwork():
     Examples
     --------
     >>> from dhnx.network import ThermalNetwork
-    >>> tnw = ThermalNetwork('csv_folder')
+    >>> tnw = ThermalNetwork()
     >>> tnw.is_consistent()
     True
     """

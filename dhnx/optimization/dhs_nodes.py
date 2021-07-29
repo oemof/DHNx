@@ -13,8 +13,9 @@ SPDX-License-Identifier: MIT
 
 
 import oemof.solph as solph
-import dhnx.optimization.oemof_heatpipe as oh
+
 import dhnx.optimization.add_components as ac
+import dhnx.optimization.oemof_heatpipe as oh
 
 
 def add_nodes_dhs(opti_network, gd, nodes, busd):

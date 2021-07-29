@@ -43,6 +43,10 @@ Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
 * Refactor internal structure of optimization modules
+* Improve processing of optimisation results by returning
+  raw (un-rounded) solver results for each pipeline
+* Use tox for CI automation
+
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^

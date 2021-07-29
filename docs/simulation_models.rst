@@ -42,7 +42,7 @@ To use DHNx for a simulation, you need to provide input data in a defined form. 
 requirements are the same for all :class:`ThermalNetwork` s, but some input data is specific to the
 simulation.
 
-.. code-block:: txt
+.. code-block::
 
     tree
     ├── consumers.csv
@@ -85,7 +85,7 @@ heat losses and global pressure losses.
 The above-mentioned variables can be found in the results of a simulation, which come in the
 following structure:
 
-.. code-block:: txt
+.. code-block::
 
     results
     ├── global-heat_losses.csv

@@ -120,7 +120,7 @@ The data for the *ThermalNetwork* must be provided in the structure as defined
 for the .csv reader. The following data is required for applying an
 optimisation:
 
-.. code-block:: txt
+.. code-block::
 
     tree
     ├── pipes.csv                       # (required)

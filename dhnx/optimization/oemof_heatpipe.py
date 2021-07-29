@@ -14,12 +14,14 @@ SPDX-License-Identifier: MIT
 import warnings
 from collections import namedtuple
 
-from pyomo.core.base.block import SimpleBlock
-from pyomo.environ import (Set, NonNegativeReals, Var, Constraint)
-
+from oemof.solph import Investment
 from oemof.solph.network import Transformer
 from oemof.solph.plumbing import sequence
-from oemof.solph import Investment
+from pyomo.core.base.block import SimpleBlock
+from pyomo.environ import Constraint
+from pyomo.environ import NonNegativeReals
+from pyomo.environ import Set
+from pyomo.environ import Var
 
 
 class Label(namedtuple('solph_label', ['tag1', 'tag2', 'tag3', 'tag4'])):

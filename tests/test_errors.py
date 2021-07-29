@@ -10,13 +10,12 @@ available from its original location oemof/oemof/tools/helpers.py
 SPDX-License-Identifier: MIT
 """
 
+import copy
 import os
 
-import copy
 import pytest
 
 import dhnx
-
 
 basedir = os.path.dirname(__file__)
 
