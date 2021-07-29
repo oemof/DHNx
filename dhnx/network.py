@@ -16,7 +16,6 @@ import os
 import pandas as pd
 
 from .graph import thermal_network_to_nx_graph
-
 from .helpers import Dict
 from .input_output import CSVNetworkExporter
 from .input_output import CSVNetworkImporter
