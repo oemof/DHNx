@@ -19,10 +19,10 @@ import oemof.solph as solph
 import pandas as pd
 from oemof.solph import helpers
 
-from .model import InvestOptimizationModel
-from .model import OperationOptimizationModel
-from .optimization_dhs_nodes import add_nodes_dhs
-from .optimization_dhs_nodes import add_nodes_houses
+from dhnx.model import InvestOptimizationModel
+from dhnx.model import OperationOptimizationModel
+from dhnx.optimization.dhs_nodes import add_nodes_dhs
+from dhnx.optimization.dhs_nodes import add_nodes_houses
 
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):

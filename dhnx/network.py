@@ -20,9 +20,9 @@ from .helpers import Dict
 from .input_output import CSVNetworkExporter
 from .input_output import CSVNetworkImporter
 from .input_output import load_component_attrs
-from .optimization import optimize_operation
-from .optimization import setup_optimise_investment
-from .optimization import solve_optimisation_investment
+from .optimization.optimization_models import optimize_operation
+from .optimization.optimization_models import setup_optimise_investment
+from .optimization.optimization_models import solve_optimisation_investment
 from .simulation import simulate
 
 dir_name = os.path.dirname(__file__)

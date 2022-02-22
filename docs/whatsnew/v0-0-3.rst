@@ -21,7 +21,7 @@ New components/constraints
 Documentation
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Fix/add complete API documentation of gistools and optimization modules
 
 Bug fixes
 ^^^^^^^^^^^^^^^^^^^^
@@ -42,6 +42,7 @@ Testing
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
+* Refactor internal structure of optimization modules
 * Improve processing of optimisation results by returning
   raw (un-rounded) solver results for each pipeline
 * Use tox for CI automation
