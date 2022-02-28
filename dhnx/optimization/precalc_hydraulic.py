@@ -30,14 +30,19 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
 
     """
 
-    :param v:
-    :param k:           [mm]    roughness of inner pipeline surface. see also https://www.schweizer-fn.de/stroemung/rauhigkeit/rauhigkeit.php
-    :param l:
-    :param d_i:
-    :param medium:
-    :param T_medium:
-    :param pressure:
-    :return:
+    Parameters
+    ----------
+    v
+    d_i
+    k
+    T_medium
+    l
+    pressure
+    fluid
+
+    Returns
+    -------
+
     """
 
     def transition_eq(x):
@@ -118,6 +123,7 @@ def calc_v(vol_flow, d_i):
     :param vol_flow: volume flow [m3/h]
     :param d_i: inner diameter [m]
     :return: flow velocity [m/s]
+    # todo: change docstring format
     """
 
     return vol_flow / ((d_i*0.5)**2 * math.pi * 3600)
