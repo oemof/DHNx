@@ -28,17 +28,33 @@ import math
 def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
             pressure=1, fluid='IF97::Water'):
 
-    """
+    """Function to determine the pressure loss in the DHN pipes.
+
+    # Text :func:`transition_eq`
+
 
     Parameters
     ----------
-    v
-    d_i
-    k
-    T_medium
-    l
-    pressure
-    fluid
+    v : numeric
+        volume [m³]
+
+    d_i : numeric
+        inner pipe diameter [m]
+
+    k : numeric
+        roughness of inner pipeline surface [mm]
+
+    T_medium : numeric
+        fluid temperature [°C]
+
+    l : numeric
+        length of the pipe [m]
+
+    pressure : numeric
+        pressure in the pipe
+
+    fluid : str
+        name of the fluid used
 
     Returns
     -------
@@ -46,12 +62,34 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
     """
 
     def transition_eq(x):
+        """
+
+        Parameters
+        ----------
+        x : numeric
+
+
+        Returns
+        -------
+
+        """
         # FM FS S.13 - erste Formel (Übergangsbereich glatt-rau)
         # http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
         # 65 < Re * k/d < 1300
         return x + 2 * np.log10((2.51 * x) / R_e + k / (3.71 * d_i))
 
+
     def glatt_eq(x):
+        """
+
+        Parameters
+        ----------
+        x : numeric
+
+        Returns
+        -------
+
+        """
         # http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
         # Formel von Prandtl und v. Karman
         # FM FS S.12 - Technische Strömung - (a)
@@ -120,10 +158,19 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
 def calc_v(vol_flow, d_i):
     """
 
-    :param vol_flow: volume flow [m3/h]
-    :param d_i: inner diameter [m]
-    :return: flow velocity [m/s]
-    # todo: change docstring format
+    Parameters
+    ----------
+    vol_flow : numeric
+        volume flow [m³/h]
+
+    d_i : numeric
+        inner diameter [m]
+
+    Returns
+    -------
+    v_flow : numeric #manuell hinzugefügt, da keine variable zurückgegeben wird
+        flow velocity [m/s]
+
     """
 
     return vol_flow / ((d_i*0.5)**2 * math.pi * 3600)
@@ -133,17 +180,46 @@ def calc_v_max(d_i, T_average, k=0.1, p_max=100,  p_epsilon=1,
                v_0=1, v_1=2,
                pressure=1, fluid='IF97::Water'):
 
+
     """
-    :param d_i:         [m]     inner diameter
-    :param T_average:   [°C]    average temperature
-    :param k:           [mm]    roughness of inner pipeline surface
-    :param p_max:       [Pa]    maximum pressure drop in pipeline
-    :param p_epsilon:   [Pa]    accuracy
-    :param v_init:      [m/s]   initial guess for maximum flow velocity
-    :param pressure:    [bar]   pressure level
-    :param fluid:       [-]     type of fluid, default: 'IF97::Water'
-    :return:            [m/s]   maximum flow velocity
+
+    Parameters
+    ----------
+    d_i : numeric
+        inner diameter [m]
+
+    T_average : numeric
+        average temperature [°C]
+
+    k : numeric
+        roughness of inner pipeline surface [mm]
+
+    p_max : numeric
+        maximum pressure drop in pipeline [Pa]
+
+    p_epsilon : numeric
+        accuracy [Pa]
+
+    v_0 : numeric
+        initial guess for maximum flow velocity [m/s] #von v_init übernommen
+
+    v_1 : numeric
+        ??? #keine vorlage
+
+    pressure : numeric
+        pressure level [bar]
+
+    fluid : str
+        type of fluid, default: 'IF97::Water'
+
+    Returns
+    -------
+    v_max : numeric
+        maximum flow velocity [m/s]
+
     """
+
+
     p_new = 0
     v_new = 0
     n = 0
@@ -184,7 +260,45 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
                     p_epsilon=0.1, v_epsilon=0.001,
                     v_0=0.01, v_1=10,
                     pressure=1, fluid='IF97::Water'):
+    """
 
+    Parameters
+    ----------
+    d_i : numeric
+        inner diameter [m]
+
+    T_average : numeric
+        average temperature [°C]
+
+    k : numeric
+        roughness of inner pipeline surface [mm]
+
+    p_max : numeric
+        maximum pressure drop in pipeline [Pa]
+
+    p_epsilon : numeric
+        accuracy [Pa]
+
+    v_epsilon : numeric
+        accuracy [m/s] #so richtig?
+
+    v_0  : numeric
+        initial guess for maximum flow velocity [m/s]
+
+    v_1 : numeric
+        #???
+    pressure : numeric
+        pressure level [bar]
+
+    fluid : str
+        type of fluid, default: 'IF97::Water'
+
+    Returns
+    -------
+    v_max : numeric
+        maximum flow velocity #siehe oben
+
+    """
     """
     :param d_i:         [m]     inner diameter
     :param T_average:   [°C]    average temperature
@@ -253,6 +367,25 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
 def calc_power(T_vl=80, T_rl=50, mf=3):
     """
 
+    Parameters
+    ----------
+    T_vl : numeric
+        forward temperature [°C]
+
+    T_rl : numeric
+        return temperature [C°]
+
+    mf : numeric
+        mass flow [kg/s]
+
+    Returns
+    -------
+    P_th : numeric
+        thermal power [W]
+
+    """
+    """
+
     :param T_vl: forward temperature [°C]
     :param T_rl: return temperature [°C]
     :param mf: mass flow [kg/s]
@@ -266,6 +399,25 @@ def calc_power(T_vl=80, T_rl=50, mf=3):
 
 
 def calc_mass_flow(v, di, T_av):
+    """
+
+    Parameters
+    ----------
+    v : numeric
+        flow velocity [m/s]
+
+    di : numeric
+        inner diameter [m]
+
+    T_av : numeric
+        temperature level [°C]
+
+    Returns
+    -------
+    mf : numeric
+        mass flow [kg/s]
+
+    """
     """
 
     :param v: flow velocity [m/s]
@@ -282,6 +434,25 @@ def calc_mass_flow(v, di, T_av):
 def calc_mass_flow_P(P, T_av, delta_T):
     """
 
+    Parameters
+    ----------
+    P : numeric
+        power [W]
+
+    T_av : numeric
+        average temperature [°C]
+
+    delta_T : numeric
+        temperature difference [K]
+
+    Returns
+    -------
+    mf : numeric
+        mass flow [kg/s]
+
+    """
+    """
+
     :param P: [W]
     :param T_av: [°C]
     :param delta_T: [K]
@@ -294,6 +465,24 @@ def calc_mass_flow_P(P, T_av, delta_T):
 
 
 def calc_v_mf(mf, di, T_av):
+    """
+
+    Parameters
+    ----------
+    mf : numeric
+        mass flow [kg/s]
+
+    di : numeric
+        inner diameter [m]
+
+    T_av : numeric
+        average temperature [°C]
+
+    Returns
+    -------
+    #einfügen
+
+    """
     """
 
     :param mf: mass flow [kg/s]
