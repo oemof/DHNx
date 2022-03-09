@@ -30,6 +30,7 @@ df['P_max [kW]'] = df.apply(lambda row: 0.001*calc_power(
     T_rl=row['T_return [Celsius]'],
     mf=row['Mass flow [kg/s]']
     ), axis=1)
+print(calc_power())
 
 #df.to_excel('data_kamp/Waermeleitungen/CaldoPEX_export.xlsx')
 
