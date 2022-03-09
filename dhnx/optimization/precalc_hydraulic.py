@@ -25,7 +25,7 @@ import math
 #   - https://www.schweizer-fn.de/stroemung/rauhigkeit/rauhigkeit.php
 
 
-def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
+def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
             pressure=1, R_crit=2320, fluid='IF97::Water'):
 
     """Function to determine the pressure loss in the DHN pipes.
@@ -47,11 +47,11 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
     T_medium : numeric
         fluid temperature [°C]
 
-    l : numeric
+    length : numeric
         length of the pipe [m]
 
     pressure : numeric
-        pressure in the pipe
+        pressure in the pipe [bar]
 
     R_crit : numeric
         critical reynolds number beetween laminar and turbulent flow
@@ -99,14 +99,13 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
         # TODO: Formel überprüfen
         return x + 2 * np.log10((2.51 * x) / R_e + k / (3.71 * d_i))
 
-
     k = k * 0.001
 
     # get density of water [kg/m^3]
-    d = PropsSI('D', 'T', T_medium + 273.15, 'P', pressure*101325, fluid)
+    d = PropsSI('D', 'T', T_medium + 273.15, 'P', pressure * 101325, fluid)
     # dynamic viscosity eta [kg/(m*s)]
-    d_v = PropsSI('V', 'T', T_medium + 273.15, 'P', pressure*101325, fluid)
-    k_v = d_v/d     # kinematic viskosity [m^2/s]
+    d_v = PropsSI('V', 'T', T_medium + 273.15, 'P', pressure * 101325, fluid)
+    k_v = d_v / d     # kinematic viskosity [m^2/s]
 
     # Reynodszahl
     R_e = (v * d_i) / k_v
@@ -114,7 +113,7 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
     if R_e < R_crit:  # laminare Strömung
 
         lam = 64 / R_e      # S. 216 - (11.9), ISBN  978-3-540-73726-1
-        d_p = lam * l / d_i * d / 2 * v ** 2
+        d_p = lam * length / d_i * d / 2 * v ** 2
 
     else:  # turbulente Strömung
 
@@ -127,7 +126,8 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
                 lam = 0.3164 * R_e ** (-0.25)
 
             elif R_e >= 10**5 and R_e < 10**6:
-                # Nikuradse: http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
+                # Nikuradse:
+                # http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
                 # Fluidmechanik I FS: S.12,
                 lam = 0.0032 + 0.221 * R_e ** (-0.237)
 
@@ -142,7 +142,7 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
                 }
 
                 x = fsolve(glatt_eq, x0=lam_init, args=args)
-                lam = 1/x[0]**2
+                lam = 1 / x[0] ** 2
 
         elif R_e * k / d_i > 1300:
             # ==> Rohr hydraulisch rau
@@ -160,40 +160,40 @@ def delta_p(v, d_i, k=0.1, T_medium=90, l=1,
             x = fsolve(transition_eq, x0=lam_init)
             lam = 1 / x[0] ** 2
 
-        d_p = lam * l / d_i * d / 2 * v**2
+        d_p = lam * length / d_i * d / 2 * v ** 2
 
     return d_p
 
 
 def calc_v(vol_flow, d_i):
-    """Calculates the velocity for a given volume flow and inner diameter of a pipe.
+    r"""
+    Calculates the velocity for a given volume flow and inner diameter of a pipe.
 
     Formula
-    -------:math:`v_{flow}=\frac{\dot{V}}{(\frac{d_i}{2})^2*\pi}`
+    -------
+    .. calc_v_equation:
+
+    :math:`v_{flow}=\frac{\dot{V}}{(\frac{d_i}{2})^2*\pi}`
 
     Parameters
     ----------
-    vol_flow : numeric
-        volume flow [m³/h]
+    vol_flow: numeric
+        :math:`\dot{V}`: volume flow [m³/h]
 
-    d_i : numeric
-        inner diameter [m]
+    d_i: numeric
+        :math:`d_i`: inner diameter [m]
 
     Returns
     -------
-    v_flow : numeric #manuell hinzugefügt, da keine variable zurückgegeben wird
-        flow velocity [m/s]
+    flow velocity [m/s] : numeric
 
     """
+    return vol_flow / ((d_i * 0.5)**2 * math.pi * 3600)
 
-    return vol_flow / ((d_i*0.5)**2 * math.pi * 3600)
 
-
-def calc_v_max(d_i, T_average, k=0.1, p_max=100,  p_epsilon=1,
+def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
                v_0=1, v_1=2,
                pressure=1, fluid='IF97::Water'):
-
-
     """
 
     Parameters
@@ -231,8 +231,6 @@ def calc_v_max(d_i, T_average, k=0.1, p_max=100,  p_epsilon=1,
         maximum flow velocity [m/s]
 
     """
-
-
     p_new = 0
     v_new = 0
     n = 0
@@ -309,7 +307,7 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
     Returns
     -------
     v_max : numeric
-        maximum flow velocity #siehe oben
+        maximum flow velocity
 
     """
     """
@@ -365,7 +363,7 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
             break
 
         else:
-            if (p_0 - p_max)*(p_new-p_max) < 0:
+            if (p_0 - p_max) * (p_new - p_max) < 0:
                 v_1 = v_new
             else:
                 v_0 = v_new
@@ -377,149 +375,162 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
     return v_new
 
 
-def calc_power(T_vl=80, T_rl=50, mf=3):
-    """
-    Function to calculate the power of the DHN. The average temperature is needed for a correct value of the heat capacity.
+def calc_power(T_vl=80, T_rl=50, mf=3, p=101325):
+    r"""
+    Function to calculate the thermal power based on mass flow and temperature difference.
 
     Formula
     -------
-    :math:`P_{th}=\dot{m}\cdot c_p \cdot (T_{VL}-T_{RL})`
+    .. calc_power_equation:
+
+    :math:`P_{th} = \dot{m} \cdot (c_{p_{VL}} \cdot T_{VL} - c_{p_{RL}} \cdot T_{RL})`
+
     Parameters
     ----------
-    T_vl : numeric
-        forward temperature [°C]
+    T_vl: numeric
+        :math:`T_{VL}`: forward temperature [°C]
 
-    T_rl : numeric
-        return temperature [C°]
+    T_rl: numeric
+        :math:`T_{RL}`: return temperature [C°]
 
-    mf : numeric
-        mass flow [kg/s]
+    mf: numeric
+        :math:`\dot{m}`: mass flow [kg/s]
+
+    p: numeric
+        :math:`p`: pressure [Pa]
 
     Returns
     -------
-    P_th : numeric
-        thermal power [W]
+    thermal power [W] : numeric
 
     """
-    """
+    cp_vl = PropsSI('C', 'T', T_vl + 273.15, 'P', p, 'IF97::Water')
 
-    :param T_vl: forward temperature [°C]
-    :param T_rl: return temperature [°C]
-    :param mf: mass flow [kg/s]
-    :return: thermal power [W]
-    """
+    cp_rl = PropsSI('C', 'T', T_rl + 273.15, 'P', p, 'IF97::Water')
 
-    T_av = (T_vl + T_rl)*0.5
-    cp = PropsSI('C', 'T', T_av + 273.15, 'P', 101325, 'IF97::Water')
+    return mf * (cp_vl * (T_vl + 273.15) - cp_rl * (T_rl + 273.15))
 
 
-    return mf * cp * (T_vl - T_rl)     # [W]
-
-
-def calc_mass_flow(v, di, T_av):
-    """Calculates the mass flow in a pipe for a given density, diameter and flow velocity. The average temperature is needed for a correct value of the density.
+def calc_mass_flow(v, di, T_av, p=101325):
+    r"""
+    Calculates the mass flow in a pipe for a given density, diameter and flow velocity.
+    The average temperature is needed for a correct value of the density.
 
     Formula
     -------
-    :math:`\dot{m} = \pi \rho_{T_av}  v  \bigg( \frac{d_i}{2}  \bigg) ^2`
+    .. calc_mass_flow_equation:
+
+    :math:`\dot{m} = \pi \rho_{T_av}  v  \big( \frac{d_i}{2}  \big) ^2`
 
     Parameters
     ----------
     v : numeric
-        flow velocity [m/s]
+        :math:`v`: flow velocity [m/s]
 
     di : numeric
-        inner diameter [m]
+        :math:`d_i`: inner diameter [m]
 
     T_av : numeric
-        temperature level [°C]
+        :math:`T_av`: temperature level [°C]
+
+    p: numeric
+        :math:`p`: pressure [Pa]
 
     Returns
     -------
-    mf : numeric
-        mass flow [kg/s]
+    mass flow [kg/s] : numeric
 
     """
+    rho = PropsSI('D', 'T', T_av + 273.15, 'P', p, 'IF97::Water')
 
-    rho = PropsSI('D', 'T', T_av + 273.15, 'P', 101325, 'IF97::Water')  # [kg/m^3]
-
-    return rho * v * (0.5*di)**2 * math.pi      # [kg/s]
+    return rho * v * (0.5 * di) ** 2 * math.pi
 
 
-def calc_mass_flow_P(P, T_av, delta_T):
-    """Calculates the mass flow in a pipe for a given power and heat difference. The average temperature is needed for a correct value of the heat capacity.
+def calc_mass_flow_P(P, T_av, delta_T, p=101325):
+    r"""
+    Calculates the mass flow in a pipe for a given power and heat difference.
+    The average temperature is needed for a correct value of the heat capacity.
 
     Formula
     -------
-    \dot{m} = \frac{P}{c_P_{T_{av}}} \cdot \Delta T}
+    .. calc_mass_flow_P_equation:
+
+    :math:`\dot{m} = \frac{P}{c_{P_{T_{av}}} \cdot \Delta T}`
 
     Parameters
     ----------
     P : numeric
-        power [W]
+        :math:`P`: power [W]
 
     T_av : numeric
-        average temperature [°C]
+        :math:`T_{av}`: average temperature [°C]
 
     delta_T : numeric
-        temperature difference [K]
+        :math:`\Delta T`: temperature difference [K]
+
+    p: numeric
+        :math:`p`: pressure [Pa]
 
     Returns
     -------
-    mf : numeric
-        mass flow [kg/s]
+    mass flow [kg/s]: numeric
 
     """
+    cp = PropsSI('C', 'T', T_av + 273.15, 'P', p, 'IF97::Water')
 
-    cp = PropsSI('C', 'T', T_av + 273.15, 'P', 101325, 'IF97::Water')
-
-    return P / (cp*delta_T)
+    return P / (cp * delta_T)
 
 
-def calc_v_mf(mf, di, T_av):
-    """Calculates the flow velocity for a given mass flow and inner diameter. The average temperature is needed for a correct value of the density.
+def calc_v_mf(mf, di, T_av, p=101325):
+    r"""
+    Calculates the flow velocity for a given mass flow and inner diameter.
+    The average temperature is needed for a correct value of the density.
 
     Formula
     -------
-    :math:`v  = \frac{\dot{m}}{\pi \rho \cdot \big( \frac{d_i}{2} \big)^2 }`
+    .. calc_v_mf_equation:
+
+    :math:`v = \frac{\dot{m}}{\pi \rho \cdot \big( \frac{d_i}{2} \big)^2 }`
 
     Parameters
     ----------
     mf : numeric
-        mass flow [kg/s]
+        :math:`dot{m}`: mass flow [kg/s]
 
     di : numeric
-        inner diameter [m]
+        :math:`d_i`: inner diameter [m]
 
     T_av : numeric
-        average temperature [°C]
+        :math:`T_{av}`: average temperature [°C]
+
+     p: numeric
+        :math:`p`: pressure [Pa]
 
     Returns
     -------
-    v : numeric
-        flow velocity [m/s]
+    flow velocity [m/s]: numeric
 
     """
-
     rho = PropsSI(
-        'D', 'T', T_av + 273.15, 'P', 101325, 'IF97::Water')  # [kg/m^3]
+        'D', 'T', T_av + 273.15, 'P', p, 'IF97::Water')  # [kg/m^3]
 
-    return mf / (rho*(0.5*di)**2 * math.pi)
+    return mf / (rho * (0.5 * di) ** 2 * math.pi)
 
 
 def calc_pipe_loss(temp_average, u_value, temp_ground=10):
-    """Calculates the heat loss of a DHS pipe trench.
-
-    Temperatures must be given consistent in [°C] or in [K].
+    r"""
+    Calculates the heat loss of a DHS pipe trench.
 
     Formula
     -------
+    .. calc_pipe_loss_equation:
+
     :math:`P_{loss} = (T_{average} - T_{ground}) \cdot U`
 
     Parameters
     ----------
     temp_average : float
-        :math:`P_{i}`: Average temperature of medium in
+        :math:`T_{average}`: Average temperature of medium in
         (if u_value relates to forward and return pipe,
         the average temperature of forward and return must be given.)
     u_value : float
@@ -531,6 +542,6 @@ def calc_pipe_loss(temp_average, u_value, temp_ground=10):
 
     Returns
     -------
-    float : :math:`P_{loss}`: Heat loss of pipe trench in W/m.
+    Heat loss of pipe trench [W/m]: float
     """
     return (temp_average - temp_ground) * u_value
