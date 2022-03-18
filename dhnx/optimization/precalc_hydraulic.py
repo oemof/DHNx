@@ -26,7 +26,7 @@ import math
 
 
 def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
-            pressure=1, R_crit=2320, fluid='IF97::Water'):
+            pressure=101325, R_crit=2320, fluid='IF97::Water'):
 
     """Function to determine the pressure loss in the DHN pipes.
 
@@ -51,7 +51,7 @@ def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
         length of the pipe [m]
 
     pressure : numeric
-        pressure in the pipe [bar]
+        pressure in the pipe [Pa]
 
     R_crit : numeric
         critical reynolds number beetween laminar and turbulent flow
@@ -102,9 +102,9 @@ def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
     k = k * 0.001
 
     # get density of water [kg/m^3]
-    d = PropsSI('D', 'T', T_medium + 273.15, 'P', pressure * 101325, fluid)
+    d = PropsSI('D', 'T', T_medium + 273.15, 'P', pressure, fluid)
     # dynamic viscosity eta [kg/(m*s)]
-    d_v = PropsSI('V', 'T', T_medium + 273.15, 'P', pressure * 101325, fluid)
+    d_v = PropsSI('V', 'T', T_medium + 273.15, 'P', pressure, fluid)
     k_v = d_v / d     # kinematic viskosity [m^2/s]
 
     # Reynodszahl
@@ -193,42 +193,49 @@ def calc_v(vol_flow, d_i):
 
 def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
                v_0=1, v_1=2,
-               pressure=1, fluid='IF97::Water'):
-    """
+               pressure=101325, fluid='IF97::Water'):
+    r"""Calculates the maximum velocity via linear interpolation from known values of
+    velocity and pressure drop. The first two values v_0 and v_1 schould be in the
+    area of the maximum value, as interpolation starts from there.
+
+    Formula
+    -------
+    .. calc_v_max_equation:
+
+    :math:`v_{new}  = v_1 - (p_1 - p_{max}) \cdot \frac{v_1 - v_0}{p_1 - p_0}`
 
     Parameters
     ----------
-    d_i : numeric
-        inner diameter [m]
+    d_i: numeric
+        :math:`d_i`: inner diameter [m]
 
-    T_average : numeric
-        average temperature [°C]
+    T_average: numeric
+        :math:`T_{av}`: average temperature [°C]
 
-    k : numeric
-        roughness of inner pipeline surface [mm]
+    k: numeric
+        :math:`k`: roughness of inner pipeline surface [mm]
 
-    p_max : numeric
-        maximum pressure drop in pipeline [Pa]
+    p_max: numeric
+        :math:`p_{max}`: maximum pressure drop in pipeline [Pa]
 
-    p_epsilon : numeric
-        accuracy [Pa]
+    p_epsilon: numeric
+        :math:`p_\epsilon`: accuracy of pressure [Pa]
 
-    v_0 : numeric
-        initial guess for maximum flow velocity [m/s] #von v_init übernommen
+    v_0: numeric
+        :math:`v_0`: first value of initial guess for maximum flow velocity [m/s]
 
-    v_1 : numeric
-        ??? #keine vorlage
+    v_1: numeric
+        :math:`v_1`: second value of initial guess for maximum flow velocity [m/s]
 
-    pressure : numeric
-        pressure level [bar]
+    pressure: numeric
+        :math:`p`: pressure level [pa]
 
-    fluid : str
+    fluid: str
         type of fluid, default: 'IF97::Water'
 
     Returns
     -------
-    v_max : numeric
-        maximum flow velocity [m/s]
+    maximum flow velocity [m/s] : numeric
 
     """
     p_new = 0
@@ -260,6 +267,12 @@ def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
             v_0 = v_1
             v_1 = v_new
 
+            # eigentlich doch:
+            # if p_0 < p_max:
+            #   v_1 = v_new
+            # else:
+            #   v_0 = v_new
+
     print('Number of Iterations: ', n)
     print('Resulting pressure drop ', p_new)
     print('Resulting velocity: ', v_new)
@@ -270,65 +283,56 @@ def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
 def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
                     p_epsilon=0.1, v_epsilon=0.001,
                     v_0=0.01, v_1=10,
-                    pressure=1, fluid='IF97::Water'):
-    """
+                    pressure=101325, fluid='IF97::Water'):
+    r"""Calculates the maximum velocity via bisection from known values of velocity and pressure drop.
+    The first two values v_0 and v_1 should be in the area of the maximum value, as bisection
+    starts from there.
 
     Parameters
     ----------
-    d_i : numeric
-        inner diameter [m]
+    d_i: numeric
+        :math:`d_i`: inner diameter [m]
 
-    T_average : numeric
-        average temperature [°C]
+    T_average: numeric
+        :math:`T_{av}`: average temperature [°C]
 
-    k : numeric
-        roughness of inner pipeline surface [mm]
+    k: numeric
+        :math:`k`: roughness of inner pipeline surface [mm]
 
-    p_max : numeric
-        maximum pressure drop in pipeline [Pa]
+    p_max: numeric
+        :math:`p_{max}`: maximum pressure drop in pipeline [Pa]
 
-    p_epsilon : numeric
-        accuracy [Pa]
+    p_epsilon: numeric
+        :math:`p_\epsilon`: accuracy of pressure [Pa]
 
-    v_epsilon : numeric
-        accuracy [m/s] #so richtig?
+    v_epsilon: numeric
+        :math:`v_\epsilon`: accuracy of velocity [m/s]
 
-    v_0  : numeric
-        initial guess for maximum flow velocity [m/s]
+    v_0 : numeric
+        :math:`v_0`: first value of initial guess for maximum flow velocity [m/s]
 
-    v_1 : numeric
-        #???
-    pressure : numeric
-        pressure level [bar]
+    v_1: numeric
+        :math:`v_1`: second value of initial guess for maximum flow velocity [m/s]
 
-    fluid : str
+    pressure: numeric
+        :math:`p`: pressure level [Pa]
+
+    fluid: str
         type of fluid, default: 'IF97::Water'
 
     Returns
     -------
-    v_max : numeric
-        maximum flow velocity
+    maximum flow velocity [m/s] : numeric
+
 
     """
-    """
-    :param d_i:         [m]     inner diameter
-    :param T_average:   [°C]    average temperature
-    :param k:           [mm]    roughness of inner pipeline surface
-    :param p_max:       [Pa]    maximum pressure drop in pipeline
-    :param p_epsilon:   [Pa]    accuracy
-    :param v_init:      [m/s]   initial guess for maximum flow velocity
-    :param pressure:    [bar]   pressure level
-    :param fluid:       [-]     type of fluid, default: 'IF97::Water'
-    :return:            [m/s]   maximum flow velocity
-    """
-
     p_0 = delta_p(v_0, k=k, d_i=d_i, T_medium=T_average,
                   pressure=pressure, fluid=fluid)
 
     p_1 = delta_p(v_1, k=k, d_i=d_i, T_medium=T_average,
                   pressure=pressure, fluid=fluid)
 
-    if (p_0 - p_max) * (p_1 - p_max) >= 0:
+    if (p_0 - p_max) * (p_1 - p_max) >= 0:  # verstehe die Bedingung nicht
         print('The initial guesses are not assumed right!')
         return
 
@@ -358,12 +362,12 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
             print('p_epsilon criterion achieved!')
             break
 
-        if abs(v_1 - v_0) < v_epsilon:
+        if abs(v_1 - v_0) < v_epsilon:  # wieso v_1 und v_0?
             print('v_epsilon criterion achieved!')
             break
 
         else:
-            if (p_0 - p_max) * (p_new - p_max) < 0:
+            if (p_0 - p_max) * (p_new - p_max) < 0:  # siehe oben
                 v_1 = v_new
             else:
                 v_0 = v_new
