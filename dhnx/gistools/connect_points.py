@@ -24,7 +24,7 @@ try:
     from shapely.geometry import MultiPoint
     from shapely.geometry import Point
     from shapely.geometry import shape
-    from shapely.ops import cascaded_union
+    from shapely.ops import unary_union
     from shapely.ops import nearest_points
 except ImportError:
     print("Need to install shapely to process geometry.")
@@ -162,7 +162,7 @@ def create_object_connections(points, lines, tol_distance=1):
                              " with only two coordinates!")
 
     # empty geopandas dataframe for house connections
-    conn_lines = gpd.GeoDataFrame()
+    conn_lines = gpd.GeoDataFrame(geometry=[], crs=lines.crs)
 
     # iterate over all houses
     for index, row in points.iterrows():
@@ -171,7 +171,7 @@ def create_object_connections(points, lines, tol_distance=1):
 
         # the same with the original lines
         all_lines = lines['geometry']
-        mergedlines = cascaded_union(all_lines)
+        mergedlines = unary_union(all_lines)
 
         # new nearest point method  ############ #########
         n_p = nearest_points(mergedlines, house_geo)[0]
@@ -198,7 +198,8 @@ def create_object_connections(points, lines, tol_distance=1):
 
             con_line = LineString([n_p, house_geo])
 
-            conn_lines = conn_lines.append({'geometry': con_line}, ignore_index=True)
+            conn_lines = pd.concat([conn_lines, gpd.GeoDataFrame(
+                geometry=[con_line], crs=lines.crs)], ignore_index=True)
 
         else:
 
@@ -213,37 +214,33 @@ def create_object_connections(points, lines, tol_distance=1):
 
                 con_line = LineString([n_p, house_geo])
 
-                conn_lines = conn_lines.append({'geometry': con_line}, ignore_index=True)
+                conn_lines = pd.concat([conn_lines, gpd.GeoDataFrame(
+                    geometry=[con_line], crs=lines.crs)], ignore_index=True)
 
                 lines.drop([line_index], inplace=True)
 
-                lines = lines.append(
-                    {'geometry': LineString([supply_line_p0, n_p])},
-                    ignore_index=True
-                )
-                lines = lines.append(
-                    {'geometry': LineString([n_p, supply_line_p1])},
-                    ignore_index=True
-                )
+                lines = pd.concat([lines, gpd.GeoDataFrame(
+                    geometry=[LineString([supply_line_p0, n_p]),
+                              LineString([n_p, supply_line_p1])],
+                    crs=lines.crs)], ignore_index=True)
 
             else:
                 # case that one or both line endings are closer than tolerance
                 # thus, the next line ending is chosen
                 logging.info(
-                    'Connect buildings... id {}: Connected to Supply line ending '
-                    'due to tolerance'.format(index))
+                    'Connect buildings... id {}: Connected to Supply line '
+                    'ending due to tolerance'.format(index))
 
                 conn_point = nearest_points(supply_line_mulitpoints, n_p)[0]
 
                 con_line = LineString([conn_point, house_geo])
 
-                conn_lines = conn_lines.append({'geometry': con_line}, ignore_index=True)
+                conn_lines = pd.concat([conn_lines, gpd.GeoDataFrame(
+                    geometry=[con_line], crs=lines.crs)], ignore_index=True)
 
     logging.info('Connection of buildings completed.')
 
-    connection_lines = gpd.GeoDataFrame(conn_lines, crs=lines.crs)
-
-    return connection_lines, lines
+    return conn_lines, lines
 
 
 def check_geometry_type(gdf, types):
