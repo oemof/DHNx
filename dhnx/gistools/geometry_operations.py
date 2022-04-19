@@ -24,9 +24,9 @@ try:
     from shapely.geometry import LineString
     from shapely.geometry import MultiLineString
     from shapely.geometry import Point
-    from shapely.ops import unary_union
     from shapely.ops import linemerge
     from shapely.ops import nearest_points
+    from shapely.ops import unary_union
 except ImportError:
     print("Need to install shapely to process geometry.")
 
