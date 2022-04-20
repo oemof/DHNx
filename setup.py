@@ -43,5 +43,6 @@ setup(
         'geopandas': ['geopandas'],
         'osmnx': ['osmnx >= 0.16.1'],
         "tests": ["geopandas", "osmnx"],
+        'precalc': ['CoolProp'],
     }
 )
