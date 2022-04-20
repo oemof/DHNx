@@ -15,10 +15,17 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-from CoolProp.CoolProp import PropsSI
+import math
+
+try:
+    from CoolProp.CoolProp import PropsSI
+
+except ImportError:
+    print("Need to install CoolProp for hydraulic pre-calculations module.")
+
 import numpy as np
 from scipy.optimize import fsolve
-import math
+
 
 # Berechnung Druckverlust siehe:
 #   - http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
