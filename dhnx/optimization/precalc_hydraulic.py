@@ -25,95 +25,345 @@ import math
 #   - https://www.schweizer-fn.de/stroemung/rauhigkeit/rauhigkeit.php
 
 
+def eq_smooth(x, *R_e):
+    r"""
+    Equation to be solved for smooth surfaces
+
+    Equation
+    --------
+    .. eq_smooth_equation:
+
+    :math:`f(x) = x-2 \cdot log\Big(\frac{Re}{2,51x}\Big)`
+
+    Parameters
+    ----------
+    x: numeric
+        :math:`x`: function variable
+    R_e: numeric
+        :math:`Re`: Reynolds number
+
+    Returns
+    -------
+    Equation : numeric
+
+    """
+    return x - 2 * np.log10(R_e / (x * 2.51))
+    # für argumente siehe https://stackoverflow.com/questions/19843116/passing-arguments-to-fsolve
+
+
+def eq_transition(x, *data):
+    r"""
+    Equation to be solved for the transition range.
+
+    Equation
+    --------
+    .. eq_transition_equation
+
+    :math:`f(x)=x+2\cdot log \Bigg(  \frac{2,51x}{Re} \cdot \frac{k}{3,71d_i} \Bigg)`
+
+    Parameters
+    ----------
+    x : numeric
+        :math:`x`: function variable
+
+    R_e: numeric
+        :math:`Re`: Reynolds number
+
+    k : numeric
+        :math:`k`: roughness of inner pipeline surface [mm]
+
+    di : numeric
+        :math:`d_i`: inner diameter [m]
+
+    Returns
+    -------
+    Equation : numeric
+
+    """
+    R_e, k, d_i = data  # siehe oben
+
+    return x + 2 * np.log10((2.51 * x) / R_e + k / (3.71 * d_i))
+
+
+def calc_k_v(d_v, d):
+    r"""
+    Calcutlates the kinematic viscosity for given density and dynamic viscosity
+
+    Formula
+    -------
+    .. calc_k_v_equation:
+
+    :math:`\nu = \frac{\eta}{\rho}`
+
+    Parameters
+    ----------
+    d_v: numeric
+        :math:`\eta`: dynamic viskosity [kg/(m*s)]
+
+    d: numeric
+        :math:`\rho`: density [kg/m³]
+
+    Returns
+    -------
+    kinematic viscosity [m²/s] : numeric
+
+    """
+    return d_v / d
+
+
+def calc_Re(v, d_i, k_v):
+    r"""
+    Calculates the Reynolds number for a given velocity, inner diameter and kinematic viscosity
+
+    Formula
+    -------
+    .. calc_Re_equation:
+
+    :math:`\frac{v \cdot d_i}{\nu}`
+
+    Parameters
+    ----------
+    v: numeric
+        :math:`v`: flow velocity [m/s]
+
+    d_i: numeric
+        :math:`d_i`: inner pipe diameter [m]
+
+    k_v: numeric
+        :math:`\nu`: kinematic viscosity [m²/s]
+
+    Returns
+    -------
+    Reynolds number []: numeric
+
+    """
+    return v * d_i / k_v
+
+
+def calc_lam_lam(Re):
+    r"""
+    Calculates the Darcy friction factor for a given Reynolds number for a laminar flow.
+
+    Formula
+    -------
+    .. calc_lam_lam_equation:
+
+    :math:`\lambda=\frac{64}{Re}`
+
+    Parameters
+    ----------
+    Re: numeric
+        :math:`Re`: Reynolds number
+
+    Returns
+    -------
+    Darcy friction factor [] : numeric
+
+    """
+    return 64 / Re
+
+
+def calc_d_p(lam, length, d_i, d, v):
+    r"""
+    Calculates the pressure drop in a pipe for a given Darcy friction factor.
+
+    Formula
+    -------
+    .. calc_d_p_equation:
+
+    :math:`\Delta p = \lambda \frac{l}{d_i} \frac{\rho}{2} v^2`
+
+    Parameters
+    ----------
+    lam: numeric
+        :math:`\lambda`: Darcy friction factor []
+
+    length: numeric
+        :math:`l`: length of the pipe [m]
+
+    d_i : numeric
+        :math:`d_i`: inner pipe diameter [m]
+
+    d: numeric
+        :math:`\rho`: density [kg/m³]
+
+    v: numeric
+        :math:`v`: flow velocity [m/s]
+
+    Returns
+    -------
+    Pressure drop [Pa]: numeric
+    """
+    return lam * length / d_i * d / 2 * v ** 2
+
+
+def calc_lam_turb1(Re):
+    r"""
+    Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow,
+    a smooth pipe and a Reynolds number smaller than 10^5
+
+    Formula
+    -------
+    .. calc_lam_turb1_equation
+
+    :math:`\lambda = 0,3164\cdot Re ^{-0,25}`
+
+    Parameters
+    ----------
+    Re: numeric
+        :math:`Re`: Reynolds number
+
+    Returns
+    -------
+    Darcy friction factor [] : numeric
+
+    """
+    return 0.3164 * Re ** (-0.25)
+
+
+def calc_lam_turb2(Re):
+    r"""
+    Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow,
+    a smooth pipe and a Reynolds number between 10^5 and 10^6.
+
+    Formula
+    -------
+    .. calc_lam_turb1_equation
+
+    :math:`0,0032 + 0,221 \cdot Re ^{-0,237}`
+
+    Parameters
+    ----------
+    Re: numeric
+        :math:`Re`: Reynolds number
+
+    Returns
+    -------
+    Darcy friction factor [] : numeric
+
+    """
+    return 0.0032 + 0.221 * Re ** (-0.237)
+
+
+def calc_lam_turb3(Re):
+    r"""
+    Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow,
+    a smooth pipe and a Reynolds number higher than 10^6. For a formula see eq_smooth
+
+    Parameters
+    ----------
+    Re: numeric
+        :math:`Re`: Reynolds number
+
+    Returns
+    -------
+    Darcy friction factor [] : numeric
+
+    """
+    lam_init = 0.3164 / (Re ** 0.25)
+
+    x = fsolve(eq_smooth, x0=lam_init, args=Re)
+
+    return 1 / x[0] ** 2
+
+
+def calc_lam_rough(d_i, k):
+    r"""
+    Calculates the Darcy driction factor for a turbulent flow and a rough inner pipe surface.
+
+    Formula
+    -------
+    .. calc_lam_rough_equation
+
+    :math:`\lambda =\frac{1}{(2 log(3,71\frac{d_i}{k}))^2}`
+
+    Parameters
+    ----------
+    d_i : numeric
+        :math:`d_i`: inner pipe diameter [m]
+
+    k : numeric
+        :math:`k`: roughness of inner pipeline surface [mm]
+
+    Returns
+    -------
+    Darcy friction factor [] : numeric
+
+    """
+    return (1 / (-2 * np.log10(k / (3.71 * d_i)))) ** 2
+
+
+def calc_lam_transition(R_e, k, d_i):
+    r"""
+    Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow and the
+    transition area between a rough and smooth pipe surface. For a formula see eq_transition.
+
+    Parameters
+    ----------
+    Re: numeric
+        :math:`Re`: Reynolds number
+
+    Returns
+    -------
+    Darcy friction factor [] : numeric
+
+    """
+    lam_init = 0.25 / R_e ** 0.2
+    x = fsolve(eq_transition, x0=lam_init, args=(R_e, k, d_i))
+    return 1 / x[0] ** 2
+
+
 def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
             pressure=101325, R_crit=2320, fluid='IF97::Water'):
 
-    """Function to determine the pressure loss in the DHN pipes.
-
-    # Text :func:`transition_eq`
-
+    r"""Function to determine the pressure loss in the DHN pipes.
 
     Parameters
     ----------
     v : numeric
-        volume [m³]
+        :math:`v`: flow velocity [m/s] # war vorher volume, das war falsch
 
     d_i : numeric
-        inner pipe diameter [m]
+        :math:`d_i`: inner pipe diameter [m]
 
     k : numeric
-        roughness of inner pipeline surface [mm]
+        :math:`k`: roughness of inner pipeline surface [mm]
 
     T_medium : numeric
-        fluid temperature [°C]
+        :math:`T_{medium}`: fluid temperature [°C]
 
     length : numeric
-        length of the pipe [m]
+        :math:`l`: length of the pipe [m]
 
     pressure : numeric
-        pressure in the pipe [Pa]
+        :math:`p`: pressure in the pipe [Pa]
 
     R_crit : numeric
-        critical reynolds number beetween laminar and turbulent flow
+        :math:`Re_{crit}`: critical Reynolds number between laminar and turbulent flow
 
     fluid : str
         name of the fluid used
 
     Returns
     -------
+    Pressure drop [bar] : numeric
 
     """
-
-    def glatt_eq(x):
-        """
-
-        Parameters
-        ----------
-        x : numeric
-
-        Returns
-        -------
-
-        """
-        # http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
-        # Formel von Prandtl und v. Karman
-        # FM FS S.12 - Technische Strömung - (a)
-        #
-        return x - 2 * np.log10(R_e / (x * 2.51))
-
-    def transition_eq(x):
-        """
-
-        Parameters
-        ----------
-        x : numeric
-
-
-        Returns
-        -------
-
-        """
-        # FM FS S.13 - erste Formel (Übergangsbereich glatt-rau)
-        # http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
-        # 65 < Re * k/d < 1300
-        # TODO: Formel überprüfen
-        return x + 2 * np.log10((2.51 * x) / R_e + k / (3.71 * d_i))
-
     k = k * 0.001
 
     # get density of water [kg/m^3]
     d = PropsSI('D', 'T', T_medium + 273.15, 'P', pressure, fluid)
     # dynamic viscosity eta [kg/(m*s)]
     d_v = PropsSI('V', 'T', T_medium + 273.15, 'P', pressure, fluid)
-    k_v = d_v / d     # kinematic viskosity [m^2/s]
+    k_v = calc_k_v(d_v, d)
 
     # Reynodszahl
-    R_e = (v * d_i) / k_v
+    R_e = calc_Re(v, d_i, k_v)
 
     if R_e < R_crit:  # laminare Strömung
 
-        lam = 64 / R_e      # S. 216 - (11.9), ISBN  978-3-540-73726-1
-        d_p = lam * length / d_i * d / 2 * v ** 2
+        lam = calc_lam_lam(R_e)
+        d_p = calc_d_p(lam, length, d_i, d, v)
 
     else:  # turbulente Strömung
 
@@ -123,44 +373,35 @@ def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
             if R_e < 10**5:
                 # siehe Fluidmechanik Formelsammlung, S.12 (2.)
                 # nach Prandtl
-                lam = 0.3164 * R_e ** (-0.25)
+                lam = calc_lam_turb1(R_e)
 
             elif R_e >= 10**5 and R_e < 10**6:
                 # Nikuradse:
                 # http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
                 # Fluidmechanik I FS: S.12,
-                lam = 0.0032 + 0.221 * R_e ** (-0.237)
+                lam = calc_lam_turb2(R_e)
 
             else:
                 # Re > 10^6 ???
                 # Prandtl and Karman / laut FM FS Nikurdase
                 # Näherungswert als Startwert für fsolve
-                lam_init = 0.3164 / (R_e ** 0.25)
-
-                args = {
-                    R_e: R_e,
-                }
-
-                x = fsolve(glatt_eq, x0=lam_init, args=args)
-                lam = 1 / x[0] ** 2
+                lam = calc_lam_turb3(R_e)
 
         elif R_e * k / d_i > 1300:
             # ==> Rohr hydraulisch rau
             # entsprich FM, FS. S.13 zweite Formel von oben
-            lam = (1 / (-2 * np.log10(k / (3.71 * d_i)))) ** 2
+            lam = calc_lam_rough(d_i, k)
 
         else:
             # ==> Übergangsbereich 65 < Re * k/d < 1300
 
             # Näherung
-            lam_init = 0.25 / R_e ** 0.2
             # FM FS S.13 - erste Formel (Übergangsbereich glatt-rau)
             # http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
             # 65 < Re * k/d < 1300
-            x = fsolve(transition_eq, x0=lam_init)
-            lam = 1 / x[0] ** 2
+            lam = calc_lam_transition(R_e, k, d_i)
 
-        d_p = lam * length / d_i * d / 2 * v ** 2
+        d_p = calc_d_p(lam, length, d_i, d, v)
 
     return d_p
 
