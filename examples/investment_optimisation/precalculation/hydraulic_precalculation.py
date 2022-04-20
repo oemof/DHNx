@@ -72,3 +72,5 @@ plt.text(2000, 250, "Linear cost approximation \n"
 plt.ylim(0, None)
 plt.grid(ls=":")
 plt.show()
+
+# TODO : Show linear approximation with more segments
