@@ -8,6 +8,10 @@ The aim is to calculate the maximum heat transport capacity in [kW]
 of pipelines given a maximum pressure drop per meter, roughness of the pipes
 inner surface, and an estimated delta T of the forward and return pipes.
 
+The equations and values used for the calculation can be found here:
+http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
+https://www.schweizer-fn.de/stroemung/rauhigkeit/rauhigkeit.php
+
 This file is part of project dhnx (). It's copyrighted
 by the contributors recorded in the version control history of the file,
 available from its original location:
@@ -20,12 +24,8 @@ import numpy as np
 from scipy.optimize import fsolve
 import math
 
-# Berechnung Druckverlust siehe:
-#   - http://www.math-tech.at/Beispiele/upload/gra_Druckverlust_in_Rohrleitungen.PDF
-#   - https://www.schweizer-fn.de/stroemung/rauhigkeit/rauhigkeit.php
 
-
-def eq_smooth(x, *R_e):
+def eq_smooth(x, R_e):
     r"""
     Equation for the calculation of the pressure drop of hydraulic smooth surfaces (Prandtl & Karman)
 
@@ -48,7 +48,6 @@ def eq_smooth(x, *R_e):
 
     """
     return x - 2 * np.log10(R_e / (x * 2.51))
-    # für argumente siehe https://stackoverflow.com/questions/19843116/passing-arguments-to-fsolve
 
 
 def eq_transition(x, R_e, k, d_i):
@@ -80,7 +79,6 @@ def eq_transition(x, R_e, k, d_i):
     Equation : numeric
 
     """
-    # R_e, k, d_i = data  # siehe oben
 
     return x + 2 * np.log10((2.51 * x) / R_e + k / (3.71 * d_i))
 
@@ -134,7 +132,7 @@ def calc_Re(v, d_i, k_v):
 
     Returns
     -------
-    Reynolds number []: numeric
+    Reynolds number [-]: numeric
 
     """
     return v * d_i / k_v
@@ -142,7 +140,7 @@ def calc_Re(v, d_i, k_v):
 
 def calc_lambda_laminar(Re):
     r"""
-    Calculates the Darcy friction factor for a given Reynolds number for a laminar flow.
+    Calculates the Darcy friction factor for a given Reynolds number for a laminar flow
 
     Formula
     -------
@@ -153,11 +151,11 @@ def calc_lambda_laminar(Re):
     Parameters
     ----------
     Re: numeric
-        :math:`Re`: Reynolds number
+        :math:`Re`: Reynolds number [-]
 
     Returns
     -------
-    Darcy friction factor [] : numeric
+    Darcy friction factor [-] : numeric
 
     """
     return 64 / Re
@@ -165,7 +163,7 @@ def calc_lambda_laminar(Re):
 
 def calc_d_p(lam, length, d_i, d, v):
     r"""
-    Calculates the pressure drop in a pipe for a given Darcy friction factor.
+    Calculates the pressure drop in a pipe for a given Darcy friction factor
 
     Formula
     -------
@@ -176,7 +174,7 @@ def calc_d_p(lam, length, d_i, d, v):
     Parameters
     ----------
     lam: numeric
-        :math:`\lambda`: Darcy friction factor []
+        :math:`\lambda`: Darcy friction factor [-]
 
     length: numeric
         :math:`l`: length of the pipe [m]
@@ -211,11 +209,11 @@ def calc_lambda_turb1(Re):
     Parameters
     ----------
     Re: numeric
-        :math:`Re`: Reynolds number
+        :math:`Re`: Reynolds number [-]
 
     Returns
     -------
-    Darcy friction factor [] : numeric
+    Darcy friction factor [-] : numeric
 
     """
     return 0.3164 * Re ** (-0.25)
@@ -235,11 +233,11 @@ def calc_lambda_turb2(Re):
     Parameters
     ----------
     Re: numeric
-        :math:`Re`: Reynolds number
+        :math:`Re`: Reynolds number [-]
 
     Returns
     -------
-    Darcy friction factor [] : numeric
+    Darcy friction factor [-] : numeric
 
     """
     return 0.0032 + 0.221 * Re ** (-0.237)
@@ -248,16 +246,16 @@ def calc_lambda_turb2(Re):
 def calc_lambda_turb3(Re):
     r"""
     Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow,
-    a smooth pipe and a Reynolds number higher than 10^6. For a formula see eq_smooth
+    a smooth pipe and a Reynolds number higher than 10^6. For a formula, see eq_smooth.
 
     Parameters
     ----------
     Re: numeric
-        :math:`Re`: Reynolds number
+        :math:`Re`: Reynolds number [-]
 
     Returns
     -------
-    Darcy friction factor [] : numeric
+    Darcy friction factor [-] : numeric
 
     """
     lam_init = 0.3164 / (Re ** 0.25)
@@ -269,7 +267,7 @@ def calc_lambda_turb3(Re):
 
 def calc_lambda_rough(d_i, k):
     r"""
-    Calculates the Darcy driction factor for a turbulent flow and a rough inner pipe surface (Prandtl & Nikuradse)
+    Calculates the Darcy friction factor for a turbulent flow and a rough inner pipe surface (Prandtl & Nikuradse)
 
     Formula
     -------
@@ -287,7 +285,7 @@ def calc_lambda_rough(d_i, k):
 
     Returns
     -------
-    Darcy friction factor [] : numeric
+    Darcy friction factor [-] : numeric
 
     """
     return (1 / (-2 * np.log10(k / (3.71 * d_i)))) ** 2
@@ -296,12 +294,12 @@ def calc_lambda_rough(d_i, k):
 def calc_lambda_transition(R_e, k, d_i):
     r"""
     Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow and the
-    transition area between a rough and smooth pipe surface. For a formula see eq_transition.
+    transition area between a rough and smooth pipe surface. For a formula, see eq_transition.
 
     Parameters
     ----------
     R_e: numeric
-        :math:`Re`: Reynolds number
+        :math:`Re`: Reynolds number [-]
 
     k : numeric
         :math:`k`: roughness of inner pipeline surface [mm]
@@ -311,7 +309,7 @@ def calc_lambda_transition(R_e, k, d_i):
 
     Returns
     -------
-    Darcy friction factor [] : numeric
+    Darcy friction factor [-] : numeric
 
     """
     lam_init = 0.25 / R_e ** 0.2
@@ -322,12 +320,13 @@ def calc_lambda_transition(R_e, k, d_i):
 def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
             pressure=101325, R_crit=2320, fluid='IF97::Water'):
 
-    r"""Function to determine the pressure loss in the DHN pipes.
+    r"""
+    Function to calculate the pressure loss in a pipeline
 
     Parameters
     ----------
     v : numeric
-        :math:`v`: flow velocity [m/s] # war vorher volume, das war falsch
+        :math:`v`: flow velocity [m/s]
 
     d_i : numeric
         :math:`d_i`: inner pipe diameter [m]
@@ -345,7 +344,7 @@ def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
         :math:`p`: pressure in the pipe [Pa]
 
     R_crit : numeric
-        :math:`Re_{crit}`: critical Reynolds number between laminar and turbulent flow
+        :math:`Re_{crit}`: critical Reynolds number between laminar and turbulent flow [-]
 
     fluid : str
         name of the fluid used
@@ -429,8 +428,8 @@ def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
                v_0=1, v_1=2,
                pressure=101325, fluid='IF97::Water'):
     r"""Calculates the maximum velocity via linear interpolation from known values of
-    velocity and pressure drop. The first two values v_0 and v_1 schould be in the
-    area of the maximum value, as interpolation starts from there.
+    velocity and pressure drop. The first two values v_0 and v_1 should be in the
+    area of the maximum flow velocity, as interpolation starts from there.
 
     Formula
     -------
@@ -502,7 +501,7 @@ def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
             v_1 = v_new
 
             # eigentlich doch:
-            # if p_0 < p_max:
+            # if p_new < p_max:
             #   v_1 = v_new
             # else:
             #   v_0 = v_new
@@ -757,7 +756,7 @@ def calc_v_mf(mf, di, T_av, p=101325):
 
 def calc_pipe_loss(temp_average, u_value, temp_ground=10):
     r"""
-    Calculates the heat loss of a DHS pipe trench.
+    Calculates the heat loss of a DHS pipe trench. Temperatures must be given in the same unit, K or °C.
 
     Formula
     -------
