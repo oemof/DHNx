@@ -27,7 +27,8 @@ import math
 
 def eq_smooth(x, R_e):
     r"""
-    Equation for the calculation of the pressure drop of hydraulic smooth surfaces (Prandtl & Karman)
+    Calculation of the pressure drop of hydraulic smooth surfaces.
+    (Prandtl & Karman)
 
     Equation
     --------
@@ -52,7 +53,8 @@ def eq_smooth(x, R_e):
 
 def eq_transition(x, R_e, k, d_i):
     r"""
-    Equation to be solved for the transition range between a smooth and rough pipe surface (Prandtl-Colebrook)
+    Equation to be solved for the transition range
+    between a smooth and rough pipe surface (Prandtl-Colebrook)
 
     Equation
     --------
@@ -111,7 +113,8 @@ def calc_k_v(d_v, d):
 
 def calc_Re(v, d_i, k_v):
     r"""
-    Calculates the Reynolds number for a given velocity, inner diameter and kinematic viscosity
+    Calculates the Reynolds number for a given velocity, inner diameter
+    and kinematic viscosity
 
     Formula
     -------
@@ -140,7 +143,8 @@ def calc_Re(v, d_i, k_v):
 
 def calc_lambda_laminar(Re):
     r"""
-    Calculates the Darcy friction factor for a given Reynolds number for a laminar flow
+    Calculates the Darcy friction factor for a given Reynolds number
+    for a laminar flow
 
     Formula
     -------
@@ -197,8 +201,9 @@ def calc_d_p(lam, length, d_i, d, v):
 
 def calc_lambda_turb1(Re):
     r"""
-    Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow,
-    a smooth pipe and a Reynolds number smaller than 10^5 (Blasius)
+    Calculates the Darcy friction factor for a given Reynolds number
+    for a turbulent flow, a smooth pipe and a Reynolds number smaller
+    than 10^5 (Blasius)
 
     Formula
     -------
@@ -221,8 +226,9 @@ def calc_lambda_turb1(Re):
 
 def calc_lambda_turb2(Re):
     r"""
-    Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow,
-    a smooth pipe and a Reynolds number between 10^5 and 10^6 (Nikuradse)
+    Calculates the Darcy friction factor for a given Reynolds number
+    for a turbulent flow, a smooth pipe and a Reynolds number
+    between 10^5 and 10^6 (Nikuradse)
 
     Formula
     -------
@@ -245,8 +251,9 @@ def calc_lambda_turb2(Re):
 
 def calc_lambda_turb3(Re):
     r"""
-    Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow,
-    a smooth pipe and a Reynolds number higher than 10^6. For a formula, see eq_smooth.
+    Calculates the Darcy friction factor for a given Reynolds number
+    for a turbulent flow, a smooth pipe and a Reynolds number higher than 10^6.
+    For a formula, see :func:`~precalc_hydraulic.eq_smooth`.
 
     Parameters
     ----------
@@ -267,7 +274,8 @@ def calc_lambda_turb3(Re):
 
 def calc_lambda_rough(d_i, k):
     r"""
-    Calculates the Darcy friction factor for a turbulent flow and a rough inner pipe surface (Prandtl & Nikuradse)
+    Calculates the Darcy friction factor for a turbulent flow
+    and a rough inner pipe surface (Prandtl & Nikuradse)
 
     Formula
     -------
@@ -293,8 +301,11 @@ def calc_lambda_rough(d_i, k):
 
 def calc_lambda_transition(R_e, k, d_i):
     r"""
-    Calculates the Darcy friction factor for a given Reynolds number for a turbulent flow and the
-    transition area between a rough and smooth pipe surface. For a formula, see eq_transition.
+    Calculates the Darcy friction factor for a given Reynolds number
+    for a turbulent flow and the transition area between a rough and
+    smooth pipe surface.
+
+    See also :func:`~precalc_hydraulic.eq_transition`.
 
     Parameters
     ----------
@@ -517,9 +528,10 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
                     p_epsilon=0.1, v_epsilon=0.001,
                     v_0=0.01, v_1=10,
                     pressure=101325, fluid='IF97::Water'):
-    r"""Calculates the maximum velocity via bisection from known values of velocity and pressure drop.
-    The first two values v_0 and v_1 should be in the area of the maximum value, as bisection
-    starts from there.
+    r"""Calculates the maximum velocity via bisection for a given pressure drop.
+
+    The two starting values v_0 and v_1 should be in the area of the maximum value,
+    as the bisection method starts from there.
 
     Parameters
     ----------
@@ -756,7 +768,9 @@ def calc_v_mf(mf, di, T_av, p=101325):
 
 def calc_pipe_loss(temp_average, u_value, temp_ground=10):
     r"""
-    Calculates the heat loss of a DHS pipe trench. Temperatures must be given in the same unit, K or °C.
+    Calculates the heat loss of a DHS pipe trench.
+
+    Temperatures must be given in the same unit, K or °C.
 
     Formula
     -------

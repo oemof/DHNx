@@ -1,6 +1,18 @@
-from dhnx.optimization.precalc_hydraulic import calc_v, calc_power, calc_mass_flow, \
-    calc_mass_flow_P, calc_v_mf, calc_pipe_loss, calc_k_v, calc_Re, calc_lambda_laminar, calc_d_p, \
-    calc_lambda_turb1, calc_lambda_turb2, calc_lambda_rough, calc_lambda_turb3, calc_lambda_transition
+from dhnx.optimization.precalc_hydraulic import calc_d_p
+from dhnx.optimization.precalc_hydraulic import calc_k_v
+from dhnx.optimization.precalc_hydraulic import calc_lambda_laminar
+from dhnx.optimization.precalc_hydraulic import calc_lambda_rough
+from dhnx.optimization.precalc_hydraulic import calc_lambda_transition
+from dhnx.optimization.precalc_hydraulic import calc_lambda_turb1
+from dhnx.optimization.precalc_hydraulic import calc_lambda_turb2
+from dhnx.optimization.precalc_hydraulic import calc_lambda_turb3
+from dhnx.optimization.precalc_hydraulic import calc_mass_flow
+from dhnx.optimization.precalc_hydraulic import calc_mass_flow_P
+from dhnx.optimization.precalc_hydraulic import calc_pipe_loss
+from dhnx.optimization.precalc_hydraulic import calc_power
+from dhnx.optimization.precalc_hydraulic import calc_Re
+from dhnx.optimization.precalc_hydraulic import calc_v
+from dhnx.optimization.precalc_hydraulic import calc_v_mf
 
 
 def test_calc_v():
