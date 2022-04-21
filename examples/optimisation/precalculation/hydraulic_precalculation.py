@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from dhnx.optimization.precalc_hydraulic import v_max_bisection,\
-    calc_mass_flow, calc_power
+    calc_mass_flow, calc_power, v_max_secant
 
 df = pd.read_csv("Pipe_data.csv", sep=";")
 
@@ -11,6 +11,13 @@ maximum_pressure_drop = 150  # in Pa/m
 
 # Calculation of maximum velocity
 df['v_max [m/s]'] = df.apply(lambda row: v_max_bisection(
+    d_i=row['Inner diameter [m]'],
+    T_average=row['Temperature level [Celsius]'],
+    k=row['Roughness [mm]'],
+    p_max=maximum_pressure_drop), axis=1)
+
+# alternative with secant method
+df['v_max (secant) [m/s]'] = df.apply(lambda row: v_max_secant(
     d_i=row['Inner diameter [m]'],
     T_average=row['Temperature level [Celsius]'],
     k=row['Roughness [mm]'],
