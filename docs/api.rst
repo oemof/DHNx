@@ -80,6 +80,14 @@ dhnx.optimization.oemof_heatpipe
     :undoc-members:
     :show-inheritance:
 
+dhnx.optimization.precalc_hydraulic
+-----------------------------------
+
+.. automodule:: dhnx.optimization.precalc_hydraulic
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 
 simulation
 ==========
