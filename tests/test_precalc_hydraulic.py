@@ -1,3 +1,5 @@
+import pytest
+
 from dhnx.optimization.precalc_hydraulic import calc_d_p
 from dhnx.optimization.precalc_hydraulic import calc_k_v
 from dhnx.optimization.precalc_hydraulic import calc_lambda_laminar
@@ -13,6 +15,7 @@ from dhnx.optimization.precalc_hydraulic import calc_power
 from dhnx.optimization.precalc_hydraulic import calc_Re
 from dhnx.optimization.precalc_hydraulic import calc_v
 from dhnx.optimization.precalc_hydraulic import calc_v_mf
+from dhnx.optimization.precalc_hydraulic import v_max_bisection
 
 
 def test_calc_v():
@@ -88,3 +91,9 @@ def test_calc_lam_turb3():
 def test_calc_lam_transition():
     lam = calc_lambda_transition(1, 1, 1)
     assert round(lam, 5) == 23.41445
+
+
+def test_wrong_initial_guess_error():
+    with pytest.raises(AttributeError, match=r"initial guesses `v_0` and "):
+        v_max_bisection(0.1, 65, v_0=1, v_1=1)
+
