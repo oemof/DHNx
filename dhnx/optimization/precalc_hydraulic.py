@@ -422,16 +422,14 @@ def calc_v(vol_flow, d_i):
     return vol_flow / ((d_i * 0.5)**2 * math.pi * 3600)
 
 
-def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
-               v_0=1, v_1=2,
-               pressure=101325, fluid='IF97::Water'):
-    r"""Calculates the maximum velocity via linear interpolation from known values of
-    velocity and pressure drop. The first two values v_0 and v_1 should be in the
-    area of the maximum flow velocity, as interpolation starts from there.
+def v_max_secant(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
+                 v_0=1, v_1=2,
+                 pressure=101325, fluid='IF97::Water'):
+    r"""Calculates the maximum velocity via iterative approach
+    using the secant method.
 
-    .. calc_v_max_equation:
-
-    :math:`v_{new}  = v_1 - (p_1 - p_{max}) \cdot \frac{v_1 - v_0}{p_1 - p_0}`
+    The two different starting values v_0 and v_1 should be in the
+    area of the maximum flow velocity, as iteration starts from there.
 
     Parameters
     ----------
@@ -484,23 +482,12 @@ def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
         p_new = delta_p(v_new, k=k, d_i=d_i, T_medium=T_average,
                         pressure=pressure, fluid=fluid)
 
-        # print(n, ' P_0 [Pa]: ', p_0, 'v_0 [m/s]: ', v_0)
-        # print(n, ' P_1 [Pa]: ', p_1, 'v_1 [m/s]: ', v_1)
-        # print(n, ' P_new [Pa]: ', p_new, 'v_new [m/s]: ', v_new)
-        # print(' --- ')
-
         if abs(p_new - p_max) < p_epsilon:
             break
 
         else:
             v_0 = v_1
             v_1 = v_new
-
-            # eigentlich doch:
-            # if p_new < p_max:
-            #   v_1 = v_new
-            # else:
-            #   v_0 = v_new
 
     print('Number of Iterations: ', n)
     print('Resulting pressure drop ', p_new)
@@ -557,7 +544,6 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
     Returns
     -------
     maximum flow velocity [m/s] : numeric
-
 
     """
     p_0 = delta_p(v_0, k=k, d_i=d_i, T_medium=T_average,
