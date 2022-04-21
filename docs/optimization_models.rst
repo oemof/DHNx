@@ -305,6 +305,11 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 
 See the *Heatpipeline* API for further details about the attributes.
 
+The module `dhnx.optimization.precalc_hydraulic` provides helpful
+functions for the calculation of the pipeline parameters (see :ref:`api_precalc_hydraulic_label`).
+See also the precalulation example in the
+example folder of the optimisation examples.
+
 .. _Consumer invest data:
 
 consumers/.

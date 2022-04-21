@@ -1,3 +1,5 @@
+.. _api_label:
+
 ~~~~~~~~~~~~~~~~~
 API Documentation
 ~~~~~~~~~~~~~~~~~
@@ -79,6 +81,8 @@ dhnx.optimization.oemof_heatpipe
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. _api_precalc_hydraulic_label:
 
 dhnx.optimization.precalc_hydraulic
 -----------------------------------
