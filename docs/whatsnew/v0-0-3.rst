@@ -53,3 +53,5 @@ Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
 * Johannes Röder
+* Joris Zimmermann
+* Robert Valeske
