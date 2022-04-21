@@ -515,8 +515,12 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
                     pressure=101325, fluid='IF97::Water'):
     r"""Calculates the maximum velocity via bisection for a given pressure drop.
 
-    The two starting values v_0 and v_1 should be in the area of the maximum value,
-    as the bisection method starts from there.
+    The two starting values `v_0` and `v_1` need to be given,
+    with `v_0` below the expected flow velocity and `v_1` above.
+    These are the starting values for the bi-section method.
+
+    If either of the stop-criteria `p_epsilon` or `v_epsilon` is reached,
+    the iterative calculation is stopped.
 
     Parameters
     ----------
@@ -562,9 +566,11 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
     p_1 = delta_p(v_1, k=k, d_i=d_i, T_medium=T_average,
                   pressure=pressure, fluid=fluid)
 
-    if (p_0 - p_max) * (p_1 - p_max) >= 0:  # verstehe die Bedingung nicht
-        print('The initial guesses are not assumed right!')
-        return
+    if (p_0 - p_max) * (p_1 - p_max) >= 0:
+        raise AttributeError(
+            "The initial guesses `v_0` and `v_1` must be "
+            "below and above the expected flow velocity."
+        )
 
     p_new = 0
     v_new = 0
@@ -583,11 +589,6 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
         p_new = delta_p(v_new, k=k, d_i=d_i, T_medium=T_average,
                         pressure=pressure, fluid=fluid)
 
-        # print(n, ' v_0 [m/s]: ', v_0, ' P_0 [Pa]: ', p_0)
-        # print(n, ' v_n [m/s]: ', v_new, ' P_n [Pa]: ', p_new)
-        # print(n, ' v_1 [m/s]: ', v_1, ' P_1 [Pa]: ', p_1)
-        # print('--- ')
-
         if abs(p_new - p_max) < p_epsilon:
             print('p_epsilon criterion achieved!')
             break
@@ -597,7 +598,9 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
             break
 
         else:
-            if (p_0 - p_max) * (p_new - p_max) < 0:  # siehe oben
+            # no stop criteria reached
+            # check if p_new is above or below p_max
+            if (p_0 - p_max) * (p_new - p_max) < 0:
                 v_1 = v_new
             else:
                 v_0 = v_new
