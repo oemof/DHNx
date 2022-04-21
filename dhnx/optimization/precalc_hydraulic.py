@@ -37,8 +37,6 @@ def eq_smooth(x, R_e):
     Calculation of the pressure drop of hydraulic smooth surfaces.
     (Prandtl & Karman)
 
-    Equation
-    --------
     .. eq_smooth_equation:
 
     :math:`f(x) = x-2 \cdot log\Big(\frac{Re}{2,51x}\Big)`
@@ -63,8 +61,6 @@ def eq_transition(x, R_e, k, d_i):
     Equation to be solved for the transition range
     between a smooth and rough pipe surface (Prandtl-Colebrook)
 
-    Equation
-    --------
     .. eq_transition_equation
 
     :math:`f(x)=x+2\cdot log \Bigg(  \frac{2,51x}{Re} \cdot \frac{k}{3,71d_i} \Bigg)`
@@ -96,8 +92,6 @@ def calc_k_v(d_v, d):
     r"""
     Calcutlates the kinematic viscosity for given density and dynamic viscosity
 
-    Formula
-    -------
     .. calc_k_v_equation:
 
     :math:`\nu = \frac{\eta}{\rho}`
@@ -123,8 +117,6 @@ def calc_Re(v, d_i, k_v):
     Calculates the Reynolds number for a given velocity, inner diameter
     and kinematic viscosity
 
-    Formula
-    -------
     .. calc_Re_equation:
 
     :math:`\frac{v \cdot d_i}{\nu}`
@@ -153,8 +145,6 @@ def calc_lambda_laminar(Re):
     Calculates the Darcy friction factor for a given Reynolds number
     for a laminar flow
 
-    Formula
-    -------
     .. calc_lam_lam_equation:
 
     :math:`\lambda=\frac{64}{Re}`
@@ -176,8 +166,6 @@ def calc_d_p(lam, length, d_i, d, v):
     r"""
     Calculates the pressure drop in a pipe for a given Darcy friction factor
 
-    Formula
-    -------
     .. calc_d_p_equation:
 
     :math:`\Delta p = \lambda \frac{l}{d_i} \frac{\rho}{2} v^2`
@@ -212,8 +200,6 @@ def calc_lambda_turb1(Re):
     for a turbulent flow, a smooth pipe and a Reynolds number smaller
     than 10^5 (Blasius)
 
-    Formula
-    -------
     .. calc_lam_turb1_equation
 
     :math:`\lambda = 0,3164\cdot Re ^{-0,25}`
@@ -237,8 +223,6 @@ def calc_lambda_turb2(Re):
     for a turbulent flow, a smooth pipe and a Reynolds number
     between 10^5 and 10^6 (Nikuradse)
 
-    Formula
-    -------
     .. calc_lam_turb1_equation
 
     :math:`0,0032 + 0,221 \cdot Re ^{-0,237}`
@@ -284,8 +268,6 @@ def calc_lambda_rough(d_i, k):
     Calculates the Darcy friction factor for a turbulent flow
     and a rough inner pipe surface (Prandtl & Nikuradse)
 
-    Formula
-    -------
     .. calc_lam_rough_equation
 
     :math:`\lambda =\frac{1}{(2 log(3,71\frac{d_i}{k}))^2}`
@@ -420,8 +402,6 @@ def calc_v(vol_flow, d_i):
     r"""
     Calculates the velocity for a given volume flow and inner diameter of a pipe.
 
-    Formula
-    -------
     .. calc_v_equation:
 
     :math:`v_{flow}=\frac{\dot{V}}{(\frac{d_i}{2})^2*\pi}`
@@ -449,8 +429,6 @@ def calc_v_max(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
     velocity and pressure drop. The first two values v_0 and v_1 should be in the
     area of the maximum flow velocity, as interpolation starts from there.
 
-    Formula
-    -------
     .. calc_v_max_equation:
 
     :math:`v_{new}  = v_1 - (p_1 - p_{max}) \cdot \frac{v_1 - v_0}{p_1 - p_0}`
@@ -635,8 +613,6 @@ def calc_power(T_vl=80, T_rl=50, mf=3, p=101325):
     r"""
     Function to calculate the thermal power based on mass flow and temperature difference.
 
-    Formula
-    -------
     .. calc_power_equation:
 
     :math:`P_{th} = \dot{m} \cdot (c_{p_{VL}} \cdot T_{VL} - c_{p_{RL}} \cdot T_{RL})`
@@ -672,8 +648,6 @@ def calc_mass_flow(v, di, T_av, p=101325):
     Calculates the mass flow in a pipe for a given density, diameter and flow velocity.
     The average temperature is needed for a correct value of the density.
 
-    Formula
-    -------
     .. calc_mass_flow_equation:
 
     :math:`\dot{m} = \pi \rho_{T_av}  v  \big( \frac{d_i}{2}  \big) ^2`
@@ -707,8 +681,6 @@ def calc_mass_flow_P(P, T_av, delta_T, p=101325):
     Calculates the mass flow in a pipe for a given power and heat difference.
     The average temperature is needed for a correct value of the heat capacity.
 
-    Formula
-    -------
     .. calc_mass_flow_P_equation:
 
     :math:`\dot{m} = \frac{P}{c_{P_{T_{av}}} \cdot \Delta T}`
@@ -742,8 +714,6 @@ def calc_v_mf(mf, di, T_av, p=101325):
     Calculates the flow velocity for a given mass flow and inner diameter.
     The average temperature is needed for a correct value of the density.
 
-    Formula
-    -------
     .. calc_v_mf_equation:
 
     :math:`v = \frac{\dot{m}}{\pi \rho \cdot \big( \frac{d_i}{2} \big)^2 }`
@@ -779,8 +749,6 @@ def calc_pipe_loss(temp_average, u_value, temp_ground=10):
 
     Temperatures must be given in the same unit, K or °C.
 
-    Formula
-    -------
     .. calc_pipe_loss_equation:
 
     :math:`P_{loss} = (T_{average} - T_{ground}) \cdot U`
