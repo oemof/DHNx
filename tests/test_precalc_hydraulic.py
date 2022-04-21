@@ -97,3 +97,11 @@ def test_wrong_initial_guess_error():
     with pytest.raises(AttributeError, match=r"initial guesses `v_0` and "):
         v_max_bisection(0.1, 65, v_0=1, v_1=1)
 
+
+def test_bisection_method_velocity():
+    bi_1 = v_max_bisection(
+        0.1, 65, k=0.1, p_max=100,
+        p_epsilon=0.1, v_epsilon=0.001, v_0=1, v_1=0.1,
+        pressure=101325, fluid='IF97::Water'
+    )
+    assert round(bi_1, 7) == 0.9876953
