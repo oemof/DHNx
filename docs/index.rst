@@ -30,8 +30,8 @@ Welcome to DHNx's documentation!
    :maxdepth: 2
    :caption: Reference
 
-   whats_new
    api
+   whats_new
    authors
 
 
