@@ -19,10 +19,17 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-from CoolProp.CoolProp import PropsSI
+import math
+
 import numpy as np
 from scipy.optimize import fsolve
-import math
+
+try:
+    from CoolProp.CoolProp import PropsSI
+
+except ImportError:
+    print("Need to install CoolProp to use the hydraulic "
+          "pre-calculation module.")
 
 
 def eq_smooth(x, R_e):
