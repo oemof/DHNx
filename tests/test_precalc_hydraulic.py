@@ -16,6 +16,7 @@ from dhnx.optimization.precalc_hydraulic import calc_Re
 from dhnx.optimization.precalc_hydraulic import calc_v
 from dhnx.optimization.precalc_hydraulic import calc_v_mf
 from dhnx.optimization.precalc_hydraulic import v_max_bisection
+from dhnx.optimization.precalc_hydraulic import v_max_secant
 
 
 def test_calc_v():
@@ -105,3 +106,12 @@ def test_bisection_method_velocity():
         pressure=101325, fluid='IF97::Water'
     )
     assert round(bi_1, 7) == 0.9876953
+
+
+def test_secant_method_velocity():
+    se_1 = v_max_secant(
+        0.4, 80, k=0.1, p_max=250, p_epsilon=1,
+        v_0=1, v_1=2,
+        pressure=101325, fluid='IF97::Water'
+    )
+    assert round(se_1, 7) == 3.7593294
