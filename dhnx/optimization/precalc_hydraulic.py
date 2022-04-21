@@ -4,7 +4,7 @@
 This module is designed to hold functions for pre-calculation of hydraulic
 parameters for the district heating network dimensioning.
 
-The aim is to calculate the maximum heat transport capacity 
+The aim is to calculate the maximum heat transport capacity
 of pipelines given a maximum pressure drop per meter, roughness of the pipes
 inner surface, and an estimated delta T of the forward and return pipes.
 
