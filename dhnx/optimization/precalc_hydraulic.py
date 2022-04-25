@@ -285,7 +285,7 @@ def calc_lambda_rough(d_i, k):
     Darcy friction factor [-] : numeric
 
     """
-    return ( 1 / ((-2 * np.log10(k / (3.71 * d_i))) ** 2 ))
+    return 1 / ((-2 * np.log10(k / (3.71 * d_i))) ** 2)
 
 
 def calc_lambda_transition(R_e, k, d_i):
