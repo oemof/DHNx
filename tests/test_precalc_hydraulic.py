@@ -17,6 +17,7 @@ from dhnx.optimization.precalc_hydraulic import calc_v
 from dhnx.optimization.precalc_hydraulic import calc_v_mf
 from dhnx.optimization.precalc_hydraulic import v_max_bisection
 from dhnx.optimization.precalc_hydraulic import v_max_secant
+from dhnx.optimization.precalc_hydraulic import delta_p
 
 
 def test_calc_v():
@@ -115,3 +116,34 @@ def test_secant_method_velocity():
         pressure=101325, fluid='IF97::Water'
     )
     assert round(se_1, 7) == 3.7593294
+
+
+def test_delta_p1():  # laminar
+    dp = delta_p(1E-6, 1)
+    assert round(dp, 13) == 1.00538E-8
+
+
+def test_delta_p2():  # turb, Re < 10**5
+    dp = delta_p(1, 5E-3, k=0.01)
+    assert round(dp, 5) == 2743.41722
+
+
+def test_delta_p3():  # turb, 10**5 < Re < 10**6
+    dp = delta_p(10, 5E-3, k=0.001)
+    assert round(dp, 5) == 156745.5396
+
+
+def test_delta_p4():  # turb, Re > 10**6
+    dp = delta_p(100, 5E-3, k=0.0001)
+    assert round(dp, 5) == 10456325.31958
+
+
+def test_delta_p5():  # turb, Re*k/di > 1300
+    dp = delta_p(100, 5E-3, k=0.01)
+    assert round(dp, 5) == 22592027.65789
+
+
+def test_delta_p6():  # turb, transition
+    dp = delta_p(100, 5E-3, k=0.0003)
+    assert round(dp, 5) == 11865210.59373
+

@@ -285,7 +285,9 @@ def calc_lambda_rough(d_i, k):
     Darcy friction factor [-] : numeric
 
     """
-    return (1 / (-2 * np.log10(k / (3.71 * d_i)))) ** 2
+    print("D_i=", d_i)
+    print("k=", k)
+    return ( 1 / ((-2 * np.log10(k / (3.71 * d_i))) ** 2 ))
 
 
 def calc_lambda_transition(R_e, k, d_i):
@@ -361,14 +363,22 @@ def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
     # dynamic viscosity eta [kg/(m*s)]
     d_v = PropsSI('V', 'T', T_medium + 273.15, 'P', pressure, fluid)
     k_v = calc_k_v(d_v, d)
+    print("d=",d)
+    print("d_v=",d_v)
+    print("k_v",k_v)
+    print("di=",d_i)
+    print("v=",v)
+
 
     # Reynolds number
     R_e = calc_Re(v, d_i, k_v)
+    print("Re=",R_e)
+    print(R_e*k/d_i)
 
     if R_e < R_crit:  # laminar flow
-
         lam = calc_lambda_laminar(R_e)
         d_p = calc_d_p(lam, length, d_i, d, v)
+        print("Test1")
 
     else:  # turbulent flow
 
@@ -377,21 +387,27 @@ def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
 
             if R_e < 10**5:
                 lam = calc_lambda_turb1(R_e)
+                print("Test2")
 
             elif R_e >= 10**5 and R_e < 10**6:
                 lam = calc_lambda_turb2(R_e)
+                print("Test3")
 
             else:
                 # Re > 10^6
                 lam = calc_lambda_turb3(R_e)
+                print("Test4")
 
         elif R_e * k / d_i > 1300:
             # Rough pipe
             lam = calc_lambda_rough(d_i, k)
+            print("lam=",lam)
+            print("Test5")
 
         else:
             # Transition range 65 < Re * k/d < 1300
             lam = calc_lambda_transition(R_e, k, d_i)
+            print("Test6")
 
         d_p = calc_d_p(lam, length, d_i, d, v)
 
