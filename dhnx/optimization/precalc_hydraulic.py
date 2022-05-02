@@ -63,7 +63,7 @@ def eq_transition(x, R_e, k, d_i):
 
     .. eq_transition_equation
 
-    :math:`f(x)=x+2\cdot log \Bigg(  \frac{2,51x}{Re} \cdot \frac{k}{3,71d_i} \Bigg)`
+    :math:`f(x)=x+2\cdot log \big(  \frac{2,51x}{Re} \cdot \frac{k}{3,71d_i} \big)`
 
     Parameters
     ----------
@@ -225,7 +225,7 @@ def calc_lambda_turb2(Re):
 
     .. calc_lam_turb1_equation
 
-    :math:`0,0032 + 0,221 \cdot Re ^{-0,237}`
+    :math:`\lambda = 0,0032 + 0,221 \cdot Re ^{-0,237}`
 
     Parameters
     ----------
