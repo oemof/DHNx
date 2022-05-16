@@ -44,7 +44,7 @@ setup(
         'osmnx': ['osmnx >= 0.16.1'],
         "tests": [
             "geopandas", "osmnx",
-            "git+https://github.com/CoolProp/CoolProp.git@master#subdirectory=wrappers/Python",
+            "CoolProp@https://github.com/CoolProp/CoolProp/archive/master.zip",
         ],
     }
 )
