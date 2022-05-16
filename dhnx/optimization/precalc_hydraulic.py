@@ -63,7 +63,7 @@ def eq_transition(x, R_e, k, d_i):
 
     .. eq_transition_equation
 
-    :math:`f(x)=x+2\cdot log \Bigg(  \frac{2,51x}{Re} \cdot \frac{k}{3,71d_i} \Bigg)`
+    :math:`f(x)=x+2\cdot log \big(  \frac{2,51x}{Re} \cdot \frac{k}{3,71d_i} \big)`
 
     Parameters
     ----------
@@ -225,7 +225,7 @@ def calc_lambda_turb2(Re):
 
     .. calc_lam_turb1_equation
 
-    :math:`0,0032 + 0,221 \cdot Re ^{-0,237}`
+    :math:`\lambda = 0,0032 + 0,221 \cdot Re ^{-0,237}`
 
     Parameters
     ----------
@@ -285,7 +285,7 @@ def calc_lambda_rough(d_i, k):
     Darcy friction factor [-] : numeric
 
     """
-    return (1 / (-2 * np.log10(k / (3.71 * d_i)))) ** 2
+    return 1 / ((-2 * np.log10(k / (3.71 * d_i))) ** 2)
 
 
 def calc_lambda_transition(R_e, k, d_i):
@@ -366,7 +366,6 @@ def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
     R_e = calc_Re(v, d_i, k_v)
 
     if R_e < R_crit:  # laminar flow
-
         lam = calc_lambda_laminar(R_e)
         d_p = calc_d_p(lam, length, d_i, d, v)
 
