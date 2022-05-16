@@ -11,7 +11,7 @@ API changes
 New features
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Pre-calculation function for optimisation parameters
 
 New components/constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,9 +46,12 @@ Other changes
 * Improve processing of optimisation results by returning
   raw (un-rounded) solver results for each pipeline
 * Use tox for CI automation
+* Rename examples folder of optimisation examples
 
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
 * Johannes Röder
+* Joris Zimmermann
+* Robert Valeske

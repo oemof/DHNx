@@ -118,9 +118,7 @@ ThermalNetwork
 
 The data for the *ThermalNetwork* must be provided in the structure as defined
 for the .csv reader. The following data is required for applying an
-optimisation:
-
-.. code-block::
+optimisation::
 
     tree
     ├── pipes.csv                       # (required)
@@ -304,6 +302,11 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 * **fix_costs**: Fix investment costs independent of the installed capacity (e.g. [€])
 
 See the *Heatpipeline* API for further details about the attributes.
+
+The module `dhnx.optimization.precalc_hydraulic` provides helpful
+functions for the calculation of the pipeline parameters (see :ref:`api_precalc_hydraulic_label`).
+See also the precalulation example in the
+example folder of the optimisation examples.
 
 .. _Consumer invest data:
 

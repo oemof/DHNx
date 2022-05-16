@@ -14,3 +14,4 @@ from .optimization import add_components  # noqa: F401
 from .optimization import dhs_nodes  # noqa: F401
 from .optimization import oemof_heatpipe  # noqa: F401
 from .optimization import optimization_models  # noqa: F401
+from .optimization import precalc_hydraulic  # noqa: F401

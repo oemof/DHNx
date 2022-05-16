@@ -8,3 +8,4 @@ Authors
 * Joris Zimmermann
 * Marie-Claire Gering
 * oakca
+* Robert Valeske
