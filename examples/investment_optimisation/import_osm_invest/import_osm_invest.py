@@ -73,6 +73,7 @@ ox.plot_graph(graph)
 gdf_poly_houses = ox.geometries_from_polygon(polygon, tags=buildings)
 gdf_lines_streets = ox.geometries_from_polygon(polygon, tags=streets)
 
+# Make sure that only polygon geometries are used
 gdf_poly_houses = gdf_poly_houses[gdf_poly_houses['geometry'].apply(
     lambda x: isinstance(x, geometry.Polygon)
 )].copy()
