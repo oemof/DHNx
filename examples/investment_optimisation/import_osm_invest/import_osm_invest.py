@@ -18,7 +18,7 @@ Contributors:
 """
 import numpy as np
 import osmnx as ox
-import shapely
+from shapely import geometry
 import matplotlib.pyplot as plt
 
 import logging
@@ -66,12 +66,19 @@ bbox = [(9.1008896, 54.1954005),
         (9.1090996, 54.1906397),
         (9.1027474, 54.1895923),
         ]
-polygon = shapely.geometry.Polygon(bbox)
+polygon = geometry.Polygon(bbox)
 graph = ox.graph_from_polygon(polygon, network_type='drive_service')
 ox.plot_graph(graph)
 
 gdf_poly_houses = ox.geometries_from_polygon(polygon, tags=buildings)
 gdf_lines_streets = ox.geometries_from_polygon(polygon, tags=streets)
+
+# Make sure that only polygon geometries are used
+gdf_poly_houses = gdf_poly_houses[gdf_poly_houses['geometry'].apply(
+    lambda x: isinstance(x, geometry.Polygon)
+)].copy()
+
+# Remove nodes column (that make somehow trouble for exporting .geojson)
 gdf_poly_houses.drop(columns=['nodes'], inplace=True)
 gdf_lines_streets.drop(columns=['nodes'], inplace=True)
 
@@ -94,6 +101,9 @@ gdf_poly_gen.plot(ax=ax, color='orange')
 gdf_poly_houses.plot(ax=ax, color='green')
 plt.title('Geometry before processing')
 plt.show()
+
+# # Optionally export the imported geometry (e.g. for QGIS)
+# gdf_poly_houses.to_file('footprint_buildings.geojson', driver='GeoJSON')
 
 # Part II: Process the geometry for DHNx #############
 
