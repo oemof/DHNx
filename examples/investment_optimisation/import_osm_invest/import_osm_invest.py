@@ -18,7 +18,7 @@ Contributors:
 """
 import numpy as np
 import osmnx as ox
-import shapely
+from shapely import geometry
 import matplotlib.pyplot as plt
 
 import logging
@@ -66,14 +66,16 @@ bbox = [(9.1008896, 54.1954005),
         (9.1090996, 54.1906397),
         (9.1027474, 54.1895923),
         ]
-polygon = shapely.geometry.Polygon(bbox)
+polygon = geometry.Polygon(bbox)
 graph = ox.graph_from_polygon(polygon, network_type='drive_service')
 ox.plot_graph(graph)
 
 gdf_poly_houses = ox.geometries_from_polygon(polygon, tags=buildings)
 gdf_lines_streets = ox.geometries_from_polygon(polygon, tags=streets)
-gdf_poly_houses.drop(columns=['nodes'], inplace=True)
-gdf_lines_streets.drop(columns=['nodes'], inplace=True)
+
+gdf_poly_houses = gdf_poly_houses[gdf_poly_houses['geometry'].apply(
+    lambda x: isinstance(x, geometry.Polygon)
+)].copy()
 
 # We need one (or more) buildings that we call "generators".
 # Choose one among the buildings at random and move it to a new GeoDataFrame
