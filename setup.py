@@ -42,6 +42,9 @@ setup(
         'cartopy': ['cartopy'],
         'geopandas': ['geopandas'],
         'osmnx': ['osmnx >= 0.16.1'],
-        "tests": ["geopandas", "osmnx", 'CoolProp'],
+        "tests": [
+            "geopandas", "osmnx",
+            "git+https://github.com/CoolProp/CoolProp.git@master#subdirectory=wrappers/Python",
+        ],
     }
 )
