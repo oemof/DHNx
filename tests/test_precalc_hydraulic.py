@@ -15,9 +15,9 @@ from dhnx.optimization.precalc_hydraulic import calc_power
 from dhnx.optimization.precalc_hydraulic import calc_Re
 from dhnx.optimization.precalc_hydraulic import calc_v
 from dhnx.optimization.precalc_hydraulic import calc_v_mf
+from dhnx.optimization.precalc_hydraulic import delta_p
 from dhnx.optimization.precalc_hydraulic import v_max_bisection
 from dhnx.optimization.precalc_hydraulic import v_max_secant
-from dhnx.optimization.precalc_hydraulic import delta_p
 
 
 def test_calc_v():
@@ -146,4 +146,3 @@ def test_delta_p5():  # turb, Re*k/di > 1300
 def test_delta_p6():  # turb, transition
     dp = delta_p(100, 5E-3, k=0.0003)
     assert round(dp, 5) == 11865210.59373
-
