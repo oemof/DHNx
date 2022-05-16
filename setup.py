@@ -28,6 +28,7 @@ setup(
             os.path.join("component_attrs", "*.csv"),
         ],
     },
+    python_requires='>=3.7, <3.9',
     install_requires=[
         'pandas >= 0.18.0',
         'matplotlib',
@@ -44,7 +45,7 @@ setup(
         'osmnx': ['osmnx >= 0.16.1'],
         "tests": [
             "geopandas", "osmnx",
-            "CoolProp@https://github.com/CoolProp/CoolProp/archive/master.zip#subdirectory=wrappers/Python",
+            "CoolProp",
         ],
     }
 )
