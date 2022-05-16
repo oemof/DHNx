@@ -78,6 +78,10 @@ gdf_poly_houses = gdf_poly_houses[gdf_poly_houses['geometry'].apply(
     lambda x: isinstance(x, geometry.Polygon)
 )].copy()
 
+# Remove nodes column (that make somehow trouble for exporting .geojson)
+gdf_poly_houses.drop(columns=['nodes'], inplace=True)
+gdf_lines_streets.drop(columns=['nodes'], inplace=True)
+
 # We need one (or more) buildings that we call "generators".
 # Choose one among the buildings at random and move it to a new GeoDataFrame
 np.random.seed(42)
@@ -97,6 +101,9 @@ gdf_poly_gen.plot(ax=ax, color='orange')
 gdf_poly_houses.plot(ax=ax, color='green')
 plt.title('Geometry before processing')
 plt.show()
+
+# # Optionally export the imported geometry (e.g. for QGIS)
+# gdf_poly_houses.to_file('footprint_buildings.geojson', driver='GeoJSON')
 
 # Part II: Process the geometry for DHNx #############
 
