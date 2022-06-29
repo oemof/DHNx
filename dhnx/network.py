@@ -316,3 +316,19 @@ class ThermalNetwork():
 
     def simulate(self, *args, **kwargs):
         self.results.simulation = simulate(self, *args, **kwargs)
+
+    def aggregate(self, maxlength = 100):
+        """
+
+        :param maxlength:
+        :return:
+        """
+        self.aggregatednetwork = dict()
+        test_dict = aggregation(forks = self.components["forks"],
+                                pipes = self.components["pipes"],
+                                consumers = self.components["consumers"],
+                                producers = self.components["producers"])
+
+
+def aggregation(forks, pipes, consumers, producers):
+    pass
