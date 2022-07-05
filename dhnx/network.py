@@ -332,9 +332,11 @@ class ThermalNetwork():
 
 def aggregation(forks, pipes, consumers, producers):
 
-
     from shapely import geometry, ops
     import geopandas as gpd
+    import matplotlib.pyplot as plt
+
+    # Zwei pipes mergen
     pipe42geo = pipes.loc[42]['geometry']   # pipe42geo = tn_input['pipes'].loc[42]['geometry']
     pipe87geo = pipes.loc[87]['geometry']   # pipe87geo = tn_input['pipes'].loc[87]['geometry']
 
@@ -345,12 +347,10 @@ def aggregation(forks, pipes, consumers, producers):
 
 
     # super_pipe1 als Series initialisieren
-   # super_pipe1 = pd.Series(data = [superpipe1geom, 'DL', 1, 2], index=['geometry', 'type', 'from_node', 'to_node'])
-
-
+    # super_pipe1 = pd.Series(data = [superpipe1geom, 'DL', 1, 2], index=['geometry', 'type', 'from_node', 'to_node'])
+    # super_pipe1 = gpd.geoseries(data=[superpipe1geom, 'DL', 1, 2], index=['geometry', 'type', 'from_node', 'to_node'])
     super_pipe1 = pipes.loc[42].copy()   # super_pipe1 = tn_input['pipes'].loc[42].copy()
     super_pipe1['geometry'] = superpipe1geom
-
 
 
     #super_pipes als GeoDataFrame initialisieren
@@ -359,11 +359,16 @@ def aggregation(forks, pipes, consumers, producers):
 
     super_pipes.loc[0] = super_pipe1
 
-    super_pipes.loc[1:30] = 0
+    #super_pipes.loc[1:len(pipes)] = none
+    super_pipes = super_pipes.drop(range(1, len(pipes)))
 
     # plotten
     _, ax = plt.subplots()
-    super_pipes.plot(ax=ax, color='grey')
+    super_pipes.plot(ax=ax, color='red')
+    consumers.plot(ax=ax, color='green')
+    producers.plot(ax=ax, color='blue')
+    forks.plot(ax=ax, color='grey')
+    plt.title('Geometry after aggregation of pipes')
     plt.show()
 
     # Exportieren als geojson
@@ -374,6 +379,12 @@ def aggregation(forks, pipes, consumers, producers):
     # Funktionen die weiterhelfen könnten:
     # super_pipes['from_node'].value_counts().head()
     # go.insert_node_ids(lines_all, points_all)
+    # testgeometry["geometry"].wkt
+    # testgeometry["geometry"].coords[2][0]
+    # testgeometry["geometry"].touches(tn_input['pipes'].loc[13]["geometry"])
+
+
+
 
     # return
     return {
