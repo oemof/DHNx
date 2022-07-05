@@ -14,6 +14,7 @@ SPDX-License-Identifier: MIT
 import os
 
 import pandas as pd
+import geopandas as gpd
 
 from .graph import thermal_network_to_nx_graph
 from .helpers import Dict
@@ -319,7 +320,6 @@ class ThermalNetwork():
 
     def aggregate(self, maxlength = 100):
         """
-
         :param maxlength:
         :return:
         """
@@ -331,4 +331,55 @@ class ThermalNetwork():
 
 
 def aggregation(forks, pipes, consumers, producers):
-    pass
+
+
+    from shapely import geometry, ops
+    import geopandas as gpd
+    pipe42geo = pipes.loc[42]['geometry']   # pipe42geo = tn_input['pipes'].loc[42]['geometry']
+    pipe87geo = pipes.loc[87]['geometry']   # pipe87geo = tn_input['pipes'].loc[87]['geometry']
+
+    #superpipe1geo = pipe42geo.union(pipe87geo) Multiline String
+
+    superpipe1geo = geometry.MultiLineString([pipe42geo, pipe87geo])
+    superpipe1geom = ops.linemerge(superpipe1geo)
+
+
+    # super_pipe1 als Series initialisieren
+   # super_pipe1 = pd.Series(data = [superpipe1geom, 'DL', 1, 2], index=['geometry', 'type', 'from_node', 'to_node'])
+
+
+    super_pipe1 = pipes.loc[42].copy()   # super_pipe1 = tn_input['pipes'].loc[42].copy()
+    super_pipe1['geometry'] = superpipe1geom
+
+
+
+    #super_pipes als GeoDataFrame initialisieren
+    #super_pipes = gpd.GeoDataFrame(geometry=[], crs=pipes.crs) # super_pipes = gpd.GeoDataFrame(geometry=[], crs=tn_input['pipes'].crs)
+    super_pipes = pipes.copy() #    super_pipes = tn_input['pipes'].copy()
+
+    super_pipes.loc[0] = super_pipe1
+
+    super_pipes.loc[1:30] = 0
+
+    # plotten
+    _, ax = plt.subplots()
+    super_pipes.plot(ax=ax, color='grey')
+    plt.show()
+
+    # Exportieren als geojson
+    # path_geo = 'qgis'
+    # super_pipes.to_file(os.path.join(path_geo, super_pipes + '.geojson'), driver='GeoJSON')
+    super_pipes.to_file('super_pipes.geojson', driver='GeoJSON')
+
+    # Funktionen die weiterhelfen könnten:
+    # super_pipes['from_node'].value_counts().head()
+    # go.insert_node_ids(lines_all, points_all)
+
+    # return
+    return {
+        'super_forks': forks, # not yet defined
+        'super_consumers': consumers, # not yet defined
+        'super_producers': producers, # not yet defined
+        'super_pipes': super_pipes,
+    }
+
