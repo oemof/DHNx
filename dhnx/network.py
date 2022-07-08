@@ -335,31 +335,59 @@ def aggregation(forks, pipes, consumers, producers):
     from shapely import geometry, ops
     import geopandas as gpd
     import matplotlib.pyplot as plt
+    import pandas as pd
+    # # # 1. Identifizierung der Superforks
+    # DL und GL aus pipes speichern
+    DLGLpipes = pipes.loc[pipes['type'].isin(['DL', 'GL'])]
+    # Anzahl von Verbindungen von den forks zählen (from_node und to_node)
+    count_forks_from_node = DLGLpipes['from_node'].value_counts()
+    count_forks_to_node = DLGLpipes['to_node'].value_counts()
+    # Anzahl von from_node und to_node addieren
+    count_forks = count_forks_from_node.add(count_forks_to_node, fill_value=0)
+    # Die Superforks, also forks mit 1, 3, 4 Verbindungen, identifizieren
+    count_superforks = count_forks[count_forks.isin([1, 3, 4])]
+    # Index von den Superforks speichern
+    superforks_indexlist = count_superforks.index.tolist()
+    # Superforks aus forks nehmen, wenn die forks als Superfork identifiziert wurden
+    super_forks = forks.copy()
+    super_forks = super_forks[super_forks['id_full'].isin(superforks_indexlist)]
+    # Anzahl der Verbindungen
+    # super_forks['Verbindungen'] = count_superforks.tolist() #Fehler, weil producer-0 in count_superforks drin ist und nicht in super_forks
+
+    # # # 2. SuperPipes identifizieren
+    # # 2.1 Pipe1 für SuperFork1 raussuchen
+    # erst durch from_node dann to_node
+    i = 1 # # # 1. Schleife Superforks durchgehen
+    superfork_id_1 = super_forks.loc[i]['id_full']
+    superpipes_SF_1_from_node = pipes[pipes['from_node'] == superfork_id_1] # # # 2.  Schleife Superpipes durchgehen
+    superpipes_SF_1_to_node = pipes[pipes['to_node'] == superfork_id_1]
+    superpipes_SF_1 = superpipes_SF_1_from_node.append(superpipes_SF_1_to_node)
+    a = 1# forks zu SP 1 raussuchen und anschließend uprüfen of SF
+    segment1 = superpipes_SF_1.loc[a]
+    forks_SP1 = superpipes_SF_1.loc[a]['from_node']
+
+
 
     # Zwei pipes mergen
     pipe42geo = pipes.loc[42]['geometry']   # pipe42geo = tn_input['pipes'].loc[42]['geometry']
     pipe87geo = pipes.loc[87]['geometry']   # pipe87geo = tn_input['pipes'].loc[87]['geometry']
 
-    #superpipe1geo = pipe42geo.union(pipe87geo) Multiline String
 
     superpipe1geo = geometry.MultiLineString([pipe42geo, pipe87geo])
     superpipe1geom = ops.linemerge(superpipe1geo)
 
-
-    # super_pipe1 als Series initialisieren
-    # super_pipe1 = pd.Series(data = [superpipe1geom, 'DL', 1, 2], index=['geometry', 'type', 'from_node', 'to_node'])
-    # super_pipe1 = gpd.geoseries(data=[superpipe1geom, 'DL', 1, 2], index=['geometry', 'type', 'from_node', 'to_node'])
     super_pipe1 = pipes.loc[42].copy()   # super_pipe1 = tn_input['pipes'].loc[42].copy()
     super_pipe1['geometry'] = superpipe1geom
 
 
-    #super_pipes als GeoDataFrame initialisieren
-    #super_pipes = gpd.GeoDataFrame(geometry=[], crs=pipes.crs) # super_pipes = gpd.GeoDataFrame(geometry=[], crs=tn_input['pipes'].crs)
     super_pipes = pipes.copy() #    super_pipes = tn_input['pipes'].copy()
+
+    # for row, col in super_pipes.iterrows():
+    #     if
+    #         continue
 
     super_pipes.loc[0] = super_pipe1
 
-    #super_pipes.loc[1:len(pipes)] = none
     super_pipes = super_pipes.drop(range(1, len(pipes)))
 
     # plotten
@@ -367,28 +395,20 @@ def aggregation(forks, pipes, consumers, producers):
     super_pipes.plot(ax=ax, color='red')
     consumers.plot(ax=ax, color='green')
     producers.plot(ax=ax, color='blue')
-    forks.plot(ax=ax, color='grey')
+    super_forks.plot(ax=ax, color='grey')
     plt.title('Geometry after aggregation of pipes')
     plt.show()
 
+
     # Exportieren als geojson
-    # path_geo = 'qgis'
-    # super_pipes.to_file(os.path.join(path_geo, super_pipes + '.geojson'), driver='GeoJSON')
+    super_forks.to_file('super_forks.geojson', driver='GeoJSON')
     super_pipes.to_file('super_pipes.geojson', driver='GeoJSON')
-
-    # Funktionen die weiterhelfen könnten:
-    # super_pipes['from_node'].value_counts().head()
-    # go.insert_node_ids(lines_all, points_all)
-    # testgeometry["geometry"].wkt
-    # testgeometry["geometry"].coords[2][0]
-    # testgeometry["geometry"].touches(tn_input['pipes'].loc[13]["geometry"])
-
 
 
 
     # return
     return {
-        'super_forks': forks, # not yet defined
+        'super_forks': super_forks,
         'super_consumers': consumers, # not yet defined
         'super_producers': producers, # not yet defined
         'super_pipes': super_pipes,
