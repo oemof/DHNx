@@ -329,6 +329,9 @@ class ThermalNetwork():
                                 consumers = self.components["consumers"],
                                 producers = self.components["producers"])
 
+# TODO: Länge der Superpipes berechnen
+# TODO: Leistungsabhängige Aggregation
+# TODO: Straßen werden als ganzes aggregiert, obwohl das nicht immer sinnvoll ist (siehe Straße "Im Grund" oben rechts)
 
 def aggregation(forks, pipes, consumers, producers):
 
@@ -336,74 +339,194 @@ def aggregation(forks, pipes, consumers, producers):
     import geopandas as gpd
     import matplotlib.pyplot as plt
     import pandas as pd
-    # # # 1. Identifizierung der Superforks
+
+# TODO: Warnings anschalten
+    import warnings
+    warnings.filterwarnings("ignore")
+
+    # # # Identifizierung der Superforks
     # DL und GL aus pipes speichern
     DLGLpipes = pipes.loc[pipes['type'].isin(['DL', 'GL'])]
+
     # Anzahl von Verbindungen von den forks zählen (from_node und to_node)
     count_forks_from_node = DLGLpipes['from_node'].value_counts()
     count_forks_to_node = DLGLpipes['to_node'].value_counts()
+
     # Anzahl von from_node und to_node addieren
     count_forks = count_forks_from_node.add(count_forks_to_node, fill_value=0)
+
     # Die Superforks, also forks mit 1, 3, 4 Verbindungen, identifizieren
     count_superforks = count_forks[count_forks.isin([1, 3, 4])]
+
     # Index von den Superforks speichern
     superforks_indexlist = count_superforks.index.tolist()
+
     # Superforks aus forks nehmen, wenn die forks als Superfork identifiziert wurden
     super_forks = forks.copy()
     super_forks = super_forks[super_forks['id_full'].isin(superforks_indexlist)]
+    super_forks = super_forks.reset_index(drop=True)
+
     # Anzahl der Verbindungen
     # super_forks['Verbindungen'] = count_superforks.tolist() #Fehler, weil producer-0 in count_superforks drin ist und nicht in super_forks
 
-    # # # 2. SuperPipes identifizieren
-    # # 2.1 Pipe1 für SuperFork1 raussuchen
-    # erst durch from_node dann to_node
-    i = 1 # # # 1. Schleife Superforks durchgehen
-    superfork_id_1 = super_forks.loc[i]['id_full']
-    superpipes_SF_1_from_node = pipes[pipes['from_node'] == superfork_id_1] # # # 2.  Schleife Superpipes durchgehen
-    superpipes_SF_1_to_node = pipes[pipes['to_node'] == superfork_id_1]
-    superpipes_SF_1 = superpipes_SF_1_from_node.append(superpipes_SF_1_to_node)
-    a = 1# forks zu SP 1 raussuchen und anschließend uprüfen of SF
-    segment1 = superpipes_SF_1.loc[a]
-    forks_SP1 = superpipes_SF_1.loc[a]['from_node']
+
+    # # # 2. SuperPipes identifizieren und mergen
+
+    # super_pipes initialisieren
+    super_pipes = pipes.copy()
+    super_pipes = super_pipes.drop(range(0, len(pipes)))
+    # Liste für aggregierte forks und pipes initialisieren
+    aggregated_forks = []
+    aggregated_pipes = []
+    # TODO: Stopp bei producer! --> beseitigt durch neue abfrage, diese nochmal überprüfen
+    i = -1  # # # Erste Schleife: Superforks durchgehen
+
+    while i <= len(super_forks) - 2:  # länge ist absolut und id startet bei 0
+        i += 1
+        # Den aktuellen super_fork (i) aus der super_fork Liste auswählen ...
+        superfork_i_id_full = super_forks.loc[i]['id_full']
+        # ... und zu den aggregierten hinzugügen
+        aggregated_forks.append(superfork_i_id_full)
+        # Pipes die am Superfork i verbunden sind raus suchen und in einen GeoDataFrame speichern
+        pipes_superfork_i_from_node = DLGLpipes[DLGLpipes['from_node'] == superfork_i_id_full]
+        pipes_superfork_i_to_node = DLGLpipes[DLGLpipes['to_node'] == superfork_i_id_full]
+        pipes_superfork_i = pipes_superfork_i_from_node.append(pipes_superfork_i_to_node)
+        pipes_superfork_i = pipes_superfork_i.reset_index(drop=True)
+
+        a = - 1 # # # Zweite Schleife: Superpipes a vom Superfork i durchgehen
+        while a <= len(pipes_superfork_i) - 2:  # länge ist absolut und id startet bei 0
+            a += 1
+            # Wenn die pipe schon aggregiert wurde, soll die nächst pipe überprüft werden
+            if pipes_superfork_i.loc[a]['id'] in aggregated_pipes:
+                continue  # evtl. a += 1 vorher break oder continue
+            # Ein Segment ist die Anreihung von pipes bevor diese gemerget werden
+            # Das Segment wird initialisiert und die pipe a ist die erste pipe des Segments
+            segment_i_a = pipes_superfork_i.copy()
+            segment_i_a = segment_i_a[segment_i_a.index == a]
+            segment_i_a = segment_i_a.reset_index(drop=True)
+
+            aggregation_segment = False # # # Dritte Schleife: Die Elemente b von pipe a durchgehen
+            b = 0
+            while aggregation_segment == False:
+
+                # print('Superfork i: ', superfork_i_id_full)
+                # print('pipe a: ', segment_i_a.at[0, 'id'])
+                # print('segment b: ', b)
+
+                # Heraussuchen des nächsten forks der mit der pipe b verbunden ist
+                fork_from_pipe_b_segment_i_a = 0  # evtl nicht nötig
+                fork_to_pipe_b_segment_i_a = 0  # evtl nicht nötig
+                fork_from_pipe_b_segment_i_a = segment_i_a.at[b, 'from_node']  # hier tritt ein fehler auf
+                fork_to_pipe_b_segment_i_a = segment_i_a.at[b, 'to_node']
+                count_type_forks_pipe_b_segment_i_a = 0
+                status_fork_from_pipe_b_segment_i_a = 0  # nicht benötigt
+                status_fork_to_pipe_b_segment_i_a = 0  # nicht benötigt
+                # Initialisieren des nächsten forks
+                fork_next_segment_i_a = 0
+                # TODO: Kann der nächste Fork überhaupt in aggregated forks sein, wenn die pipe nicht aggregiert ist?
+                # Prüfen ob der fork 'from' bereits aggregiert oder ein superfork ist oder ein producer ist
+                # Wenn ja wird die Anzahl der count_type_forks_pipe_b_segment_i_a erhöht ...
+                # ... falls nicht ist der fork zum nächsten segment der fork 'from'
+                if fork_from_pipe_b_segment_i_a in super_forks[
+                    'id_full'].unique() or fork_from_pipe_b_segment_i_a in aggregated_forks or fork_from_pipe_b_segment_i_a in \
+                        producers['id_full'].unique():
+                    count_type_forks_pipe_b_segment_i_a += 1
+                    status_fork_from_pipe_b_segment_i_a = 'aggregated/superfork'  # nicht benötigt
+                else:
+                    fork_next_segment_i_a = fork_from_pipe_b_segment_i_a  # Der nächste fork darf noch nicht aggregiert sein
+                # Prüfen ob der fork 'to' bereits aggregiert oder ein superfork ist oder ein producer ist
+                # Wenn ja wird die Anzahl der count_type_forks_pipe_b_segment_i_a erhöht
+                # ... falls nicht ist der fork zum nächsten segment der fork 'to'
+                if fork_to_pipe_b_segment_i_a in super_forks[
+                    'id_full'].unique() or fork_to_pipe_b_segment_i_a in aggregated_forks or fork_to_pipe_b_segment_i_a in \
+                        producers['id_full'].unique():
+                    count_type_forks_pipe_b_segment_i_a += 1
+                    status_fork_to_pipe_b_segment_i_a = 'aggregated/superfork'  # nicht benötigt
+                else:
+                    fork_next_segment_i_a = fork_to_pipe_b_segment_i_a  # Der nächste fork darf noch nicht aggregiert sein
+                # Wenn beide forks aggregiert sind wird das Segment gemergt
+                if count_type_forks_pipe_b_segment_i_a == 2:
+                    # merge new geometry
+                    geom_multi_segment_i_a = geometry.MultiLineString(segment_i_a['geometry'].unique())
+                    geom_line_segment_i_a = ops.linemerge(geom_multi_segment_i_a)
+                    # create new pipe
+                    merged_segment_i_a = segment_i_a[segment_i_a.index == 0]
+                    merged_segment_i_a['geometry'] = geom_line_segment_i_a
+                    #
+                    merged_segment_i_a['to_node'] = segment_i_a.loc[b]['to_node']
+                    # add new pipe to super pipes
+                    super_pipes = super_pipes.append(merged_segment_i_a)
+                    # add pipe_ids to aggregated pipes
+                    aggregated_pipes = aggregated_pipes + segment_i_a['id'].tolist()
+
+                    aggregation_segment == True
+                    # TODO: Länge des Segments berechnen und to node from node anpassen
+
+                    break
 
 
+                    # Identifizieren welche pipes mit fork_next_segment_i_a verbunden sind
+                elif count_type_forks_pipe_b_segment_i_a == 1:  #
 
-    # Zwei pipes mergen
-    pipe42geo = pipes.loc[42]['geometry']   # pipe42geo = tn_input['pipes'].loc[42]['geometry']
-    pipe87geo = pipes.loc[87]['geometry']   # pipe87geo = tn_input['pipes'].loc[87]['geometry']
+                    pipe_next_segment_i_a = 0  #
+                    # Nächste Pipe darf nicht die aktuelle sein!
+                    # TODO: Von einigen Forks gehen zwei pipes hin oder zwei pipes weg. Daher andere Überprüfung nötig!
+                    # TODO:EVTL from und to in ein Array und dann die pipe die nicht die letzte ist als neue
+                    # TODO:Abfrage schlauer gestalten
+
+                    list_of_connected_pipes_to_next_fork = []
+                    list_of_connected_pipes_to_next_fork = list_of_connected_pipes_to_next_fork + DLGLpipes.loc[
+                        DLGLpipes['from_node'].isin([fork_next_segment_i_a])]['id'].tolist() + DLGLpipes.loc[
+                                                               DLGLpipes['to_node'].isin([fork_next_segment_i_a])][
+                                                               'id'].tolist()
+
+                    #print('list of connected pipes: ', list_of_connected_pipes_to_next_fork)
+
+                    if segment_i_a.at[b, 'id'] == list_of_connected_pipes_to_next_fork[0]:
+                        pipe_next_segment_i_a = DLGLpipes.loc[
+                            DLGLpipes['id'].isin([list_of_connected_pipes_to_next_fork[1]])]
+
+                    elif segment_i_a.at[b, 'id'] == list_of_connected_pipes_to_next_fork[1]:
+                        pipe_next_segment_i_a = DLGLpipes.loc[
+                            DLGLpipes['id'].isin([list_of_connected_pipes_to_next_fork[0]])]
+
+                    else:
+                        print('error: next fork doesnt connect to any new pipe')
+
+                    # b hoch zählen
+                    b += 1
+
+                    # hinzufügen zu segment i_a
+                    segment_i_a = segment_i_a.append(pipe_next_segment_i_a)
+
+                    # index resetten
+                    segment_i_a = segment_i_a.reset_index(drop=True)
+
+                    # fork zu aggregated fork
+                    aggregated_forks.append(fork_next_segment_i_a)
 
 
-    superpipe1geo = geometry.MultiLineString([pipe42geo, pipe87geo])
-    superpipe1geom = ops.linemerge(superpipe1geo)
+                else:
+                    print('error: pipe is not connected to any aggregated fork or super fork')
 
-    super_pipe1 = pipes.loc[42].copy()   # super_pipe1 = tn_input['pipes'].loc[42].copy()
-    super_pipe1['geometry'] = superpipe1geom
+    # Länge der super_pipes berechnen
+    super_pipes['length'] = super_pipes.length
 
-
-    super_pipes = pipes.copy() #    super_pipes = tn_input['pipes'].copy()
-
-    # for row, col in super_pipes.iterrows():
-    #     if
-    #         continue
-
-    super_pipes.loc[0] = super_pipe1
-
-    super_pipes = super_pipes.drop(range(1, len(pipes)))
+    print('list of aggregated pipes: ', aggregated_pipes)
+    print('list of aggregated forks: ', aggregated_forks)
 
     # plotten
     _, ax = plt.subplots()
     super_pipes.plot(ax=ax, color='red')
-    consumers.plot(ax=ax, color='green')
+    # consumers.plot(ax=ax, color='green')
     producers.plot(ax=ax, color='blue')
     super_forks.plot(ax=ax, color='grey')
     plt.title('Geometry after aggregation of pipes')
     plt.show()
 
-
     # Exportieren als geojson
     super_forks.to_file('super_forks.geojson', driver='GeoJSON')
     super_pipes.to_file('super_pipes.geojson', driver='GeoJSON')
-
 
 
     # return
