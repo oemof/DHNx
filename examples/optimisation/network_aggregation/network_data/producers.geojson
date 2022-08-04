@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::4647" } },
+"features": [
+{ "type": "Feature", "properties": { "id": 0, "addr:city": "Heide", "addr:country": "DE", "addr:housenumber": "19", "addr:postcode": "25746", "addr:street": "Rüsdorfer Straße", "building": "commercial", "name": null, "opening_hours": null, "shop": null, "toilets:wheelchair": null, "website": null, "wheelchair": null, "craft": null, "fixme": null, "lat": 6005108.4937480008, "lon": 32506649.763465486, "id_full": "producers-0", "type": "G" }, "geometry": { "type": "Point", "coordinates": [ 32506649.763465486466885, 6005108.493748000822961 ] } }
+]
+}

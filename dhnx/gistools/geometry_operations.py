@@ -27,14 +27,17 @@ try:
     from shapely.ops import linemerge
     from shapely.ops import nearest_points
     from shapely.ops import unary_union
+
 except ImportError:
     print("Need to install shapely to process geometry.")
 
 import logging
 
 import matplotlib.pyplot as plt
+# from shapely import geometry, ops
 import pandas as pd
-
+from shapely import geometry
+from shapely import ops
 
 def create_forks(lines):
     """
@@ -511,3 +514,272 @@ def check_crs(gdf, crs=4647):
         logging.info('CRS of GeoDataFrame converted to EPSG:{0}'.format(crs))
 
     return gdf
+
+def aggregation(forks, pipes, consumers, producers):
+
+    """
+    This function forms a new aggregated network consisting of super forks, super pipes and super produsers
+    Super forks are forks with less or more than two connections to DL or are connected to GL.
+    Super pipes are all pipes between those super forks
+
+    Parameters
+        ----------
+        forks : geopandas.GeoDataFrame
+            Location of forks. Expected geometry: Polygons or Points.
+        pipes : geopandas.GeoDataFrame
+            Routes for the DHS. Expected geometry Linestrings or MultilineStrings.
+            The graph of this line network should be connected.
+        consumers : geopandas.GeoDataFrame
+            Location of demand/consumers. Expected geometry: Polygons or Points.
+        producers : geopandas.GeoDataFrame
+            Location of supply sites. Expected geometry: Polygons or Points.
+
+    Returns
+        -------
+        dict : Results of aggregation. Contains:
+            - 'super_forks' : geopandas.GeoDataFrame
+                    forks identifyed as super forks
+            - 'super_pipes' : geopandas.GeoDataFrame
+                    pipes aggregated to super pipes
+            - 'super_producer' : geopandas.GeoDataFrame
+                    unchanged producers
+            - 'super_consumer' : geopandas.GeoDataFrame
+                    unchanged consumers
+
+    Example:
+        network_aggregation
+    """
+
+
+    # # # 1. identify super forks
+    # DL and GL pipes copied from pipes
+    DLpipes = pipes.loc[pipes['type'].isin(['DL'])]
+    GLpipes = pipes.loc[pipes['type'].isin(['GL'])]
+
+    # count connections of forks to DL pipes
+    count_forks = DLpipes['from_node'].value_counts() + DLpipes['to_node'].value_counts()
+
+    # identify super forks with less or more than two connections
+    count_superforks = count_forks[~count_forks.isin([2])]
+
+    # add producer super forks
+    producers_superforks = GLpipes['from_node'].tolist() + GLpipes['to_node'].tolist()
+
+    # save indexes of super forks
+    superforks_indexlist = count_superforks.index.tolist() + producers_superforks
+
+    # copy super forks out of forks, if they are identified as super fork
+    super_forks = forks.copy()
+    super_forks = super_forks[super_forks['id_full'].isin(superforks_indexlist)]
+    super_forks = super_forks.reset_index(drop=True)
+
+    # # # 2. identify and merge super pipes
+
+    # initialize super pipes
+    super_pipes = pipes.copy()
+    super_pipes = super_pipes.drop(range(0, len(pipes)))
+    # initialize lists for aggregated forks and pipes
+    aggregated_forks = []
+    aggregated_pipes = []
+
+    # initialize HL pipes for aggregated_consumers_segment_i_a
+    HLpipes = pipes.loc[pipes['type'].isin(['HL'])]
+    # DL and GL pipes
+    DLGLpipes = pipes.loc[pipes['type'].isin(['DL', 'GL'])]
+
+    # # # first loop: go throught super forks
+    # the length is absolute and id starts at 0
+    i = -1
+    while i <= len(super_forks) - 2:
+        i += 1
+        # select the current super fork (i)...
+        superfork_i_id_full = super_forks.loc[i]['id_full']
+        # ... and add to the aggregated forks
+        aggregated_forks.append(superfork_i_id_full)
+
+        # search for consumer which are connected with super fork i
+        aggregated_consumer_super_fork_i = []
+        aggregated_consumer_super_fork_i = HLpipes.loc[HLpipes['from_node'] == superfork_i_id_full]['to_node'].tolist()
+        str_aggregated_consumer_super_forks = ', '.join(aggregated_consumer_super_fork_i)
+        index = super_forks.loc[super_forks['id_full'] == superfork_i_id_full].index[0]
+        super_forks.at[index, 'aggregated_consumers'] = str_aggregated_consumer_super_forks
+
+        # add the max_heat off all connected consumers to super fork i
+        aggregated_P_heat_super_fork_i = []
+        aggregated_P_heat_super_fork_i = consumers.loc[consumers['id_full'].isin(aggregated_consumer_super_fork_i)][
+            'P_heat_max'].tolist()
+        sum_aggregated_P_heat_max_super_fork_i = sum(aggregated_P_heat_super_fork_i)
+        super_forks.at[index, 'aggregated_P_heat_max'] = sum_aggregated_P_heat_max_super_fork_i
+
+        # Find pipes connected to the super fork i and save them in a GeoDataFrame.
+        pipes_superfork_i_from_node = DLGLpipes[DLGLpipes['from_node'] == superfork_i_id_full]
+        pipes_superfork_i_to_node = DLGLpipes[DLGLpipes['to_node'] == superfork_i_id_full]
+        pipes_superfork_i = pipes_superfork_i_from_node.append(pipes_superfork_i_to_node)
+        pipes_superfork_i = pipes_superfork_i.reset_index(drop=True)
+
+        # # # second loop: go through super pipes a from super fork i
+        # the length is absolute and id starts at 0
+        a = - 1
+        while a <= len(pipes_superfork_i) - 2:
+            a += 1
+            # If the pipe has already been aggregated, the next pipe should be checked
+            if pipes_superfork_i.loc[a]['id'] in aggregated_pipes:
+                continue  # evtl. a += 1 vorher break oder continue
+            # A segment is the accumulation of pipes before they are merged
+            # The segment is initialized and the pipe a is the first pipe of the segment
+            segment_i_a = pipes_superfork_i.copy()
+            segment_i_a = segment_i_a[segment_i_a.index == a]
+            segment_i_a = segment_i_a.reset_index(drop=True)
+            included_forks_segment_i_a = []
+            # # # thrid loop: Go through the elements b (pipes and forks) of super pipe a
+            aggregation_segment = False
+            b = 0
+            while aggregation_segment == False:
+
+                # Searching for the next fork connected to pipe b
+                fork_from_pipe_b_segment_i_a = segment_i_a.at[b, 'from_node']
+                fork_to_pipe_b_segment_i_a = segment_i_a.at[b, 'to_node']
+                count_type_forks_pipe_b_segment_i_a = 0
+
+                # Initialize the next fork
+                fork_next_segment_i_a = 0
+
+                # Check if the fork 'from' is already aggregated or is a superfork or is a producer
+                # If yes the number of count_type_forks_pipe_b_segment_i_a is increased ...
+                # ... if not the fork to the next segment is the fork 'from'.
+                if fork_from_pipe_b_segment_i_a in super_forks[
+                    'id_full'].unique() or fork_from_pipe_b_segment_i_a in aggregated_forks or fork_from_pipe_b_segment_i_a in \
+                        producers['id_full'].unique():
+                    count_type_forks_pipe_b_segment_i_a += 1
+                # The next fork must not be aggregated yet
+                else:
+                    fork_next_segment_i_a = fork_from_pipe_b_segment_i_a
+
+                # Check if the fork 'to' is already aggregated or is a superfork or is a producer
+                # If yes the number of count_type_forks_pipe_b_segment_i_a is increased
+                # ... if not the fork to the next segment is the fork 'to'.
+                if fork_to_pipe_b_segment_i_a in super_forks[
+                    'id_full'].unique() or fork_to_pipe_b_segment_i_a in aggregated_forks or fork_to_pipe_b_segment_i_a in \
+                        producers['id_full'].unique():
+                    count_type_forks_pipe_b_segment_i_a += 1
+                # The next fork must not be aggregated yet
+                else:
+                    fork_next_segment_i_a = fork_to_pipe_b_segment_i_a
+
+                # If both forks are aggregated or are super forks the segment is merged
+                if count_type_forks_pipe_b_segment_i_a == 2:
+                    # merge new geometry
+                    geom_multi_segment_i_a = geometry.MultiLineString(segment_i_a['geometry'].unique())
+                    geom_line_segment_i_a = ops.linemerge(geom_multi_segment_i_a)
+                    # create new pipe
+                    merged_segment_i_a = segment_i_a[segment_i_a.index == 0]
+                    merged_segment_i_a['geometry'] = geom_line_segment_i_a
+
+                    # # set from_node and to_node of the merged segment
+                    # from_node is the super fork i
+                    merged_segment_i_a.at[0, 'from_node'] = superfork_i_id_full
+                    # to_node is not the super fork i and ether a super fork or a producer
+                    last_fork_segment_i_a = 0
+                    if fork_to_pipe_b_segment_i_a != superfork_i_id_full and (fork_to_pipe_b_segment_i_a in super_forks[
+                        'id_full'].unique() or fork_to_pipe_b_segment_i_a in \
+                                                                              producers['id_full'].unique()):
+
+                        last_fork_segment_i_a = fork_to_pipe_b_segment_i_a
+
+                    elif fork_from_pipe_b_segment_i_a != superfork_i_id_full and (
+                            fork_from_pipe_b_segment_i_a in super_forks[
+                        'id_full'].unique() or fork_from_pipe_b_segment_i_a in \
+                            producers['id_full'].unique()):
+
+                        last_fork_segment_i_a = fork_from_pipe_b_segment_i_a
+
+                    else:
+                        print('error: last fork is not a super fork')
+
+                    merged_segment_i_a.at[0, 'to_node'] = last_fork_segment_i_a
+
+
+                    # # add column 'included_forks'
+                    str_included_forks_segment_i_a = ', '.join(included_forks_segment_i_a)
+                    merged_segment_i_a.at[0, 'included_forks'] = str_included_forks_segment_i_a
+
+                    # # add column 'aggregated_consumers'
+                    included_consumer_segment_i_a = []
+                    included_consumer_segment_i_a = HLpipes.loc[HLpipes['from_node'].isin(included_forks_segment_i_a)][
+                        'to_node'].tolist()
+                    str_included_consumer_segment_i_a = ', '.join(included_consumer_segment_i_a)
+                    merged_segment_i_a.at[0, 'included_consumer'] = str_included_consumer_segment_i_a
+
+                    # # add column 'aggregated_P_heat_max'
+                    included_P_heat_max_segment_i_a = []
+                    included_P_heat_max_segment_i_a = \
+                    consumers.loc[consumers['id_full'].isin(included_consumer_segment_i_a)]['P_heat_max'].tolist()
+                    sum_included_P_heat_max_segment_i_a = sum(included_P_heat_max_segment_i_a)
+                    merged_segment_i_a.at[0, 'included_P_heat_max'] = sum_included_P_heat_max_segment_i_a
+
+                    # # add column 'Gleichzeitigkeitsfaktor'
+                    number_included_consumer_segment_i_a = len(included_consumer_segment_i_a)
+                    Gleichzeitigkeitsfaktor_segment_i_a = pow(1.05, -number_included_consumer_segment_i_a) # Note: this is just a placeholder formula
+                    merged_segment_i_a.at[0, 'Gleichzeitigkeitsfaktor'] = Gleichzeitigkeitsfaktor_segment_i_a
+
+                    # add new pipe to super pipes
+                    super_pipes = super_pipes.append(merged_segment_i_a)
+                    # add pipe_ids to aggregated pipes
+                    aggregated_pipes = aggregated_pipes + segment_i_a['id'].tolist()
+
+                    aggregation_segment == True
+
+                    break
+
+                    # Identify which pipes are connected to fork_next_segment_i_a
+                elif count_type_forks_pipe_b_segment_i_a == 1:  #
+
+                    pipe_next_segment_i_a = 0
+
+                    # Next pipe must not be the current one
+                    list_of_connected_pipes_to_next_fork = []
+                    list_of_connected_pipes_to_next_fork = list_of_connected_pipes_to_next_fork + DLGLpipes.loc[
+                        DLGLpipes['from_node'].isin([fork_next_segment_i_a])]['id'].tolist() + DLGLpipes.loc[
+                                                               DLGLpipes['to_node'].isin([fork_next_segment_i_a])][
+                                                               'id'].tolist()
+
+
+                    if segment_i_a.at[b, 'id'] == list_of_connected_pipes_to_next_fork[0]:
+                        pipe_next_segment_i_a = DLGLpipes.loc[
+                            DLGLpipes['id'].isin([list_of_connected_pipes_to_next_fork[1]])]
+
+                    elif segment_i_a.at[b, 'id'] == list_of_connected_pipes_to_next_fork[1]:
+                        pipe_next_segment_i_a = DLGLpipes.loc[
+                            DLGLpipes['id'].isin([list_of_connected_pipes_to_next_fork[0]])]
+
+                    else:
+                        print('error: next fork doesnt connect to any new pipe')
+
+                    # count b up
+                    b += 1
+
+                    # add to segment i_a
+                    segment_i_a = segment_i_a.append(pipe_next_segment_i_a)
+
+                    # reset index
+                    segment_i_a = segment_i_a.reset_index(drop=True)
+
+                    # add fork to aggregated forks
+                    aggregated_forks.append(fork_next_segment_i_a)
+
+                    # add fork to aggregated forks segment i a
+                    included_forks_segment_i_a.append(fork_next_segment_i_a)
+                else:
+                    print('error: pipe is not connected to any aggregated fork or super fork')
+
+    # Calculate length of super_pipes
+    super_pipes['length'] = super_pipes.length
+
+    # return
+    return {
+        'super_forks': super_forks,
+        'super_consumers': consumers, # not yet defined
+        'super_producers': producers, # not yet defined
+        'super_pipes': super_pipes,
+    }
+

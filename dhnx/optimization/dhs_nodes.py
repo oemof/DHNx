@@ -279,3 +279,4 @@ def add_nodes_houses(opti_network, nodes, busd, label_1):
                 nodes = ac.add_storage(item, d_labels, nodes, busd)
 
     return nodes, busd
+
