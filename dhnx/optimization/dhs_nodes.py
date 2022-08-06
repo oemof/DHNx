@@ -279,4 +279,106 @@ def add_nodes_houses(opti_network, nodes, busd, label_1):
                 nodes = ac.add_storage(item, d_labels, nodes, busd)
 
     return nodes, busd
+# TODO: copied this function. original: add_nodes_houses
+def add_nodes_super_network(opti_network, nodes, busd):
+    """
+    # TODO: adjust discription
+    For each *producers*/*super_pipes*/*super_forks* of the aggregated*ThermalNetwork* of the
+    *OemofInvestOptimisationModel*, the oemof-solph components for the *consumers*/*producers*
+    are initialised depending on the given tables of the ``invest_options`` of the
+    *OemofInvestOptimisationModel*.
+
+    The tables of `invest_options` provide the information and attributes for the oemof-solph
+    components, which should be build at every *consumer*/*producer*.
+
+    The minimum requirement is to provide table with at least one *heat Bus* for all consumers
+    and all producers, a table with a *heat sink* as demand for all consumers, and
+    a table with at least one *heat source* for all producers.
+
+    Additionally, further tables with *Transformer*, *Storages*, and further *Sources* and
+    *Sinks* can be added.
+
+    For the attributes for each table, you need to provide, please see:
+
+    .. py:module::`~dhnx.optimization_modules.add_components`
+
+    Parameters
+    ----------
+    opti_network : OemofInvestOptimisationModel
+
+    gd : dict
+        General optimisation settings.
+    nodes : list
+        List for collecting all oemof-solph objects.
+    busd : dict
+        Dictionary collecting all oemof-solph Buses. Keys: labels of the oemof-solph Buses;
+        Values: oemof-solph Buses.
+    label_1 : str
+        First tag of the label, which is either `producers` or `consumers`.
+
+    Returns
+    -------
+    list, dict : List of all oemof-solph objects and dictionary of oemof-solph Buses.
+
+    """
+# TODO: add buses and components for GENERATORS, SUPER_PIPE_DEMAND, SUPER_FORK_DEMAND
+
+   # gen_data = opti_network.invest_options[label_1]     # genic data for all houses
+   # series = opti_network.thermal_network.sequences[label_1]    # sequences
+   # d_labels = {}
+
+    for typ in ['producers', 'demand_super_pipes', 'super_forks']:
+        d_labels = {}
+
+        if typ == 'producers':
+            dict_name_aggregated = 'super_producers'
+            label_1 = 'producers'
+            label_4 = 'producers'
+            gen_data = opti_network.invest_options['producers'] # genic data for all generators
+            series = opti_network.thermal_network.sequences['producers']# sequences, not used for producers
+
+
+        elif typ == 'demand_super_pipes':
+            dict_name_aggregated = 'super_pipes'
+            label_1 = 'consumers'
+            label_4 = 'demand_super_pipes'
+            gen_data = opti_network.invest_options['consumers']  # genic data for all generators
+            series = opti_network.thermal_network.sequences['consumers']  # sequences, not used for producers
+
+
+        elif typ == 'super_forks':
+            dict_name_aggregated = 'super_forks'
+            label_1 = 'infrastructure'
+            label_4 = 'super_forks'
+            gen_data = opti_network.invest_options['consumers']  # genic data for all generators
+            series = opti_network.thermal_network.sequences['consumers']  # sequences, not used for producers
+
+        for r, c in opti_network.thermal_network.aggregatednetwork[dict_name_aggregated].iterrows():
+
+            # heat bus is always necessary
+            d_labels['l_1'] = label_1
+            d_labels['l_4'] = label_4 + '-' + str(c['id'])
+
+            # add buses first, because other classes need to have them already
+            nodes, busd = ac.add_buses(gen_data['bus'],
+                                       d_labels, nodes, busd)
+
+            for key, item in gen_data.items():
+
+                if key == 'source':
+                    nodes = ac.add_sources(opti_network, item, c, d_labels, nodes, busd)
+# TODO: time series of demands are not supported yet
+                if key == 'demand':
+                    nodes = ac.add_demand_aggregated(item, d_labels, c, nodes, busd)
+
+                if key == 'transformer':
+                    nodes = ac.add_transformer(item, d_labels, nodes, busd)
+
+                if key == 'storages':
+                    nodes = ac.add_storage(item, d_labels, nodes, busd)
+
+#TODO: add heatpipes (with demand)
+
+    return nodes, busd
+
 

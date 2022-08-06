@@ -463,3 +463,42 @@ def add_heatpipes_exist(pipes, labels, gd, q, b_in, b_out, nodes):
     ))
 
     return nodes
+# TODO: copied most of the code from function "add_demand"
+# TODO: time series are not supported
+def add_demand_aggregated(it, labels, c, nodes, busd):
+    """
+    Initialisation of oemof.solph.Sinks which represent demands.
+
+    Parameters
+    ----------
+    it : pd.DataFrame
+        Table of attributes for Sources for the producers and consumers.
+    labels : dict
+        Dictonary containing specifications for label-tuple.
+    c : Series
+        Attributes of specific producer or consumer from the ThermalNetwork.
+    nodes : list
+        All oemof.solph components are added to the list.
+    busd : dict
+        All oemof.solph.Bus objects are given by this dictionary.
+
+    Returns
+    -------
+    list : Updated list of nodes.
+    """
+
+    for _, de in it.iterrows():
+        labels['l_3'] = 'demand'
+        labels['l_2'] = de['label_2']
+        # set static inflow values
+        inflow_args = {'nominal_value': de['nominal_value'],
+                       'fix': c['P_heat_max']}
+
+        # create
+        nodes.append(
+            solph.Sink(label=oh.Label(
+                labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
+                inputs={busd[(labels['l_1'], labels['l_2'], 'bus',
+                              labels['l_4'])]: solph.Flow(**inflow_args)}))
+
+    return nodes
