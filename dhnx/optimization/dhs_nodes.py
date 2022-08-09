@@ -279,7 +279,7 @@ def add_nodes_houses(opti_network, nodes, busd, label_1):
                 nodes = ac.add_storage(item, d_labels, nodes, busd)
 
     return nodes, busd
-# TODO: copied this function. original: add_nodes_houses
+# TODO: copied most parts of this function. original: add_nodes_houses and add_nodes_dhs
 def add_nodes_super_network(opti_network, nodes, busd):
     """
     # TODO: adjust discription
