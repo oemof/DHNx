@@ -609,7 +609,7 @@ def aggregation(forks, pipes, consumers, producers):
         aggregated_P_heat_super_fork_i = consumers.loc[consumers['id_full'].isin(aggregated_consumer_super_fork_i)][
             'P_heat_max'].tolist()
         sum_aggregated_P_heat_max_super_fork_i = sum(aggregated_P_heat_super_fork_i)
-        super_forks.at[index, 'aggregated_P_heat_max'] = sum_aggregated_P_heat_max_super_fork_i
+        super_forks.at[index, 'P_heat_max'] = sum_aggregated_P_heat_max_super_fork_i
 
         # Find pipes connected to the super fork i and save them in a GeoDataFrame.
         pipes_superfork_i_from_node = DLGLpipes[DLGLpipes['from_node'] == superfork_i_id_full]
@@ -630,7 +630,7 @@ def aggregation(forks, pipes, consumers, producers):
             segment_i_a = pipes_superfork_i.copy()
             segment_i_a = segment_i_a[segment_i_a.index == a]
             segment_i_a = segment_i_a.reset_index(drop=True)
-            included_forks_segment_i_a = []
+            aggregated_forks_segment_i_a = []
             # # # thrid loop: Go through the elements b (pipes and forks) of super pipe a
             aggregation_segment = False
             b = 0
@@ -699,28 +699,28 @@ def aggregation(forks, pipes, consumers, producers):
                     merged_segment_i_a.at[0, 'to_node'] = last_fork_segment_i_a
 
 
-                    # # add column 'included_forks'
-                    str_included_forks_segment_i_a = ', '.join(included_forks_segment_i_a)
-                    merged_segment_i_a.at[0, 'included_forks'] = str_included_forks_segment_i_a
+                    # # add column 'aggregated_forks'
+                    str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)
+                    merged_segment_i_a.at[0, 'aggregated_forks'] = str_aggregated_forks_segment_i_a
 
                     # # add column 'aggregated_consumers'
-                    included_consumer_segment_i_a = []
-                    included_consumer_segment_i_a = HLpipes.loc[HLpipes['from_node'].isin(included_forks_segment_i_a)][
+                    aggregated_consumer_segment_i_a = []
+                    aggregated_consumer_segment_i_a = HLpipes.loc[HLpipes['from_node'].isin(aggregated_forks_segment_i_a)][
                         'to_node'].tolist()
-                    str_included_consumer_segment_i_a = ', '.join(included_consumer_segment_i_a)
-                    merged_segment_i_a.at[0, 'included_consumer'] = str_included_consumer_segment_i_a
+                    str_aggregated_consumer_segment_i_a = ', '.join(aggregated_consumer_segment_i_a)
+                    merged_segment_i_a.at[0, 'aggregated_consumer'] = str_aggregated_consumer_segment_i_a
 
                     # # add column 'aggregated_P_heat_max'
-                    included_P_heat_max_segment_i_a = []
-                    included_P_heat_max_segment_i_a = \
-                    consumers.loc[consumers['id_full'].isin(included_consumer_segment_i_a)]['P_heat_max'].tolist()
-                    sum_included_P_heat_max_segment_i_a = sum(included_P_heat_max_segment_i_a)
-                    merged_segment_i_a.at[0, 'included_P_heat_max'] = sum_included_P_heat_max_segment_i_a
+                    aggregated_P_heat_max_segment_i_a = []
+                    aggregated_P_heat_max_segment_i_a = \
+                    consumers.loc[consumers['id_full'].isin(aggregated_consumer_segment_i_a)]['P_heat_max'].tolist()
+                    sum_aggregated_P_heat_max_segment_i_a = sum(aggregated_P_heat_max_segment_i_a)
+                    merged_segment_i_a.at[0, 'P_heat_max'] = sum_aggregated_P_heat_max_segment_i_a
 
-                    # # add column 'Gleichzeitigkeitsfaktor'
-                    number_included_consumer_segment_i_a = len(included_consumer_segment_i_a)
-                    Gleichzeitigkeitsfaktor_segment_i_a = pow(1.05, -number_included_consumer_segment_i_a) # Note: this is just a placeholder formula
-                    merged_segment_i_a.at[0, 'Gleichzeitigkeitsfaktor'] = Gleichzeitigkeitsfaktor_segment_i_a
+                    # # add column 'simultaneity factor'
+                    number_aggregated_consumer_segment_i_a = len(aggregated_consumer_segment_i_a)
+                    simultaneity_factor_segment_i_a = pow(1.05, -number_aggregated_consumer_segment_i_a) # Note: this is just a placeholder formula
+                    merged_segment_i_a.at[0, 'simultaneity factor'] = simultaneity_factor_segment_i_a
 
                     # add new pipe to super pipes
                     super_pipes = super_pipes.append(merged_segment_i_a)
@@ -768,7 +768,7 @@ def aggregation(forks, pipes, consumers, producers):
                     aggregated_forks.append(fork_next_segment_i_a)
 
                     # add fork to aggregated forks segment i a
-                    included_forks_segment_i_a.append(fork_next_segment_i_a)
+                    aggregated_forks_segment_i_a.append(fork_next_segment_i_a)
                 else:
                     print('error: pipe is not connected to any aggregated fork or super fork')
 
