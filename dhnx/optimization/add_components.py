@@ -502,3 +502,67 @@ def add_demand_aggregated(it, labels, c, nodes, busd):
                               labels['l_4'])]: solph.Flow(**inflow_args)}))
 
     return nodes
+# TODO: This function is mostly copied. Original: add_heatpipes
+# added a second output
+def add_heatpipes_aggregated(it, labels, bidirectional, length, b_in, b_out_1, b_out_2, nodes):
+    """
+    Adds *HeatPipeline* objects with *Investment* attribute to the list of oemof.solph components.
+
+    Parameters
+    ----------
+    it : pd.DataFrame
+        Table of *Heatpipeline* attributes of the district heating grid
+    labels : dict
+        Dictonary containing specifications for label-tuple
+    bidirectional : bool
+        Settings for creating bidirectional heatpipelines
+    length : float
+        Length of pipeline
+    b_in : oemof.solph.Bus
+        Bus of Inflow
+    b_out_1 : oemof.solph.Bus
+        Bus of Outflow
+    b_out_2 : oemof.solph.Bus
+        Bus of Outflow
+    nodes : list
+        All oemof.solph components are added to the list
+
+    Returns
+    -------
+    list : Updated list of nodes.
+    """
+
+    for _, t in it.iterrows():
+
+        # definition of tag3 of label -> type of pipe
+        labels['l_3'] = t['label_3']
+
+        epc_p = t['capex_pipes'] * length
+        epc_fix = t['fix_costs'] * length
+
+        # Heatpipe with binary variable
+        nc = bool(t['nonconvex'])
+
+        # bidirectional heatpipelines yes or no
+        flow_bi_args = {
+            'bidirectional': True, 'min': -1}\
+            if bidirectional else {}
+
+        nodes.append(oh.HeatPipeline(
+            label=oh.Label(labels['l_1'], labels['l_2'],
+                           labels['l_3'], labels['l_4']),
+            inputs={b_in: solph.Flow(**flow_bi_args)},
+            outputs={b_out_1: solph.Flow(
+                nominal_value=None,
+                **flow_bi_args,
+                investment=solph.Investment(
+                    ep_costs=epc_p, maximum=t['cap_max'],
+                    minimum=t['cap_min'], nonconvex=nc, offset=epc_fix,
+                )),
+                b_out_2: solph.Flow()
+            },
+            heat_loss_factor=t['l_factor'] * length,
+            heat_loss_factor_fix=t['l_factor_fix'] * length,
+        ))
+
+    return nodes

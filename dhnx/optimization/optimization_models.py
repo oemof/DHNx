@@ -25,6 +25,7 @@ from dhnx.optimization.dhs_nodes import add_nodes_dhs
 from dhnx.optimization.dhs_nodes import add_nodes_houses
 
 from dhnx.optimization.dhs_nodes import add_nodes_super_network
+from dhnx.optimization.dhs_nodes import add_nodes_super_pipes
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
     r"""
@@ -738,8 +739,10 @@ def setup_optimise_investment(
         'aggregated' : aggregated
     }
 
-    if aggregated == True:
-        model = OemofInvestOptimizationModel_aggregated(thermal_network, settings, invest_options)
+    if aggregated is True:
+        # if settings['bidirectional_pipes'] is False:
+        #     raise valueerror  # TODO: Warning: aggregaed model requires bidirectional_pipes = True.
+        model = OemofInvestOptimizationModelAggregated(thermal_network, settings, invest_options)
     else:
         model = OemofInvestOptimizationModel(thermal_network, settings, invest_options)
 
@@ -769,7 +772,11 @@ def solve_optimisation_investment(model):
         my_es.dump(dpath=model.settings['dump_path'], filename=model.settings['dump_name'])
         print('oemof Energysystem stored in "{}"'.format(model.settings['dump_path']))
 
-    edges_results = model.get_results_edges()
+    if model.settings['aggregated'] is True:
+        edges_results = model.get_results_edges_aggregated()
+
+    else:
+        edges_results = model.get_results_edges()
 
     results = {'oemof': model.es.results['main'],
                'oemof_meta': model.es.results['meta'],
@@ -780,7 +787,7 @@ def solve_optimisation_investment(model):
 # # # # #
 # TODO: This part is for aggregated networks
 
-class OemofInvestOptimizationModel_aggregated(InvestOptimizationModel):
+class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
     """
     Implementation of an invest optimization model using oemof-solph.
 
@@ -1086,17 +1093,16 @@ class OemofInvestOptimizationModel_aggregated(InvestOptimizationModel):
         logging.info('Create oemof objects')
 
 
-        # TODO: add_nodes_houses ggf anpassen
-        # add generation, super_pipe_demand, super_fork_demand
+        # TODO: added add_nodes_super_network and add_nodes_super_pipes
 
+        # add generation, super_pipe_demand, super_fork_demand
         self.nodes, self.buses = add_nodes_super_network(self, self.nodes, self.buses)
 
-        logging.info('Producers, Consumers Nodes appended.')
+        logging.info('Producers, demand_super_pipes and super_forks Nodes appended.')
 
-        # add heating infrastructure
-        self.nodes, self.buses = add_nodes_dhs(self, self.settings, self.nodes,
-                                               self.buses)
-        logging.info('DHS Nodes appended.')
+        # add super_pipes
+        self.nodes, self.buses = add_nodes_super_pipes(self, self.settings, self.nodes, self.buses)
+        logging.info('Super_pipe nodes appended.')
 
         # add nodes and flows to energy system
         self.es.add(*self.nodes)
@@ -1366,6 +1372,235 @@ class OemofInvestOptimizationModel_aggregated(InvestOptimizationModel):
         # remove input data
         df = df[['from_node', 'to_node', 'length']].copy()
 
+        # putting the results of the investments in heatpipes to the pipes:
+        df_hp = self.invest_options['network']['pipes']
+
+        # list of active heat pipes
+        active_hp = list(df_hp['label_3'].values)
+
+        for hp in active_hp:
+            hp_param = df_hp[df_hp['label_3'] == hp].squeeze()
+            get_hp_results(hp_param)
+            check_multi_dir_invest(hp)
+
+        catch_up_results()
+
+        recalc_costs_losses()
+
+        return df[['from_node', 'to_node', 'length', 'hp_type', 'capacity', 'direction',
+                   'costs', 'losses']]
+
+# TODO: mostly copied. Original: get_results_edges
+    def get_results_edges_aggregated(self):
+        """Postprocessing of the investment results of the pipes."""
+
+        def get_invest_val(lab):
+
+            res = self.es.results['main']
+
+            outflow = [x for x in res.keys()
+                       if x[1] is not None
+                       if lab == str(x[0].label)]
+
+            # if len(outflow) > 1:
+            #     print('Multiple IDs!')
+
+            try:
+                invest = res[outflow[0]]['scalars']['invest']
+            except (KeyError, IndexError):
+                try:
+                    # that's in case of a one timestep optimisation due to
+                    # an oemof bug in outputlib
+                    invest = res[outflow[0]]['sequences']['invest'][0]
+                except (KeyError, IndexError):
+                    # this is in case there is no bi-directional heatpipe, e.g. at
+                    # forks-consumers, producers-forks
+                    invest = 0
+
+            # the rounding is performed due to numerical issues
+            return round(invest, 6)
+
+        def get_invest_status(lab):
+
+            res = self.es.results['main']
+
+            outflow = [x for x in res.keys()
+                       if x[1] is not None
+                       if lab == str(x[0].label)]
+
+            try:
+                invest_status = res[outflow[0]]['scalars']['invest_status']
+            except (KeyError, IndexError):
+                try:
+                    # that's in case of a one timestep optimisation due to
+                    # an oemof bug in outputlib
+                    invest_status = res[outflow[0]]['sequences']['invest_status'][0]
+                except (KeyError, IndexError):
+                    # this is in case there is no bi-directional heatpipe, e.g. at
+                    # forks-consumers, producers-forks
+                    invest_status = 0
+
+            return invest_status
+
+        def get_hp_results(p):
+
+            hp_lab = p['label_3']
+            label_base = 'infrastructure_' + 'heat_' + hp_lab + '_'
+
+            # maybe slow approach with lambda function
+            #TODO: ggf df['from_node'] + '-' + df['to_node'] anpassen
+            test = get_invest_val(label_base + 'super_pipes-' + str(df.iloc[10]['id']) + df.iloc[10]['from_node'] + '-' + 'super_' + df.iloc[10]['to_node'])
+            df[hp_lab + '.' + 'dir-1'] = df['from_node'] + '-' + df['to_node']
+            df[hp_lab + '.' + 'size-1'] = df[hp_lab + '.' + 'dir-1'].apply(
+                lambda x: get_invest_val(label_base + x))
+            df[hp_lab + '.' + 'dir-2'] = df['to_node'] + '-' + df['from_node']
+            df[hp_lab + '.' + 'size-2'] = df[hp_lab + '.' + 'dir-2'].apply(
+                lambda x: get_invest_val(label_base + x))
+
+            df[hp_lab + '.' + 'size'] = \
+                df[[hp_lab + '.' + 'size-1', hp_lab + '.' + 'size-2']].max(axis=1)
+
+            # get direction of pipes
+            for r, c in df.iterrows():
+                if c[hp_lab + '.' + 'size-1'] > c[hp_lab + '.' + 'size-2']:
+                    df.at[r, hp_lab + '.direction'] = 1
+                elif c[hp_lab + '.' + 'size-1'] < c[hp_lab + '.' + 'size-2']:
+                    df.at[r, hp_lab + '.direction'] = -1
+                else:
+                    df.at[r, hp_lab + '.direction'] = 0
+
+            if p['nonconvex']:
+                df[hp_lab + '.' + 'status-1'] = df[hp_lab + '.' + 'dir-1'].apply(
+                    lambda x: get_invest_status(label_base + x))
+                df[hp_lab + '.' + 'status-2'] = df[hp_lab + '.' + 'dir-2'].apply(
+                    lambda x: get_invest_status(label_base + x))
+                df[hp_lab + '.' + 'status'] = \
+                    df[[hp_lab + '.' + 'status-1', hp_lab + '.' + 'status-2']].max(axis=1)
+
+                for r, c in df.iterrows():
+                    if df.at[r, hp_lab + '.' + 'status-1'] + \
+                            df.at[r, hp_lab + '.' + 'status-2'] > 1:
+                        print(
+                            "Investment status of pipe id {} is 1 for both dircetions!"
+                            " This is not allowed!".format(r)
+                        )
+                    if (df.at[r, hp_lab + '.' + 'status-1'] == 1 and df.at[
+                        r, hp_lab + '.' + 'size-1'] == 0) \
+                            or \
+                            (df.at[r, hp_lab + '.' + 'status-2'] == 1 and df.at[
+                                r, hp_lab + '.' + 'size-2'] == 0):
+                        print(
+                            "Investment status of pipe id {} is 1, and capacity is 0!"
+                            "What happend?!".format(r)
+                        )
+
+            return df
+
+        def check_multi_dir_invest(hp_lab):
+
+            df_double_invest = \
+                df[(df[hp_lab + '.' + 'size-1'] > 0) & (df[hp_lab + '.' + 'size-2'] > 0)]
+
+            if self.settings['print_logging_info']:
+                print('***')
+                if df_double_invest.empty:
+                    print('There is NO investment in both directions at the'
+                          'following pipes for "', hp_lab, '"')
+                else:
+                    print('There is an investment in both directions at the'
+                          'following pipes for "', hp_lab, '":')
+                    print('----------')
+                    print(' id | from_node | to_node | size-1 | size-2 ')
+                    print('============================================')
+                    for r, c in df_double_invest.iterrows():
+                        print(r, ' | ', c['from_node'], ' | ', c['to_node'],
+                              ' | ', c[hp_lab + '.' + 'size-1'], ' | ',
+                              c[hp_lab + '.' + 'size-2'], ' | ')
+                    print('----------')
+
+        def catch_up_results():
+
+            def check_invest_label(hp_type, edge_id):
+                """
+                If there is already a heatpipe type, an error is raised,
+                because only one investment type for each edges makes sense.
+                """
+                if isinstance(hp_type, str):
+                    raise ValueError(
+                        "Pipe id {} already has an investment > 0!".format(edge_id))
+
+            df['hp_type'] = None
+            df['capacity'] = float(0)
+            df['direction'] = 0
+            df['status'] = float(0)
+
+            for ahp in active_hp:
+                # p = df_hp[df_hp['label_3'] == ahp].squeeze()   # series of heatpipe
+                for r, c in df.iterrows():
+                    if c[ahp + '.size'] > 0:
+                        check_invest_label(c['hp_type'], id)
+                        df.at[r, 'hp_type'] = ahp
+                        df.at[r, 'capacity'] = c[ahp + '.size']
+                        df.at[r, 'direction'] = c[ahp + '.direction']
+                        if ahp + '.status' in c.index:
+                            df.at[r, 'status'] = c[ahp + '.status']
+
+        def recalc_costs_losses():
+            """
+            Calculates the investment costs and thermal losses for each
+            pipeline of the district heating network.
+            (This recalculation could also serve as check for comparing the
+            total pipeline costs with the objective value of oemof.solph
+            optimisation model)
+
+            Note
+            ----
+            With nonconvex investments (with binary variables) it could happen
+            that very low results of the decision variable occur (although
+            there is a minimum investment threshold), and that
+            the status variable could have values of almost 0 and almost 1.
+            This cost re-calculation does not round any of this results, and
+            transfers the results as they into a DataFrame containing all
+            pipes of the district heating network.
+
+            """
+
+            df['costs'] = float(0)
+            df['losses'] = float(0)
+
+            for r, c in df.iterrows():
+                if c['capacity'] > 0:
+                    hp_lab = c['hp_type']
+                    # select row from heatpipe type table
+                    hp_p = df_hp[df_hp['label_3'] == hp_lab].squeeze()
+                    if hp_p['nonconvex'] == 1:
+                        df.at[r, 'costs'] = c['length'] * (
+                                c['capacity'] * hp_p['capex_pipes'] +  # noqa: W504
+                                hp_p['fix_costs'] * c['status']
+                        )
+                        df.at[r, 'losses'] = c['length'] * (
+                                c['capacity'] * hp_p['l_factor'] +  # noqa: W504
+                                hp_p['l_factor_fix'] * c['status']
+                        )
+
+                    elif hp_p['nonconvex'] == 0:
+                        df.at[r, 'costs'] = c['length'] * c['capacity'] * hp_p['capex_pipes']
+                        # Note, that a constant loss is possible also for convex
+                        df.at[r, 'losses'] = c['length'] * (
+                                c['capacity'] * hp_p['l_factor'] + hp_p['l_factor_fix']
+                        )
+
+        # use super_pipes dataframe as base and add results as new columns to it
+        df = self.thermal_network.aggregatednetwork['super_pipes']
+
+        # TODO: existing pipes not implemented yet
+        # only select not existing pipes
+        #df = df[df['existing'] == 0].copy()
+
+        # remove input data
+        df = df[['id', 'from_node', 'to_node', 'length']].copy()
+
+        # super_pipes have the same investment data as pipes
         # putting the results of the investments in heatpipes to the pipes:
         df_hp = self.invest_options['network']['pipes']
 

@@ -279,10 +279,10 @@ def add_nodes_houses(opti_network, nodes, busd, label_1):
                 nodes = ac.add_storage(item, d_labels, nodes, busd)
 
     return nodes, busd
-# TODO: copied most parts of this function. original: add_nodes_houses and add_nodes_dhs
+# TODO: copied most parts of this function. original: add_nodes_houses
 def add_nodes_super_network(opti_network, nodes, busd):
     """
-    # TODO: adjust discription
+    # TODO: need to adjust discription
     For each *producers*/*super_pipes*/*super_forks* of the aggregated*ThermalNetwork* of the
     *OemofInvestOptimisationModel*, the oemof-solph components for the *consumers*/*producers*
     are initialised depending on the given tables of the ``invest_options`` of the
@@ -377,8 +377,184 @@ def add_nodes_super_network(opti_network, nodes, busd):
                 if key == 'storages':
                     nodes = ac.add_storage(item, d_labels, nodes, busd)
 
-#TODO: add heatpipes (with demand)
+
 
     return nodes, busd
 
 
+# TODO: add heatpipes (with demand)
+# TODO: copied most parts of this function. original: add_nodes_dhs
+def add_nodes_super_pipes(opti_network, gd, nodes, busd):
+    """
+    Based on the *forks* and *pipes* of the *ThermalNetwork* of the
+    *OemofInvestOptimisationModel*, the oemof-solph components for the district heating
+    network optimisation are initialised.
+
+    For all *forks*, a `solph.Bus` with the label `infrastructure_heat_bus_forks-<id>`
+    (string representation) is generated.
+
+    For all *pipes*, a 'HeatPipeline' with the label
+    `infrastructure_heat_<type>_<from_node>-<to_node>` (string representation)
+    is generated. Depending on the attributes in *pipes*,
+    an investment pipe, or an existing pipe is built.
+
+
+    Parameters
+    ----------
+    opti_network : OemofInvestOptimisationModel
+    gd : dict
+        General optimisation settings.
+    nodes : list
+        List for collecting all oemof-solph objects.
+    busd : dict
+        Dictionary collecting all oemof-solph Buses. Keys: labels of the oemof-solph Buses;
+        Values: oemof-solph Buses.
+
+    Returns
+    -------
+    list, dict : List of all oemof-solph objects and dictionary of oemof-solph Buses.
+    """
+
+    d_labels = {}
+
+
+
+    # add heatpipes for all lines
+    for p, q in opti_network.thermal_network.aggregatednetwork['super_pipes'].iterrows():
+
+        pipe_data = opti_network.invest_options['network']['pipes']
+
+        d_labels['l_1'] = 'infrastructure'
+        d_labels['l_2'] = 'heat'
+
+        # TODO: Existing not implemented yet
+        # if q['existing']:
+        #
+        #     # terminate the first label
+        #     l_1_in = 'infrastructure'
+        #     l_1_out = 'infrastructure'
+        #
+        #     typ_from = q['from_node'].split('-')[0]
+        #     typ_to = q['to_node'].split('-')[0]
+        #
+        #     if (typ_from == 'forks') and (typ_to == 'consumers'):
+        #         l_1_out = 'consumers'
+        #
+        #         start = q['from_node']
+        #         end = q['to_node']
+        #         b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+        #         b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+        #         d_labels['l_4'] = start + '-' + end
+        #         nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
+        #                                        nodes)
+        #
+        #     elif (typ_from == 'consumers') and (typ_to == 'forks'):
+        #         raise ValueError(
+        #             "Pipes must not go from 'consumers' to 'forks'!"
+        #             " Existing heatpipe id {}".format(p))
+        #
+        #     elif (typ_from == 'forks') and (typ_to == 'producers'):
+        #         l_1_in = 'producers'
+        #
+        #         start = q['to_node']
+        #         end = q['from_node']
+        #         b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+        #         b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+        #         d_labels['l_4'] = start + '-' + end
+        #         nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q,
+        #                                        b_in, b_out,
+        #                                        nodes)
+        #
+        #     elif (typ_from == 'producers') and (typ_to == 'forks'):
+        #         l_1_in = 'producers'
+        #
+        #         start = q['from_node']
+        #         end = q['to_node']
+        #         b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+        #         b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+        #         d_labels['l_4'] = start + '-' + end
+        #         nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
+        #                                        nodes)
+        #
+        #     elif (typ_from == 'forks') and (typ_to == 'forks'):
+        #
+        #         start = q['from_node']
+        #         end = q['to_node']
+        #         b_in = busd[(l_1_in, d_labels['l_2'], 'bus', start)]
+        #         b_out = busd[(l_1_out, d_labels['l_2'], 'bus', end)]
+        #         d_labels['l_4'] = start + '-' + end
+        #         nodes = ac.add_heatpipes_exist(pipe_data, d_labels, gd, q, b_in, b_out,
+        #                                        nodes)
+        #
+        #     else:
+        #         raise ValueError("Something wrong!")
+        #
+        # else:   # calls Investment heatpipeline function
+# TODO: those consumer connections dont exist for super_pipes
+        # connection of houses (not needed)
+        if q['to_node'].split('-')[0] == "consumers":
+
+            start = q['from_node']
+            end = q['to_node']
+            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', start)]
+            b_out = busd[('consumers', d_labels['l_2'], 'bus', end)]
+
+            d_labels['l_4'] = start + '-' + end
+
+            nodes = ac.add_heatpipes(
+                pipe_data, d_labels, False, q['length'], b_in, b_out,
+                nodes)
+
+        elif q['from_node'].split('-')[0] == "consumers":
+            raise ValueError(
+                "Pipes must not go from 'consumers'!"
+                " Existing heatpipe id {}".format(p))
+
+        elif q['to_node'].split('-')[0] == "producers":
+
+            start = q['to_node']
+            end = q['from_node']
+            b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
+            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super_' + end)]
+            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand_super_pipes-' + str(q['id']))]
+
+            d_labels['l_4'] = 'super_pipes-' + str(q['id']) + start + '-' + 'super_' + end
+
+            nodes = ac.add_heatpipes_aggregated(
+                pipe_data, d_labels,
+                gd['bidirectional_pipes'], q['length'], b_in, b_out_1, b_out_2,
+                nodes)
+
+        elif q['from_node'].split('-')[0] == "producers":
+
+            start = q['from_node']
+            end = q['to_node']
+            b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
+            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super_' + end)]
+            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand_super_pipes-' + str(q['id']))]
+
+            d_labels['l_4'] = 'super_pipes-' + str(q['id']) + start + '-' + 'super_' + end
+
+            nodes = ac.add_heatpipes_aggregated(
+                pipe_data, d_labels, gd['bidirectional_pipes'], q['length'],
+                b_in, b_out_1, b_out_2, nodes,
+            )
+
+        elif (q['from_node'].split('-')[0] == 'forks') and (
+                q['to_node'].split('-')[0] == 'forks'):
+
+            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super_' + q['from_node'])]
+            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super_' + q['to_node'])]
+            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand_super_pipes-' + str(q['id']))]
+
+            d_labels['l_4'] = 'super_pipes-' + str(q['id']) +  q['from_node'] + '-' + 'super_' + q['to_node']
+
+            nodes = ac.add_heatpipes_aggregated(
+                pipe_data, d_labels, gd['bidirectional_pipes'], q['length'], b_in, b_out_1, b_out_2, nodes)
+
+
+        else:
+            raise ValueError("Something wrong!")
+
+
+    return nodes, busd
