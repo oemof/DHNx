@@ -26,6 +26,7 @@ from dhnx.optimization.dhs_nodes import add_nodes_houses
 
 from dhnx.optimization.dhs_nodes import add_nodes_super_network
 from dhnx.optimization.dhs_nodes import add_nodes_super_pipes
+import warnings
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
     r"""
@@ -741,6 +742,8 @@ def setup_optimise_investment(
 
     if aggregated is True:
         # if settings['bidirectional_pipes'] is False:
+        #     warnings.warn("Warning...........Message")
+
         #     raise valueerror  # TODO: Warning: aggregaed model requires bidirectional_pipes = True.
         model = OemofInvestOptimizationModelAggregated(thermal_network, settings, invest_options)
     else:
