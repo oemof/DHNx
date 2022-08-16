@@ -341,7 +341,7 @@ def add_nodes_super_network(opti_network, nodes, busd):
         elif typ == 'demand_super_pipes':
             dict_name_aggregated = 'super_pipes'
             label_1 = 'consumers'
-            label_4 = 'demand_super_pipes'
+            label_4 = 'demand-super-pipes'
             gen_data = opti_network.invest_options['consumers']  # genic data for all generators
             series = opti_network.thermal_network.sequences['consumers']  # sequences, not used for producers
 
@@ -349,7 +349,7 @@ def add_nodes_super_network(opti_network, nodes, busd):
         elif typ == 'super_forks':
             dict_name_aggregated = 'super_forks'
             label_1 = 'infrastructure'
-            label_4 = 'super_forks'
+            label_4 = 'super-forks'
             gen_data = opti_network.invest_options['consumers']  # genic data for all generators
             series = opti_network.thermal_network.sequences['consumers']  # sequences, not used for producers
 
@@ -515,10 +515,10 @@ def add_nodes_super_pipes(opti_network, gd, nodes, busd):
             start = q['to_node']
             end = q['from_node']
             b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
-            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super_' + end)]
-            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand_super_pipes-' + str(q['id']))]
+            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super-' + end)]
+            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand-super-pipes-' + str(q['id']))]
 
-            d_labels['l_4'] = 'super_pipes-' + str(q['id']) + start + '-' + 'super_' + end
+            d_labels['l_4'] = 'super_pipes-' + str(q['id'])
 
             nodes = ac.add_heatpipes_aggregated(
                 pipe_data, d_labels,
@@ -530,10 +530,10 @@ def add_nodes_super_pipes(opti_network, gd, nodes, busd):
             start = q['from_node']
             end = q['to_node']
             b_in = busd[('producers', d_labels['l_2'], 'bus', start)]
-            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super_' + end)]
-            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand_super_pipes-' + str(q['id']))]
+            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super-' + end)]
+            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand-super-pipes-' + str(q['id']))]
 
-            d_labels['l_4'] = 'super_pipes-' + str(q['id']) + start + '-' + 'super_' + end
+            d_labels['l_4'] = 'super-pipes-' + str(q['id'])
 
             nodes = ac.add_heatpipes_aggregated(
                 pipe_data, d_labels, gd['bidirectional_pipes'], q['length'],
@@ -543,11 +543,11 @@ def add_nodes_super_pipes(opti_network, gd, nodes, busd):
         elif (q['from_node'].split('-')[0] == 'forks') and (
                 q['to_node'].split('-')[0] == 'forks'):
 
-            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super_' + q['from_node'])]
-            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super_' + q['to_node'])]
-            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand_super_pipes-' + str(q['id']))]
+            b_in = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super-' + q['from_node'])]
+            b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super-' + q['to_node'])]
+            b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand-super-pipes-' + str(q['id']))]
 
-            d_labels['l_4'] = 'super_pipes-' + str(q['id']) +  q['from_node'] + '-' + 'super_' + q['to_node']
+            d_labels['l_4'] = 'super-pipes-' + str(q['id'])
 
             nodes = ac.add_heatpipes_aggregated(
                 pipe_data, d_labels, gd['bidirectional_pipes'], q['length'], b_in, b_out_1, b_out_2, nodes)

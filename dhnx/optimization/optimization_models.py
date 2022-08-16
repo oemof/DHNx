@@ -429,7 +429,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         def get_invest_val(lab):
 
             res = self.es.results['main']
-
+            # TODO: buses dient nur zum testen
+            buses = tuple(res.keys())
             outflow = [x for x in res.keys()
                        if x[1] is not None
                        if lab == str(x[0].label)]
@@ -740,14 +741,16 @@ def setup_optimise_investment(
         'aggregated' : aggregated
     }
 
-    if aggregated is True:
-        # if settings['bidirectional_pipes'] is False:
-        #     warnings.warn("Warning...........Message")
+    if settings['aggregated'] is True:
+        if settings['bidirectional_pipes'] is False:
+            warnings.warn("aggregated models require bidirctionla_pipes = True. For the further calculation bidirectional")
+            settings['bidirectional_pipes'] = True
 
-        #     raise valueerror  # TODO: Warning: aggregaed model requires bidirectional_pipes = True.
         model = OemofInvestOptimizationModelAggregated(thermal_network, settings, invest_options)
+
     else:
         model = OemofInvestOptimizationModel(thermal_network, settings, invest_options)
+
 
     return model
 
@@ -1175,7 +1178,8 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
         def get_invest_val(lab):
 
             res = self.es.results['main']
-
+            # TODO: buses dient nur zum testen
+            buses = tuple(res.keys())
             outflow = [x for x in res.keys()
                        if x[1] is not None
                        if lab == str(x[0].label)]
@@ -1399,12 +1403,13 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
 
         def get_invest_val(lab):
 
-            res = self.es.results['main']
-
+            res = self.es.results['main'] #dict mit den Ergebnissen der buse
+            # TODO: buses dient nur zum testen
+            buses = tuple(res.keys())
             outflow = [x for x in res.keys()
-                       if x[1] is not None
+                       if x[1] is not None # outflow sind 2 buse
                        if lab == str(x[0].label)]
-
+# Für jede HP gibt es 3 einträge im tuble. 1.
             # if len(outflow) > 1:
             #     print('Multiple IDs!')
 
@@ -1416,9 +1421,13 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
                     # an oemof bug in outputlib
                     invest = res[outflow[0]]['sequences']['invest'][0]
                 except (KeyError, IndexError):
-                    # this is in case there is no bi-directional heatpipe, e.g. at
-                    # forks-consumers, producers-forks
-                    invest = 0
+                    try:
+                        invest = res[outflow[1]]['scalars']['invest']
+                    except (KeyError, IndexError):
+                        try:
+                            invest = res[outflow[1]]['sequences']['invest'][0]
+                        except (KeyError, IndexError):
+                            invest = 0
 
             # the rounding is performed due to numerical issues
             return round(invest, 6)
@@ -1449,20 +1458,23 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
 
             hp_lab = p['label_3']
             label_base = 'infrastructure_' + 'heat_' + hp_lab + '_'
-
+# TODO: hier weiter machen
             # maybe slow approach with lambda function
-            #TODO: ggf df['from_node'] + '-' + df['to_node'] anpassen
-            test = get_invest_val(label_base + 'super_pipes-' + str(df.iloc[10]['id']) + df.iloc[10]['from_node'] + '-' + 'super_' + df.iloc[10]['to_node'])
-            df[hp_lab + '.' + 'dir-1'] = df['from_node'] + '-' + df['to_node']
-            df[hp_lab + '.' + 'size-1'] = df[hp_lab + '.' + 'dir-1'].apply(
-                lambda x: get_invest_val(label_base + x))
-            df[hp_lab + '.' + 'dir-2'] = df['to_node'] + '-' + df['from_node']
-            df[hp_lab + '.' + 'size-2'] = df[hp_lab + '.' + 'dir-2'].apply(
-                lambda x: get_invest_val(label_base + x))
+            #TODO: ggf df['from_node'] + '-' + df['to_node'] anpasse
 
+            df[hp_lab + '.' + 'dir-1'] = 'super-pipes' + '-' +  df['id'].apply(str) # neue spalte (pipe-typ-A.dir-1) mit dem vierten label
+     # TODO error here below
+            df[hp_lab + '.' + 'size-1'] = df[hp_lab + '.' + 'dir-1'].apply(  # neue spalte (pipe-typ-A.size-1) mit dem invest der hp
+                lambda x: get_invest_val(label_base + x))
+       # TODO: code unterhalb wird nicht mehr bentigt da nur mono directional
+            df[hp_lab + '.' + 'dir-2'] = 'super-pipes' + '-' + df['id'].apply(str)# neue spalte (pipe-typ-A.dir-2) mit dem vierten label
+            df[hp_lab + '.' + 'size-2'] = df[hp_lab + '.' + 'dir-2'].apply( # neue spalte (pipe-typ-A.size-2) mit dem invest der hp
+                lambda x: get_invest_val(label_base + x))
+            # Spalte mit maximaler größe
             df[hp_lab + '.' + 'size'] = \
-                df[[hp_lab + '.' + 'size-1', hp_lab + '.' + 'size-2']].max(axis=1)
+                df[[hp_lab + '.' + 'size-1', hp_lab + '.' + 'size-2']].max(axis=1)# Spalte mit maximaler größe
 
+            # TODO: code unterhalb kann auch evtl weg
             # get direction of pipes
             for r, c in df.iterrows():
                 if c[hp_lab + '.' + 'size-1'] > c[hp_lab + '.' + 'size-2']:
@@ -1602,7 +1614,7 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
 
         # remove input data
         df = df[['id', 'from_node', 'to_node', 'length']].copy()
-
+        df = df.reset_index(drop= True)
         # super_pipes have the same investment data as pipes
         # putting the results of the investments in heatpipes to the pipes:
         df_hp = self.invest_options['network']['pipes']
