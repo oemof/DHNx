@@ -774,7 +774,7 @@ def aggregation(forks, pipes, consumers, producers):
 
     # Calculate length of super_pipes
     super_pipes['length'] = super_pipes.length
-
+    super_pipes = super_pipes.reset_index(drop=True)
     # return
     return {
         'super_forks': super_forks,
