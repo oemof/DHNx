@@ -1455,26 +1455,13 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
             label_base = 'infrastructure_' + 'heat_' + hp_lab + '_'
 
             # maybe slow approach with lambda function
-            df[hp_lab + '.' + 'dir-1'] = 'super-pipes' + '-' +  df['id'].apply(str) # neue spalte (pipe-typ-A.dir-1) mit dem vierten label
-            df[hp_lab + '.' + 'size-1'] = df[hp_lab + '.' + 'dir-1'].apply(  # neue spalte (pipe-typ-A.size-1) mit dem invest der hp
+            df[hp_lab + '.' + 'dir'] = 'super-pipes' + '-' +  df['id'].apply(str) # neue spalte (pipe-typ-A.dir-1) mit dem vierten label
+            df[hp_lab + '.' + 'size'] = df[hp_lab + '.' + 'dir'].apply(  # neue spalte (pipe-typ-A.size-1) mit dem invest der hp
                 lambda x: get_invest_val(label_base + x))
-       # TODO: code unterhalb wird nicht mehr bentigt da nur mono directional
-            df[hp_lab + '.' + 'dir-2'] = 'super-pipes' + '-' + df['id'].apply(str)# neue spalte (pipe-typ-A.dir-2) mit dem vierten label
-            df[hp_lab + '.' + 'size-2'] = df[hp_lab + '.' + 'dir-2'].apply( # neue spalte (pipe-typ-A.size-2) mit dem invest der hp
-                lambda x: get_invest_val(label_base + x))
-            # Spalte mit maximaler größe
-            df[hp_lab + '.' + 'size'] = \
-                df[[hp_lab + '.' + 'size-1', hp_lab + '.' + 'size-2']].max(axis=1)# Spalte mit maximaler größe
 
             # TODO: code unterhalb kann auch evtl weg
-            # get direction of pipes
             for r, c in df.iterrows():
-                if c[hp_lab + '.' + 'size-1'] > c[hp_lab + '.' + 'size-2']:
-                    df.at[r, hp_lab + '.direction'] = 1
-                elif c[hp_lab + '.' + 'size-1'] < c[hp_lab + '.' + 'size-2']:
-                    df.at[r, hp_lab + '.direction'] = -1
-                else:
-                    df.at[r, hp_lab + '.direction'] = 0
+                    df.at[r, hp_lab + '.direction'] = 'NaN'
 
             if p['nonconvex']:
                 df[hp_lab + '.' + 'status-1'] = df[hp_lab + '.' + 'dir-1'].apply(
@@ -1502,28 +1489,6 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
                         )
 
             return df
-
-        def check_multi_dir_invest(hp_lab):
-
-            df_double_invest = \
-                df[(df[hp_lab + '.' + 'size-1'] > 0) & (df[hp_lab + '.' + 'size-2'] > 0)]
-
-            if self.settings['print_logging_info']:
-                print('***')
-                if df_double_invest.empty:
-                    print('There is NO investment in both directions at the'
-                          'following pipes for "', hp_lab, '"')
-                else:
-                    print('There is an investment in both directions at the'
-                          'following pipes for "', hp_lab, '":')
-                    print('----------')
-                    print(' id | from_node | to_node | size-1 | size-2 ')
-                    print('============================================')
-                    for r, c in df_double_invest.iterrows():
-                        print(r, ' | ', c['from_node'], ' | ', c['to_node'],
-                              ' | ', c[hp_lab + '.' + 'size-1'], ' | ',
-                              c[hp_lab + '.' + 'size-2'], ' | ')
-                    print('----------')
 
         def catch_up_results():
 
@@ -1617,7 +1582,6 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
         for hp in active_hp:
             hp_param = df_hp[df_hp['label_3'] == hp].squeeze()
             get_hp_results(hp_param)
-            check_multi_dir_invest(hp)
 
         catch_up_results()
 
