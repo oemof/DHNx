@@ -518,7 +518,7 @@ def add_nodes_super_pipes(opti_network, gd, nodes, busd):
             b_out_1 = busd[(d_labels['l_1'], d_labels['l_2'], 'bus', 'super-' + end)]
             b_out_2 = busd[('consumers', d_labels['l_2'], 'bus', 'demand-super-pipes-' + str(q['id']))]
 
-            d_labels['l_4'] = 'super_pipes-' + str(q['id'])
+            d_labels['l_4'] = 'super-pipes-' + str(q['id'])
 
             nodes = ac.add_heatpipes_aggregated(
                 pipe_data, d_labels,

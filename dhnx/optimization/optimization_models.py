@@ -429,8 +429,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         def get_invest_val(lab):
 
             res = self.es.results['main']
-            # TODO: buses dient nur zum testen
-            buses = tuple(res.keys())
+
             outflow = [x for x in res.keys()
                        if x[1] is not None
                        if lab == str(x[0].label)]
@@ -1405,13 +1404,15 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
 
             res = self.es.results['main'] #dict mit den Ergebnissen der buse
             # TODO: buses dient nur zum testen
-            buses = tuple(res.keys())
+            # buses = tuple(res.keys())
+            # keyproducer3 = list(res.keys())[287]
+            # reskeyproducer3 = res[keyproducer3]
+            # invest = res[keyproducer3]['sequences']['invest'][0]
+
             outflow = [x for x in res.keys()
-                       if x[1] is not None # outflow sind 2 buse
-                       if lab == str(x[0].label)]
-# Für jede HP gibt es 3 einträge im tuble. 1.
-            # if len(outflow) > 1:
-            #     print('Multiple IDs!')
+                       if x[1] is not None #
+                       if lab == str(x[0].label)
+                       if 'infrastructure' == str(x[1].label[0])]
 
             try:
                 invest = res[outflow[0]]['scalars']['invest']
@@ -1421,12 +1422,6 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
                     # an oemof bug in outputlib
                     invest = res[outflow[0]]['sequences']['invest'][0]
                 except (KeyError, IndexError):
-                    try:
-                        invest = res[outflow[1]]['scalars']['invest']
-                    except (KeyError, IndexError):
-                        try:
-                            invest = res[outflow[1]]['sequences']['invest'][0]
-                        except (KeyError, IndexError):
                             invest = 0
 
             # the rounding is performed due to numerical issues
@@ -1458,12 +1453,9 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
 
             hp_lab = p['label_3']
             label_base = 'infrastructure_' + 'heat_' + hp_lab + '_'
-# TODO: hier weiter machen
-            # maybe slow approach with lambda function
-            #TODO: ggf df['from_node'] + '-' + df['to_node'] anpasse
 
+            # maybe slow approach with lambda function
             df[hp_lab + '.' + 'dir-1'] = 'super-pipes' + '-' +  df['id'].apply(str) # neue spalte (pipe-typ-A.dir-1) mit dem vierten label
-     # TODO error here below
             df[hp_lab + '.' + 'size-1'] = df[hp_lab + '.' + 'dir-1'].apply(  # neue spalte (pipe-typ-A.size-1) mit dem invest der hp
                 lambda x: get_invest_val(label_base + x))
        # TODO: code unterhalb wird nicht mehr bentigt da nur mono directional
