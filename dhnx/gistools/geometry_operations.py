@@ -703,6 +703,10 @@ def aggregation(forks, pipes, consumers, producers):
                     str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)
                     merged_segment_i_a.at[0, 'aggregated_forks'] = str_aggregated_forks_segment_i_a
 
+                    # # add column 'aggregated_pipes'
+                    str_aggregated_pipes_segment_i_a = ', '.join(str(x) for x in segment_i_a['id'].tolist())
+                    merged_segment_i_a.at[0, 'aggregated_pipes'] = str_aggregated_pipes_segment_i_a
+
                     # # add column 'aggregated_consumers'
                     aggregated_consumer_segment_i_a = []
                     aggregated_consumer_segment_i_a = HLpipes.loc[HLpipes['from_node'].isin(aggregated_forks_segment_i_a)][
@@ -721,10 +725,6 @@ def aggregation(forks, pipes, consumers, producers):
                     number_aggregated_consumer_segment_i_a = len(aggregated_consumer_segment_i_a)
                     simultaneity_factor_segment_i_a = pow(1.05, -number_aggregated_consumer_segment_i_a) # Note: this is just a placeholder formula
                     merged_segment_i_a.at[0, 'simultaneity factor'] = simultaneity_factor_segment_i_a
-
-                    # # add column 'aggregated_pipes'
-                    str_aggregated_pipes_segment_i_a = ', '.join(str(x) for x in segment_i_a['id'].tolist())
-                    merged_segment_i_a.at[0, 'aggregated_pipes'] = str_aggregated_pipes_segment_i_a
 
                     # add new pipe to super pipes
                     super_pipes = super_pipes.append(merged_segment_i_a)
