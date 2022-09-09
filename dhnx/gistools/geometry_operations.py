@@ -703,11 +703,6 @@ def aggregation(forks, pipes, consumers, producers):
                     str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)
                     merged_segment_i_a.at[0, 'aggregated_forks'] = str_aggregated_forks_segment_i_a
 
-                    # add new pipe to super pipes
-                    super_pipes = super_pipes.append(merged_segment_i_a)
-                    # add pipe_ids to aggregated pipes
-                    aggregated_pipes = aggregated_pipes + segment_i_a['id'].tolist()
-
                     # # add column 'aggregated_consumers'
                     aggregated_consumer_segment_i_a = []
                     aggregated_consumer_segment_i_a = HLpipes.loc[HLpipes['from_node'].isin(aggregated_forks_segment_i_a)][
@@ -730,6 +725,11 @@ def aggregation(forks, pipes, consumers, producers):
                     # # add column 'aggregated_pipes'
                     str_aggregated_pipes_segment_i_a = ', '.join(str(x) for x in segment_i_a['id'].tolist())
                     merged_segment_i_a.at[0, 'aggregated_pipes'] = str_aggregated_pipes_segment_i_a
+
+                    # add new pipe to super pipes
+                    super_pipes = super_pipes.append(merged_segment_i_a)
+                    # add pipe_ids to aggregated pipes
+                    aggregated_pipes = aggregated_pipes + segment_i_a['id'].tolist()
 
                     aggregation_segment == True
 

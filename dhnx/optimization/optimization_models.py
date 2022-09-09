@@ -779,7 +779,7 @@ def solve_optimisation_investment(model):
 
     if model.settings['aggregated'] is True:
         edges_results = model.get_results_edges_aggregated()
-
+#TODO: results for aggregated network are saved in 'components': {'pipes': edges_results}
     else:
         edges_results = model.get_results_edges()
 
