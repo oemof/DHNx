@@ -1433,7 +1433,8 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
 
             outflow = [x for x in res.keys()
                        if x[1] is not None
-                       if lab == str(x[0].label)]
+                       if lab == str(x[0].label)
+                       if 'infrastructure' == str(x[1].label[0])]
 
             try:
                 invest_status = res[outflow[0]]['scalars']['invest_status']
@@ -1464,25 +1465,17 @@ class OemofInvestOptimizationModelAggregated(InvestOptimizationModel):
                     df.at[r, hp_lab + '.direction'] = 'NaN'
 
             if p['nonconvex']:
-                df[hp_lab + '.' + 'status-1'] = df[hp_lab + '.' + 'dir-1'].apply(
+                df[hp_lab + '.' + 'status'] = df[hp_lab + '.' + 'dir'].apply(
                     lambda x: get_invest_status(label_base + x))
-                df[hp_lab + '.' + 'status-2'] = df[hp_lab + '.' + 'dir-2'].apply(
-                    lambda x: get_invest_status(label_base + x))
-                df[hp_lab + '.' + 'status'] = \
-                    df[[hp_lab + '.' + 'status-1', hp_lab + '.' + 'status-2']].max(axis=1)
 
                 for r, c in df.iterrows():
-                    if df.at[r, hp_lab + '.' + 'status-1'] + \
-                            df.at[r, hp_lab + '.' + 'status-2'] > 1:
+                    if df.at[r, hp_lab + '.' + 'status'] > 1:
                         print(
                             "Investment status of pipe id {} is 1 for both dircetions!"
                             " This is not allowed!".format(r)
                         )
-                    if (df.at[r, hp_lab + '.' + 'status-1'] == 1 and df.at[
-                        r, hp_lab + '.' + 'size-1'] == 0) \
-                            or \
-                            (df.at[r, hp_lab + '.' + 'status-2'] == 1 and df.at[
-                                r, hp_lab + '.' + 'size-2'] == 0):
+                    if (df.at[r, hp_lab + '.' + 'status'] == 1 and df.at[
+                        r, hp_lab + '.' + 'size'] == 0):
                         print(
                             "Investment status of pipe id {} is 1, and capacity is 0!"
                             "What happend?!".format(r)
