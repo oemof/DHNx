@@ -111,6 +111,10 @@ def insert_node_ids(lines, nodes):
     lines['from_node'] = lines['b0_wkt'].apply(lambda x: nodes.at[x, 'id_full'])
     lines['to_node'] = lines['b1_wkt'].apply(lambda x: nodes.at[x, 'id_full'])
 
+    for r,c in lines.iterrows():
+       if c['b0_wkt'] not in nodes.index:
+           print(c['b0_wkt'])
+
     lines.drop(axis=1, inplace=True, labels=['b0_wkt', 'b1_wkt'])
 
     return lines
