@@ -492,6 +492,7 @@ def add_nodes_super_pipes(opti_network, gd, nodes, busd):
         # else:   # calls Investment heatpipeline function
 # TODO: those consumer connections dont exist for super_pipes
         # connection of houses (not needed)
+
         if q['to_node'].split('-')[0] == "consumers":
 
             start = q['from_node']
