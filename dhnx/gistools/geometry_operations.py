@@ -699,8 +699,8 @@ def aggregation(forks, pipes, consumers, producers):
                     merged_segment_i_a.at[0, 'to_node'] = last_fork_segment_i_a
 
 
-                    # # add column 'aggregated_forks'
-                    str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)
+                    # # add column 'aggregated_forks' # added also the last fork of a superpipe
+                    str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)  + ', ' + last_fork_segment_i_a
                     merged_segment_i_a.at[0, 'aggregated_forks'] = str_aggregated_forks_segment_i_a
 
                     # # add column 'aggregated_pipes'
