@@ -594,8 +594,6 @@ def aggregation(forks, pipes, consumers, producers):
         i += 1
         # select the current super fork (i)...
         superfork_i_id_full = super_forks.loc[i]['id_full']
-        # ... and add to the aggregated forks
-        aggregated_forks.append(superfork_i_id_full)
 
         # search for consumer which are connected with super fork i
         aggregated_consumer_super_fork_i = []
@@ -698,6 +696,14 @@ def aggregation(forks, pipes, consumers, producers):
 
                     merged_segment_i_a.at[0, 'to_node'] = last_fork_segment_i_a
 
+                    # add last and first fork, if they are not aggregated yet
+                    if superfork_i_id_full not in aggregated_forks:
+                        aggregated_forks.append(superfork_i_id_full)
+                        aggregated_forks_segment_i_a.append(superfork_i_id_full)
+
+                    if last_fork_segment_i_a not in aggregated_forks:
+                        aggregated_forks.append(last_fork_segment_i_a)
+                        aggregated_forks_segment_i_a.append(last_fork_segment_i_a)
 
                     # # add column 'aggregated_forks'
                     str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)
