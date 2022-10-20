@@ -39,6 +39,7 @@ import pandas as pd
 from shapely import geometry
 from shapely import ops
 
+
 def create_forks(lines):
     """
     Creates a forks(nodes) GeoDataFrame from a "line"-GeoDataFrame
@@ -515,8 +516,8 @@ def check_crs(gdf, crs=4647):
 
     return gdf
 
-def aggregation(forks, pipes, consumers, producers):
 
+def aggregation(forks, pipes, consumers, producers):
     """
     This function forms a new aggregated network consisting of super forks, super pipes and super produsers
     Super forks are forks with less or more than two connections to DL or are connected to GL.
@@ -549,7 +550,6 @@ def aggregation(forks, pipes, consumers, producers):
     Example:
         network_aggregation
     """
-
 
     # # # 1. identify super forks
     # DL and GL pipes copied from pipes
@@ -594,8 +594,6 @@ def aggregation(forks, pipes, consumers, producers):
         i += 1
         # select the current super fork (i)...
         superfork_i_id_full = super_forks.loc[i]['id_full']
-        # ... and add to the aggregated forks
-        aggregated_forks.append(superfork_i_id_full)
 
         # search for consumer which are connected with super fork i
         aggregated_consumer_super_fork_i = []
@@ -698,9 +696,17 @@ def aggregation(forks, pipes, consumers, producers):
 
                     merged_segment_i_a.at[0, 'to_node'] = last_fork_segment_i_a
 
+                    # add last and first fork, if they are not aggregated yet
+                    if superfork_i_id_full not in aggregated_forks:
+                        aggregated_forks.append(superfork_i_id_full)
+                        aggregated_forks_segment_i_a.append(superfork_i_id_full)
 
-                    # # add column 'aggregated_forks' # added also the last fork of a superpipe
-                    str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)  + ', ' + last_fork_segment_i_a
+                    if last_fork_segment_i_a not in aggregated_forks:
+                        aggregated_forks.append(last_fork_segment_i_a)
+                        aggregated_forks_segment_i_a.append(last_fork_segment_i_a)
+
+                    # # add column 'aggregated_forks'
+                    str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)
                     merged_segment_i_a.at[0, 'aggregated_forks'] = str_aggregated_forks_segment_i_a
 
                     # # add column 'aggregated_pipes'
@@ -709,7 +715,8 @@ def aggregation(forks, pipes, consumers, producers):
 
                     # # add column 'aggregated_consumers'
                     aggregated_consumer_segment_i_a = []
-                    aggregated_consumer_segment_i_a = HLpipes.loc[HLpipes['from_node'].isin(aggregated_forks_segment_i_a)][
+                    aggregated_consumer_segment_i_a = \
+                    HLpipes.loc[HLpipes['from_node'].isin(aggregated_forks_segment_i_a)][
                         'to_node'].tolist()
                     str_aggregated_consumer_segment_i_a = ', '.join(aggregated_consumer_segment_i_a)
                     merged_segment_i_a.at[0, 'aggregated_consumer'] = str_aggregated_consumer_segment_i_a
@@ -717,13 +724,14 @@ def aggregation(forks, pipes, consumers, producers):
                     # # add column 'aggregated_P_heat_max'
                     aggregated_P_heat_max_segment_i_a = []
                     aggregated_P_heat_max_segment_i_a = \
-                    consumers.loc[consumers['id_full'].isin(aggregated_consumer_segment_i_a)]['P_heat_max'].tolist()
+                        consumers.loc[consumers['id_full'].isin(aggregated_consumer_segment_i_a)]['P_heat_max'].tolist()
                     sum_aggregated_P_heat_max_segment_i_a = sum(aggregated_P_heat_max_segment_i_a)
                     merged_segment_i_a.at[0, 'P_heat_max'] = sum_aggregated_P_heat_max_segment_i_a
 
                     # # add column 'simultaneity factor'
                     number_aggregated_consumer_segment_i_a = len(aggregated_consumer_segment_i_a)
-                    simultaneity_factor_segment_i_a = pow(1.05, -number_aggregated_consumer_segment_i_a) # Note: this is just a placeholder formula
+                    simultaneity_factor_segment_i_a = pow(1.05,
+                                                          -number_aggregated_consumer_segment_i_a)  # Note: this is just a placeholder formula
                     merged_segment_i_a.at[0, 'simultaneity factor'] = simultaneity_factor_segment_i_a
 
                     # add new pipe to super pipes
@@ -746,7 +754,6 @@ def aggregation(forks, pipes, consumers, producers):
                         DLGLpipes['from_node'].isin([fork_next_segment_i_a])]['id'].tolist() + DLGLpipes.loc[
                                                                DLGLpipes['to_node'].isin([fork_next_segment_i_a])][
                                                                'id'].tolist()
-
 
                     if segment_i_a.at[b, 'id'] == list_of_connected_pipes_to_next_fork[0]:
                         pipe_next_segment_i_a = DLGLpipes.loc[
@@ -782,7 +789,30 @@ def aggregation(forks, pipes, consumers, producers):
     # return
     return {
         'super_forks': super_forks,
-        'super_consumers': consumers, # not yet defined
-        'super_producers': producers, # not yet defined
+        'super_consumers': consumers,  # not yet defined
+        'super_producers': producers,  # not yet defined
         'super_pipes': super_pipes,
     }
+
+
+def remove_con_prod_forks(forks, consumers, producers):
+    """
+    Parameters
+    ----------
+    forks
+    consumers
+    producers
+    Returns
+    -------
+    """
+    consumers["geometry_wkt"] = \
+        consumers["geometry"].apply(lambda geom: geom.wkt)
+
+    producers["geometry_wkt"] = \
+        producers["geometry"].apply(lambda geom: geom.wkt)
+
+    con_prod = list(producers["geometry_wkt"]) + list(consumers["geometry_wkt"])
+
+    forks_only = forks[forks.geometry_wkt.isin(con_prod) == False]
+
+    return forks_only
