@@ -704,7 +704,6 @@ def setup_optimise_investment(
         Additional logging info is printed.
     write_lp_file : bool
         Linear program file is stored (‘User/.oemof/lp_files/DHNx.lp’).
-
     Returns
     -------
     oemof.solph.Model : The oemof.solph.Model is build.

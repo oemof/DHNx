@@ -14,6 +14,7 @@ SPDX-License-Identifier: MIT
 import os
 
 import pandas as pd
+import geopandas as gpd
 
 from .graph import thermal_network_to_nx_graph
 from .helpers import Dict
@@ -24,6 +25,7 @@ from .optimization.optimization_models import optimize_operation
 from .optimization.optimization_models import setup_optimise_investment
 from .optimization.optimization_models import solve_optimisation_investment
 from .simulation import simulate
+from .gistools.geometry_operations import aggregation
 
 dir_name = os.path.dirname(__file__)
 
@@ -316,3 +318,13 @@ class ThermalNetwork():
 
     def simulate(self, *args, **kwargs):
         self.results.simulation = simulate(self, *args, **kwargs)
+
+    def aggregate(self):
+
+        self.aggregatednetwork = dict()
+        forks = self.components["forks"]
+        pipes = self.components["pipes"]
+        consumers = self.components["consumers"]
+        producers = self.components["producers"]
+        self.aggregatednetwork = aggregation(forks, pipes, consumers, producers)
+
