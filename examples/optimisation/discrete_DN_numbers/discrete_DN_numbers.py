@@ -70,8 +70,8 @@ for r, c in twn_results.components['pipes'].iterrows():
     id = c["to_node"].split("-")[1]
     lat_1 = twn_results.components[type].loc[id].lat
     lon_1 = twn_results.components[type].loc[id].lon
-    lat_mid = lat_0 + 0.5*(lat_1 - lat_0)
-    lon_mid = lon_0 + 0.5*(lon_1 - lon_0)
+    lat_mid = lat_0 + 0.5 * (lat_1 - lat_0)
+    lon_mid = lon_0 + 0.5 * (lon_1 - lon_0)
     plt.text(lon_mid, lat_mid, size, va="center", ha="center")
 
 plt.legend()
