@@ -279,13 +279,12 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 * **label_3**: Label of the third tag. See :ref:`Label system <Label system>`.
 * **active**: (0/1). If *active* is 0, this heatpipeline component is not considered. This attribute helps
   for easy selecting and deselecting different investment options.
-* **nonconvex**: (0/1). Choose whether a convex or a nonconvex investment should be performed. This leads
-  to a different meaning of the minimum heat transport capacity (*cap_min*). See
-  *P_heat_max* is given, the maximum heat load is calculated from the heat
-  demand series (see `consumers-heat_flow.csv`). Depending on the optimisation
-  setting, *P_heat_max* or the demand series is used for the optimisation
-  (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
-  for further information).
+* **nonconvex**: (0/1). Choose whether a convex or a nonconvex investment should be performed.
+  With `nonconvex` set to 1, fix losses and fix costs independent of the
+  dimension of the pipelines capacity can be considered. It is recommended to
+  set `nonconvex` to 1, as the construction of DHS pipelines is usually
+  characterized by a high share of fixed costs.
+  If `nonconvex` is 0, the costs-curve is a line through origin.
 * **l_factor**: Relative thermal loss per length unit (e.g. [kW_loss/(m*kW_installed)].
   Defines the loss factor depending on the installed heat transport capacity of the
   pipe. The *l_factor* is multiplied by the invested capacity in investment case, and by the given
