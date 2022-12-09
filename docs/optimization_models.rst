@@ -279,13 +279,12 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 * **label_3**: Label of the third tag. See :ref:`Label system <Label system>`.
 * **active**: (0/1). If *active* is 0, this heatpipeline component is not considered. This attribute helps
   for easy selecting and deselecting different investment options.
-* **nonconvex**: (0/1). Choose whether a convex or a nonconvex investment should be performed. This leads
-  to a different meaning of the minimum heat transport capacity (*cap_min*). See
-  *P_heat_max* is given, the maximum heat load is calculated from the heat
-  demand series (see `consumers-heat_flow.csv`). Depending on the optimisation
-  setting, *P_heat_max* or the demand series is used for the optimisation
-  (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
-  for further information).
+* **nonconvex**: (0/1). Choose whether a convex or a nonconvex investment should be performed.
+  With `nonconvex` set to 1, fix losses and fix costs independent of the
+  dimension of the pipelines capacity can be considered. It is recommended to
+  set `nonconvex` to 1, as the construction of DHS pipelines is usually
+  characterized by a high share of fixed costs.
+  If `nonconvex` is 0, the costs-curve is a line through origin.
 * **l_factor**: Relative thermal loss per length unit (e.g. [kW_loss/(m*kW_installed)].
   Defines the loss factor depending on the installed heat transport capacity of the
   pipe. The *l_factor* is multiplied by the invested capacity in investment case, and by the given
@@ -293,6 +292,7 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 * **l_factor_fix**: Absolute thermal loss per length unit (e.g. [kW/m]).
   In case of *nonconvex* is 1, the *l_factor_fix* is zero if no investement in a specific pipe
   element is done. Be careful, if *nonconvex* is 0, this creates a fixed thermal loss.
+  Recommended to use with `nonconvex` is `True`.
 * **cap_max**: Maximum installable capacity (e.g. [kW]).
 * **cap_min**: Minimum installable capacity (e.g. [kW]). Note that there is a difference if a
   *nonconvex* investment is applied (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
@@ -300,6 +300,7 @@ everybody is free to choose his own units (energy, mass flow, etc.).
 * **capex_pipes**: Variable investment costs depending on the installed heat transport capacity
   (e.g. [€/kW]).
 * **fix_costs**: Fix investment costs independent of the installed capacity (e.g. [€])
+  This attribute requires `nonconvex` is set to `True`.
 
 See the *Heatpipeline* API for further details about the attributes.
 
