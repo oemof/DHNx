@@ -211,15 +211,17 @@ def create_object_connections(points, lines, tol_distance=1):
         if n_p in supply_line_points:
             # case that nearest point is a line ending
 
-            logging.info(
+            logging.debug(
                 'Connect buildings... id {}: '
                 'Connected to supply line ending (nearest point)'.format(index)
             )
 
             con_line = LineString([n_p, house_geo])
 
-            conn_lines = pd.concat([conn_lines, gpd.GeoDataFrame(
-                geometry=[con_line], crs=lines.crs)], ignore_index=True)
+            conn_lines = pd.concat(
+                [gpd.GeoDataFrame(conn_lines, crs=lines.crs),
+                 gpd.GeoDataFrame(geometry=[con_line], crs=lines.crs)],
+                ignore_index=True)
 
         else:
 
@@ -229,25 +231,29 @@ def create_object_connections(points, lines, tol_distance=1):
                 # line is split, no line ending is close to the nearest point
                 # this also means the original supply line needs to be deleted
 
-                logging.info(
+                logging.debug(
                     'Connect buildings... id {}: Supply line split'.format(index))
 
                 con_line = LineString([n_p, house_geo])
 
-                conn_lines = pd.concat([conn_lines, gpd.GeoDataFrame(
-                    geometry=[con_line], crs=lines.crs)], ignore_index=True)
+                conn_lines = pd.concat(
+                    [gpd.GeoDataFrame(conn_lines, crs=lines.crs),
+                     gpd.GeoDataFrame(geometry=[con_line], crs=lines.crs)],
+                    ignore_index=True)
 
                 lines.drop([line_index], inplace=True)
 
-                lines = pd.concat([lines, gpd.GeoDataFrame(
-                    geometry=[LineString([supply_line_p0, n_p]),
-                              LineString([n_p, supply_line_p1])],
-                    crs=lines.crs)], ignore_index=True)
+                lines = pd.concat(
+                    [gpd.GeoDataFrame(lines, crs=lines.crs),
+                     gpd.GeoDataFrame(geometry=[
+                         LineString([supply_line_p0, n_p]),
+                         LineString([n_p, supply_line_p1])], crs=lines.crs)],
+                    ignore_index=True)
 
             else:
                 # case that one or both line endings are closer than tolerance
                 # thus, the next line ending is chosen
-                logging.info(
+                logging.debug(
                     'Connect buildings... id {}: Connected to Supply line '
                     'ending due to tolerance'.format(index))
 
@@ -255,8 +261,10 @@ def create_object_connections(points, lines, tol_distance=1):
 
                 con_line = LineString([conn_point, house_geo])
 
-                conn_lines = pd.concat([conn_lines, gpd.GeoDataFrame(
-                    geometry=[con_line], crs=lines.crs)], ignore_index=True)
+                conn_lines = pd.concat(
+                    [gpd.GeoDataFrame(conn_lines, crs=lines.crs),
+                     gpd.GeoDataFrame(geometry=[con_line], crs=lines.crs)],
+                    ignore_index=True)
 
     logging.info('Connection of buildings completed.')
 

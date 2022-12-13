@@ -316,9 +316,10 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         Simplified potential pipe network.
 
     """
-    gdf_line_net_new = gpd.GeoDataFrame(geometry=[], crs=gdf_line_net.crs)
-    gdf_merged_all = gpd.GeoDataFrame(geometry=[], crs=gdf_line_net.crs)
-    gdf_deleted = gpd.GeoDataFrame(geometry=[], crs=gdf_line_net.crs)
+    crs = gdf_line_net.crs
+    gdf_line_net_new = gpd.GeoDataFrame(geometry=[], crs=crs)
+    gdf_merged_all = gpd.GeoDataFrame(geometry=[], crs=crs)
+    gdf_deleted = gpd.GeoDataFrame(geometry=[], crs=crs)
     # Merge generator and houses line DataFrames to 'external' lines
     gdf_line_ext = pd.concat([gdf_line_gen, gdf_line_houses])
 
@@ -334,6 +335,7 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                 gpd.GeoDataFrame(geometry=[geom]).plot(ax=ax, color=color)
 
         geom = b.geometry  # The current line segment
+        gdf_b = gpd.GeoDataFrame(b.to_frame().T, crs=crs)
 
         if any_check(geom, gdf_merged_all, how='within'):
             # Drop this object, because it is contained within a merged object
@@ -347,34 +349,36 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         for neighbour in neighbours.geometry:
             if all([neighbour.intersects(g) for g in neighbours.geometry]):
                 # Treat as if there was only one neighbour (like end segment)
-                neighbours = gpd.GeoDataFrame(geometry=[neighbour])
+                neighbours = gpd.GeoDataFrame(geometry=[neighbour], crs=crs)
                 break
 
         if len(neighbours) <= 1:
             # This is a potentially unused end segment
             unused = True
 
-            # Test if one end touches a 'external' line, while the other
-            # end touches touches a network line segment
+            # Test if one end touches an 'external' line, while the other
+            # end touches a network line segment
             p1 = geom.boundary.geoms[0]
             p2 = geom.boundary.geoms[-1]
             p1_neighbours = [p1.intersects(g) for g in neighbours.geometry]
             p2_neighbours = [p2.intersects(g) for g in neighbours.geometry]
-            if any_check(p1, gdf_line_ext, how='touches') and p2_neighbours.count(True) > 0:
+            if (any_check(p1, gdf_line_ext, how='touches')
+               and p2_neighbours.count(True) > 0):
                 unused = False
-            elif any_check(p2, gdf_line_ext, how='touches') and p1_neighbours.count(True) > 0:
+            elif (any_check(p2, gdf_line_ext, how='touches')
+                  and p1_neighbours.count(True) > 0):
                 unused = False
 
             if unused:
                 # If truly unused, we can discard it to simplify the network
                 debug_plot(neighbours, color='white')
-                gdf_deleted = pd.concat(
-                    [gdf_deleted, b.to_frame().T], ignore_index=True)
+                gdf_deleted = pd.concat([gdf_deleted, gdf_b],
+                                        ignore_index=True)
             else:
                 # Keep it, if it touches a generator or a house
                 debug_plot(neighbours, color='black')
-                gdf_line_net_new = pd.concat(
-                    [gdf_line_net_new, b.to_frame().T], ignore_index=True)
+                gdf_line_net_new = pd.concat([gdf_line_net_new, gdf_b],
+                                             ignore_index=True)
             continue  # Continue with the next line segment
 
         if len(neighbours) > 2:
@@ -391,8 +395,8 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             elif p2_neighbours.count(True) == 1:  # Only one neighbour allowed
                 neighbours = neighbours[p2_neighbours]  # Neighbour to merge
             else:  # Keep this segment. Multiple lines meet at an intersection
-                gdf_line_net_new = pd.concat(
-                    [gdf_line_net_new, b.to_frame().T], ignore_index=True)
+                gdf_line_net_new = pd.concat([gdf_line_net_new, gdf_b],
+                                             ignore_index=True)
                 debug_plot(neighbours, color='green')
                 continue  # Continue with the next line segment
 
@@ -420,12 +424,12 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                 break  # This is a intersection that cannot be simplified
             else:  # Choose neighbour for merging
                 neighbours_list.append(neighbour)
-        neighbours = gpd.GeoDataFrame(geometry=neighbours_list)
+        neighbours = gpd.GeoDataFrame(geometry=neighbours_list, crs=crs)
 
         if len(neighbours) == 0:
             # If no neighbours are left now, continue with next line segment
-            gdf_line_net_new = pd.concat(
-                [gdf_line_net_new, b.to_frame().T], ignore_index=True)
+            gdf_line_net_new = pd.concat([gdf_line_net_new, gdf_b],
+                                         ignore_index=True)
             continue
 
         # Create list of all elements that should be merged
@@ -445,7 +449,7 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
 
         # Merge the MultiLineString into a single object
         merged_line = linemerge(multi_line)
-        gdf_merged = gpd.GeoDataFrame(geometry=[merged_line])
+        gdf_merged = gpd.GeoDataFrame(geometry=[merged_line], crs=crs)
         debug_plot(neighbours)  # Plot the segments before the merge
         debug_plot(gdf_merged, color='orange')  # ...and after the merge
         gdf_line_net_new = pd.concat([gdf_line_net_new, gdf_merged],
