@@ -312,13 +312,123 @@ def create_points_from_polygons(gdf, method='midpoint'):
     if gdf['geometry'].values[0].type == 'Point':
         return gdf
 
-    if method == 'midpoint':
+    if method == 'midpoint' or method == 'boundary':
+        # (method 'boundary' is performed later and needs the centroid)
         gdf['geometry'] = gdf['geometry'].centroid
         return gdf
 
     raise ValueError(
-        'No other method than >midpoint< implemented!'
+        "No other methods than 'midpoint' and 'boundary' implemented!"
     )
+
+
+def run_point_method_boundary(
+        consumers_poly, consumers, producers_poly, producers,
+        lines_consumers, lines_producers):
+    """Run 'boundary' method for finding the building connection point.
+
+    The 'midpoint' method (using the centroid) must already have been run,
+    generating the default connection lines from street to centroid.
+
+    If there is only one intersection between that line and the boundary
+    of the building, this intersection point is used as the connection
+    point instead (and the connection line is shortened accordingly).
+
+    However, complex building shapes can produce multiple intersections. In
+    this case, the intersection with the 'convex hull' of the building is used
+    instead. This may result in connection points that do not touch an
+    actual building wall, but it should still be an improvement compared to
+    the 'midpoint' method.
+
+    In case of no intersections with the building boundary (possible for e.g.
+    U-shaped buildings), the original centroid is used.
+
+    Parameters
+    ----------
+    consumers_poly : geopandas.GeoDataFrame
+        Polygons of the consumer buildings. Point geometries are also allowed,
+        but they are not changed.
+    consumers : geopandas.GeoDataFrame
+        Points of the consumer buildings (as returned by 'midpoint' method).
+    producers_poly : geopandas.GeoDataFrame
+        Polygons of the producer buildings. Point geometries are also allowed,
+        but they are not changed.
+    producers : geopandas.GeoDataFrame
+        Points of the producer buildings (as returned by 'midpoint' method).
+    lines_consumers : geopandas.GeoDataFrame
+        Connection lines from street to each consumer point.
+    lines_producers : geopandas.GeoDataFrame
+        Connection lines from street to each producer point.
+
+    Returns
+    -------
+    consumers : geopandas.GeoDataFrame
+        Updated points of the consumer buildings.
+    producers : geopandas.GeoDataFrame
+        Updated points of the producer buildings.
+    lines_consumers : geopandas.GeoDataFrame
+        Updated connection lines from street to each consumer point.
+    lines_producers : geopandas.GeoDataFrame
+        Updated connection lines from street to each producer point.
+
+    """
+    logging.info('Run "boundary" method for finding the building connections')
+    # Cut the part off of each "line_consumer" that is within the building
+    # polygon. As a result, the heating grid will only reach to the wall of
+    # the building.
+    lines_consumers_n = gpd.GeoDataFrame(
+        geometry=lines_consumers.difference(consumers_poly, align=False))
+    # This produces a MultiLineString for complex building polygons, where
+    # the boundary and the simple lines from centroid to street intersect
+    # multiple times. This would not be a valid connection line. In those
+    # cases the 'convex hull' of the building is used instead.
+    lines_consumers_n.loc[lines_consumers_n.type == "MultiLineString"] = \
+        gpd.GeoDataFrame(geometry=lines_consumers.difference(
+            consumers_poly.convex_hull, align=False))
+
+    # Repeat for the producer lines
+    lines_producers_n = gpd.GeoDataFrame(geometry=lines_producers.difference(
+        producers_poly, align=False))
+    lines_producers_n.loc[lines_producers_n.type == "MultiLineString"] = \
+        gpd.GeoDataFrame(geometry=lines_producers.difference(
+            producers_poly.convex_hull, align=False))
+
+    # Now the "consumers" (point objects for each building) need to be
+    # updated to touch the end of the consumer_lines
+    consumers_n = gpd.GeoDataFrame(geometry=lines_consumers.intersection(
+        consumers_poly.boundary, align=False))
+    consumers_n.loc[consumers_n.type == "MultiPoint"] = \
+        gpd.GeoDataFrame(geometry=lines_consumers.intersection(
+            consumers_poly.convex_hull.boundary, align=False))
+
+    # Repeat for the producers
+    producers_n = gpd.GeoDataFrame(geometry=lines_producers.intersection(
+        producers_poly.convex_hull.boundary, align=False))
+    producers_n.loc[producers_n.type == "MultiPoint"] = \
+        gpd.GeoDataFrame(geometry=lines_producers.intersection(
+            producers_poly.convex_hull.boundary, align=False))
+
+    # Sometimes the centroid does not lie within a building and there may be
+    # no intersetions, i.e. the new point is an 'empty' geometry. This can
+    # happen if buildings are multipolygons, which is not forbidden.
+    # Sometimes the new lines are empty (e.g. because a street and a building
+    # object cross each other).
+    # In these cases the original geometry is used for points and lines.
+    mask = (consumers_n.is_empty | lines_consumers_n.is_empty)
+    consumers_n.loc[mask] = consumers.loc[mask].geometry
+    lines_consumers_n.loc[mask] = lines_consumers.loc[mask].geometry
+
+    mask = (producers_n.is_empty | lines_producers_n.is_empty)
+    producers_n.loc[mask] = producers.loc[mask].geometry
+    lines_producers_n.loc[mask] = lines_producers.loc[mask].geometry
+
+    # Now update all the original variables with the new data
+    consumers.geometry = consumers_n.geometry
+    producers.geometry = producers_n.geometry
+    lines_consumers = lines_consumers_n
+    lines_producers = lines_producers_n
+
+    return consumers, producers, lines_consumers, lines_producers
 
 
 def check_duplicate_geometries(gdf):
@@ -358,7 +468,10 @@ def process_geometry(lines, consumers, producers,
     producers : geopandas.GeoDataFrame
         Location of supply sites. Expected geometry: Polygons or Points.
     method : str
-        Method for creating the point if polygons are given for the consumers and producers.
+        Method for creating the point if polygons are given for the consumers
+        and producers. Method 'midpoint' uses the centroid of each building
+        polygon. Method 'boundary' moves the point to the boundary (wall) of
+        the building, along the line constructed from centroid to the street.
     multi_connections : bool
         Setting if a building should be connected to multiple streets.
     projected_crs : EPSG integer code
@@ -380,6 +493,10 @@ def process_geometry(lines, consumers, producers,
            'producers', 'pipes'.
 
     """
+    if method == 'boundary':
+        # copies of the original polygons are needed for method 'boundary'
+        consumers_poly = go.check_crs(consumers, crs=projected_crs).copy()
+        producers_poly = go.check_crs(producers, crs=projected_crs).copy()
 
     # check whether the expected geometry is used for geo dataframes
     check_geometry_type(lines, types=['LineString', 'MultiLineString'])
@@ -422,6 +539,13 @@ def process_geometry(lines, consumers, producers,
         # Connection lines are ordered the same as points. Match their indexes
         lines_consumers.index = consumers.index
         lines_producers.index = producers.index
+
+    if method == 'boundary':
+        # Can only be performed after 'midpoint' method
+        consumers, producers, lines_consumers, lines_producers = (
+            run_point_method_boundary(
+                consumers_poly, consumers, producers_poly, producers,
+                lines_consumers, lines_producers))
 
     # Weld continuous line segments together and cut loose ends
     lines = go.weld_segments(
