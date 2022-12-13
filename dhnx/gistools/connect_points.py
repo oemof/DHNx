@@ -293,6 +293,24 @@ def create_points_from_polygons(gdf, method='midpoint'):
     )
 
 
+def check_duplicate_geometries(gdf):
+    """Test the input GeoDataFrame for duplicate geometries and plot them."""
+    if gdf.duplicated(subset="geometry").any():
+        idx = gdf.duplicated(subset="geometry")
+        try:
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(dpi=200)
+            gdf.loc[~idx].plot(ax=ax, color='green')
+            gdf.loc[idx].plot(ax=ax, color='red')
+            plt.title("Red are duplicate geometries. Please fix!")
+            plt.show()
+        except ImportError:
+            logging.info("Install matplotlib to show a plot of the duplicate "
+                         "geometries.")
+        raise ValueError("GeoDataFrame has {} duplicate geometries"
+                         .format(len(gdf.loc[idx])))
+
+
 def process_geometry(lines, consumers, producers,
                      method='midpoint', projected_crs=4647,
                      tol_distance=2):
@@ -335,8 +353,9 @@ def process_geometry(lines, consumers, producers,
     check_geometry_type(lines, types=['LineString', 'MultiLineString'])
     for gdf in [producers, consumers]:
         check_geometry_type(gdf, types=['Polygon', 'Point', 'MultiPolygon'])
+        check_duplicate_geometries(gdf)
 
-    # # split multilinestrings to single lines with only 1 starting and 1 ending point
+    # split multilinestrings to single lines with only 1 starting and 1 ending point
     lines = go.split_multilinestr_to_linestr(lines)
 
     # check and convert crs if it is not already the `projected_crs`
