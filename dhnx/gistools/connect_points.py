@@ -161,6 +161,30 @@ def create_object_connections(points, lines, tol_distance=1):
             raise ValueError("The Linestrings must consists of simple lines,"
                              " with only two coordinates!")
 
+    # Pepare merging all the street lines
+    all_lines = lines['geometry']
+
+    # There seems to be a conflict between shapely and pygeos,
+    # which both use 'geos' internally, if both are installed.
+    # This can cause
+    # 'OSError exception: access violation reading 0xFFFFFFFFFFFFFFFF'.
+    #
+    # With shapely 1.8.0 and pygeos 0.12.0 it was observed that
+    # this sometimes even fails without error. In such a case
+    # mergedlines might only contain a single LineString (one street
+    # segment) instead of a MultiLineString (the combined network
+    # of all street segments). This completely messes up the
+    # following nearest_points().
+    #
+    # Wrapping the argument in 'list()' seems to be a valid workaround.
+    # It may come with a performance cost, as noted here:
+    # https://github.com/geopandas/geopandas/issues/1820
+    # https://github.com/geopandas/geopandas/issues/2171
+    # This issue may disappear when shapely 2.0 is released (then pygeos
+    # is merged with shapely).
+    mergedlines = unary_union(list(all_lines))
+    # mergedlines = unary_union(all_lines)  # TODO Try this with shapely 2.0
+
     # empty geopandas dataframe for house connections
     conn_lines = gpd.GeoDataFrame(geometry=[], crs=lines.crs)
 
@@ -168,10 +192,6 @@ def create_object_connections(points, lines, tol_distance=1):
     for index, row in points.iterrows():
 
         house_geo = row['geometry']
-
-        # the same with the original lines
-        all_lines = lines['geometry']
-        mergedlines = unary_union(all_lines)
 
         # new nearest point method  ############ #########
         n_p = nearest_points(mergedlines, house_geo)[0]
