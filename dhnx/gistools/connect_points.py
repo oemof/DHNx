@@ -341,7 +341,7 @@ def check_duplicate_geometries(gdf):
 
 def process_geometry(lines, consumers, producers,
                      method='midpoint', projected_crs=4647,
-                     tol_distance=2):
+                     tol_distance=2, reset_index=True):
     """
     This function connects the consumers and producers to the line network, and prepares the
     attributes of the geopandas.GeoDataFrames for importing as dhnx.ThermalNetwork.
@@ -368,6 +368,10 @@ def process_geometry(lines, consumers, producers,
     tol_distance : float
         Tolerance distance at connection the points to the line network
         for choosing the end of the line instead of the lot.
+    reset_index : bool
+        If True, reset the index and ignore the existing index. If False,
+        use the existing index for consumer and producer identificators.
+        Default: True
 
     Returns
     -------
@@ -392,10 +396,15 @@ def process_geometry(lines, consumers, producers,
     for layer in [producers, consumers]:
         layer = go.check_crs(layer, crs=projected_crs)
         layer = create_points_from_polygons(layer, method=method)
-        layer.reset_index(inplace=True, drop=True)
-        layer.index.name = 'id'
-        if 'id' in layer.columns:
-            layer.drop(['id'], axis=1, inplace=True)
+        if reset_index:
+            layer.reset_index(inplace=True, drop=True)
+            layer.index.name = 'id'
+            if 'id' in layer.columns:
+                layer.drop(['id'], axis=1, inplace=True)
+        else:
+            if layer.index.has_duplicates:
+                raise ValueError("The index of input data has duplicate "
+                                 "values, which is not allowed")
         layer['lat'] = layer['geometry'].apply(lambda x: x.y)
         layer['lon'] = layer['geometry'].apply(lambda x: x.x)
 
@@ -405,8 +414,14 @@ def process_geometry(lines, consumers, producers,
     consumers['type'] = 'H'
 
     # Add lines to consumers and producers
-    lines_consumers, lines = create_object_connections(consumers, lines, tol_distance=tol_distance)
-    lines_producers, lines = create_object_connections(producers, lines, tol_distance=tol_distance)
+    lines_consumers, lines = create_object_connections(
+        consumers, lines, tol_distance=tol_distance)
+    lines_producers, lines = create_object_connections(
+        producers, lines, tol_distance=tol_distance)
+    if not reset_index:
+        # Connection lines are ordered the same as points. Match their indexes
+        lines_consumers.index = consumers.index
+        lines_producers.index = producers.index
 
     # Weld continuous line segments together and cut loose ends
     lines = go.weld_segments(
@@ -425,9 +440,10 @@ def process_geometry(lines, consumers, producers,
     # concat lines
     lines_all = pd.concat([lines, lines_consumers, lines_producers], sort=False)
     lines_all.reset_index(inplace=True, drop=True)
-    lines_all.index.name = 'id'
-    if 'id' in lines_all.columns:
-        lines_all.drop(['id'], axis=1, inplace=True)
+    if reset_index:
+        lines_all.index.name = 'id'
+        if 'id' in lines_all.columns:
+            lines_all.drop(['id'], axis=1, inplace=True)
 
     # concat point layer
     points_all = pd.concat([
