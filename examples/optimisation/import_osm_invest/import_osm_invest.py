@@ -116,7 +116,8 @@ plt.show()
 tn_input = process_geometry(
     lines=gdf_lines_streets,
     producers=gdf_poly_gen,
-    consumers=gdf_poly_houses
+    consumers=gdf_poly_houses,
+    method="boundary",  # select the method of how to connect the buildings
 )
 
 # plot output after processing the geometry
