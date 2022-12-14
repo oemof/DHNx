@@ -151,7 +151,7 @@ def add_sources(on, it, c, labels, nodes, busd):
 
         # add timeseries data if present
         if ts_status:
-            ts_key = labels['l_4'].split('-')[1] + '_' + labels['l_2']
+            ts_key = labels['l_4'].split('-', 1)[1] + '_' + labels['l_2']
             for col in ts.columns.values:
                 if col.split('.')[0] == ts_key:
                     outflow_args[col.split('.')[1]] = ts[col].values
@@ -195,7 +195,7 @@ def add_demand(it, labels, series, nodes, busd):
         # set static inflow values
         inflow_args = {'nominal_value': de['nominal_value'],
                        'fix': series['heat_flow'][
-                           labels['l_4'].split('-')[1]].values}
+                           labels['l_4'].split('-', 1)[1]].values}
 
         # create
         nodes.append(
