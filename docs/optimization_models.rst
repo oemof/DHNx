@@ -295,7 +295,7 @@ everybody is free to choose his own units (energy, mass flow, etc.).
   Recommended to use with `nonconvex` is `True`.
 * **cap_max**: Maximum installable capacity (e.g. [kW]).
 * **cap_min**: Minimum installable capacity (e.g. [kW]). Note that there is a difference if a
-  *nonconvex* investment is applied (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#using-the-investment-mode>`_
+  *nonconvex* investment is applied (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#investment-optimisation>`_
   for further information).
 * **capex_pipes**: Variable investment costs depending on the installed heat transport capacity
   (e.g. [€/kW]).
