@@ -13,6 +13,11 @@ New features
 
 * Pre-calculation function for optimisation parameters
 
+Geometry processing:
+
+* New method for connecting buildings to polygons boundary
+* Allow to keep index of buildings/consumer
+
 New components/constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
