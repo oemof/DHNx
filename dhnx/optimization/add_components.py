@@ -19,9 +19,10 @@ import dhnx.optimization.oemof_heatpipe as oh
 
 def add_buses(it, labels, nodes, busd):
     """
-    This function initialises the oemof.solph.Bus classes of the energysystem based on the given
-    tabular information. Additionally, a sink or a source can be added to every bus and costs for
-    this source (shortage) or sink (excess) can be defined.
+    This function initialises the oemof.solph.Bus classes of the energysystem
+    based on the given tabular information. Additionally, a sink or a source
+    can be added to every bus and costs for this source (shortage) or sink
+    (excess) can be defined.
 
     The table must be given as follows:
 
@@ -29,11 +30,11 @@ def add_buses(it, labels, nodes, busd):
 
     .. table:: Example for table of *Buses*
 
-        +---------+--------+--------+----------+----------------+--------------+
-        | label_2 | active | excess | shortage | shortage costs | excess costs |
-        +=========+========+========+==========+================+==============+
-        | heat    | 1      | 0      | 0        | 99999          | 99999        |
-        +---------+--------+--------+----------+----------------+--------------+
+        +---------+--------+--------+----------+----------------+-------------+
+        | label_2 | active | excess | shortage | shortage costs | excess costs|
+        +=========+========+========+==========+================+=============+
+        | heat    | 1      | 0      | 0        | 99999          | 99999       |
+        +---------+--------+--------+----------+----------------+-------------+
 
     Parameters
     ----------
@@ -55,7 +56,8 @@ def add_buses(it, labels, nodes, busd):
 
         labels['l_3'] = 'bus'
         labels['l_2'] = b['label_2']
-        l_bus = oh.Label(labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4'])
+        l_bus = oh.Label(labels['l_1'], labels['l_2'], labels['l_3'],
+                         labels['l_4'])
 
         # check if bus already exists (due to infrastructure)
         if l_bus in busd:
@@ -86,10 +88,12 @@ def add_buses(it, labels, nodes, busd):
 
 def add_sources(on, it, c, labels, nodes, busd):
     """
-    The oemof.solph.components.Source components for the producers and consumers are initialised based on the
-    given tabular information of the investment_options of the OemofInvestOptimizationModel.
-    Time-series can also be used as attribute values for the outflow of the Source.
-    Therefore, a table with the filename 'source_timeseries' must be given.
+    The oemof.solph.Source components for the producers and consumers are
+    initialised based on the given tabular information of the
+    investment_options of the OemofInvestOptimizationModel.
+    Time-series can also be used as attribute values for the outflow of the
+    Source. Therefore, a table with the filename 'source_timeseries' must be
+    given.
 
     Parameters
     ----------
@@ -135,7 +139,9 @@ def add_sources(on, it, c, labels, nodes, busd):
         # specific flow attributes
         # e.g. check for heat (label 2)
         # e.g. check for source (label 3)
-        spec_attr = [x for x in list(on.thermal_network.components[labels['l_1']].columns)
+        spec_attr = [x for x in list(
+            on.thermal_network.components[labels['l_1']].columns
+        )
                      if x.split('.')[-1] in on.oemof_flow_attr
                      if x.split('.')[0] == labels['l_2']
                      if x.split('.')[1] == labels['l_3']]
@@ -143,8 +149,10 @@ def add_sources(on, it, c, labels, nodes, busd):
         for sa in spec_attr:
             if sa.split('.')[-1] in outflow_args.keys():
                 print(
-                    'General attribute <{}> of Label 2 <{}> and Label 3 <{}> (value: {}) will '
-                    'be replaced by specific data. New value for <{}>: {}'.format(
+                    'General attribute <{}> of Label 2 <{}> and '
+                    'Label 3 <{}> (value: {}) will '
+                    'be replaced by specific data. New value for <{}>: {}'
+                    ''.format(
                         sa.split('.')[-1], labels['l_2'], labels['l_3'],
                         outflow_args[sa.split('.')[-1]], labels['l_4'], c[sa]))
             outflow_args[sa.split('.')[-1]] = c[sa]
@@ -159,7 +167,9 @@ def add_sources(on, it, c, labels, nodes, busd):
         nodes.append(
             solph.components.Source(
                 label=oh.Label(
-                    labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
+                    labels['l_1'], labels['l_2'], labels['l_3'],
+                    labels['l_4']
+                ),
                 outputs={
                     busd[(labels['l_1'], cs['label_2'], 'bus',
                           labels['l_4'])]: solph.Flow(**outflow_args)}))
@@ -210,8 +220,8 @@ def add_demand(it, labels, series, nodes, busd):
 def add_transformer(it, labels, nodes, busd):
     """Adds oemof.network.Transformer objects to the list of components.
 
-    If attribute `invest` is *True*, an `Investment` attribute is added to the outflow of the
-    Transformer.
+    If attribute `invest` is *True*, an `Investment` attribute is added to
+    the outflow of the Transformer.
 
     Parameters
     ----------
@@ -251,7 +261,8 @@ def add_transformer(it, labels, nodes, busd):
                 nodes.append(
                     Transformer(
                         label=oh.Label(
-                            labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
+                            labels['l_1'], labels['l_2'], labels['l_3'],
+                            labels['l_4']),
                         inputs={b_in_1: solph.Flow()},
                         outputs={b_out_1: solph.Flow(
                             variable_costs=t['variable_costs'],
@@ -289,7 +300,8 @@ def add_transformer(it, labels, nodes, busd):
 def add_storage(it, labels, nodes, busd):
     """Adds oemof.solph.components.GenericStorage objects to the list of components.
 
-    If attribute `invest` is *True*, the investment version of the Storage is created.
+    If attribute `invest` is *True*, the investment version of the Storage is
+    created.
 
     Parameters
     ----------
@@ -309,7 +321,10 @@ def add_storage(it, labels, nodes, busd):
 
     for _, s in it.iterrows():
 
-        label_storage = oh.Label(labels['l_1'], s['bus'], s['label'], labels['l_4'])
+        label_storage = oh.Label(
+            labels['l_1'], s['bus'], s['label'], labels['l_4']
+        )
+
         label_bus = busd[(labels['l_1'], s['bus'], 'bus', labels['l_4'])]
 
         if s['invest']:
@@ -350,7 +365,8 @@ def add_storage(it, labels, nodes, busd):
 
 def add_heatpipes(it, labels, bidirectional, length, b_in, b_out, nodes):
     """
-    Adds *HeatPipeline* objects with *Investment* attribute to the list of oemof.solph components.
+    Adds *HeatPipeline* objects with *Investment* attribute to the list of
+    oemof.solph components.
 
     Parameters
     ----------
