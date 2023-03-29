@@ -117,10 +117,10 @@ class HeatPipeline(Transformer):
             self._set_nominal_value()
 
     def _check_flows_invest(self):
-        for flow in self.inputs.values():
-            if isinstance(flow.investment, Investment):
-                raise ValueError(
-                    "The investment must be defined at the Outputflow!")
+        # for flow in self.inputs.values():
+        #     if isinstance(flow.investment, Investment):
+        #         raise ValueError(
+        #             "The investment must be defined at the Outputflow!")
 
         for flow in self.outputs.values():
             if isinstance(flow.investment, Investment):
@@ -250,7 +250,7 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             expr += (
                 n.heat_loss_factor[t] * m.flows[n, o].nominal_value
                 + n.heat_loss_factor_fix[t]
-            ) * m.NonConvexFlow.status[n, o, t]
+            ) * m.NonConvexFlowBlock.status[n, o, t]
             return expr == 0
 
         self.heat_loss_equation_on_off = Constraint(

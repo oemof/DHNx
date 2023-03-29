@@ -410,7 +410,10 @@ def add_heatpipes(it, labels, bidirectional, length, b_in, b_out, nodes):
         nodes.append(oh.HeatPipeline(
             label=oh.Label(labels['l_1'], labels['l_2'],
                            labels['l_3'], labels['l_4']),
-            inputs={b_in: solph.Flow(**flow_bi_args)},
+            inputs={b_in: solph.Flow(
+                investment=solph.Investment(),
+                **flow_bi_args,
+            )},
             outputs={b_out: solph.Flow(
                 nominal_value=None,
                 **flow_bi_args,
@@ -469,7 +472,10 @@ def add_heatpipes_exist(pipes, labels, gd, q, b_in, b_out, nodes):
     nodes.append(oh.HeatPipeline(
         label=oh.Label(labels['l_1'], labels['l_2'],
                        labels['l_3'], labels['l_4']),
-        inputs={b_in: solph.Flow(**flow_bi_args)},
+        inputs={b_in: solph.Flow(
+            nominal_value=q['capacity'],
+            **flow_bi_args,
+        )},
         outputs={b_out: solph.Flow(
             nominal_value=q['capacity'],
             **flow_bi_args,
