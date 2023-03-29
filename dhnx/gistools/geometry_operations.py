@@ -204,7 +204,7 @@ def split_multilinestr_to_linestr(gdf_input):
 
         geom = b['geometry']
 
-        if geom.type == 'MultiLineString':
+        if geom.geom_type == 'MultiLineString':
 
             multilinestrings = []
             for line in geom:

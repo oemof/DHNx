@@ -309,7 +309,7 @@ def create_points_from_polygons(gdf, method='midpoint'):
 
     """
 
-    if gdf['geometry'].values[0].type == 'Point':
+    if gdf['geometry'].values[0].geom_type == 'Point':
         return gdf
 
     if method == 'midpoint' or method == 'boundary':
