@@ -23,7 +23,6 @@ try:
     from shapely.geometry import LineString
     from shapely.geometry import MultiPoint
     from shapely.geometry import Point
-    from shapely.geometry import shape
     from shapely.ops import nearest_points
     from shapely.ops import unary_union
 except ImportError:
