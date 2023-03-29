@@ -14,8 +14,8 @@ SPDX-License-Identifier: MIT
 import warnings
 from collections import namedtuple
 
-from oemof.solph import Investment
 from oemof.network import Transformer
+from oemof.solph import Investment
 from oemof.solph._plumbing import sequence
 from pyomo.core.base.block import SimpleBlock
 from pyomo.environ import Constraint

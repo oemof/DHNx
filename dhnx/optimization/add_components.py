@@ -11,8 +11,8 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-from oemof.network import Transformer
 import oemof.solph as solph
+from oemof.network import Transformer
 
 import dhnx.optimization.oemof_heatpipe as oh
 
