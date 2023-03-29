@@ -90,9 +90,8 @@ def calc_lot_foot(line, point):
     -------
     shapely.geometry.Point
     """
-
-    s_1 = shape(line).boundary[0]
-    s_2 = shape(line).boundary[1]
+    s_1 = Point(line.coords[0])
+    s_2 = Point(line.coords[-1])
 
     g_1 = point_to_array(s_1)  # end point 1 of line
     g_2 = point_to_array(s_2)  # end point 2 of line

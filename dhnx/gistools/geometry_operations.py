@@ -22,6 +22,7 @@ except ImportError:
 try:
     from shapely import wkt
     from shapely.geometry import LineString
+    from shapely.geometry import mapping
     from shapely.geometry import MultiLineString
     from shapely.geometry import Point
     from shapely.ops import linemerge
@@ -207,8 +208,9 @@ def split_multilinestr_to_linestr(gdf_input):
         if geom.geom_type == 'MultiLineString':
 
             multilinestrings = []
-            for line in geom:
-                multilinestrings.append(line)
+
+            for line in mapping(geom)["coordinates"]:
+                multilinestrings.append(LineString(line))
 
             for multiline in multilinestrings:
                 new_row = b.copy()
