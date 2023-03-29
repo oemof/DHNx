@@ -11,7 +11,7 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-
+from oemof.network import Transformer
 import oemof.solph as solph
 
 import dhnx.optimization.oemof_heatpipe as oh
@@ -70,14 +70,14 @@ def add_buses(it, labels, nodes, busd):
             if b['excess']:
                 labels['l_3'] = 'excess'
                 nodes.append(
-                    solph.Sink(label=oh.Label(
+                    solph.components.Sink(label=oh.Label(
                         labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                         inputs={busd[l_bus]: solph.Flow(variable_costs=b['excess costs'])}))
 
             if b['shortage']:
                 labels['l_3'] = 'shortage'
                 nodes.append(
-                    solph.Source(label=oh.Label(
+                    solph.components.Source(label=oh.Label(
                         labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                         outputs={busd[l_bus]: solph.Flow(variable_costs=b['shortage costs'])}))
 
@@ -86,7 +86,7 @@ def add_buses(it, labels, nodes, busd):
 
 def add_sources(on, it, c, labels, nodes, busd):
     """
-    The oemof.solph.Source components for the producers and consumers are initialised based on the
+    The oemof.solph.components.Source components for the producers and consumers are initialised based on the
     given tabular information of the investment_options of the OemofInvestOptimizationModel.
     Time-series can also be used as attribute values for the outflow of the Source.
     Therefore, a table with the filename 'source_timeseries' must be given.
@@ -157,7 +157,7 @@ def add_sources(on, it, c, labels, nodes, busd):
                     outflow_args[col.split('.')[1]] = ts[col].values
 
         nodes.append(
-            solph.Source(
+            solph.components.Source(
                 label=oh.Label(
                     labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                 outputs={
@@ -199,7 +199,7 @@ def add_demand(it, labels, series, nodes, busd):
 
         # create
         nodes.append(
-            solph.Sink(label=oh.Label(
+            solph.components.Sink(label=oh.Label(
                 labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                 inputs={busd[(labels['l_1'], labels['l_2'], 'bus',
                               labels['l_4'])]: solph.Flow(**inflow_args)}))
@@ -208,7 +208,7 @@ def add_demand(it, labels, series, nodes, busd):
 
 
 def add_transformer(it, labels, nodes, busd):
-    """Adds oemof.solph.Transformer objects to the list of components.
+    """Adds oemof.network.Transformer objects to the list of components.
 
     If attribute `invest` is *True*, an `Investment` attribute is added to the outflow of the
     Transformer.
@@ -249,7 +249,7 @@ def add_transformer(it, labels, nodes, busd):
 
                 # create
                 nodes.append(
-                    solph.Transformer(
+                    Transformer(
                         label=oh.Label(
                             labels['l_1'], labels['l_2'], labels['l_3'], labels['l_4']),
                         inputs={b_in_1: solph.Flow()},
@@ -273,7 +273,7 @@ def add_transformer(it, labels, nodes, busd):
                     #             col]
 
                 nodes.append(
-                    solph.Transformer(
+                    Transformer(
                         label=oh.Label(labels['l_1'], labels['l_2'], labels['l_3'],
                                        labels['l_4']),
                         inputs={b_in_1: solph.Flow()},
@@ -287,7 +287,7 @@ def add_transformer(it, labels, nodes, busd):
 
 
 def add_storage(it, labels, nodes, busd):
-    """Adds oemof.solph.GenericStorage objects to the list of components.
+    """Adds oemof.solph.components.GenericStorage objects to the list of components.
 
     If attribute `invest` is *True*, the investment version of the Storage is created.
 
