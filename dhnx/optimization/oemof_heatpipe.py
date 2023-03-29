@@ -256,8 +256,7 @@ class HeatPipelineBlock(SimpleBlock):  # pylint: disable=too-many-ancestors
 
             expr = 0
             expr += - m.flow[n, o, t]
-            expr += m.flow[i, n, t] * n.conversion_factors[
-                o][t] / n.conversion_factors[i][t]
+            expr += m.flow[i, n, t]
             expr += - block.heat_loss[n, t]
             return expr == 0
 
@@ -372,8 +371,7 @@ class HeatPipelineInvestBlock(SimpleBlock):  # pylint: disable=too-many-ancestor
 
             expr = 0
             expr += - m.flow[n, o, t]
-            expr += m.flow[i, n, t] * n.conversion_factors[
-                o][t] / n.conversion_factors[i][t]
+            expr += m.flow[i, n, t]
             expr += - block.heat_loss[n, t]
             return expr == 0
 
