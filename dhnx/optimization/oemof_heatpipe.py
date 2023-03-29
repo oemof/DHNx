@@ -17,7 +17,7 @@ from collections import namedtuple
 from oemof.network import Transformer
 from oemof.solph import Investment
 from oemof.solph._plumbing import sequence
-from pyomo.core.base.block import SimpleBlock
+from pyomo.core.base.block import ScalarBlock
 from pyomo.environ import Constraint
 from pyomo.environ import NonNegativeReals
 from pyomo.environ import Set
@@ -149,7 +149,7 @@ class HeatPipeline(Transformer):
         return HeatPipelineBlock
 
 
-class HeatPipelineBlock(SimpleBlock):  # pylint: disable=too-many-ancestors
+class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
     r"""Block representing a pipeline of a district heating system.
     :class:`~dhnx.optimization.oemof_heatpipe.HeatPipeline`
 
@@ -271,7 +271,7 @@ class HeatPipelineBlock(SimpleBlock):  # pylint: disable=too-many-ancestors
                                    rule=_relation_rule)
 
 
-class HeatPipelineInvestBlock(SimpleBlock):  # pylint: disable=too-many-ancestors
+class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
     r"""Block representing a pipeline of a district heating system.
     :class:`~oemof.solph.custom.HeatPipeline`
 
