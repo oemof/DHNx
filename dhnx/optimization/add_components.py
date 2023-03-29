@@ -139,12 +139,13 @@ def add_sources(on, it, c, labels, nodes, busd):
         # specific flow attributes
         # e.g. check for heat (label 2)
         # e.g. check for source (label 3)
-        spec_attr = [x for x in list(
-            on.thermal_network.components[labels['l_1']].columns
-        )
-                     if x.split('.')[-1] in on.oemof_flow_attr
-                     if x.split('.')[0] == labels['l_2']
-                     if x.split('.')[1] == labels['l_3']]
+        spec_attr = [
+            x for x in list(
+                on.thermal_network.components[labels['l_1']].columns)
+            if x.split('.')[-1] in on.oemof_flow_attr
+            if x.split('.')[0] == labels['l_2']
+            if x.split('.')[1] == labels['l_3']
+        ]
 
         for sa in spec_attr:
             if sa.split('.')[-1] in outflow_args.keys():

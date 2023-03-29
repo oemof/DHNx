@@ -247,10 +247,10 @@ class HeatPipelineBlock(SimpleBlock):  # pylint: disable=too-many-ancestors
 
             expr = 0
             expr += - block.heat_loss[n, t]
-            expr += \
-                (n.heat_loss_factor[t] * m.flows[n, o].nominal_value + \
-                 n.heat_loss_factor_fix[t]) *\
-                m.NonConvexFlow.status[n, o, t]
+            expr += (
+                n.heat_loss_factor[t] * m.flows[n, o].nominal_value
+                + n.heat_loss_factor_fix[t]
+            ) * m.NonConvexFlow.status[n, o, t]
             return expr == 0
 
         self.heat_loss_equation_on_off = Constraint(
@@ -379,8 +379,7 @@ class HeatPipelineInvestBlock(SimpleBlock):  # pylint: disable=too-many-ancestor
                 n, list(n.outputs.keys())[0]]
             expr += n.heat_loss_factor_fix[t] * \
                 m.InvestmentFlowBlock.invest_status[
-                    n, list(n.outputs.keys())[0]
-                ]
+                    n, list(n.outputs.keys())[0]]
             return expr == 0
 
         self.heat_loss_equation_nonconvex = Constraint(
@@ -430,8 +429,8 @@ class HeatPipelineInvestBlock(SimpleBlock):  # pylint: disable=too-many-ancestor
             i = list(n.inputs.keys())[0]
             o = list(n.outputs.keys())[0]
 
-            expr = (m.InvestmentFlowBlock.invest[i, n] ==
-                    m.InvestmentFlowBlock.invest[n, o])
+            expr = (m.InvestmentFlowBlock.invest[i, n]
+                    == m.InvestmentFlowBlock.invest[n, o])
             return expr
         self.inflow_outflow_invest_coupling = Constraint(
             self.INVESTHEATPIPES, rule=_inflow_outflow_invest_coupling_rule
