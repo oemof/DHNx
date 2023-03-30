@@ -24,6 +24,7 @@ try:
     from shapely.geometry import LineString
     from shapely.geometry import MultiLineString
     from shapely.geometry import Point
+    from shapely.geometry import mapping
     from shapely.ops import linemerge
     from shapely.ops import nearest_points
     from shapely.ops import unary_union
@@ -204,11 +205,12 @@ def split_multilinestr_to_linestr(gdf_input):
 
         geom = b['geometry']
 
-        if geom.type == 'MultiLineString':
+        if geom.geom_type == 'MultiLineString':
 
             multilinestrings = []
-            for line in geom:
-                multilinestrings.append(line)
+
+            for line in mapping(geom)["coordinates"]:
+                multilinestrings.append(LineString(line))
 
             for multiline in multilinestrings:
                 new_row = b.copy()

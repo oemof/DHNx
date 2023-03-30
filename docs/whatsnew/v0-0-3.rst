@@ -42,7 +42,7 @@ Known issues
 Testing
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Add tests for hydraulic pre-calculations
 
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
@@ -52,6 +52,7 @@ Other changes
   raw (un-rounded) solver results for each pipeline
 * Use tox for CI automation
 * Rename examples folder of optimisation examples
+* oemof-solph >= v0.5.x required
 
 
 Contributors

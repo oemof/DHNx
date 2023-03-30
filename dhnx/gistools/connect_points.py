@@ -23,7 +23,6 @@ try:
     from shapely.geometry import LineString
     from shapely.geometry import MultiPoint
     from shapely.geometry import Point
-    from shapely.geometry import shape
     from shapely.ops import nearest_points
     from shapely.ops import unary_union
 except ImportError:
@@ -90,9 +89,8 @@ def calc_lot_foot(line, point):
     -------
     shapely.geometry.Point
     """
-
-    s_1 = shape(line).boundary[0]
-    s_2 = shape(line).boundary[1]
+    s_1 = Point(line.coords[0])
+    s_2 = Point(line.coords[-1])
 
     g_1 = point_to_array(s_1)  # end point 1 of line
     g_2 = point_to_array(s_2)  # end point 2 of line
@@ -309,7 +307,7 @@ def create_points_from_polygons(gdf, method='midpoint'):
 
     """
 
-    if gdf['geometry'].values[0].type == 'Point':
+    if gdf['geometry'].values[0].geom_type == 'Point':
         return gdf
 
     if method == 'midpoint' or method == 'boundary':

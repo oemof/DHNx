@@ -343,7 +343,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         logging.info('Initialize the energy system')
 
-        self.es = solph.EnergySystem(timeindex=date_time_index)
+        self.es = solph.EnergySystem(
+            timeindex=date_time_index,
+            infer_last_interval=True,
+        )
 
         logging.info('Create oemof objects')
 
