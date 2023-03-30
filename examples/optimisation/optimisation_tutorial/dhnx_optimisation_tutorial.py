@@ -13,11 +13,15 @@ Overview
 Optimisation
 ^^^^^^^^^^^^
 
-Part I: Get OSM data
-Part II: Process the geometry for DHNx
-Part IIa: Pre-calculate the hydraulic parameter
-Part III: Initialise the ThermalNetwork and perform the Optimisation
-Part IV: Postprocessing
+Part I: Get and prepare the input data for the optimisation
+    a) Geometry of potential routes and buildings
+        - Get OSM data
+        - Process the geometry for DHNx
+    b) Pre-calculate the hydraulic parameter
+
+Part II: Initialise the ThermalNetwork and perform the Optimisation
+
+Part III: Postprocessing
 
 Simulation
 ^^^^^^^^^^
@@ -46,8 +50,11 @@ logger.define_logging(
     logfile="dhnx.log"
 )
 
-# Part I: Get OSM data #############
+# Part I: Get and prepare the input data for the optimisation #############
+#   a) Geometry of potential routes and buildings
+#        - Get OSM data
 
+# One option for potential routes
 # select the street types you want to consider as DHS routes
 # see: https://wiki.openstreetmap.org/wiki/Key:highway
 streets = dict({
