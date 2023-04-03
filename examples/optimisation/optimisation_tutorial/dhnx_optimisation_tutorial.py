@@ -35,6 +35,7 @@ Contributors:
 """
 import numpy as np
 import osmnx as ox
+import pandas as pd
 from shapely import geometry
 import matplotlib.pyplot as plt
 
@@ -44,6 +45,8 @@ from oemof.tools import logger
 from dhnx.network import ThermalNetwork
 from dhnx.input_output import load_invest_options
 from dhnx.gistools.connect_points import process_geometry
+from dhnx.optimization.precalc_hydraulic import v_max_bisection,\
+    calc_mass_flow, calc_power, v_max_secant, calc_pipe_loss
 
 logger.define_logging(
     screen_level=logging.INFO,
@@ -211,10 +214,144 @@ plt.show()
 
 # Besides the geometries, we need the techno-economic data for the
 # investment optimisation of the DHS piping network. Therefore, we load
-# the pipes data table. This is the information you need to get from your
+# the pipes data table. This is the information you need from your
 # manufacturer / from your project.
 
+df_pipe_data = pd.read_csv("input/Pipe_data.csv", sep=",")
+print(df_pipe_data.head(n=8))
 
+# This is an example of input data. The Roughness refers to the roughness of
+# the inner surface and depends on the material (steel, plastic). The U-value
+# and the costs refer to the costs of the whole pipeline trench, so including
+# forward and return pipelines. The design process of DHNx is based on
+# a maximum pressure drop per meter as design criteria:
+
+df_pipe_data["Maximum pressure drop [Pa/m]"] = 150
+
+# You could also define the maximum pressure drop individually for each DN
+# number.
+
+# As further assumptions, you need to estimate the operation temperatures of
+# the district heating network in the design case:
+
+df_pipe_data["T_forward [C]"] = 80
+df_pipe_data["T_return [C]"] = 50
+df_pipe_data["T_level [C]"] = 65
+
+# Based on that pressure drop, the maximum transport capacity (mass flow) is
+# calculated for each DN number.
+
+# First, the maximum flow velocity is calculated.
+
+df_pipe_data["v_max [m/s]"] = df_pipe_data.apply(lambda row: v_max_bisection(
+    d_i=row["Inner diameter [m]"],
+    T_average=row["T_level [C]"],
+    k=row['Roughness [mm]'],
+    p_max=row["Maximum pressure drop [Pa/m]"]), axis=1)
+
+# Then, the maximum mass flow:
+
+df_pipe_data['Mass flow [kg/s]'] = df_pipe_data.apply(
+    lambda row: calc_mass_flow(
+        v=row['v_max [m/s]'],
+        di=row["Inner diameter [m]"],
+        T_av=row["T_level [C]"]), axis=1,
+)
+
+# Finally, the maximum thermal transport capacity of each DN pipeline trench
+# in kW is calculated based on the design temperatures of the DHS:
+
+df_pipe_data['P_max [kW]'] = df_pipe_data.apply(
+    lambda row: 0.001 * calc_power(
+        T_vl=row['T_forward [C]'],
+        T_rl=row['T_return [C]'],
+        mf=row['Mass flow [kg/s]']), axis=1,
+)
+
+# Furthermore, the thermal loss of ech DN number per meter is calculated
+# (based on the design temperatures of the district heating network):
+
+temperature_ground = 10
+
+df_pipe_data['P_loss [kW]'] = df_pipe_data.apply(
+    lambda row: 0.001 * calc_pipe_loss(
+        temp_average=row["T_level [C]"],
+        u_value=row["U-value [W/mK]"],
+        temp_ground=temperature_ground,
+    ), axis=1,
+)
+
+# The last step is the linearisation of the cost  and loss parameter for the
+# DHNx optimisation (which is based on the MILP optimisation package
+# oemof-solph)
+
+# It is possible to use different accuracies: you could linearize the cost
+# and loss values with 1 segment, or many segment, or you can also perform
+# an optimisation with discrete DN numbers (which is of course computationally
+# more expensive). See also the DHNx example "discrete_DN_numbers"
+
+# Here follows a linear approximation with 1 segment
+
+constants_costs = np.polyfit(
+    df_pipe_data['P_max [kW]'], df_pipe_data['Costs [eur]'], 1,
+)
+constants_loss = np.polyfit(
+    df_pipe_data['P_max [kW]'], df_pipe_data['P_loss [kW]'], 1,
+)
+
+print('Costs constants: ', constants_costs)
+print('Loss constants: ', constants_loss)
+
+# The next step is the creation of the input dataframe with the techno-economic
+# parameter of the district heating pipelines (See DHNx documentation).
+
+# Note: you can also skip the pre-calculation of the hydraulic parameter and
+# directly fill the following table with the optimisation parameter of the
+# district heating pipelines.
+
+df_pipes = pd.DataFrame(
+    {
+        "label_3": "your-pipe-type-label",
+        "active": 1,
+        "nonconvex": 1,
+        "l_factor": constants_loss[0],
+        "l_factor_fix": constants_loss[1],
+        "cap_max": df_pipe_data['P_max [kW]'].max(),
+        "cap_min": df_pipe_data['P_max [kW]'].min(),
+        "capex_pipes": constants_costs[0],
+        "fix_costs": constants_costs[1],
+    }, index=[0],
+)
+
+# Let's plot the economic assumptions:
+
+x_min = df_pipe_data['P_max [kW]'].min()
+x_max = df_pipe_data['P_max [kW]'].max()
+y_min = constants_costs[0] * x_min + constants_costs[1]
+y_max = constants_costs[0] * x_max + constants_costs[1]
+
+_, ax = plt.subplots()
+x = df_pipe_data['P_max [kW]']
+y = df_pipe_data['Costs [eur]']
+ax.plot(x, y, lw=0, marker="o")
+ax.plot(
+    [x_min, x_max], [y_min, y_max],
+    ls=":", color='r', marker="x"
+)
+ax.set_xlabel("Transport capacity [kW]")
+ax.set_ylabel("Kosten [€/m]")
+plt.text(
+    2000, 250,
+    "Linear cost approximation \n"
+    "of district heating pipelines \n"
+    "based on maximum pressure drop \n"
+    "of {:.0f} Pa/m".format(df_pipe_data["Maximum pressure drop [Pa/m]"][0])
+)
+plt.ylim(0, None)
+plt.grid(ls=":")
+plt.show()
+
+# #############################################################################
 
 # Part III: Initialise the ThermalNetwork and perform the Optimisation #######
 
