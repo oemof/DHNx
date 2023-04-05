@@ -302,12 +302,41 @@ constants_loss = np.polyfit(
 print('Costs constants: ', constants_costs)
 print('Loss constants: ', constants_loss)
 
+# Let's plot the economic assumptions:
+
+x_min = df_pipe_data['P_max [kW]'].min()
+x_max = df_pipe_data['P_max [kW]'].max()
+y_min = constants_costs[0] * x_min + constants_costs[1]
+y_max = constants_costs[0] * x_max + constants_costs[1]
+
+_, ax = plt.subplots()
+x = df_pipe_data['P_max [kW]']
+y = df_pipe_data['Costs [eur]']
+ax.plot(x, y, lw=0, marker="o", label="DN numbers",)
+ax.plot(
+    [x_min, x_max], [y_min, y_max],
+    ls=":", color='r', marker="x"
+)
+ax.set_xlabel("Transport capacity [kW]")
+ax.set_ylabel("Kosten [€/m]")
+plt.text(
+    2000, 250,
+    "Linear cost approximation \n"
+    "of district heating pipelines \n"
+    "based on maximum pressure drop \n"
+    "of {:.0f} Pa/m".format(df_pipe_data["Maximum pressure drop [Pa/m]"][0])
+)
+plt.legend()
+plt.ylim(0, None)
+plt.grid(ls=":")
+plt.show()
+
 # The next step is the creation of the input dataframe with the techno-economic
 # parameter of the district heating pipelines (See DHNx documentation).
 
-# Note: you can also skip the pre-calculation of the hydraulic parameter and
-# directly fill the following table with the optimisation parameter of the
-# district heating pipelines.
+# Note: you can also skip the previous pre-calculation of the hydraulic
+# parameter and directly fill the following table with the optimisation
+# parameter of the district heating pipelines.
 
 df_pipes = pd.DataFrame(
     {
@@ -323,58 +352,61 @@ df_pipes = pd.DataFrame(
     }, index=[0],
 )
 
-# Let's plot the economic assumptions:
-
-x_min = df_pipe_data['P_max [kW]'].min()
-x_max = df_pipe_data['P_max [kW]'].max()
-y_min = constants_costs[0] * x_min + constants_costs[1]
-y_max = constants_costs[0] * x_max + constants_costs[1]
-
-_, ax = plt.subplots()
-x = df_pipe_data['P_max [kW]']
-y = df_pipe_data['Costs [eur]']
-ax.plot(x, y, lw=0, marker="o")
-ax.plot(
-    [x_min, x_max], [y_min, y_max],
-    ls=":", color='r', marker="x"
-)
-ax.set_xlabel("Transport capacity [kW]")
-ax.set_ylabel("Kosten [€/m]")
-plt.text(
-    2000, 250,
-    "Linear cost approximation \n"
-    "of district heating pipelines \n"
-    "based on maximum pressure drop \n"
-    "of {:.0f} Pa/m".format(df_pipe_data["Maximum pressure drop [Pa/m]"][0])
-)
-plt.ylim(0, None)
-plt.grid(ls=":")
-plt.show()
-
 # #############################################################################
 
-# Part III: Initialise the ThermalNetwork and perform the Optimisation #######
+# # Part II: Initialise the ThermalNetwork and perform the Optimisation
 
-# initialize a ThermalNetwork
+# Initialize a DHNx ThermalNetwork
+
 network = ThermalNetwork()
 
-# add the pipes, forks, consumer, and producers to the ThermalNetwork
+# Add the pipes, forks, consumer, and producers as components
+# to the ThermalNetwork
+
 for k, v in tn_input.items():
     network.components[k] = v
 
-# check if ThermalNetwork is consistent
+# Check if ThermalNetwork is consistent
+
 network.is_consistent()
+
+# Check if geometry is connected with networknx.
+# It sometimes happens that two lines in your input geometry are not connected,
+# because the starting point of one line is not exactly the ending point of
+# the other line.
+
+import networkx as nx
+
+network.nx_graph = network.to_nx_undirected_graph()
+g = network.nx_graph
+nx.is_connected(g)
+
+# If `nx.is_connected(g)` returns false, you can use the following lines
+# to find out of how many networks your geometry consists, and which ids
+# belong to these networks. With this information, load your geometry in QGIS
+# and manually fix the geometry.
+
+# Number of networks
+print(len(sorted(nx.connected_components(g), key=len, reverse=True)))
+
+# Components of the network
+print([c for c in sorted(nx.connected_components(g), key=len, reverse=True)])
+
+# Now, we have all data collected and checked and we continue with the DHNx
+# investment optimisation
 
 # load the specification of the oemof-solph components
 invest_opt = load_invest_options('invest_data')
 
-
-# optionally, define some settings for the solver. Especially increasing the
+# Optionally, define some settings for the solver. Especially increasing the
 # solution tolerance with 'ratioGap' or setting a maximum runtime in 'seconds'
-# helps if large networks take too long to solve
+# helps if large networks take too long to solve.
+# Please see :func::dhnx.optimisation_models.setup_optimise_investment: for
+# all options.
+
 settings = dict(solver='cbc',
                 solve_kw={
-                    'tee': False,  # print solver output
+                    'tee': True,  # print solver output
                 },
                 solver_cmdline_options={
                     # 'allowableGap': 1e-5,  # (absolute gap) default: 1e-10
@@ -384,7 +416,11 @@ settings = dict(solver='cbc',
                 )
 
 # perform the investment optimisation
-network.optimize_investment(invest_options=invest_opt, **settings)
+network.optimize_investment(
+    pipeline_invest_options=df_pipes,
+    additional_invest_options=invest_opt,
+    **settings,
+)
 
 
 # Part IV: Check the results #############
