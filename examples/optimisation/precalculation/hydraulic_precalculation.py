@@ -43,7 +43,8 @@ constants_loss = np.polyfit(df['P_max [kW]'], df['Loss [kW/m]'], 1)
 print('Costs constants: ', constants_costs)
 print('Loss constants: ', constants_loss)
 
-df_pipes = pd.DataFrame(
+
+pipes = pd.DataFrame(
     {
         "label_3": "your-pipe-type-label",
         "active": 1,
