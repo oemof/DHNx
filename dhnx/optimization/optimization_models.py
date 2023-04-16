@@ -742,7 +742,7 @@ def setup_optimise_investment(
 
     if settings['aggregated'] is True:
         if settings['bidirectional_pipes'] is False:
-            warnings.warn("aggregated models require bidirctionla_pipes = True. For the further calculation bidirectional pipes are set to False")
+            warnings.warn("aggregated models require bidirctionla_pipes = True. For the further calculation bidirectional pipes are set to True")
             settings['bidirectional_pipes'] = True
 
         model = OemofInvestOptimizationModelAggregated(thermal_network, settings, invest_options)

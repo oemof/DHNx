@@ -557,8 +557,7 @@ def aggregation(forks, pipes, consumers, producers):
     GLpipes = pipes.loc[pipes['type'].isin(['GL'])]
 
     # count connections of forks to DL pipes
-    count_forks = DLpipes['from_node'].value_counts() + DLpipes['to_node'].value_counts()
-
+    count_forks = DLpipes['from_node'].value_counts().add(DLpipes['to_node'].value_counts(), fill_value=0)
     # identify super forks with less or more than two connections
     count_superforks = count_forks[~count_forks.isin([2])]
 
@@ -588,7 +587,7 @@ def aggregation(forks, pipes, consumers, producers):
     DLGLpipes = pipes.loc[pipes['type'].isin(['DL', 'GL'])]
 
     # # # first loop: go throught super forks
-    # the length is absolute and id starts at 0
+    # the length is absolute and id starts at 0, TODO: substitute while function with for function with .iterrows
     i = -1
     while i <= len(super_forks) - 2:
         i += 1
@@ -696,14 +695,7 @@ def aggregation(forks, pipes, consumers, producers):
 
                     merged_segment_i_a.at[0, 'to_node'] = last_fork_segment_i_a
 
-                    # add last and first fork, if they are not aggregated yet
-                    if superfork_i_id_full not in aggregated_forks:
-                        aggregated_forks.append(superfork_i_id_full)
-                        aggregated_forks_segment_i_a.append(superfork_i_id_full)
 
-                    if last_fork_segment_i_a not in aggregated_forks:
-                        aggregated_forks.append(last_fork_segment_i_a)
-                        aggregated_forks_segment_i_a.append(last_fork_segment_i_a)
 
                     # # add column 'aggregated_forks'
                     str_aggregated_forks_segment_i_a = ', '.join(aggregated_forks_segment_i_a)
