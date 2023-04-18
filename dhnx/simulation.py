@@ -652,8 +652,8 @@ class SimulationModelNumpy(SimulationModel):
             if data['component_type'] == 'Producer'
         ]
 
-        mass_flow_producers = self.results['pipes-mass_flow'].iloc[:,
-            self.results['pipes-mass_flow'].columns.isin(
+        mass_flow_producers = self.results['pipes-mass_flow'].iloc[
+            :, self.results['pipes-mass_flow'].columns.isin(
                 producers, level=0)].sum(axis=1)
 
         pump_power = mass_flow_producers * global_pressure_losses / (self.eta_pump * self.rho)
