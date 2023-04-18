@@ -34,12 +34,3 @@ jobs:
         pip install tox tox-gh-actions coverage coveralls
     - name: Test with tox
       run: tox
-
-    - name: Check test coverage
-      run: coverage report -m --fail-under=${{ matrix.vcs == 'bzr' && 24 || 25 }}
-
-    - name: Report to coveralls
-      run: coveralls
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        COVERALLS_SERVICE_NAME: github

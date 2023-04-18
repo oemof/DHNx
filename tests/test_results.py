@@ -12,6 +12,8 @@ tmp_dir = helpers.extend_basic_path('tmp')
 
 def test_tree_simulation():
 
+    # TODO: Test not working! Nothing happens, if check fails!
+
     input_data = os.path.join(
         tests_path,
         '_files',
@@ -45,6 +47,8 @@ def test_tree_simulation():
 
 
 def test_tree_simulation_reverse_pipe_dir():
+
+    # TODO: Test not working! Nothing happens, if check fails!
 
     input_data = os.path.join(
         tests_path,

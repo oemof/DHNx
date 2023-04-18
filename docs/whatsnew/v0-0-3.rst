@@ -36,7 +36,8 @@ Bug fixes
 Known issues
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Simulation tests do not test, as check_if_csv_files_equal
+  from helpers module is incomplete.
 
 
 Testing
