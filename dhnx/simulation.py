@@ -190,7 +190,7 @@ class SimulationModelNumpy(SimulationModel):
         ]
 
         if select_scalars:
-            select_scalars = pd.concat(select_scalars, 0)
+            select_scalars = pd.concat(select_scalars, axis=0)
 
         else:
             select_scalars = None
