@@ -190,7 +190,7 @@ class SimulationModelNumpy(SimulationModel):
         ]
 
         if select_scalars:
-            select_scalars = pd.concat(select_scalars, 0)
+            select_scalars = pd.concat(select_scalars, axis=0)
 
         else:
             select_scalars = None
@@ -217,7 +217,7 @@ class SimulationModelNumpy(SimulationModel):
             if name in d
         ]
 
-        concat_sequences = pd.concat(select_sequences, 1)
+        concat_sequences = pd.concat(select_sequences, axis=1)
 
         return concat_sequences
 
@@ -652,8 +652,9 @@ class SimulationModelNumpy(SimulationModel):
             if data['component_type'] == 'Producer'
         ]
 
-        mass_flow_producers = \
-            self.results['pipes-mass_flow'].loc[:, idx[producers, :]].sum(axis=1)
+        mass_flow_producers = self.results['pipes-mass_flow'].iloc[
+            :, self.results['pipes-mass_flow'].columns.isin(
+                producers, level=0)].sum(axis=1)
 
         pump_power = mass_flow_producers * global_pressure_losses / (self.eta_pump * self.rho)
 

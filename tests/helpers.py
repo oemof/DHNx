@@ -51,6 +51,8 @@ def check_if_csv_files_equal(csv_file_a, csv_file_b, check_arrays=False, **kwarg
     r"""
     Compares two csv files.
 
+    TODO: Check not working. Nothing happens, if check fails!
+
     Parameters
     ----------
     csv_file_a : str
