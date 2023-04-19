@@ -35,7 +35,7 @@ setup(
         'pillow',
         'folium',
         'addict',
-        'oemof.solph >= 0.5.0',
+        'oemof.solph >= 0.5',
         'scipy >= 1.5',
     ],
     extras_require={
