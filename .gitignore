@@ -1,11 +1,58 @@
+*.py[cod]
+__pycache__
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+.eggs
+parts
+bin
+var
+sdist
+wheelhouse
+develop-eggs
+.installed.cfg
+lib
+lib64
+venv*/
+pyvenv*/
+pip-wheel-metadata/
+
+# Installer logs
+pip-log.txt
+
 *.pyc
 *.png
-*.egg-info
 *.html
-.idea
 results/
 _build
 jupyter_notebooks
-*/import_export_plot/data_csv_output/
-*/import_osmnx/data/
-cache/
+
+# Unit test / coverage reports
+.coverage
+.tox
+.coverage.*
+.pytest_cache/
+nosetests.xml
+coverage.xml
+htmlcov
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+.idea
+*.iml
+*.komodoproject
+
+# examples
+examples/import_export_plot/data_csv_output/*
+examples/import_osmnx/osm_network/*
+examples/simulation/tree_results/*
+*cache*

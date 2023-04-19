@@ -1,9 +1,11 @@
+.. _api_label:
+
 ~~~~~~~~~~~~~~~~~
 API Documentation
 ~~~~~~~~~~~~~~~~~
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :glob:
 
 
@@ -18,6 +20,18 @@ network
 
 gistools
 ========
+
+dhnx.gistools.geometry_operations
+---------------------------------
+
+.. automodule:: dhnx.gistools.geometry_operations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dhnx.gistools.connect_points
+----------------------------
+
 .. automodule:: dhnx.gistools.connect_points
     :members:
     :undoc-members:
@@ -36,7 +50,44 @@ model
 optimization
 ============
 
-.. automodule:: dhnx.optimization
+dhnx.optimization.optimization_models
+-------------------------------------
+
+.. automodule:: dhnx.optimization.optimization_models
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dhnx.optimization.dhs_nodes
+-------------------------------------
+
+.. automodule:: dhnx.optimization.dhs_nodes
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dhnx.optimization.add_components
+--------------------------------
+
+.. automodule:: dhnx.optimization.add_components
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+dhnx.optimization.oemof_heatpipe
+--------------------------------
+
+.. automodule:: dhnx.optimization.oemof_heatpipe
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. _api_precalc_hydraulic_label:
+
+dhnx.optimization.precalc_hydraulic
+-----------------------------------
+
+.. automodule:: dhnx.optimization.precalc_hydraulic
     :members:
     :undoc-members:
     :show-inheritance:

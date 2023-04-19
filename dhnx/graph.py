@@ -11,8 +11,8 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-import pandas as pd
 import networkx as nx
+import pandas as pd
 
 
 def thermal_network_to_nx_graph(thermal_network):
@@ -109,7 +109,7 @@ def write_edge_data_to_graph(series, graph_in, var_name=None):
     else:
         raise ValueError(r"Have to either pass Series with name or provide var_name.")
 
-    for index, value in series.iteritems():
+    for index, value in series.items():
 
         graph.edges[index][var_name] = value
 

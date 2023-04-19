@@ -1,4 +1,4 @@
-﻿v0.0.3 (???)
+﻿v0.0.3 (19.04.2023)
 ==========================
 
 
@@ -11,7 +11,12 @@ API changes
 New features
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Pre-calculation function for optimisation parameters
+
+Geometry processing:
+
+* New method for connecting buildings to polygons boundary
+* Allow to keep index of buildings/consumer
 
 New components/constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -21,7 +26,7 @@ New components/constraints
 Documentation
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Fix/add complete API documentation of gistools and optimization modules
 
 Bug fixes
 ^^^^^^^^^^^^^^^^^^^^
@@ -31,20 +36,29 @@ Bug fixes
 Known issues
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Simulation tests do not test, as check_if_csv_files_equal
+  from helpers module is incomplete.
 
 
 Testing
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Add tests for hydraulic pre-calculations
 
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* something
+* Refactor internal structure of optimization modules
+* Improve processing of optimisation results by returning
+  raw (un-rounded) solver results for each pipeline
+* Use tox for CI automation
+* Rename examples folder of optimisation examples
+* oemof-solph >= v0.5.x required
+
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
-* somebody
+* Johannes Röder
+* Joris Zimmermann
+* Robert Valeske

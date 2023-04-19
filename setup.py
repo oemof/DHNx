@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from setuptools import setup
 import os
+
+from setuptools import setup
 
 
 def read(fname):
@@ -10,7 +11,7 @@ def read(fname):
 
 setup(
     name='dhnx',
-    version='0.0.2',
+    version='0.0.3',
     description='Simulation and optimization of district heating and cooling networks',
     author="oemof developer group",
     author_email='jann.launer@rl-institut.de, johannes-roeder@uni-bremen.de',
@@ -19,6 +20,7 @@ setup(
     packages=[
         'dhnx',
         'dhnx.gistools',
+        'dhnx.optimization',
     ],
     package_data={
         'dhnx': [
@@ -33,12 +35,16 @@ setup(
         'pillow',
         'folium',
         'addict',
-        'oemof.solph >= 0.4.0',
+        'oemof.solph >= 0.5.0',
         'scipy >= 1.5',
     ],
     extras_require={
         'cartopy': ['cartopy'],
         'geopandas': ['geopandas'],
         'osmnx': ['osmnx >= 0.16.1'],
+        "tests": [
+            "geopandas", "osmnx",
+            "CoolProp",
+        ],
     }
 )

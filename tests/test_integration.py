@@ -15,8 +15,8 @@ import networkx as nx
 import pandas as pd
 
 import dhnx
-from . import helpers
 
+from . import helpers
 
 tmpdir = helpers.extend_basic_path('tmp')
 
@@ -88,7 +88,7 @@ def test_setup_operation_optimization():
 
 def test_setup_investment_optimization():
 
-    dhnx.optimization.setup_optimise_investment(tn_invest, invest_opt)
+    dhnx.optimization_models.setup_optimise_investment(tn_invest, invest_opt)
 
 
 def test_setup_simulation():
