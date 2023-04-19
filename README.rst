@@ -1,4 +1,4 @@
-|badge_travis| |badge_coverage| |readthedocs| |zenodo|
+|badge_coverage| |readthedocs| |zenodo|
 
 ~~~~
 DHNx
