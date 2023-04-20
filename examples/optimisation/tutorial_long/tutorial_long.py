@@ -19,7 +19,10 @@ Part I: Get and prepare the input data for the optimisation
         - Process the geometry for DHNx
     b) Pre-calculate the hydraulic parameter
 
-Part II: Initialise the ThermalNetwork and perform the Optimisation
+Part II: Perform the Optimisation
+    a) Initialise the ThermalNetwork and check input
+    b) Perform the optimisation
+    c) Process the results
 
 Part III: Postprocessing
 
@@ -352,11 +355,18 @@ df_pipes = pd.DataFrame(
     }, index=[0],
 )
 
+# Export the optimisation parameter of the dhs pipelines to the investment
+# data and replace the default csv file.
+
+df_pipes.to_csv(
+    "invest_data/network/pipes.csv", index=False,
+)
+
 # #############################################################################
 
-# # Part II: Initialise the ThermalNetwork and perform the Optimisation
+# # Part II: Perform the Optimisation
 
-# Initialize a DHNx ThermalNetwork
+# ## a) Initialise the ThermalNetwork and check input
 
 network = ThermalNetwork()
 
@@ -370,7 +380,7 @@ for k, v in tn_input.items():
 
 network.is_consistent()
 
-# Check if geometry is connected with networknx.
+# Important: Check if geometry is connected with networknx.
 # It sometimes happens that two lines in your input geometry are not connected,
 # because the starting point of one line is not exactly the ending point of
 # the other line.
@@ -392,15 +402,19 @@ print(len(sorted(nx.connected_components(g), key=len, reverse=True)))
 # Components of the network
 print([c for c in sorted(nx.connected_components(g), key=len, reverse=True)])
 
-# Now, we have all data collected and checked and we continue with the DHNx
+# Now, we have all data collected and checked, and we continue with the DHNx
 # investment optimisation
 
-# load the specification of the oemof-solph components
+# Now, we load the whole specification for the oemof-solph components from
+# the invest_data folder, in which we previously exported the specifications
+# for the dhs pipelines
+
 invest_opt = load_invest_options('invest_data')
 
-# Optionally, define some settings for the solver. Especially increasing the
-# solution tolerance with 'ratioGap' or setting a maximum runtime in 'seconds'
-# helps if large networks take too long to solve.
+# With the optimisation settings, you can e.g. configure the solver.
+# Especially increasing the solution tolerance with 'ratioGap'
+# or setting a maximum runtime in 'seconds' helps if large networks take
+# too long to solve.
 # Please see :func::dhnx.optimisation_models.setup_optimise_investment: for
 # all options.
 
@@ -415,15 +429,13 @@ settings = dict(solver='cbc',
                 },
                 )
 
-# perform the investment optimisation
-network.optimize_investment(
-    pipeline_invest_options=df_pipes,
-    additional_invest_options=invest_opt,
-    **settings,
-)
+# ## b) Perform the optimisation
 
+# Now, we execute the actual optimisation
 
-# Part IV: Check the results #############
+network.optimize_investment(invest_options=invest_opt, **settings)
+
+# ## c) Process the results
 
 # get results
 results_edges = network.results.optimization['components']['pipes']
