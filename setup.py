@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name='dhnx',
-    version='0.0.3dev0',
+    version='0.0.4dev0',
     description='Simulation and optimization of district heating and cooling networks',
     author="oemof developer group",
     author_email='jann.launer@rl-institut.de, johannes-roeder@uni-bremen.de',
@@ -35,7 +35,7 @@ setup(
         'pillow',
         'folium',
         'addict',
-        'oemof.solph >= 0.5.0',
+        'oemof.solph >= 0.5',
         'scipy >= 1.5',
     ],
     extras_require={

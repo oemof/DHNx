@@ -1,0 +1,52 @@
+﻿v0.0.4 (???)
+==========================
+
+
+API changes
+^^^^^^^^^^^^^^^^^^^^
+
+* No changes
+
+
+New features
+^^^^^^^^^^^^^^^^^^^^
+
+* No changes
+
+New components/constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* No changes
+
+Documentation
+^^^^^^^^^^^^^^^^^^^^
+
+* No changes
+
+Bug fixes
+^^^^^^^^^^^^^^^^^^^^
+
+* No changes
+
+Known issues
+^^^^^^^^^^^^^^^^^^^^
+
+* Simulation tests do not test, as check_if_csv_files_equal
+  from helpers module is incomplete.
+
+
+Testing
+^^^^^^^^^^^^^^^^^^^^
+
+* No changes
+
+Other changes
+^^^^^^^^^^^^^^^^^^^^
+
+* No changes
+
+
+Contributors
+^^^^^^^^^^^^^^^^^^^^
+
+* somebody

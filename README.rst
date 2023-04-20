@@ -1,4 +1,4 @@
-|badge_travis| |badge_coverage| |readthedocs| |zenodo|
+|badge_coverage| |readthedocs| |zenodo|
 
 ~~~~
 DHNx
@@ -95,12 +95,8 @@ SOFTWARE.
     :target: https://coveralls.io/github/oemof-heat/DHNx?branch=dev
     :alt: Test coverage
 
-.. |badge_travis| image:: https://api.travis-ci.org/oemof/DHNx.svg?branch=dev
-    :target: https://travis-ci.org/oemof/DHNx
-    :alt: Build status
-
-.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5084392.svg
-   :target: https://doi.org/10.5281/zenodo.5084392
+.. |zenodo| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.7844753.svg
+   :target: https://doi.org/10.5281/zenodo.7844753
 
 .. |readthedocs| image:: https://readthedocs.org/projects/dhnx/badge/?version=latest
     :target: https://dhnx.readthedocs.io/en/latest/?badge=latest
