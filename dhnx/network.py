@@ -13,6 +13,7 @@ SPDX-License-Identifier: MIT
 
 import os
 
+import networkx as nx
 import pandas as pd
 
 from .graph import thermal_network_to_nx_graph
@@ -112,7 +113,16 @@ class ThermalNetwork():
         exporter.save()
 
     def to_nx_graph(self):
-        nx_graph = thermal_network_to_nx_graph(self)
+        nx_graph = thermal_network_to_nx_graph(
+            self, type_of_graph=nx.DiGraph(),
+        )
+
+        return nx_graph
+
+    def to_nx_undirected_graph(self):
+        nx_graph = thermal_network_to_nx_graph(
+            self, type_of_graph=nx.Graph(),
+        )
 
         return nx_graph
 
