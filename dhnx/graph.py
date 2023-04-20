@@ -15,19 +15,24 @@ import networkx as nx
 import pandas as pd
 
 
-def thermal_network_to_nx_graph(thermal_network):
+def thermal_network_to_nx_graph(thermal_network, type_of_graph=None):
     r"""
 
     Parameters
     ----------
     thermal_network : dhnx.network.ThermalNetwork
+    type_of_graph : networkx graph class
+        Must be either Graph() or DiGraph()
 
     Returns
     -------
     nx_graph : nx:MultiDigraph
         networkx graph of thermal_network
     """
-    nx_graph = nx.DiGraph()  # TODO: Check if this line can be removed.
+    if type_of_graph is None:
+        type_of_graph = nx.Graph()
+
+    nx_graph = type_of_graph
 
     edges = thermal_network.components['pipes'].copy()
 
