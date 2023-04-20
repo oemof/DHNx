@@ -104,11 +104,25 @@ buildings = dict({
 # Then, define a bounding box polygon from a list of lat/lon coordinates, that
 # contains the district you are considering.
 
-bbox = [(9.1008896, 54.1954005),
-        (9.1048374, 54.1961024),
-        (9.1090996, 54.1906397),
-        (9.1027474, 54.1895923),
-        ]
+# bbox = [(9.1008896, 54.1954005),
+#         (9.1048374, 54.1961024),
+#         (9.1090996, 54.1906397),
+#         (9.1027474, 54.1895923),
+#         ]
+
+# bbox = [(9.101, 54.196),
+#         (9.104, 54.196),
+#         (9.106, 54.192),
+#         (9.102, 54.192),
+#         ]
+
+bbox = [
+    (9.121146, 54.190682),
+    (9.119905, 54.192672),
+    (9.115752, 54.191913),
+    (9.117364, 54.189318),
+]
+
 polygon = geometry.Polygon(bbox)
 
 # With osmnx we can convert create a graph from the street network and
@@ -121,26 +135,42 @@ ox.plot_graph(graph)
 # (polygon geometries) and also for the street network, which are line
 # geometries
 
-gdf_poly_houses = ox.geometries_from_polygon(polygon, tags=buildings)
-gdf_lines_streets = ox.geometries_from_polygon(polygon, tags=streets)
+# gdf_poly_houses = ox.geometries_from_polygon(polygon, tags=buildings)
+# gdf_lines_streets = ox.geometries_from_polygon(polygon, tags=streets)
 
-# We need to make sure that only polygon geometries are used
+gdf_poly_houses = ox.geometries_from_polygon(polygon, tags={'building': True})
+gdf_lines_streets = ox.geometries_from_polygon(polygon, tags={'highway': True})
+
+# We need to make sure that only polygon geometries are used for the houses
 
 gdf_poly_houses = gdf_poly_houses[gdf_poly_houses['geometry'].apply(
     lambda x: isinstance(x, geometry.Polygon)
-)].copy()
+)]
+
+# We need to make sure that only line geometries are used for the streets
+
+gdf_lines_streets = gdf_lines_streets[gdf_lines_streets['geometry'].apply(
+    lambda x: isinstance(x, geometry.LineString)
+)]
+
+# Further, we filter the houses for houses with address to remove e.g.
+# carports
+
+gdf_poly_houses.dropna(subset="addr:housenumber", inplace=True)
 
 # Remove nodes column (that make somehow trouble for exporting .geojson)
 
-gdf_poly_houses.drop(columns=['nodes'], inplace=True)
-gdf_lines_streets.drop(columns=['nodes'], inplace=True)
+if "nodes" in gdf_poly_houses.columns:
+    gdf_poly_houses.drop(columns=['nodes'], inplace=True)
+if "nodes" in gdf_lines_streets.columns:
+    gdf_lines_streets.drop(columns=['nodes'], inplace=True)
 
 # We need one (or more) buildings that we call "generators", that represent
 # the heat supply facility. In this example, we randomly choose one of the
 # buildings and put it to a new GeoDataFrame. Of course, in your project,
 # you need to import a geopandas DataFrame with you heat supply sites.
 
-np.random.seed(42)
+np.random.seed(7)
 id_generator = np.random.randint(len(gdf_poly_houses))
 gdf_poly_gen = gdf_poly_houses.iloc[[id_generator]].copy()
 gdf_poly_houses.drop(index=gdf_poly_houses.index[id_generator], inplace=True)
@@ -358,6 +388,9 @@ df_pipes = pd.DataFrame(
 # Export the optimisation parameter of the dhs pipelines to the investment
 # data and replace the default csv file.
 
+# You can also directly change the parameters of the pipes.csv file, instead
+# of using the pre-calculation shown above.
+
 df_pipes.to_csv(
     "invest_data/network/pipes.csv", index=False,
 )
@@ -427,6 +460,7 @@ settings = dict(solver='cbc',
                     # 'ratioGap': 0.2,  # (0.2 = 20% gap) default: 0
                     # 'seconds': 60 * 1,  # (maximum runtime) default: 1e+100
                 },
+                # bidirectional_pipes=True,
                 )
 
 # ## b) Perform the optimisation
@@ -457,6 +491,88 @@ _, ax = plt.subplots()
 network.components['consumers'].plot(ax=ax, color='green')
 network.components['producers'].plot(ax=ax, color='red')
 network.components['forks'].plot(ax=ax, color='grey')
-gdf_pipes[gdf_pipes['capacity'] > 0].plot(ax=ax, color='blue')
-plt.title('Invested pipelines')
+gdf_pipes[gdf_pipes['capacity'] > 0.01].plot(ax=ax, color='blue')
+plt.title('Invested pipelines routes')
+plt.show()
+
+# Round the results to the next upper existing DN number
+
+
+def get_dn(capa, table):
+
+    if capa > 0.01:
+
+        if capa > table["P_max [kW]"].max():
+            index = table.sort_values(by=["P_max [kW]"],
+                                      ascending=False).index[0]
+            dn = table.loc[index, "Bezeichnung [DN]"]
+            print('Maximum heat demand exceeds capacity of biggest pipe! The '
+                  'biggest pipe type is selected.')
+        else:
+            index = table[table["P_max [kW]"] >= capa].sort_values(
+                by=["P_max [kW]"]).index[0]
+            dn = table.loc[index, "DN number"]
+    else:
+        dn = 0
+
+    return dn
+
+
+def get_dn_apply(df, table):
+    df['DN'] = df.apply(lambda x: get_dn(x['capacity'], table), axis=1)
+    return df
+
+
+def get_real_costs(df, table):
+
+    def get_specific_costs(size):
+
+        if size > 0.01:
+            i = table.loc[table["DN number"] == size].index[0]
+            costs = table.at[i, "Costs [eur]"]
+        else:
+            costs = 0
+
+        return costs
+
+    if 'DN' not in df.columns:
+        ValueError("The 'DN' column is missing!")
+
+    df['DN_costs [€]'] = df.apply(
+        lambda x: x['length']*get_specific_costs(x['DN']), axis=1)
+
+    return df
+
+
+def get_dn_and_costs(df, table):
+    df = get_dn_apply(df, table)
+    df = get_real_costs(df, table)
+    return df
+
+
+def get_dn_loss(df, table):
+
+    table.rename(columns={"DN number": "DN"}, inplace=True)
+    df = df.join(table[['DN', 'P_loss [kW]']].set_index('DN'), on='DN')
+    df['DN_loss [kW]'] = df['P_loss [kW]'] * df['length']
+
+    return df
+
+
+gdf_pipes = get_dn_and_costs(gdf_pipes, df_pipe_data)
+gdf_pipes = get_dn_loss(gdf_pipes, df_pipe_data)
+
+# Plot the results with the DN numbers
+
+_, ax = plt.subplots()
+network.components['consumers'].plot(ax=ax, color='green')
+network.components['producers'].plot(ax=ax, color='red')
+# network.components['forks'].plot(ax=ax, color='grey')
+gdf_pipes[gdf_pipes['capacity'] > 0].plot(
+    ax=ax, lw=3,
+    column='DN', categorical=True, legend=True,
+    legend_kwds={'loc': 'center left', "title": "DN number",
+                 'bbox_to_anchor': (1, 0.5), 'fmt': "{:.0f}"}
+)
+plt.title('DN numbers of invested pipelines')
 plt.show()
