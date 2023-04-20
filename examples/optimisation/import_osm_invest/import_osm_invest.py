@@ -75,8 +75,7 @@ gdf_lines_streets = ox.geometries_from_polygon(polygon, tags=streets)
 
 # Make sure that only polygon geometries are used
 gdf_poly_houses = gdf_poly_houses[gdf_poly_houses['geometry'].apply(
-    lambda x: isinstance(x, geometry.Polygon)
-)].copy()
+    lambda x: isinstance(x, geometry.Polygon))]
 
 # Remove nodes column (that make somehow trouble for exporting .geojson)
 gdf_poly_houses.drop(columns=['nodes'], inplace=True)
