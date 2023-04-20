@@ -491,8 +491,15 @@ _, ax = plt.subplots()
 network.components['consumers'].plot(ax=ax, color='green')
 network.components['producers'].plot(ax=ax, color='red')
 network.components['forks'].plot(ax=ax, color='grey')
-gdf_pipes[gdf_pipes['capacity'] > 0.01].plot(ax=ax, color='blue')
+gdf_pipes[gdf_pipes['capacity'] > 0.01].plot(
+    ax=ax,
+    color='blue',
+    # column='capacity', scheme='BoxPlot', cmap='BuPu', legend=True,
+    # legend_kwds={'loc': 'center left', 'title': 'Thermal capacity [kW]',
+    #              'bbox_to_anchor': (1, 0.5), 'interval': True}
+)
 plt.title('Invested pipelines routes')
+plt.tight_layout()
 plt.show()
 
 # Round the results to the next upper existing DN number
