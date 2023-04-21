@@ -619,7 +619,9 @@ consumers['massflow'] = consumers['P_heat_max'].apply(lambda x: x / (cp * dT))
 
 # delete pipes with capacity of 0
 pipes = pipes.drop(pipes[pipes['capacity'] == 0].index)
-# pipes = pipes.reset_index(drop=True)  # why?
+pipes = pipes.reset_index(
+    # drop=True
+)  # why?
 
 pipes = pipes.join(df_pipe_data[[
     "DN", "Inner diameter [m]", "Roughness [mm]",
@@ -697,7 +699,7 @@ for index, pipe in pipes.iterrows():
         k_mm=pipe["Roughness [mm]"],
         alpha_w_per_m2k=pipe["alpha [W/m2K]"],
         text_k=ext_temp,
-        name=index,
+        name=pipe['id'],
     )
 
 print('calculate pandapipes for the fine network')
@@ -726,14 +728,15 @@ with pd.ExcelWriter('results/results_fine.xlsx') as writer:
         writer, sheet_name='pipes',
         columns=['id', 'type', 'from_node', 'to_node', 'length', 'capacity',
                  'DN_costs [€]', 'P_loss [kW]', "Inner diameter [m]",
-                 "Roughness [mm]", 'U-value [W/mK]', "alpha [W/m2K]", 'DN',
-                 'DN_costs']
+                 "Roughness [mm]", 'U-value [W/mK]', "alpha [W/m2K]", 'DN']
     )
     res_pipe.to_excel(writer, sheet_name='pandapipes_pipes')
     res_junction.to_excel(writer, sheet_name='pandapipes_junctions')
 
 
 # Export as CSV with results
+
+# TODO : Check and fix export and merge of results to GeoDataFrames
 
 # merge pipe_data_row
 fine_pipes_modified = pipes.reset_index(drop=True)
