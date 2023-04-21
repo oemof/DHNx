@@ -750,6 +750,55 @@ fine_pipes_modified = pd.merge(
     how='left'
 )
 
-# fine network
-fine_pipes_modified.to_file('results/fine_pipes.geojson', driver='GeoJSON')
-res_junction.to_file('results/fine_pandajunctions.geojson', driver='GeoJSON')
+# # fine network
+# fine_pipes_modified.to_file('results/fine_pipes.geojson', driver='GeoJSON')
+# res_junction.to_file('results/fine_pandajunctions.geojson', driver='GeoJSON')
+
+# plot output after processing the geometry
+_, ax = plt.subplots()
+network.components['consumers'].plot(ax=ax, color='green')
+network.components['producers'].plot(ax=ax, color='red')
+network.components['forks'].plot(ax=ax, color='grey')
+fine_pipes_modified.plot(
+    ax=ax,
+    #
+    # column='p_to_bar', scheme='BoxPlot', cmap='BuPu', legend=True,
+    # legend_kwds={'loc': 'center left', 'title': 'Thermal capacity [kW]',
+    #              'bbox_to_anchor': (1, 0.5), 'interval': True}
+    #
+    column='p_from_bar',  # 't_to_k'
+    legend=True, legend_kwds={'label': "Pressure [bar]",
+                              'shrink': 0.5},
+    cmap='cividis',
+    linewidth=1,
+    zorder=2
+    #vmin=12,
+    #vmax=15
+)
+plt.title('Pressure')
+plt.tight_layout()
+plt.show()
+
+# plot output after processing the geometry
+_, ax = plt.subplots()
+network.components['consumers'].plot(ax=ax, color='green')
+network.components['producers'].plot(ax=ax, color='red')
+network.components['forks'].plot(ax=ax, color='grey')
+fine_pipes_modified.plot(
+    ax=ax,
+    #
+    # column='p_to_bar', scheme='BoxPlot', cmap='BuPu', legend=True,
+    # legend_kwds={'loc': 'center left', 'title': 'Thermal capacity [kW]',
+    #              'bbox_to_anchor': (1, 0.5), 'interval': True}
+    #
+    column='t_to_k',
+    legend=True,
+    legend_kwds={'label': "Temperature [K]",
+                 'shrink': 0.5},
+    cmap='Wistia',
+    linewidth=1,
+    zorder=2
+)
+plt.title('Temperature')
+plt.tight_layout()
+plt.show()
