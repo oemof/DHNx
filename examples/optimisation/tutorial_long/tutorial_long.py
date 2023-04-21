@@ -640,31 +640,32 @@ pipes = pipes.join(df_pipe_data[[
 # feasibility of the drafted piping system, and we can check, if the
 # temperature at the consumers is sufficiently high.
 
-fine_ppnet = pp.create_empty_network(fluid="water")
+pp_net = pp.create_empty_network(fluid="water")
 
 for index, fork in forks.iterrows():
     pp.create_junction(
-        fine_ppnet, pn_bar=pressure_pn, tfluid_k=feed_temp,
+        pp_net, pn_bar=pressure_pn, tfluid_k=feed_temp,
         name=fork['id_full']
     )
 
 for index, consumer in consumers.iterrows():
     pp.create_junction(
-        fine_ppnet, pn_bar=pressure_pn, tfluid_k=feed_temp,
+        pp_net, pn_bar=pressure_pn, tfluid_k=feed_temp,
         name=consumer['id_full']
     )
 
 for index, producer in producers.iterrows():
     pp.create_junction(
-        fine_ppnet, pn_bar=pressure_pn, tfluid_k=feed_temp,
+        pp_net, pn_bar=pressure_pn, tfluid_k=feed_temp,
         name=producer['id_full']
     )
 
 # create sink for consumers
 for index, consumer in consumers.iterrows(): # junction and sink have the same name
     pp.create_sink(
-        fine_ppnet,
-        junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == consumer['id_full']][0],
+        pp_net,
+        junction=pp_net.junction.index[
+            pp_net.junction['name'] == consumer['id_full']][0],
         mdot_kg_per_s=consumer['massflow'],
         name=consumer['id_full']
     )
@@ -672,8 +673,9 @@ for index, consumer in consumers.iterrows(): # junction and sink have the same n
 # create source for producers
 for index, producer in producers.iterrows():  # junction and sink have the same name
     pp.create_source(
-        fine_ppnet,
-        junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == producer['id_full']][0],
+        pp_net,
+        junction=pp_net.junction.index[
+            pp_net.junction['name'] == producer['id_full']][0],
         mdot_kg_per_s=consumers['massflow'].sum(),
         name=producer['id_full']
     )
@@ -681,8 +683,9 @@ for index, producer in producers.iterrows():  # junction and sink have the same 
 # EXTRENAL GRID as slip (Schlupf)
 for index, producer in producers.iterrows():
     pp.create_ext_grid(
-        fine_ppnet,
-        junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == producer['id_full']][0],
+        pp_net,
+        junction=pp_net.junction.index[
+            pp_net.junction['name'] == producer['id_full']][0],
         p_bar=pressure_net,
         t_k=feed_temp,
         name=producer['id_full'],
@@ -691,9 +694,11 @@ for index, producer in producers.iterrows():
 # create pipes
 for index, pipe in pipes.iterrows():
     pp.create_pipe_from_parameters(
-        fine_ppnet,
-        from_junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == pipe['from_node']][0],
-        to_junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == pipe['to_node']][0],
+        pp_net,
+        from_junction=pp_net.junction.index[
+            pp_net.junction['name'] == pipe['from_node']][0],
+        to_junction=pp_net.junction.index[
+            pp_net.junction['name'] == pipe['to_node']][0],
         length_km=pipe['length'] / 1000,  # convert to km
         diameter_m=pipe["Inner diameter [m]"],
         k_mm=pipe["Roughness [mm]"],
@@ -705,7 +710,7 @@ for index, pipe in pipes.iterrows():
 print('calculate pandapipes for the fine network')
 # time_start_fine = datetime.datetime.now()
 pp.pipeflow(
-    fine_ppnet, stop_condition="tol", iter=3, friction_model="colebrook",
+    pp_net, stop_condition="tol", iter=3, friction_model="colebrook",
     mode="all", transient=False, nonlinear_method="automatic", tol_p=1e-3,
     tol_v=1e-3,
 )
@@ -713,10 +718,10 @@ pp.pipeflow(
 # time_finish_fine = datetime.datetime.now()
 # time_fine_pandapipes = time_finish_fine - time_start_fine
 
-res_junction = fine_ppnet.res_junction
-res_pipe = fine_ppnet.res_pipe
-print(fine_ppnet.res_junction)
-print(fine_ppnet.res_pipe)
+res_junction = pp_net.res_junction
+res_pipe = pp_net.res_pipe
+print(pp_net.res_junction)
+print(pp_net.res_pipe)
 
 # Part V: Export data
 print('Part V: Export data')
