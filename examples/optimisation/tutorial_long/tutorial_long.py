@@ -26,11 +26,15 @@ Part II: Perform the Optimisation
 
 Part III: Postprocessing
 
-Simulation
-^^^^^^^^^^
+Simulation with pandapipes
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Part I: Create panda-pipes model
 
+
+Requirements:
+- dhnx with extra_requires (osmnx, geopandas, CoolProp)
+- pandapipes
 
 Contributors:
 - Joris Zimmermann
@@ -73,7 +77,37 @@ logger.define_logging(
 # then you could manually edit the geometries, e.g. in QGIS,
 # and the import them again in your Python script with geopandas.
 
-# For getting the OSM data, first, select the street types you want to
+# For getting the OSM data, first, define a bounding box polygon from a list
+# of lat/lon coordinates, that contains the district you are considering.
+
+bbox = [
+    (9.121146, 54.190682),
+    (9.119905, 54.192672),
+    (9.115752, 54.191913),
+    (9.117364, 54.189318),
+]
+
+polygon = geometry.Polygon(bbox)
+
+# With osmnx we can convert create a graph from the street network and
+# plot this with the plotting function of osmnx
+
+graph = ox.graph_from_polygon(polygon, network_type='drive_service')
+ox.plot_graph(graph)
+
+# Next, we create geopandas dataframes with the footprints of the buildings
+# (polygon geometries) and also for the street network, which are line
+# geometries
+
+# gdf_poly_houses = ox.geometries_from_polygon(polygon, tags=buildings)
+# gdf_lines_streets = ox.geometries_from_polygon(polygon, tags=streets)
+
+gdf_poly_houses = ox.geometries_from_polygon(polygon, tags={'building': True})
+gdf_lines_streets = ox.geometries_from_polygon(polygon, tags={'highway': True})
+
+# Note: you could also use only specific types of buildings and streets
+
+# Therefore, select the street types you want to
 # consider as routes for the district heating network.
 # see also: https://wiki.openstreetmap.org/wiki/Key:highway
 
@@ -100,46 +134,6 @@ buildings = dict({
         'semidetached_house'
     ]
 })
-
-# Then, define a bounding box polygon from a list of lat/lon coordinates, that
-# contains the district you are considering.
-
-# bbox = [(9.1008896, 54.1954005),
-#         (9.1048374, 54.1961024),
-#         (9.1090996, 54.1906397),
-#         (9.1027474, 54.1895923),
-#         ]
-
-# bbox = [(9.101, 54.196),
-#         (9.104, 54.196),
-#         (9.106, 54.192),
-#         (9.102, 54.192),
-#         ]
-
-bbox = [
-    (9.121146, 54.190682),
-    (9.119905, 54.192672),
-    (9.115752, 54.191913),
-    (9.117364, 54.189318),
-]
-
-polygon = geometry.Polygon(bbox)
-
-# With osmnx we can convert create a graph from the street network and
-# plot this with the plotting function of osmnx
-
-graph = ox.graph_from_polygon(polygon, network_type='drive_service')
-ox.plot_graph(graph)
-
-# Next, we create geopandas dataframes with the footprints of the buildings
-# (polygon geometries) and also for the street network, which are line
-# geometries
-
-# gdf_poly_houses = ox.geometries_from_polygon(polygon, tags=buildings)
-# gdf_lines_streets = ox.geometries_from_polygon(polygon, tags=streets)
-
-gdf_poly_houses = ox.geometries_from_polygon(polygon, tags={'building': True})
-gdf_lines_streets = ox.geometries_from_polygon(polygon, tags={'highway': True})
 
 # We need to make sure that only polygon geometries are used for the houses
 
@@ -351,7 +345,7 @@ ax.plot(
     ls=":", color='r', marker="x"
 )
 ax.set_xlabel("Transport capacity [kW]")
-ax.set_ylabel("Kosten [€/m]")
+ax.set_ylabel("Costs [€/m]")
 plt.text(
     2000, 250,
     "Linear cost approximation \n"
@@ -484,7 +478,11 @@ print('Objective value: ', network.results.optimization['oemof_meta']['objective
 
 # add the investment results to the geoDataFrame
 gdf_pipes = network.components['pipes']
-gdf_pipes = gdf_pipes.join(results_edges, rsuffix='results_')
+gdf_pipes.drop("hp_type", axis=1, inplace=True)
+gdf_pipes = gdf_pipes.join(
+    results_edges[["hp_type", "capacity", "direction", "costs", "losses"]],
+    rsuffix='',
+)
 
 # plot output after processing the geometry
 _, ax = plt.subplots()
@@ -583,3 +581,167 @@ gdf_pipes[gdf_pipes['capacity'] > 0].plot(
 )
 plt.title('DN numbers of invested pipelines')
 plt.show()
+
+
+# #############################################################################
+# Simulation with pandapipes
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+import pandapipes as pp
+
+# # Part I: Create panda-pipes model
+
+# values for calulation
+cp = 4.2  # KJ/kg K TODO : get from input table
+dT = 30  # 30 K
+d = 1000  # kg/m³
+pi = 3.14  # 1
+v = 1.0  # m/s
+
+# pandapipes parameters
+pressure_net = 12
+pressure_pn = 20
+feed_temp = 348  # 75°C
+ext_temp = 283  # 10°C
+
+# create junctions for forks, consumers and producers
+forks = network.components['forks']
+consumers = network.components['consumers']
+producers = network.components['producers']
+pipes = gdf_pipes
+
+# prepare the consumers dataframe
+
+# calculate massflow for each consumer and producer
+consumers['massflow'] = consumers['P_heat_max'].apply(lambda x: x / (cp * dT))
+
+# prepare the pipes dataframe
+
+# delete pipes with capacity of 0
+pipes = pipes.drop(pipes[pipes['capacity'] == 0].index)
+# pipes = pipes.reset_index(drop=True)  # why?
+
+pipes = pipes.join(df_pipe_data[[
+    "DN", "Inner diameter [m]", "Roughness [mm]",
+    "U-value [W/mK]", "alpha [W/m2K]",
+]].set_index('DN'), on='DN')
+
+
+# #################
+
+# Now, we create the pandapipes network (pp_net).
+# Note that we only model the forward pipeline system in this example and
+# focus on the pressure losses due to the pipes (no pressure losses e.g. due
+# to expansion bend and so on).
+# However, if we assume the same pressure drop for the return pipes and add
+# a constant value for the substation, we can a first idea of the hydraulic
+# feasibility of the drafted piping system, and we can check, if the
+# temperature at the consumers is sufficiently high.
+
+fine_ppnet = pp.create_empty_network(fluid="water")
+
+for index, fork in forks.iterrows():
+    pp.create_junction(
+        fine_ppnet, pn_bar=pressure_pn, tfluid_k=feed_temp,
+        name=fork['id_full']
+    )
+
+for index, consumer in consumers.iterrows():
+    pp.create_junction(
+        fine_ppnet, pn_bar=pressure_pn, tfluid_k=feed_temp,
+        name=consumer['id_full']
+    )
+
+for index, producer in producers.iterrows():
+    pp.create_junction(
+        fine_ppnet, pn_bar=pressure_pn, tfluid_k=feed_temp,
+        name=producer['id_full']
+    )
+
+# create sink for consumers
+for index, consumer in consumers.iterrows(): # junction and sink have the same name
+    pp.create_sink(
+        fine_ppnet,
+        junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == consumer['id_full']][0],
+        mdot_kg_per_s=consumer['massflow'],
+        name=consumer['id_full']
+    )
+
+# create source for producers
+for index, producer in producers.iterrows():  # junction and sink have the same name
+    pp.create_source(
+        fine_ppnet,
+        junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == producer['id_full']][0],
+        mdot_kg_per_s=consumers['massflow'].sum(),
+        name=producer['id_full']
+    )
+
+# EXTRENAL GRID as slip (Schlupf)
+for index, producer in producers.iterrows():
+    pp.create_ext_grid(
+        fine_ppnet,
+        junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == producer['id_full']][0],
+        p_bar=pressure_net,
+        t_k=feed_temp,
+        name=producer['id_full'],
+    )
+
+# create pipes
+for index, pipe in pipes.iterrows():
+    pp.create_pipe_from_parameters(
+        fine_ppnet,
+        from_junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == pipe['from_node']][0],
+        to_junction=fine_ppnet.junction.index[fine_ppnet.junction['name'] == pipe['to_node']][0],
+        length_km=pipe['length'] / 1000,  # convert to km
+        diameter_m=pipe["Inner diameter [m]"],
+        k_mm=pipe["Roughness [mm]"],
+        alpha_w_per_m2k=pipe["alpha [W/m2K]"],
+        text_k=ext_temp,
+        name=index,
+    )
+
+print('calculate pandapipes for the fine network')
+# time_start_fine = datetime.datetime.now()
+pp.pipeflow(
+    fine_ppnet, stop_condition="tol", iter=3, friction_model="colebrook",
+    mode="all", transient=False, nonlinear_method="automatic", tol_p=1e-3,
+    tol_v=1e-3,
+)
+
+# time_finish_fine = datetime.datetime.now()
+# time_fine_pandapipes = time_finish_fine - time_start_fine
+
+res_junction = fine_ppnet.res_junction
+res_pipe = fine_ppnet.res_pipe
+print(fine_ppnet.res_junction)
+print(fine_ppnet.res_pipe)
+
+# Part V: Export data
+print('Part V: Export data')
+
+# Export as excel
+
+with pd.ExcelWriter('results/results_fine.xlsx') as writer:
+    pipes.to_excel(
+        writer, sheet_name='pipes',
+        columns=['id', 'type', 'from_node', 'to_node', 'length', 'capacity',
+                 'DN_costs [€]', 'P_loss [kW]', "Inner diameter [m]",
+                 "Roughness [mm]", 'U-value [W/mK]', "alpha [W/m2K]", 'DN',
+                 'DN_costs']
+    )
+    res_pipe.to_excel(writer, sheet_name='pandapipes_pipes')
+    res_junction.to_excel(writer, sheet_name='pandapipes_junctions')
+
+
+# Export as CSV with results
+
+# merge pipe_data_row
+fine_pipes_modified = pipes.reset_index(drop=True)
+fine_pipes_modified = pd.merge(
+    fine_pipes_modified, res_pipe, left_index=True, right_index=True,
+    how='left'
+)
+
+# fine network
+fine_pipes_modified.to_file('results/fine_pipes.geojson', driver='GeoJSON')
+res_junction.to_file('results/fine_pandajunctions.geojson', driver='GeoJSON')
