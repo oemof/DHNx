@@ -46,20 +46,24 @@ Contributors:
 - Johannes Röder
 
 """
+import logging
+import math
+
+from CoolProp.CoolProp import PropsSI
+import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
+from oemof.tools import logger
 import osmnx as ox
 import pandas as pd
+import pandapipes as pp
 from shapely import geometry
-import matplotlib.pyplot as plt
-
-import logging
-from oemof.tools import logger
 
 from dhnx.network import ThermalNetwork
 from dhnx.input_output import load_invest_options
 from dhnx.gistools.connect_points import process_geometry
 from dhnx.optimization.precalc_hydraulic import v_max_bisection,\
-    calc_mass_flow, calc_power, v_max_secant, calc_pipe_loss
+    calc_mass_flow, calc_power, calc_pipe_loss
 
 logger.define_logging(
     screen_level=logging.INFO,
@@ -419,8 +423,6 @@ network.is_consistent()
 # because the starting point of one line is not exactly the ending point of
 # the other line.
 
-import networkx as nx
-
 network.nx_graph = network.to_nx_undirected_graph()
 g = network.nx_graph
 nx.is_connected(g)
@@ -547,7 +549,7 @@ def get_real_costs(df, table):
         ValueError("The 'DN' column is missing!")
 
     df['DN_costs [€]'] = df.apply(
-        lambda x: x['length']*get_specific_costs(x['DN']), axis=1)
+        lambda x: x['length'] * get_specific_costs(x['DN']), axis=1)
 
     return df
 
@@ -589,10 +591,6 @@ plt.show()
 # Part II: Simulation with pandapipes
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-import math  # only for pi
-import pandapipes as pp
-from CoolProp.CoolProp import PropsSI
-
 # # Define the pandapipes parameters
 
 dT = 30  # [K]
@@ -607,7 +605,7 @@ ext_temp = 283  # 10 °C (temperature of the ground)
 
 p = pressure_net * 100000  # pressure in [Pa]
 
-cp = PropsSI('C', 'T', feed_temp, 'P', p, 'IF97::Water')*0.001  # [kJ/(kg K)]
+cp = PropsSI('C', 'T', feed_temp, 'P', p, 'IF97::Water') * 0.001  # [kJ/(kg K)]
 d = PropsSI('D', 'T', feed_temp, 'P', p, 'IF97::Water')  # [kg/m³]
 
 # # Prepare the component tables of the DHNx network
