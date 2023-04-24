@@ -1,44 +1,50 @@
 # -*- coding: utf-8 -*-
 
-"""
+"""District heating network design and simulation from scratch
+
 Create a district heating network from OpenStreetMap data,
 and perform a DHS Investment Optimisation.
 Based on the routing and dimensioning of the optimisation, a pandapipes
 model is generated for the detailed thermo-hydraulic calculation for
 checking the feasibility of the suggested design of the optimisation.
 
-Overview
---------
+Overview:
 
-Optimisation
-^^^^^^^^^^^^
+Part I: Optimisation of routing with DHNx
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Part I: Get and prepare the input data for the optimisation
-    a) Geometry of potential routes and buildings
-        - Get OSM data
-        - Process the geometry for DHNx
-    b) Pre-calculate the hydraulic parameter
+    - Get and prepare the input data for the optimisation
+        a) Geometry of potential routes and buildings
+            - Get OSM data
+            - Process the geometry for DHNx
+        b) Pre-calculate the hydraulic parameter
 
-Part II: Perform the Optimisation
-    a) Initialise the ThermalNetwork and check input
-    b) Perform the optimisation
-    c) Process the results
+    - Perform the Optimisation
+        a) Initialise the ThermalNetwork and check input
+        b) Perform the optimisation
+        c) Process and plot the results
 
-Part III: Postprocessing
+Part II: Simulation with pandapipes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Simulation with pandapipes
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Part I: Create panda-pipes model
-
+    - Define the pandapipes parameters
+    - Prepare the component tables of the DHNx network
+    - Create the pandapipes model
+    - Execute the pandapipes simulation
+    - Example of exports of the results
+    - Plot the results of pandapipes simulation
 
 Requirements:
+
 - dhnx with extra_requires (osmnx, geopandas, CoolProp)
 - pandapipes
+- Make sure you have the solver CBC installed
 
 Contributors:
+
 - Joris Zimmermann
 - Johannes Röder
+
 """
 import numpy as np
 import osmnx as ox
@@ -60,7 +66,10 @@ logger.define_logging(
     logfile="dhnx.log"
 )
 
-# # Part I: Get and prepare the input data for the optimisation
+# Part I: Optimisation of routing with DHNx
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+# # Get and prepare the input data for the optimisation
 
 # ## a) Geometry of potential routes and buildings
 
@@ -389,9 +398,7 @@ df_pipes.to_csv(
     "invest_data/network/pipes.csv", index=False,
 )
 
-# #############################################################################
-
-# # Part II: Perform the Optimisation
+# # Perform the Optimisation
 
 # ## a) Initialise the ThermalNetwork and check input
 
@@ -579,29 +586,31 @@ plt.title('DN numbers of invested pipelines')
 plt.show()
 
 
-# #############################################################################
-
-# Simulation with pandapipes
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^
+# Part II: Simulation with pandapipes
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 import math  # only for pi
 import pandapipes as pp
+from CoolProp.CoolProp import PropsSI
 
-# # Part I: Create panda-pipes model
+# # Define the pandapipes parameters
 
-# ### Define the pandapipes parameters
+dT = 30  # [K]
 
-cp = 4.2  # KJ/kg K TODO : get from input table
-dT = 30  # 30 K
-d = 1000  # kg/m³
 pi = math.pi  # [-]
 v = 1.0  # [m/s] (Initial value for simulation?)
+
 pressure_net = 12  # [bar] (Pressure at the heat supply)
 pressure_pn = 20
 feed_temp = 348  # 75 °C (Feed-in temperature at the heat supply)
 ext_temp = 283  # 10 °C (temperature of the ground)
 
-# ### Prepare the components of the network
+p = pressure_net * 100000  # pressure in [Pa]
+
+cp = PropsSI('C', 'T', feed_temp, 'P', p, 'IF97::Water')*0.001  # [kJ/(kg K)]
+d = PropsSI('D', 'T', feed_temp, 'P', p, 'IF97::Water')  # [kg/m³]
+
+# # Prepare the component tables of the DHNx network
 
 forks = network.components['forks']
 consumers = network.components['consumers']
@@ -617,9 +626,9 @@ consumers['massflow'] = consumers['P_heat_max'].apply(lambda x: x / (cp * dT))
 
 # delete pipes with capacity of 0
 pipes = pipes.drop(pipes[pipes['capacity'] == 0].index)
-pipes = pipes.reset_index(
-    # drop=True
-)  # why?
+# reset the index to later on merge the pandapipes results, that
+# do not know an 'id' or 'name' anymore
+pipes = pipes.reset_index()
 
 # add the data of technical data sheet with the DN numbers to the pipes table
 pipes = pipes.join(df_pipe_data[[
@@ -628,7 +637,7 @@ pipes = pipes.join(df_pipe_data[[
 ]].set_index('DN'), on='DN')
 
 
-# ### Create the pandapipes model
+# # Create the pandapipes model
 
 # Now, we create the pandapipes network (pp_net).
 # Note that we only model the forward pipeline system in this example and
@@ -660,7 +669,7 @@ for index, producer in producers.iterrows():
     )
 
 # create sink for consumers
-for index, consumer in consumers.iterrows(): # junction and sink have the same name
+for index, consumer in consumers.iterrows():
     pp.create_sink(
         pp_net,
         junction=pp_net.junction.index[
@@ -670,7 +679,7 @@ for index, consumer in consumers.iterrows(): # junction and sink have the same n
     )
 
 # create source for producers
-for index, producer in producers.iterrows():  # junction and sink have the same name
+for index, producer in producers.iterrows():
     pp.create_source(
         pp_net,
         junction=pp_net.junction.index[
@@ -706,7 +715,7 @@ for index, pipe in pipes.iterrows():
         name=pipe['id'],
     )
 
-# ### Execute the pandapipes simulation
+# # Execute the pandapipes simulation
 
 pp.pipeflow(
     pp_net, stop_condition="tol", iter=3, friction_model="colebrook",
@@ -717,8 +726,9 @@ pp.pipeflow(
 print(pp_net.res_junction.head(n=8))
 print(pp_net.res_pipe.head(n=8))
 
-# ### Example of export as excel
+# # Example of exports of the results
 
+# to excel
 with pd.ExcelWriter('results/results_fine.xlsx') as writer:
     pipes.to_excel(
         writer, sheet_name='pipes',
@@ -729,21 +739,16 @@ with pd.ExcelWriter('results/results_fine.xlsx') as writer:
     pp_net.res_pipe.to_excel(writer, sheet_name='pandapipes_pipes')
     pp_net.res_junction.to_excel(writer, sheet_name='pandapipes_junctions')
 
-# TODO : Check and fix export and merge of results to GeoDataFrames
-
 # merge results of pipes to GeoDataFrame
-
-gdf_pipes_results = pipes.reset_index(drop=True)
-gdf_pipes_results = pd.merge(
-    gdf_pipes_results, pp_net.res_pipe, left_index=True, right_index=True,
+pipes = pd.merge(
+    pipes, pp_net.res_pipe, left_index=True, right_index=True,
     how='left'
 )
 
-# ### export the GeoDataFrames with the simulation results
+# export the GeoDataFrames with the simulation results to .geojson
+pipes.to_file('results/fine_pipes.geojson', driver='GeoJSON')
 
-gdf_pipes_results.to_file('results/fine_pipes.geojson', driver='GeoJSON')
-
-# ### Plot results of pandapipes simulation
+# # Plot the results of pandapipes simulation
 
 # plots pressure of pipes' ending nodes
 
@@ -751,7 +756,7 @@ _, ax = plt.subplots()
 network.components['consumers'].plot(ax=ax, color='green')
 network.components['producers'].plot(ax=ax, color='red')
 network.components['forks'].plot(ax=ax, color='grey')
-gdf_pipes_results.plot(
+pipes.plot(
     ax=ax,
     column='p_to_bar',
     legend=True, legend_kwds={'label': "Pressure [bar]",
@@ -770,7 +775,7 @@ _, ax = plt.subplots()
 network.components['consumers'].plot(ax=ax, color='green')
 network.components['producers'].plot(ax=ax, color='red')
 network.components['forks'].plot(ax=ax, color='grey')
-gdf_pipes_results.plot(
+pipes.plot(
     ax=ax,
     column='t_to_k',
     legend=True,
