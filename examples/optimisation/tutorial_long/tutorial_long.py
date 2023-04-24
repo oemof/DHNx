@@ -463,7 +463,7 @@ settings = dict(solver='cbc',
 
 network.optimize_investment(invest_options=invest_opt, **settings)
 
-# ## c) Process the results
+# ## c) Process and plot the results
 
 # get results
 results_edges = network.results.optimization['components']['pipes']
@@ -476,7 +476,7 @@ print('Objective value: ', network.results.optimization['oemof_meta']['objective
 # pipelines are the same, since no additional costs (e.g. for energy sources)
 # are considered in this example.)
 
-# add the investment results to the geoDataFrame
+# add the investment results to the geoDataFrame of the pipes
 gdf_pipes = network.components['pipes']
 gdf_pipes.drop("hp_type", axis=1, inplace=True)
 gdf_pipes = gdf_pipes.join(
@@ -489,18 +489,14 @@ _, ax = plt.subplots()
 network.components['consumers'].plot(ax=ax, color='green')
 network.components['producers'].plot(ax=ax, color='red')
 network.components['forks'].plot(ax=ax, color='grey')
-gdf_pipes[gdf_pipes['capacity'] > 0.01].plot(
-    ax=ax,
-    color='blue',
-    # column='capacity', scheme='BoxPlot', cmap='BuPu', legend=True,
-    # legend_kwds={'loc': 'center left', 'title': 'Thermal capacity [kW]',
-    #              'bbox_to_anchor': (1, 0.5), 'interval': True}
-)
+gdf_pipes[gdf_pipes['capacity'] > 0.01].plot(ax=ax, color='blue')
 plt.title('Invested pipelines routes')
 plt.tight_layout()
 plt.show()
 
 # Round the results to the next upper existing DN number
+# You can use the following functions or write your own, if e.g. you do not
+# want to select the next upper DN number but round to the next DN number.
 
 
 def get_dn(capa, table):
@@ -584,27 +580,29 @@ plt.show()
 
 
 # #############################################################################
+
 # Simulation with pandapipes
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+import math  # only for pi
 import pandapipes as pp
 
 # # Part I: Create panda-pipes model
 
-# values for calulation
+# ### Define the pandapipes parameters
+
 cp = 4.2  # KJ/kg K TODO : get from input table
 dT = 30  # 30 K
 d = 1000  # kg/m³
-pi = 3.14  # 1
-v = 1.0  # m/s
-
-# pandapipes parameters
-pressure_net = 12
+pi = math.pi  # [-]
+v = 1.0  # [m/s] (Initial value for simulation?)
+pressure_net = 12  # [bar] (Pressure at the heat supply)
 pressure_pn = 20
-feed_temp = 348  # 75°C
-ext_temp = 283  # 10°C
+feed_temp = 348  # 75 °C (Feed-in temperature at the heat supply)
+ext_temp = 283  # 10 °C (temperature of the ground)
 
-# create junctions for forks, consumers and producers
+# ### Prepare the components of the network
+
 forks = network.components['forks']
 consumers = network.components['consumers']
 producers = network.components['producers']
@@ -623,13 +621,14 @@ pipes = pipes.reset_index(
     # drop=True
 )  # why?
 
+# add the data of technical data sheet with the DN numbers to the pipes table
 pipes = pipes.join(df_pipe_data[[
-    "DN", "Inner diameter [m]", "Roughness [mm]",
-    "U-value [W/mK]", "alpha [W/m2K]",
+    "DN", "Inner diameter [m]", "Roughness [mm]", "U-value [W/mK]",
+    "alpha [W/m2K]",
 ]].set_index('DN'), on='DN')
 
 
-# #################
+# ### Create the pandapipes model
 
 # Now, we create the pandapipes network (pp_net).
 # Note that we only model the forward pipeline system in this example and
@@ -707,26 +706,18 @@ for index, pipe in pipes.iterrows():
         name=pipe['id'],
     )
 
-print('calculate pandapipes for the fine network')
-# time_start_fine = datetime.datetime.now()
+# ### Execute the pandapipes simulation
+
 pp.pipeflow(
     pp_net, stop_condition="tol", iter=3, friction_model="colebrook",
     mode="all", transient=False, nonlinear_method="automatic", tol_p=1e-3,
     tol_v=1e-3,
 )
 
-# time_finish_fine = datetime.datetime.now()
-# time_fine_pandapipes = time_finish_fine - time_start_fine
+print(pp_net.res_junction.head(n=8))
+print(pp_net.res_pipe.head(n=8))
 
-res_junction = pp_net.res_junction
-res_pipe = pp_net.res_pipe
-print(pp_net.res_junction)
-print(pp_net.res_pipe)
-
-# Part V: Export data
-print('Part V: Export data')
-
-# Export as excel
+# ### Example of export as excel
 
 with pd.ExcelWriter('results/results_fine.xlsx') as writer:
     pipes.to_excel(
@@ -735,62 +726,52 @@ with pd.ExcelWriter('results/results_fine.xlsx') as writer:
                  'DN_costs [€]', 'P_loss [kW]', "Inner diameter [m]",
                  "Roughness [mm]", 'U-value [W/mK]', "alpha [W/m2K]", 'DN']
     )
-    res_pipe.to_excel(writer, sheet_name='pandapipes_pipes')
-    res_junction.to_excel(writer, sheet_name='pandapipes_junctions')
-
-
-# Export as CSV with results
+    pp_net.res_pipe.to_excel(writer, sheet_name='pandapipes_pipes')
+    pp_net.res_junction.to_excel(writer, sheet_name='pandapipes_junctions')
 
 # TODO : Check and fix export and merge of results to GeoDataFrames
 
-# merge pipe_data_row
-fine_pipes_modified = pipes.reset_index(drop=True)
-fine_pipes_modified = pd.merge(
-    fine_pipes_modified, res_pipe, left_index=True, right_index=True,
+# merge results of pipes to GeoDataFrame
+
+gdf_pipes_results = pipes.reset_index(drop=True)
+gdf_pipes_results = pd.merge(
+    gdf_pipes_results, pp_net.res_pipe, left_index=True, right_index=True,
     how='left'
 )
 
-# # fine network
-# fine_pipes_modified.to_file('results/fine_pipes.geojson', driver='GeoJSON')
-# res_junction.to_file('results/fine_pandajunctions.geojson', driver='GeoJSON')
+# ### export the GeoDataFrames with the simulation results
 
-# plot output after processing the geometry
+gdf_pipes_results.to_file('results/fine_pipes.geojson', driver='GeoJSON')
+
+# ### Plot results of pandapipes simulation
+
+# plots pressure of pipes' ending nodes
+
 _, ax = plt.subplots()
 network.components['consumers'].plot(ax=ax, color='green')
 network.components['producers'].plot(ax=ax, color='red')
 network.components['forks'].plot(ax=ax, color='grey')
-fine_pipes_modified.plot(
+gdf_pipes_results.plot(
     ax=ax,
-    #
-    # column='p_to_bar', scheme='BoxPlot', cmap='BuPu', legend=True,
-    # legend_kwds={'loc': 'center left', 'title': 'Thermal capacity [kW]',
-    #              'bbox_to_anchor': (1, 0.5), 'interval': True}
-    #
-    column='p_from_bar',  # 't_to_k'
+    column='p_to_bar',
     legend=True, legend_kwds={'label': "Pressure [bar]",
                               'shrink': 0.5},
     cmap='cividis',
     linewidth=1,
     zorder=2
-    #vmin=12,
-    #vmax=15
 )
 plt.title('Pressure')
 plt.tight_layout()
 plt.show()
 
-# plot output after processing the geometry
+# plot temperature of pipes' ending nodes
+
 _, ax = plt.subplots()
 network.components['consumers'].plot(ax=ax, color='green')
 network.components['producers'].plot(ax=ax, color='red')
 network.components['forks'].plot(ax=ax, color='grey')
-fine_pipes_modified.plot(
+gdf_pipes_results.plot(
     ax=ax,
-    #
-    # column='p_to_bar', scheme='BoxPlot', cmap='BuPu', legend=True,
-    # legend_kwds={'loc': 'center left', 'title': 'Thermal capacity [kW]',
-    #              'bbox_to_anchor': (1, 0.5), 'interval': True}
-    #
     column='t_to_k',
     legend=True,
     legend_kwds={'label': "Temperature [K]",
