@@ -491,7 +491,7 @@ def v_max_secant(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
 
     logging.info(
         "Maximum flow velocity calculated. Iterations: %d, "
-        "Flow velocity: %f [m/s], Pressure drop: %f [Pa/m]"
+        "Flow velocity: %.4f [m/s], Pressure drop: %.4f [Pa/m]"
         % (n, v_new, p_new)
     )
 
@@ -595,7 +595,7 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
 
     logging.info(
         "Maximum flow velocity calculated. Iterations: %d, "
-        "Flow velocity: %f [m/s], Pressure drop: %f [Pa/m]"
+        "Flow velocity: %.4f [m/s], Pressure drop: %.4f [Pa/m]"
         % (n, v_new, p_new)
     )
 
