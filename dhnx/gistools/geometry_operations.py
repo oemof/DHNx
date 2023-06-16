@@ -357,20 +357,18 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         geom = b.geometry  # The current line segment
         gdf_b = gpd.GeoDataFrame(b.to_frame().T, crs=crs)
 
-        if any_check(geom, gdf_merged_all, how='within'):
+        if any(gdf_merged_all.geometry.contains(geom)):
             # Drop this object, because it is contained within a merged object
             continue  # Continue with the next line segment
 
         # Find all neighbours of the current segment
-        mask_neighbours = [geom.touches(g) for g in gdf_line_net.geometry]
-        neighbours = gdf_line_net[mask_neighbours]
+        neighbours = gdf_line_net[gdf_line_net.geometry.touches(geom)]
         # If all of the neighbours intersect with each other, it is the
         # last segement before an intersection, which can be removed
-        for neighbour in neighbours.geometry:
-            if all([neighbour.intersects(g) for g in neighbours.geometry]):
-                # Treat as if there was only one neighbour (like end segment)
-                neighbours = gpd.GeoDataFrame(geometry=[neighbour], crs=crs)
-                break
+        if all([all(neighbours.geometry.intersects(neighbour))
+                for neighbour in neighbours.geometry]):
+            # Treat as if there was only one neighbour (like end segment)
+            neighbours = neighbours.head(1)
 
         if len(neighbours) <= 1:
             # This is a potentially unused end segment
@@ -380,12 +378,12 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             # end touches a network line segment
             p1 = geom.boundary.geoms[0]
             p2 = geom.boundary.geoms[-1]
-            p1_neighbours = [p1.intersects(g) for g in neighbours.geometry]
-            p2_neighbours = [p2.intersects(g) for g in neighbours.geometry]
-            if (any_check(p1, gdf_line_ext, how='touches')
+            p1_neighbours = neighbours.geometry.intersects(p1).to_list()
+            p2_neighbours = neighbours.geometry.intersects(p2).to_list()
+            if (any(gdf_line_ext.geometry.touches(p1))
                and p2_neighbours.count(True) > 0):
                 unused = False
-            elif (any_check(p2, gdf_line_ext, how='touches')
+            elif (any(gdf_line_ext.geometry.touches(p2))
                   and p1_neighbours.count(True) > 0):
                 unused = False
 
@@ -408,8 +406,8 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             # only has one neighbour. Then that one can still be merged.
             p1 = geom.boundary.geoms[0]
             p2 = geom.boundary.geoms[-1]
-            p1_neighbours = [p1.intersects(g) for g in neighbours.geometry]
-            p2_neighbours = [p2.intersects(g) for g in neighbours.geometry]
+            p1_neighbours = neighbours.geometry.intersects(p1).to_list()
+            p2_neighbours = neighbours.geometry.intersects(p2).to_list()
             if p1_neighbours.count(True) == 1:  # Only one neighbour allowed
                 neighbours = neighbours[p1_neighbours]  # Neighbour to merge
             elif p2_neighbours.count(True) == 1:  # Only one neighbour allowed
@@ -427,19 +425,19 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         # Before merging, we need to futher clean up the list of neighbours
         neighbours_list = []
         for neighbour in neighbours.geometry:
-            if any_check(neighbour, gdf_deleted, how='equals'):
+            if any(gdf_deleted.geometry.geom_equals(neighbour)):
                 continue  # Do not use neighbour that has already been deleted
-            if any_check(neighbour, gdf_line_net_new, how='within'):
+            if any(gdf_line_net_new.geometry.contains(neighbour)):
                 continue  # Prevent creating dublicates
-            if any_check(neighbour, gdf_line_ext, how='intersects'):
-                mask = [neighbour.intersects(g) for g in gdf_line_ext.geometry]
+            if any(gdf_line_ext.geometry.intersects(neighbour)):
+                mask = gdf_line_ext.geometry.intersects(neighbour)
                 houses = gdf_line_ext[mask]
                 # Neighbour intersects with external, but geom does not
-                if all([geom.disjoint(g) for g in houses.geometry]):
+                if all(houses.geometry.disjoint(geom)):
                     neighbours_list.append(neighbour)
                 else:  # No not merge neighbour intersecting with external
                     continue
-            elif any_check(neighbour, neighbours, how='touches'):
+            elif any(neighbours.geometry.touches(neighbour)):
                 neighbours_list = []  # The two neighbours touch
                 break  # This is a intersection that cannot be simplified
             else:  # Choose neighbour for merging
@@ -478,48 +476,6 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                                    ignore_index=True)
 
     return gdf_line_net_new
-
-
-def any_check(geom_test, gdf, how):
-    """Improve speed for an 'any()' test on a list comprehension.
-
-    Replace a statement like...
-
-    .. code::
-
-        if any([geom_test.touches(g) for g in gdf.geometry]):
-
-    ... with the following:
-
-    .. code::
-
-        if any_check(geom_test, gdf, how='touches'):
-
-    Instead of iterating through all of 'g in gdf.geometry', return
-    'True' after the first match.
-
-    Parameters
-    ----------
-    geom_test : Shapely object
-        Object which's function 'how' is called.
-    gdf : GeoDataFrame
-        All geometries in gdf are passed to 'how'.
-    how : str
-        Shapely object function like equals, almost_equals,
-        contains, crosses, disjoint, intersects, touches, within.
-
-    Returns
-    -------
-    bool
-        True if any call of function 'how' is True.
-
-    """
-    for g in gdf.geometry:
-        method_to_call = getattr(geom_test, how)
-        result = method_to_call(g)
-        if result:  # Return once the first result is True
-            return True
-    return False
 
 
 def check_crs(gdf, crs=4647):
