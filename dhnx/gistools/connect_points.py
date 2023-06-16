@@ -550,6 +550,8 @@ def process_geometry(lines, consumers, producers,
         lines, lines_producers, lines_consumers,
         # debug_plotting=True,
     )
+    # Keep only the shortest of all lines connecting the same two points
+    lines = go.drop_parallel_lines(lines)
 
     # add additional line identifier
     lines_producers['type'] = 'GL'  # GL for generation line
