@@ -86,9 +86,9 @@ def create_forks(lines):
 
 
 def insert_node_ids(lines, nodes):
-    """
-    Creates the columns `from_node`, `to_node` and inserts
-    the node ids (eg. forks-3, consumers-5).
+    """Create the columns `from_node`, `to_node` and insert the node ids.
+
+    The node ids are called e.g. forks-3, consumers-5 etc.
     The updated "line"-GeoDataFrame is returned.
 
     Parameters
@@ -100,14 +100,32 @@ def insert_node_ids(lines, nodes):
     -------
     geopandas.GeoDataFrame
     """
-
     # add id to gdf_lines for starting and ending node
     # point as wkt
-    lines['b0_wkt'] = lines["geometry"].apply(lambda geom: geom.boundary.geoms[0].wkt)
-    lines['b1_wkt'] = lines["geometry"].apply(lambda geom: geom.boundary.geoms[-1].wkt)
+    lines['b0_wkt'] = lines["geometry"].apply(
+        lambda geom: geom.boundary.geoms[0].wkt)
+    lines['b1_wkt'] = lines["geometry"].apply(
+        lambda geom: geom.boundary.geoms[-1].wkt)
 
-    lines['from_node'] = lines['b0_wkt'].apply(lambda x: nodes.at[x, 'id_full'])
-    lines['to_node'] = lines['b1_wkt'].apply(lambda x: nodes.at[x, 'id_full'])
+    try:
+        lines['from_node'] = lines['b0_wkt'].apply(
+            lambda x: nodes.at[x, 'id_full'])
+        lines['to_node'] = lines['b1_wkt'].apply(
+            lambda x: nodes.at[x, 'id_full'])
+    except KeyError as e:
+        errors = ([wkt.loads(x) for x in lines['b0_wkt']
+                   if x not in nodes['id_full']])
+        errors.extend([wkt.loads(x) for x in lines['b1_wkt']
+                       if x not in nodes['id_full']])
+        gdf_errors = gpd.GeoDataFrame(geometry=errors, crs=lines.crs)
+        ax = lines.plot()
+        gdf_errors.plot(ax=ax, color='red', label='Point(s) causing error')
+        plt.legend()
+        plt.show()
+        # gdf_errors.to_file('debug_points.geojson')
+        # lines.to_file('debug_lines.geojson')
+        raise KeyError("This error indicates specific problems with the data. "
+                       "A plot of the problematic point(s) is shown.") from e
 
     lines.drop(axis=1, inplace=True, labels=['b0_wkt', 'b1_wkt'])
 
