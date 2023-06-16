@@ -493,7 +493,7 @@ def drop_parallel_lines(gdf):
     """
     # Stores each LineString's endpoints and length in temporary columns
     gdf['5d7u6j_endpoints'] = gdf.geometry.apply(
-            lambda line: tuple(sorted([line.coords[0], line.coords[-1]])))
+        lambda line: tuple(sorted([line.coords[0], line.coords[-1]])))
     gdf['5d7u6j_length'] = gdf.geometry.length
 
     # Group by endpoints and keep only the shortest LineString for each group
