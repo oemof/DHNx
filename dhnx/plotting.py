@@ -30,7 +30,7 @@ try:
     from cartopy.io.img_tiles import Stamen
 
 except ImportError:
-    logging.info("Cartopy is not installed. Background maps will not be drawn.")
+    logger.info("Cartopy is not installed. Background maps will not be drawn.")
     cartopy_installed = False
 
 
@@ -227,7 +227,7 @@ class StaticMap():
         """
         if background_map:
             if not cartopy_installed:
-                logging.warning('To draw background map, cartopy must be installed.')
+                logger.warning('To draw background map, cartopy must be installed.')
                 background_map = False
 
         if background_map:

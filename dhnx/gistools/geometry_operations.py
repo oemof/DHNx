@@ -36,6 +36,8 @@ import logging
 import matplotlib.pyplot as plt
 import pandas as pd
 
+logger = logging.getLogger(__name__)  # Create a logger for this module
+
 
 def create_forks(lines):
     """
@@ -173,7 +175,7 @@ def check_double_points(gdf, radius=0.001, id_column=None):
             else:
                 print_name = c[id_column]
 
-            logging.info(
+            logger.info(
                 'Node {} has a near neighbour! '
                 'Distance {}'.format(print_name, point.distance(x2))
             )
@@ -181,9 +183,9 @@ def check_double_points(gdf, radius=0.001, id_column=None):
             count += 1
 
     if count > 0:
-        logging.info('Number of duplicated points: ', count)
+        logger.info('Number of duplicated points: ', count)
     else:
-        logging.info(
+        logger.info(
             'Check passed: No points with a distance closer than {}'.format(radius))
 
     return l_ids
@@ -304,11 +306,12 @@ def weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                                       gdf_line_houses, debug_plotting)
     # Now do all of this recursively
     while len(gdf_line_net_new) < len(gdf_line_net_last):
-        logging.info('Welding lines... reduced from {} to {} lines'.format(
+        logger.info('Welding lines... reduced from {} to {} lines'.format(
             len(gdf_line_net_last), len(gdf_line_net_new)))
         gdf_line_net_last = gdf_line_net_new
         gdf_line_net_new = _weld_segments(gdf_line_net_new, gdf_line_gen,
                                           gdf_line_houses, debug_plotting)
+    logger.info('Welding lines... done')
     return gdf_line_net_new
 
 
@@ -517,6 +520,6 @@ def check_crs(gdf, crs=4647):
     """
     if gdf.crs.to_epsg() != crs:
         gdf.to_crs(epsg=crs, inplace=True)
-        logging.info('CRS of GeoDataFrame converted to EPSG:{0}'.format(crs))
+        logger.info('CRS of GeoDataFrame converted to EPSG:{0}'.format(crs))
 
     return gdf

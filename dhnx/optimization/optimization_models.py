@@ -24,6 +24,8 @@ from dhnx.model import OperationOptimizationModel
 from dhnx.optimization.dhs_nodes import add_nodes_dhs
 from dhnx.optimization.dhs_nodes import add_nodes_houses
 
+logger = logging.getLogger(__name__)  # Create a logger for this module
+
 
 class OemofOperationOptimizationModel(OperationOptimizationModel):
     r"""
@@ -341,31 +343,31 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                                         periods=self.settings['num_ts'],
                                         freq=self.settings['frequence'])
 
-        logging.info('Initialize the energy system')
+        logger.info('Initialize the energy system')
 
         self.es = solph.EnergySystem(
             timeindex=date_time_index,
             infer_last_interval=True,
         )
 
-        logging.info('Create oemof objects')
+        logger.info('Create oemof objects')
 
         # add houses and generation
         for typ in ['consumers', 'producers']:
             self.nodes, self.buses = add_nodes_houses(
                 self, self.nodes, self.buses, typ)
 
-        logging.info('Producers, Consumers Nodes appended.')
+        logger.info('Producers, Consumers Nodes appended.')
 
         # add heating infrastructure
         self.nodes, self.buses = add_nodes_dhs(self, self.settings, self.nodes,
                                                self.buses)
-        logging.info('DHS Nodes appended.')
+        logger.info('DHS Nodes appended.')
 
         # add nodes and flows to energy system
         self.es.add(*self.nodes)
 
-        logging.info('Energysystem has been created')
+        logger.info('Energysystem has been created')
 
         if self.settings['print_logging_info']:
             print("*********************************************************")
@@ -401,7 +403,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     def solve(self):
         """Builds the oemof.solph.Model of the energysystem *es*."""
 
-        logging.info('Build the operational model')
+        logger.info('Build the operational model')
         self.om = solph.Model(self.es)
 
         if self.settings['solve_kw'] is None:
@@ -409,7 +411,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         else:
             s_kw = self.settings['solve_kw']
 
-        logging.info('Solve the optimization problem')
+        logger.info('Solve the optimization problem')
         self.om.solve(
             solver=self.settings['solver'],
             solve_kwargs=s_kw,
@@ -418,7 +420,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         if self.settings['write_lp_file']:
             filename = os.path.join(
                 helpers.extend_basic_path('lp_files'), 'DHNx.lp')
-            logging.info('Store lp-file in %s', filename)
+            logger.info('Store lp-file in %s', filename)
             self.om.write(filename, io_options={'symbolic_solver_labels': True})
 
         self.es.results['main'] = solph.processing.results(self.om)

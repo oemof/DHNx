@@ -35,6 +35,8 @@ import pandas as pd
 
 from . import geometry_operations as go
 
+logger = logging.getLogger(__name__)  # Create a logger for this module
+
 
 def line_of_point(point, gdf_lines):
     """Gets index of geometry of a GeoDataFrame, a point is located next to,
@@ -209,7 +211,7 @@ def create_object_connections(points, lines, tol_distance=1):
         if n_p in supply_line_points:
             # case that nearest point is a line ending
 
-            logging.debug(
+            logger.debug(
                 'Connect buildings... id {}: '
                 'Connected to supply line ending (nearest point)'.format(index)
             )
@@ -229,7 +231,7 @@ def create_object_connections(points, lines, tol_distance=1):
                 # line is split, no line ending is close to the nearest point
                 # this also means the original supply line needs to be deleted
 
-                logging.debug(
+                logger.debug(
                     'Connect buildings... id {}: Supply line split'.format(index))
 
                 con_line = LineString([n_p, house_geo])
@@ -251,7 +253,7 @@ def create_object_connections(points, lines, tol_distance=1):
             else:
                 # case that one or both line endings are closer than tolerance
                 # thus, the next line ending is chosen
-                logging.debug(
+                logger.debug(
                     'Connect buildings... id {}: Connected to Supply line '
                     'ending due to tolerance'.format(index))
 
@@ -264,7 +266,7 @@ def create_object_connections(points, lines, tol_distance=1):
                      gpd.GeoDataFrame(geometry=[con_line], crs=lines.crs)],
                     ignore_index=True)
 
-    logging.info('Connection of buildings completed.')
+    logger.info('Connection of buildings completed.')
 
     return conn_lines, lines
 
@@ -372,7 +374,7 @@ def run_point_method_boundary(
         Updated connection lines from street to each producer point.
 
     """
-    logging.info('Run "boundary" method for finding the building connections')
+    logger.info('Run "boundary" method for finding the building connections')
     # Cut the part off of each "line_consumer" that is within the building
     # polygon. As a result, the heating grid will only reach to the wall of
     # the building.
@@ -451,14 +453,14 @@ def check_duplicate_geometries(gdf):
         idx = gdf.duplicated(subset="geometry")
         try:
             import matplotlib.pyplot as plt
-            fig, ax = plt.subplots(dpi=200)
+            fig, ax = plt.subplots(dpi=400)
             gdf.loc[~idx].plot(ax=ax, color='green')
             gdf.loc[idx].plot(ax=ax, color='red')
             plt.title("Red are duplicate geometries. Please fix!")
             plt.show()
         except ImportError:
-            logging.info("Install matplotlib to show a plot of the duplicate "
-                         "geometries.")
+            logger.info("Install matplotlib to show a plot of the duplicate "
+                        "geometries.")
         raise ValueError("GeoDataFrame has {} duplicate geometries"
                          .format(len(gdf.loc[idx])))
 
@@ -599,7 +601,7 @@ def process_geometry(lines, consumers, producers,
     lines_all = go.insert_node_ids(lines_all, points_all)
 
     lines_all['length'] = lines_all.length
-    logging.info(
+    logger.info(
         "Total line length is {:.0f} m".format(lines_all['length'].sum()))
 
     # Convert all MultiLineStrings to LineStrings
