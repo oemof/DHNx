@@ -159,7 +159,8 @@ def check_double_points(gdf, radius=0.001, id_column=None):
 
         point = c['geometry']
         gdf_other = gdf.drop([r])
-        other_points = unary_union(gdf_other['geometry'])
+        # Prevent OSError, see https://github.com/oemof/DHNx/issues/107
+        other_points = unary_union(list(gdf_other['geometry']))
 
         # x1 = nearest_points(point, other_points)[0]
         x2 = nearest_points(point, other_points)[1]
