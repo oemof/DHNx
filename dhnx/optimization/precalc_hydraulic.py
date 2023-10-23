@@ -490,7 +490,7 @@ def v_max_secant(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
             v_0 = v_1
             v_1 = v_new
 
-    logging.info(
+    logger.info(
         "Maximum flow velocity calculated. Iterations: %d, "
         "Flow velocity: %.4f [m/s], Pressure drop: %.4f [Pa/m]"
         % (n, v_new, p_new)
@@ -579,11 +579,11 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
                         pressure=pressure, fluid=fluid)
 
         if abs(p_new - p_max) < p_epsilon:
-            logging.info("Bi-section method: p_epsilon criterion reached.")
+            logger.info("Bi-section method: p_epsilon criterion reached.")
             break
 
         if abs(v_1 - v_0) < v_epsilon:  # wieso v_1 und v_0?
-            logging.info("Bi-section method: v_epsilon criterion reached.")
+            logger.info("Bi-section method: v_epsilon criterion reached.")
             break
 
         else:
@@ -594,7 +594,7 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
             else:
                 v_0 = v_new
 
-    logging.info(
+    logger.info(
         "Maximum flow velocity calculated. Iterations: %d, "
         "Flow velocity: %.4f [m/s], Pressure drop: %.4f [Pa/m]"
         % (n, v_new, p_new)
