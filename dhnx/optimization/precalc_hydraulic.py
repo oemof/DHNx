@@ -19,6 +19,7 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
+import logging
 import math
 
 import numpy as np
@@ -30,6 +31,8 @@ try:
 except ImportError:
     print("Need to install CoolProp to use the hydraulic "
           "pre-calculation module.")
+
+logger = logging.getLogger(__name__)  # Create a logger for this module
 
 
 def eq_smooth(x, R_e):
@@ -488,9 +491,11 @@ def v_max_secant(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
             v_0 = v_1
             v_1 = v_new
 
-    print('Number of Iterations: ', n)
-    print('Resulting pressure drop ', p_new)
-    print('Resulting velocity: ', v_new)
+    logger.info(
+        "Maximum flow velocity calculated. Iterations: %d, "
+        "Flow velocity: %.4f [m/s], Pressure drop: %.4f [Pa/m]"
+        % (n, v_new, p_new)
+    )
 
     return v_new
 
@@ -575,11 +580,11 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
                         pressure=pressure, fluid=fluid)
 
         if abs(p_new - p_max) < p_epsilon:
-            print('p_epsilon criterion achieved!')
+            logger.info("Bi-section method: p_epsilon criterion reached.")
             break
 
         if abs(v_1 - v_0) < v_epsilon:  # wieso v_1 und v_0?
-            print('v_epsilon criterion achieved!')
+            logger.info("Bi-section method: v_epsilon criterion reached.")
             break
 
         else:
@@ -590,9 +595,11 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
             else:
                 v_0 = v_new
 
-    print('Number of Iterations: ', n)
-    print('Resulting pressure drop: ', p_new)
-    print('Resulting velocity: ', v_new)
+    logger.info(
+        "Maximum flow velocity calculated. Iterations: %d, "
+        "Flow velocity: %.4f [m/s], Pressure drop: %.4f [Pa/m]"
+        % (n, v_new, p_new)
+    )
 
     return v_new
 
