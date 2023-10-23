@@ -150,13 +150,13 @@ class ThermalNetwork():
         id
         kwargs
         """
-        assert class_name in available_components.index,\
+        assert class_name in available_components.index, \
             f"Component class {class_name} is not within the available components" \
             f" {available_components.index}."
 
         list_name = available_components.loc[class_name].list_name
 
-        assert id not in self.components[list_name].index,\
+        assert id not in self.components[list_name].index, \
             f"There is already a component with the id {id}."
 
         # check if required parameters are in kwargs
@@ -187,12 +187,12 @@ class ThermalNetwork():
         id : int
             id of the component to remove
         """
-        assert class_name in available_components.index,\
+        assert class_name in available_components.index, \
             "Component class '{}' is not within the available_components."
 
         list_name = available_components.loc[class_name].list_name
 
-        assert id in self.components[list_name].index,\
+        assert id in self.components[list_name].index, \
             f"There is no component with the id {id}."
 
         self.components[list_name].drop(id, inplace=True)

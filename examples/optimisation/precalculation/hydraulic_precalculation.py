@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from dhnx.optimization.precalc_hydraulic import v_max_bisection,\
+from dhnx.optimization.precalc_hydraulic import v_max_bisection, \
     calc_mass_flow, calc_power, v_max_secant
 
 df = pd.read_csv("Pipe_data.csv", sep=";")

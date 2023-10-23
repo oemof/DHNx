@@ -107,7 +107,7 @@ def check_if_csv_dirs_equal(dir_a, dir_b, **kwargs):
 
     diff = list(set(f_names_a).symmetric_difference(set(f_names_b)))
 
-    assert not diff,\
+    assert not diff, \
         f"Lists of filenames are not the same." \
         f" The diff is: {diff}"
 
