@@ -32,6 +32,7 @@ except ImportError:
     print("Need to install CoolProp to use the hydraulic "
           "pre-calculation module.")
 
+logger = logging.getLogger(__name__)  # Create a logger for this module
 
 def eq_smooth(x, R_e):
     r"""
