@@ -40,7 +40,7 @@ class SimulationModelNumpy(SimulationModel):
 
         self.nx_graph = thermal_network.to_nx_graph()
 
-        assert nx.algorithms.tree.is_tree(self.nx_graph),\
+        assert nx.algorithms.tree.is_tree(self.nx_graph), \
             "Currently, only tree networks can be modeled. " \
             "Looped networks are not implemented yet."
 
@@ -270,7 +270,7 @@ class SimulationModelNumpy(SimulationModel):
                 rcond=None
             )
 
-            assert residuals < self.tolerance,\
+            assert residuals < self.tolerance, \
                 f"Residuals {residuals} are larger than tolerance {self.tolerance}!"
 
             pipes_mass_flow.update({t: x})
