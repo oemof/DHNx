@@ -86,9 +86,9 @@ def create_forks(lines):
 
 
 def insert_node_ids(lines, nodes):
-    """
-    Creates the columns `from_node`, `to_node` and inserts
-    the node ids (eg. forks-3, consumers-5).
+    """Create the columns `from_node`, `to_node` and insert the node ids.
+
+    The node ids are called e.g. forks-3, consumers-5 etc.
     The updated "line"-GeoDataFrame is returned.
 
     Parameters
@@ -100,14 +100,32 @@ def insert_node_ids(lines, nodes):
     -------
     geopandas.GeoDataFrame
     """
-
     # add id to gdf_lines for starting and ending node
     # point as wkt
-    lines['b0_wkt'] = lines["geometry"].apply(lambda geom: geom.boundary.geoms[0].wkt)
-    lines['b1_wkt'] = lines["geometry"].apply(lambda geom: geom.boundary.geoms[-1].wkt)
+    lines['b0_wkt'] = lines["geometry"].apply(
+        lambda geom: geom.boundary.geoms[0].wkt)
+    lines['b1_wkt'] = lines["geometry"].apply(
+        lambda geom: geom.boundary.geoms[-1].wkt)
 
-    lines['from_node'] = lines['b0_wkt'].apply(lambda x: nodes.at[x, 'id_full'])
-    lines['to_node'] = lines['b1_wkt'].apply(lambda x: nodes.at[x, 'id_full'])
+    try:
+        lines['from_node'] = lines['b0_wkt'].apply(
+            lambda x: nodes.at[x, 'id_full'])
+        lines['to_node'] = lines['b1_wkt'].apply(
+            lambda x: nodes.at[x, 'id_full'])
+    except KeyError as e:
+        errors = ([wkt.loads(x) for x in lines['b0_wkt']
+                   if x not in nodes['id_full']])
+        errors.extend([wkt.loads(x) for x in lines['b1_wkt']
+                       if x not in nodes['id_full']])
+        gdf_errors = gpd.GeoDataFrame(geometry=errors, crs=lines.crs)
+        ax = lines.plot()
+        gdf_errors.plot(ax=ax, color='red', label='Point(s) causing error')
+        plt.legend()
+        plt.show()
+        # gdf_errors.to_file('debug_points.geojson')
+        # lines.to_file('debug_lines.geojson')
+        raise KeyError("This error indicates specific problems with the data. "
+                       "A plot of the problematic point(s) is shown.") from e
 
     lines.drop(axis=1, inplace=True, labels=['b0_wkt', 'b1_wkt'])
 
@@ -141,7 +159,8 @@ def check_double_points(gdf, radius=0.001, id_column=None):
 
         point = c['geometry']
         gdf_other = gdf.drop([r])
-        other_points = unary_union(gdf_other['geometry'])
+        # Prevent OSError, see https://github.com/oemof/DHNx/issues/107
+        other_points = unary_union(list(gdf_other['geometry']))
 
         # x1 = nearest_points(point, other_points)[0]
         x2 = nearest_points(point, other_points)[1]
@@ -339,20 +358,18 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         geom = b.geometry  # The current line segment
         gdf_b = gpd.GeoDataFrame(b.to_frame().T, crs=crs)
 
-        if any_check(geom, gdf_merged_all, how='within'):
+        if any(gdf_merged_all.geometry.contains(geom)):
             # Drop this object, because it is contained within a merged object
             continue  # Continue with the next line segment
 
         # Find all neighbours of the current segment
-        mask_neighbours = [geom.touches(g) for g in gdf_line_net.geometry]
-        neighbours = gdf_line_net[mask_neighbours]
+        neighbours = gdf_line_net[gdf_line_net.geometry.touches(geom)]
         # If all of the neighbours intersect with each other, it is the
         # last segement before an intersection, which can be removed
-        for neighbour in neighbours.geometry:
-            if all([neighbour.intersects(g) for g in neighbours.geometry]):
-                # Treat as if there was only one neighbour (like end segment)
-                neighbours = gpd.GeoDataFrame(geometry=[neighbour], crs=crs)
-                break
+        if all([all(neighbours.geometry.intersects(neighbour))
+                for neighbour in neighbours.geometry]):
+            # Treat as if there was only one neighbour (like end segment)
+            neighbours = neighbours.head(1)
 
         if len(neighbours) <= 1:
             # This is a potentially unused end segment
@@ -362,12 +379,12 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             # end touches a network line segment
             p1 = geom.boundary.geoms[0]
             p2 = geom.boundary.geoms[-1]
-            p1_neighbours = [p1.intersects(g) for g in neighbours.geometry]
-            p2_neighbours = [p2.intersects(g) for g in neighbours.geometry]
-            if (any_check(p1, gdf_line_ext, how='touches')
+            p1_neighbours = neighbours.geometry.intersects(p1).to_list()
+            p2_neighbours = neighbours.geometry.intersects(p2).to_list()
+            if (any(gdf_line_ext.geometry.touches(p1))
                and p2_neighbours.count(True) > 0):
                 unused = False
-            elif (any_check(p2, gdf_line_ext, how='touches')
+            elif (any(gdf_line_ext.geometry.touches(p2))
                   and p1_neighbours.count(True) > 0):
                 unused = False
 
@@ -390,8 +407,8 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             # only has one neighbour. Then that one can still be merged.
             p1 = geom.boundary.geoms[0]
             p2 = geom.boundary.geoms[-1]
-            p1_neighbours = [p1.intersects(g) for g in neighbours.geometry]
-            p2_neighbours = [p2.intersects(g) for g in neighbours.geometry]
+            p1_neighbours = neighbours.geometry.intersects(p1).to_list()
+            p2_neighbours = neighbours.geometry.intersects(p2).to_list()
             if p1_neighbours.count(True) == 1:  # Only one neighbour allowed
                 neighbours = neighbours[p1_neighbours]  # Neighbour to merge
             elif p2_neighbours.count(True) == 1:  # Only one neighbour allowed
@@ -409,19 +426,19 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         # Before merging, we need to futher clean up the list of neighbours
         neighbours_list = []
         for neighbour in neighbours.geometry:
-            if any_check(neighbour, gdf_deleted, how='equals'):
+            if any(gdf_deleted.geometry.geom_equals(neighbour)):
                 continue  # Do not use neighbour that has already been deleted
-            if any_check(neighbour, gdf_line_net_new, how='within'):
+            if any(gdf_line_net_new.geometry.contains(neighbour)):
                 continue  # Prevent creating dublicates
-            if any_check(neighbour, gdf_line_ext, how='intersects'):
-                mask = [neighbour.intersects(g) for g in gdf_line_ext.geometry]
+            if any(gdf_line_ext.geometry.intersects(neighbour)):
+                mask = gdf_line_ext.geometry.intersects(neighbour)
                 houses = gdf_line_ext[mask]
                 # Neighbour intersects with external, but geom does not
-                if all([geom.disjoint(g) for g in houses.geometry]):
+                if all(houses.geometry.disjoint(geom)):
                     neighbours_list.append(neighbour)
                 else:  # No not merge neighbour intersecting with external
                     continue
-            elif any_check(neighbour, neighbours, how='touches'):
+            elif any(neighbours.geometry.touches(neighbour)):
                 neighbours_list = []  # The two neighbours touch
                 break  # This is a intersection that cannot be simplified
             else:  # Choose neighbour for merging
@@ -462,46 +479,32 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
     return gdf_line_net_new
 
 
-def any_check(geom_test, gdf, how):
-    """Improve speed for an 'any()' test on a list comprehension.
+def drop_parallel_lines(gdf):
+    """Keep only the shortest of all lines connecting the same two points.
 
-    Replace a statement like...
+    This prevents an error in eomof.solph that will occur if multiple lines
+    connect the same two points in a network.
 
-    .. code::
+    These can be two actually distinct paths between two points, or two
+    identical lines on top of each other. When downloading streets with osmnx,
+    this can intruduce such duplicates where the two have the attributes
+    'reversed=True' and 'reversed=False'
 
-        if any([geom_test.touches(g) for g in gdf.geometry]):
-
-    ... with the following:
-
-    .. code::
-
-        if any_check(geom_test, gdf, how='touches'):
-
-    Instead of iterating through all of 'g in gdf.geometry', return
-    'True' after the first match.
-
-    Parameters
-    ----------
-    geom_test : Shapely object
-        Object which's function 'how' is called.
-    gdf : GeoDataFrame
-        All geometries in gdf are passed to 'how'.
-    how : str
-        Shapely object function like equals, almost_equals,
-        contains, crosses, disjoint, intersects, touches, within.
-
-    Returns
-    -------
-    bool
-        True if any call of function 'how' is True.
-
+    This function modifies the GeoDataFrame in place and resets the index.
     """
-    for g in gdf.geometry:
-        method_to_call = getattr(geom_test, how)
-        result = method_to_call(g)
-        if result:  # Return once the first result is True
-            return True
-    return False
+    # Stores each LineString's endpoints and length in temporary columns
+    gdf['5d7u6j_endpoints'] = gdf.geometry.apply(
+        lambda line: tuple(sorted([line.coords[0], line.coords[-1]])))
+    gdf['5d7u6j_length'] = gdf.geometry.length
+
+    # Group by endpoints and keep only the shortest LineString for each group
+    gdf = (gdf.sort_values('5d7u6j_length')
+           .groupby('5d7u6j_endpoints').first()
+           .set_crs(gdf.crs)  # The groupby operation removes crs info
+           .reset_index(drop=True)  # Drop the temporary columns
+           .drop(columns=['5d7u6j_length'])  # Drop the temporary columns
+           )
+    return gdf
 
 
 def check_crs(gdf, crs=4647):

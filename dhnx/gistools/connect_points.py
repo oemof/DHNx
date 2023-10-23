@@ -339,7 +339,9 @@ def run_point_method_boundary(
     the 'midpoint' method.
 
     In case of no intersections with the building boundary (possible for e.g.
-    U-shaped buildings), the original centroid is used.
+    U-shaped buildings), the original centroid is used. This is also
+    necessary when the the street line already touches the building, to
+    prevent deleting the connection line.
 
     Parameters
     ----------
@@ -401,7 +403,7 @@ def run_point_method_boundary(
 
     # Repeat for the producers
     producers_n = gpd.GeoDataFrame(geometry=lines_producers.intersection(
-        producers_poly.convex_hull.boundary, align=False))
+        producers_poly.boundary, align=False))
     producers_n.loc[producers_n.type == "MultiPoint"] = \
         gpd.GeoDataFrame(geometry=lines_producers.intersection(
             producers_poly.convex_hull.boundary, align=False))
@@ -412,11 +414,25 @@ def run_point_method_boundary(
     # Sometimes the new lines are empty (e.g. because a street and a building
     # object cross each other).
     # In these cases the original geometry is used for points and lines.
-    mask = (consumers_n.is_empty | lines_consumers_n.is_empty)
+    mask1 = (consumers_n.is_empty | lines_consumers_n.is_empty)
+
+    # Another special case has to be covered. If the original street lines
+    # already touch the building wall, no additional connection line would be
+    # necessary. However, in dhnx each building needs one connection line.
+    # Thus the geometry from the 'midpoint' method is used here, too.
+    # Find the problematic cases by testing if the new connection point
+    # equals the starting point of the connection line.
+    mask2 = consumers_n.geom_equals(
+        lines_consumers.geometry.apply(lambda line: line.boundary.geoms[0]))
+    mask = mask1 | mask2
     consumers_n.loc[mask] = consumers.loc[mask].geometry
     lines_consumers_n.loc[mask] = lines_consumers.loc[mask].geometry
 
-    mask = (producers_n.is_empty | lines_producers_n.is_empty)
+    # Repeat for the producers
+    mask1 = (producers_n.is_empty | lines_producers_n.is_empty)
+    mask2 = producers_n.geom_equals(
+        lines_producers.geometry.apply(lambda line: line.boundary.geoms[0]))
+    mask = mask1 | mask2
     producers_n.loc[mask] = producers.loc[mask].geometry
     lines_producers_n.loc[mask] = lines_producers.loc[mask].geometry
 
@@ -550,6 +566,8 @@ def process_geometry(lines, consumers, producers,
         lines, lines_producers, lines_consumers,
         # debug_plotting=True,
     )
+    # Keep only the shortest of all lines connecting the same two points
+    lines = go.drop_parallel_lines(lines)
 
     # add additional line identifier
     lines_producers['type'] = 'GL'  # GL for generation line
