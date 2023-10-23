@@ -34,6 +34,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)  # Create a logger for this module
 
+
 def eq_smooth(x, R_e):
     r"""
     Calculation of the pressure drop of hydraulic smooth surfaces.
