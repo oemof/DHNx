@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 import dhnx
 
 
@@ -6,12 +7,31 @@ import dhnx
 network = dhnx.network.ThermalNetwork()
 network = network.from_csv_folder('twn_data')
 
+# DHS pipeline invest data
+df_pipes = pd.DataFrame(
+    {
+        "label_3": "your-pipe-type-label",
+        "active": 1,
+        "nonconvex": 1,
+        "l_factor": 0.000002,
+        "l_factor_fix": 0.001,
+        "cap_max": 10000,
+        "cap_min": 25,
+        "capex_pipes": 5,
+        "fix_costs": 200,
+    }, index=[0],
+)
+
 # Load investment parameter
 invest_opt = dhnx.input_output.load_invest_options('invest_data')
 
 # Execute investment optimization
-network.optimize_investment(invest_options=invest_opt,
-                            write_lp_file=True)
+network.optimize_investment(
+    pipeline_invest_options=df_pipes,
+    additional_invest_options=invest_opt,
+    write_lp_file=True,
+    print_logging_info=True,
+)
 
 # ####### Postprocessing and Plotting ###########
 # Draw network

@@ -314,15 +314,43 @@ class ThermalNetwork():
     def optimize_operation(self):
         self.results.operation = optimize_operation(self)
 
-    def optimize_investment(self, invest_options, **kwargs):
+    def optimize_investment(
+            self, pipeline_invest_options,
+            additional_invest_options=None, **kwargs):
+        """
+
+        Parameters
+        ----------
+        pipeline_invest_options : pandas.DataFrame
+            Table with the investment options for the district heating
+            pipelines.
+            The table requires the columns:
+            - "":
+            - "":
+            - "":
+            - "":
+        additional_invest_options : dict
+            Optional dictionary with pandas.DataFrame with additional
+            oemof-solph components for the consumers and the producers.
+        kwargs
+
+        Returns
+        -------
+
+        """
 
         oemof_opti_model = setup_optimise_investment(
-            self, invest_options, **kwargs
+            self,
+            pipeline_invest_options,
+            additional_invest_options=additional_invest_options,
+            **kwargs
         )
 
         self.results.optimization = solve_optimisation_investment(
             oemof_opti_model
         )
+
+        return self.results.optimization
 
     def simulate(self, *args, **kwargs):
         self.results.simulation = simulate(self, *args, **kwargs)

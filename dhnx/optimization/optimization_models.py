@@ -55,6 +55,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     ----------
     settings : dict
         Dictionary holding the optimisation settings. See .
+    pipelines_invest_options : pandas.DataFrame
+        Table with the investment options for DHS pipelines.
     invest_options : dict
         Dictionary holding the investment options for the district heating system.
     nodes : list
@@ -85,10 +87,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         Calls *check_input()*, *complete_exist_data()*, *get_pipe_data()*, and *setup_oemof_es()*.
 
     """
-    def __init__(self, thermal_network, settings, investment_options):
+    def __init__(self, thermal_network, pipeline_invest_options,
+                 settings, additional_invest_options):
 
         self.settings = settings
-        self.invest_options = investment_options
+        self.pipelines_invest_options = pipeline_invest_options
+        self.invest_options = additional_invest_options
         self.nodes = []  # list of all nodes
         self.buses = {}  # dict of all buses
         self.es = solph.EnergySystem()
@@ -224,8 +228,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         for k, v in self.thermal_network.components.items():
             self.thermal_network.components[k] = clean_df(v)
 
-        pipes = self.invest_options['network']['pipes']
-        self.invest_options['network']['pipes'] = clean_df(pipes)
+        pipes = self.pipelines_invest_options
+        self.pipelines_invest_options = clean_df(pipes)
 
         for node_typ in ['consumers', 'producers']:
             for k, v in self.invest_options[node_typ].items():
@@ -309,7 +313,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             self.thermal_network.components['pipes']['hp_type'] = None
 
         edges = self.thermal_network.components['pipes']
-        pipe_types = self.invest_options['network']['pipes']
+        pipe_types = self.pipelines_invest_options
 
         hp_list = list({x for x in edges['hp_type'].tolist()
                         if isinstance(x, str)})
@@ -633,7 +637,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         df = df[['from_node', 'to_node', 'length']].copy()
 
         # putting the results of the investments in heatpipes to the pipes:
-        df_hp = self.invest_options['network']['pipes']
+        df_hp = self.pipelines_invest_options
 
         # list of active heat pipes
         active_hp = list(df_hp['label_3'].values)
@@ -666,7 +670,8 @@ def optimize_operation(thermal_network):
 
 
 def setup_optimise_investment(
-        thermal_network, invest_options, heat_demand='scalar', num_ts=1,
+        thermal_network, pipeline_invest_options,
+        additional_invest_options=None, heat_demand='scalar', num_ts=1,
         time_res=1, start_date='1/1/2018', frequence='H', solver='cbc',
         solve_kw=None, solver_cmdline_options=None, simultaneity=1,
         bidirectional_pipes=False, dump_path=None, dump_name='dump.oemof',
@@ -678,7 +683,9 @@ def setup_optimise_investment(
     ----------
     thermal_network : ThermalNetwork
         See the ThermalNetwork class.
-    invest_options : dict
+    pipeline_invest_options : pandas.DataFrame
+        Table with the investment options for the DHS pipelines.
+    additional_invest_options : dict
         Dictionary holding the investment options for the district heating system.
     heat_demand : str
         'scalar': Peak heat load is used as heat consumers’ heat demand.
@@ -740,7 +747,12 @@ def setup_optimise_investment(
         'write_lp_file': write_lp_file,
     }
 
-    model = OemofInvestOptimizationModel(thermal_network, settings, invest_options)
+    model = OemofInvestOptimizationModel(
+        thermal_network,
+        pipeline_invest_options,
+        settings,
+        additional_invest_options,
+    )
 
     return model
 

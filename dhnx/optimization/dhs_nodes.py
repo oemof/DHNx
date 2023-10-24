@@ -54,6 +54,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     d_labels['l_2'] = 'heat'
     d_labels['l_3'] = 'bus'
 
+    # add a solph.Bus to every fork
     for n, _ in opti_network.thermal_network.components['forks'].iterrows():
         d_labels['l_4'] = 'forks-' + str(n)
         d_labels['l_1'] = 'infrastructure'
@@ -66,7 +67,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     # add heatpipes for all lines
     for p, q in opti_network.thermal_network.components['pipes'].iterrows():
 
-        pipe_data = opti_network.invest_options['network']['pipes']
+        pipe_data = opti_network.pipelines_invest_options
 
         d_labels['l_1'] = 'infrastructure'
         d_labels['l_2'] = 'heat'
