@@ -523,3 +523,29 @@ def check_crs(gdf, crs=4647):
         logger.info('CRS of GeoDataFrame converted to EPSG:{0}'.format(crs))
 
     return gdf
+
+
+def remove_con_prod_forks(forks, consumers, producers):
+    """
+
+    Parameters
+    ----------
+    forks
+    consumers
+    producers
+
+    Returns
+    -------
+
+    """
+    consumers["geometry_wkt"] = \
+        consumers["geometry"].apply(lambda geom: geom.wkt)
+
+    producers["geometry_wkt"] = \
+        producers["geometry"].apply(lambda geom: geom.wkt)
+
+    con_prod = list(producers["geometry_wkt"]) + list(consumers["geometry_wkt"])
+
+    forks_only = forks[forks.geometry_wkt.isin(con_prod) == False]
+
+    return forks_only

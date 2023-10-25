@@ -576,11 +576,13 @@ def process_geometry(lines, consumers, producers,
     lines['type'] = 'DL'  # DL for distribution line
     lines_consumers['type'] = 'HL'  # HL for house line
 
-    # generate forks point layer
-    forks = go.create_forks(lines)
-
     # concat lines
     lines_all = pd.concat([lines, lines_consumers, lines_producers], sort=False)
+
+    forks = go.create_forks(lines_all)
+
+    forks = go.remove_con_prod_forks(forks, consumers, producers)
+
     lines_all.reset_index(inplace=True, drop=True)
     if reset_index:
         lines_all.index.name = 'id'
