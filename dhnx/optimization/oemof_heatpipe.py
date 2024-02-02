@@ -66,12 +66,23 @@ class HeatPipeline(Transformer):
 
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        inputs,
+        outputs,
+        label=None,
+        heat_loss_factor=0,
+        heat_loss_factor_fix=0,
+    ):
 
-        self.heat_loss_factor = sequence(kwargs.get('heat_loss_factor', 0))
-        self.heat_loss_factor_fix = sequence(kwargs.get(
-            'heat_loss_factor_fix', 0))
+        self.heat_loss_factor = sequence(heat_loss_factor)
+        self.heat_loss_factor_fix = sequence(heat_loss_factor_fix)
+
+        super().__init__(
+            inputs=inputs,
+            outputs=outputs,
+            label=label,
+        )
 
         self._invest_group = False
         self._nonconvex_group = False
