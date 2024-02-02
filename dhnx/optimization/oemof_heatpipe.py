@@ -269,8 +269,14 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             o = list(n.outputs.keys())[0]
 
             expr = 0
-            expr += - m.flow[n, o, t]
-            expr += m.flow[i, n, t]
+            try:  # oemof.solph<=0.5.0
+                expr += - m.flow[n, o, t]
+                expr += m.flow[i, n, t]
+            except KeyError:  # oemof.solph>=0.5.1
+                period = 0  # Periods are not (yet) supported in DHNx
+                expr += - m.flow[n, o, period, t]
+                expr += m.flow[i, n, period, t]
+
             expr += - block.heat_loss[n, t]
             return expr == 0
 
