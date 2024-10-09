@@ -14,7 +14,7 @@ SPDX-License-Identifier: MIT
 import warnings
 from collections import namedtuple
 
-from oemof.network import Transformer
+from oemof.network import Node
 from oemof.solph import Investment
 from oemof.solph._plumbing import sequence
 from pyomo.core.base.block import ScalarBlock
@@ -32,7 +32,7 @@ class Label(namedtuple("solph_label", ["tag1", "tag2", "tag3", "tag4"])):
         return "_".join(map(str, self._asdict().values()))
 
 
-class HeatPipeline(Transformer):
+class HeatPipeline(Node):
     r"""A HeatPipeline represent a Pipeline in a district heating system.
     This is done by a Transformer with a constant energy loss independent of
     actual power, but dependent on the nominal power and the length parameter.
@@ -67,7 +67,11 @@ class HeatPipeline(Transformer):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(
+            label=kwargs.get("label"),
+            inputs=kwargs.get("inputs"),
+            outputs=kwargs.get("outputs"),
+        )
 
         self.heat_loss_factor = sequence(kwargs.get("heat_loss_factor", 0))
         self.heat_loss_factor_fix = sequence(kwargs.get("heat_loss_factor_fix", 0))
@@ -368,7 +372,7 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
             expr += -block.heat_loss[n, t]
             expr += (
                 n.heat_loss_factor[t]
-                * m.InvestmentFlowBlock.invest[n, list(n.outputs.keys())[0]]
+                * m.InvestmentFlowBlock.invest[n, list(n.outputs.keys())[0], 0]
             )
             expr += n.heat_loss_factor_fix[t]
             return expr == 0
@@ -385,11 +389,11 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
             expr += -block.heat_loss[n, t]
             expr += (
                 n.heat_loss_factor[t]
-                * m.InvestmentFlowBlock.invest[n, list(n.outputs.keys())[0]]
+                * m.InvestmentFlowBlock.invest[n, list(n.outputs.keys())[0], 0]
             )
             expr += (
                 n.heat_loss_factor_fix[t]
-                * m.InvestmentFlowBlock.invest_status[n, list(n.outputs.keys())[0]]
+                * m.InvestmentFlowBlock.invest_status[n, list(n.outputs.keys())[0], 0]
             )
             return expr == 0
 
@@ -446,7 +450,8 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
             o = list(n.outputs.keys())[0]
 
             expr = (
-                m.InvestmentFlowBlock.invest[i, n] == m.InvestmentFlowBlock.invest[n, o]
+                m.InvestmentFlowBlock.invest[i, n, 0]
+                == m.InvestmentFlowBlock.invest[n, o, 0]
             )
             return expr
 
