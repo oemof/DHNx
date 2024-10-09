@@ -24,12 +24,12 @@ from pyomo.environ import Set
 from pyomo.environ import Var
 
 
-class Label(namedtuple('solph_label', ['tag1', 'tag2', 'tag3', 'tag4'])):
+class Label(namedtuple("solph_label", ["tag1", "tag2", "tag3", "tag4"])):
     __slots__ = ()
 
     def __str__(self):
         """The string is used within solph as an ID, so it hast to be unique"""
-        return '_'.join(map(str, self._asdict().values()))
+        return "_".join(map(str, self._asdict().values()))
 
 
 class HeatPipeline(Transformer):
@@ -69,9 +69,8 @@ class HeatPipeline(Transformer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.heat_loss_factor = sequence(kwargs.get('heat_loss_factor', 0))
-        self.heat_loss_factor_fix = sequence(kwargs.get(
-            'heat_loss_factor_fix', 0))
+        self.heat_loss_factor = sequence(kwargs.get("heat_loss_factor", 0))
+        self.heat_loss_factor_fix = sequence(kwargs.get("heat_loss_factor_fix", 0))
 
         self._invest_group = False
         self._nonconvex_group = False
@@ -81,13 +80,13 @@ class HeatPipeline(Transformer):
             if len(self.outputs) == 2:
                 self._demand_group = True
             else:
-                raise ValueError("Heatpipe must not have more than"
-                                 " one input and two outputs!")
+                raise ValueError(
+                    "Heatpipe must not have more than" " one input and two outputs!"
+                )
 
         for f in self.inputs.values():
             if f.nonconvex is not None:
-                raise ValueError(
-                    "Inputflow must not be of type NonConvexFlow!")
+                raise ValueError("Inputflow must not be of type NonConvexFlow!")
 
         for f in self.outputs.values():
             if f.nonconvex is not None:
@@ -100,19 +99,22 @@ class HeatPipeline(Transformer):
                 "Either an investment OR a switchable heatloss can be set"
                 " (NonConvexFlow)."
                 " Remove the NonConvexFlow or drop "
-                "the Investment attribute.")
+                "the Investment attribute."
+            )
 
         if self._invest_group is True:
             self._set_flows()
             o = list(self.outputs.keys())[0]
-            if (self.heat_loss_factor_fix[0] > 0) \
-                    and (self.outputs[o].investment.nonconvex is False):
+            if (self.heat_loss_factor_fix[0] > 0) and (
+                self.outputs[o].investment.nonconvex is False
+            ):
                 warnings.warn(
                     "Be careful! In case of a convex Investment "
                     "(Investment.nonconvex is False), the "
                     "'heat_loss_factor_fix' is considered, even though the "
                     "investment might be zero! => A simple sink could be "
-                    "the results. Hopefully, you know what you are doing.")
+                    "the results. Hopefully, you know what you are doing."
+                )
         else:
             self._set_nominal_value()
 
@@ -137,11 +139,9 @@ class HeatPipeline(Transformer):
         i = list(self.inputs.keys())[0]
         o = list(self.outputs.keys())[0]
         if self.outputs[o].nominal_value is not None:
-            self.inputs[i].nominal_value = \
-                self.outputs[o].nominal_value
+            self.inputs[i].nominal_value = self.outputs[o].nominal_value
         elif self.inputs[i].nominal_value is not None:
-            self.outputs[o].nominal_value = \
-                self.inputs[i].nominal_value
+            self.outputs[o].nominal_value = self.inputs[i].nominal_value
 
     def constraint_group(self):
         if self._invest_group is True:
@@ -195,7 +195,7 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
         super().__init__(*args, **kwargs)
 
     def _create(self, group=None):
-        """ Creates the linear constraint for the class:`Heatpipe`
+        """Creates the linear constraint for the class:`Heatpipe`
         block.
 
         Parameters
@@ -210,18 +210,22 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
 
         self.HEATPIPES = Set(initialize=list(group))
         self.CONVEX_HEATPIPES = Set(
-            initialize=[n for n in group
-                        if n.outputs[list(n.outputs.keys())[0]].nonconvex
-                        is None]
+            initialize=[
+                n
+                for n in group
+                if n.outputs[list(n.outputs.keys())[0]].nonconvex is None
+            ]
         )
         self.NONCONVEX_HEATPIPES = Set(
-            initialize=[n for n in group
-                        if n.outputs[list(n.outputs.keys())[0]].nonconvex
-                        is not None])
+            initialize=[
+                n
+                for n in group
+                if n.outputs[list(n.outputs.keys())[0]].nonconvex is not None
+            ]
+        )
 
         # Defining Variables
-        self.heat_loss = Var(self.HEATPIPES, m.TIMESTEPS,
-                             within=NonNegativeReals)
+        self.heat_loss = Var(self.HEATPIPES, m.TIMESTEPS, within=NonNegativeReals)
 
         def _heat_loss_rule_fix(block, n, t):
             """Rule definition for the heat loss depending on the nominal
@@ -230,14 +234,14 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             o = list(n.outputs.keys())[0]
 
             expr = 0
-            expr += - block.heat_loss[n, t]
-            expr +=\
-                n.heat_loss_factor[t] * m.flows[n, o].nominal_value
+            expr += -block.heat_loss[n, t]
+            expr += n.heat_loss_factor[t] * m.flows[n, o].nominal_value
             expr += n.heat_loss_factor_fix[t]
             return expr == 0
 
         self.heat_loss_equation_fix = Constraint(
-            self.CONVEX_HEATPIPES, m.TIMESTEPS, rule=_heat_loss_rule_fix)
+            self.CONVEX_HEATPIPES, m.TIMESTEPS, rule=_heat_loss_rule_fix
+        )
 
         def _heat_loss_rule_on_off(block, n, t):
             """Rule definition for the heat loss depending on the nominal
@@ -246,7 +250,7 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             o = list(n.outputs.keys())[0]
 
             expr = 0
-            expr += - block.heat_loss[n, t]
+            expr += -block.heat_loss[n, t]
             expr += (
                 n.heat_loss_factor[t] * m.flows[n, o].nominal_value
                 + n.heat_loss_factor_fix[t]
@@ -254,7 +258,8 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             return expr == 0
 
         self.heat_loss_equation_on_off = Constraint(
-            self.NONCONVEX_HEATPIPES, m.TIMESTEPS, rule=_heat_loss_rule_on_off)
+            self.NONCONVEX_HEATPIPES, m.TIMESTEPS, rule=_heat_loss_rule_on_off
+        )
 
         def _relation_rule(block, n, t):
             """Link input and output flow and subtract heat loss."""
@@ -262,13 +267,12 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             o = list(n.outputs.keys())[0]
 
             expr = 0
-            expr += - m.flow[n, o, t]
+            expr += -m.flow[n, o, t]
             expr += m.flow[i, n, t]
-            expr += - block.heat_loss[n, t]
+            expr += -block.heat_loss[n, t]
             return expr == 0
 
-        self.relation = Constraint(self.HEATPIPES, m.TIMESTEPS,
-                                   rule=_relation_rule)
+        self.relation = Constraint(self.HEATPIPES, m.TIMESTEPS, rule=_relation_rule)
 
 
 class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
@@ -316,7 +320,7 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
         super().__init__(*args, **kwargs)
 
     def _create(self, group=None):
-        """ Creates the linear constraint for the class:`HeatPipeline`
+        """Creates the linear constraint for the class:`HeatPipeline`
         block.
 
         Parameters
@@ -332,41 +336,45 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
         # Defining Sets
         self.INVESTHEATPIPES = Set(initialize=list(group))
         self.CONVEX_INVESTHEATPIPES = Set(
-            initialize=[n for n in group
-                        if n.outputs[
-                            list(n.outputs.keys())[0]
-                        ].investment.nonconvex is False]
+            initialize=[
+                n
+                for n in group
+                if n.outputs[list(n.outputs.keys())[0]].investment.nonconvex is False
+            ]
         )
         self.NONCONVEX_INVESTHEATPIPES = Set(
-            initialize=[n for n in group
-                        if n.outputs[
-                            list(n.outputs.keys())[0]
-                        ].investment.nonconvex is True]
+            initialize=[
+                n
+                for n in group
+                if n.outputs[list(n.outputs.keys())[0]].investment.nonconvex is True
+            ]
         )
 
         self.INVESTHEATPIPES_NO_DEMAND = Set(
-            initialize=[n for n in group if len(n.outputs.keys()) == 1])
+            initialize=[n for n in group if len(n.outputs.keys()) == 1]
+        )
         self.INVESTHEATPIPES_WITH_DEMAND = Set(
-            initialize=[n for n in group if len(n.outputs.keys()) == 2])
+            initialize=[n for n in group if len(n.outputs.keys()) == 2]
+        )
 
         # Defining Variables
-        self.heat_loss = Var(self.INVESTHEATPIPES, m.TIMESTEPS,
-                             within=NonNegativeReals)
+        self.heat_loss = Var(self.INVESTHEATPIPES, m.TIMESTEPS, within=NonNegativeReals)
 
         def _heat_loss_rule_convex(block, n, t):
             """Rule definition for constraint to connect the installed capacity
             and the heat loss
             """
             expr = 0
-            expr += - block.heat_loss[n, t]
-            expr += n.heat_loss_factor[t] * m.InvestmentFlowBlock.invest[
-                n, list(n.outputs.keys())[0]
-            ]
+            expr += -block.heat_loss[n, t]
+            expr += (
+                n.heat_loss_factor[t]
+                * m.InvestmentFlowBlock.invest[n, list(n.outputs.keys())[0]]
+            )
             expr += n.heat_loss_factor_fix[t]
             return expr == 0
+
         self.heat_loss_equation_convex = Constraint(
-            self.CONVEX_INVESTHEATPIPES, m.TIMESTEPS,
-            rule=_heat_loss_rule_convex
+            self.CONVEX_INVESTHEATPIPES, m.TIMESTEPS, rule=_heat_loss_rule_convex
         )
 
         def _heat_loss_rule_nonconvex(block, n, t):
@@ -374,17 +382,19 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
             and the heat loss
             """
             expr = 0
-            expr += - block.heat_loss[n, t]
-            expr += n.heat_loss_factor[t] * m.InvestmentFlowBlock.invest[
-                n, list(n.outputs.keys())[0]]
-            expr += n.heat_loss_factor_fix[t] * \
-                m.InvestmentFlowBlock.invest_status[
-                    n, list(n.outputs.keys())[0]]
+            expr += -block.heat_loss[n, t]
+            expr += (
+                n.heat_loss_factor[t]
+                * m.InvestmentFlowBlock.invest[n, list(n.outputs.keys())[0]]
+            )
+            expr += (
+                n.heat_loss_factor_fix[t]
+                * m.InvestmentFlowBlock.invest_status[n, list(n.outputs.keys())[0]]
+            )
             return expr == 0
 
         self.heat_loss_equation_nonconvex = Constraint(
-            self.NONCONVEX_INVESTHEATPIPES, m.TIMESTEPS,
-            rule=_heat_loss_rule_nonconvex
+            self.NONCONVEX_INVESTHEATPIPES, m.TIMESTEPS, rule=_heat_loss_rule_nonconvex
         )
 
         def _relation_rule_no_demand(block, n, t):
@@ -393,14 +403,13 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
             o = list(n.outputs.keys())[0]
 
             expr = 0
-            expr += - m.flow[n, o, t]
+            expr += -m.flow[n, o, t]
             expr += m.flow[i, n, t]
-            expr += - block.heat_loss[n, t]
+            expr += -block.heat_loss[n, t]
             return expr == 0
 
         self.relation_no_demand = Constraint(
-            self.INVESTHEATPIPES_NO_DEMAND, m.TIMESTEPS,
-            rule=_relation_rule_no_demand
+            self.INVESTHEATPIPES_NO_DEMAND, m.TIMESTEPS, rule=_relation_rule_no_demand
         )
 
         def _relation_rule_with_demand(block, n, t):
@@ -410,18 +419,25 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
             d = list(n.outputs.keys())[1]
 
             expr = 0
-            expr += - m.flow[n, o, t]
-            expr += m.flow[i, n, t] * n.conversion_factors[
-                o][t] / n.conversion_factors[i][t]
-            expr += - block.heat_loss[n, t]
-            expr += - m.flow[n, d, t]
+            expr += -m.flow[n, o, t]
+            expr += (
+                m.flow[i, n, t]
+                * n.conversion_factors[o][t]
+                / n.conversion_factors[i][t]
+            )
+            expr += -block.heat_loss[n, t]
+            expr += -m.flow[n, d, t]
             return expr == 0
+
         self.relation_with_demand = Constraint(
-            self.INVESTHEATPIPES_WITH_DEMAND, m.TIMESTEPS,
-            rule=_relation_rule_with_demand
+            self.INVESTHEATPIPES_WITH_DEMAND,
+            m.TIMESTEPS,
+            rule=_relation_rule_with_demand,
         )
 
-        def _inflow_outflow_invest_coupling_rule(block, n):  # pylint: disable=unused-argument
+        def _inflow_outflow_invest_coupling_rule(
+            block, n
+        ):  # pylint: disable=unused-argument
             """Rule definition of constraint connecting the inflow
             `InvestmentFlowBlock.invest of pipe with invested outflow `invest`
             by nominal_storage_capacity__inflow_ratio
@@ -429,9 +445,11 @@ class HeatPipelineInvestBlock(ScalarBlock):  # pylint: disable=too-many-ancestor
             i = list(n.inputs.keys())[0]
             o = list(n.outputs.keys())[0]
 
-            expr = (m.InvestmentFlowBlock.invest[i, n]
-                    == m.InvestmentFlowBlock.invest[n, o])
+            expr = (
+                m.InvestmentFlowBlock.invest[i, n] == m.InvestmentFlowBlock.invest[n, o]
+            )
             return expr
+
         self.inflow_outflow_invest_coupling = Constraint(
             self.INVESTHEATPIPES, rule=_inflow_outflow_invest_coupling_rule
         )

@@ -42,10 +42,11 @@ from dhnx.dhn_from_osm import connect_points_to_network
 logger = logging.getLogger()
 
 
-class NetworkImporter():
+class NetworkImporter:
     r"""
     Generic Importer object for network.ThermalNetwork
     """
+
     def __init__(self, thermal_network, basedir):
         thermal_network.is_consistent()
         self.thermal_network = thermal_network
@@ -55,10 +56,11 @@ class NetworkImporter():
         pass
 
 
-class NetworkExporter():
+class NetworkExporter:
     r"""
     Generic Exporter object for network.ThermalNetwork
     """
+
     def __init__(self, thermal_network, basedir):
         thermal_network.is_consistent()
         self.thermal_network = thermal_network
@@ -72,62 +74,76 @@ class CSVNetworkImporter(NetworkImporter):
     r"""
     Imports thermal networks from directory with csv-files.
     """
+
     def load_component_table(self, list_name):
 
         if list_name not in self.thermal_network.available_components.list_name.values:
-            raise KeyError(f"Component '{list_name}'is not "
-                           f"part of the available components.")
+            raise KeyError(
+                f"Component '{list_name}'is not " f"part of the available components."
+            )
 
-        file_name = list_name + '.csv'
-        component_table = pd.read_csv(os.path.join(self.basedir, file_name), index_col=0)
+        file_name = list_name + ".csv"
+        component_table = pd.read_csv(
+            os.path.join(self.basedir, file_name), index_col=0
+        )
 
         return component_table
 
     def load_sequence(self, list_name, attr_name):
 
         if list_name not in self.thermal_network.available_components.list_name.values:
-            raise KeyError(f"Component '{list_name}' is not "
-                           f"part of the available components.")
+            raise KeyError(
+                f"Component '{list_name}' is not " f"part of the available components."
+            )
 
         if attr_name not in self.thermal_network.component_attrs[list_name]:
-            logger.info("Attribute '%s' is not "
-                        "part of the component attributes.", attr_name)
+            logger.info(
+                "Attribute '%s' is not " "part of the component attributes.", attr_name
+            )
 
-        file_name = '-'.join([list_name, attr_name]) + '.csv'
-        sequence = pd.read_csv(os.path.join(self.basedir, 'sequences', file_name), index_col=0)
+        file_name = "-".join([list_name, attr_name]) + ".csv"
+        sequence = pd.read_csv(
+            os.path.join(self.basedir, "sequences", file_name), index_col=0
+        )
 
         return sequence
 
     def load(self):
         for name in os.listdir(self.basedir):
 
-            if name.endswith('.csv'):
+            if name.endswith(".csv"):
 
                 list_name = os.path.splitext(name)[0]
 
-                self.thermal_network.components[list_name] = self.load_component_table(list_name)
+                self.thermal_network.components[list_name] = self.load_component_table(
+                    list_name
+                )
 
                 self.thermal_network.set_defaults()
 
             elif os.path.isdir(os.path.join(self.basedir, name)):
 
-                assert name in ['sequences'], f"Unknown directory name. Directory '{name}' " \
-                                              f"is not a defined subdirectory."
+                assert name in ["sequences"], (
+                    f"Unknown directory name. Directory '{name}' "
+                    f"is not a defined subdirectory."
+                )
 
                 for sequence_name in os.listdir(os.path.join(self.basedir, name)):
 
-                    assert sequence_name.endswith('.csv'), f"Inappropriate filetype of '{name}'" \
-                                                           f"for csv import."
+                    assert sequence_name.endswith(".csv"), (
+                        f"Inappropriate filetype of '{name}'" f"for csv import."
+                    )
 
-                    list_name, attr_name = tuple(sequence_name.split('-'))
+                    list_name, attr_name = tuple(sequence_name.split("-"))
 
                     attr_name = os.path.splitext(attr_name)[0]
 
                     if list_name not in self.thermal_network.sequences:
                         self.thermal_network.sequences[list_name] = Dict()
 
-                    self.thermal_network.sequences[list_name][attr_name] =\
+                    self.thermal_network.sequences[list_name][attr_name] = (
                         self.load_sequence(list_name, attr_name)
+                    )
 
             else:
                 raise ImportError(f"Inappropriate filetype of '{name}' for csv import.")
@@ -143,6 +159,7 @@ class CSVNetworkExporter(NetworkExporter):
     r"""
     Exports thermal networks to directory with csv-files.
     """
+
     def __init__(self, thermal_network, basedir):
         super().__init__(thermal_network, basedir)
         if not os.path.exists(self.basedir):
@@ -153,20 +170,20 @@ class CSVNetworkExporter(NetworkExporter):
 
     def save_sequence(self, list_name, attr_name, sequence):
 
-        sequence_dir = os.path.join(self.basedir, 'sequences')
+        sequence_dir = os.path.join(self.basedir, "sequences")
 
         if not os.path.exists(sequence_dir):
 
             os.mkdir(sequence_dir)
 
-        file_name = '-'.join([list_name, attr_name]) + '.csv'
+        file_name = "-".join([list_name, attr_name]) + ".csv"
 
-        sequence.to_csv(os.path.join(self.basedir, 'sequences', file_name))
+        sequence.to_csv(os.path.join(self.basedir, "sequences", file_name))
 
     def save(self):
         for list_name, component_table in self.thermal_network.components.items():
             if not component_table.empty:
-                filename = list_name + '.csv'
+                filename = list_name + ".csv"
                 self.save_component_table(component_table, filename)
 
         for list_name, subdict in self.thermal_network.sequences.items():
@@ -182,6 +199,7 @@ class OSMNetworkImporter(NetworkImporter):
 
     Not yet implemented.
     """
+
     def __init__(self, thermal_network, place, distance):
         super().__init__(thermal_network, None)
 
@@ -191,11 +209,9 @@ class OSMNetworkImporter(NetworkImporter):
 
     def download_street_network(self):
 
-        print('Downloading street network...')
+        print("Downloading street network...")
 
-        graph = ox.graph_from_point(
-            center_point=self.place, dist=self.distance
-        )
+        graph = ox.graph_from_point(center_point=self.place, dist=self.distance)
 
         graph = ox.project_graph(graph)
 
@@ -203,15 +219,15 @@ class OSMNetworkImporter(NetworkImporter):
 
     def download_footprints(self):
 
-        print('Downloading footprints...')
+        print("Downloading footprints...")
 
         footprints = ox.geometries_from_point(
             center_point=self.place,
             dist=self.distance,
-            tags={'building': True},
+            tags={"building": True},
         )
 
-        footprints = footprints.drop(labels='nodes', axis=1)
+        footprints = footprints.drop(labels="nodes", axis=1)
 
         footprints = ox.project_gdf(footprints)
 
@@ -233,7 +249,9 @@ class OSMNetworkImporter(NetworkImporter):
         return graph
 
     @staticmethod
-    def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
+    def graph_to_gdfs(
+        G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True
+    ):
         """
         Convert a graph into node and/or edge GeoDataFrames. Adapted from osmnx for DiGraph.
 
@@ -256,7 +274,7 @@ class OSMNetworkImporter(NetworkImporter):
             gdf_nodes or gdf_edges or both as a tuple
         """
         if not (nodes or edges):
-            raise ValueError('You must request nodes or edges, or both.')
+            raise ValueError("You must request nodes or edges, or both.")
 
         to_return = []
 
@@ -265,11 +283,12 @@ class OSMNetworkImporter(NetworkImporter):
             nodes, data = zip(*G.nodes(data=True))
             gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
             if node_geometry:
-                gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']),
-                                                        axis=1)
-                gdf_nodes.set_geometry('geometry', inplace=True)
-            gdf_nodes.crs = G.graph['crs']
-            gdf_nodes.gdf_name = '{}_nodes'.format(G.name)
+                gdf_nodes["geometry"] = gdf_nodes.apply(
+                    lambda row: Point(row["x"], row["y"]), axis=1
+                )
+                gdf_nodes.set_geometry("geometry", inplace=True)
+            gdf_nodes.crs = G.graph["crs"]
+            gdf_nodes.gdf_name = "{}_nodes".format(G.name)
 
             to_return.append(gdf_nodes)
 
@@ -282,26 +301,26 @@ class OSMNetworkImporter(NetworkImporter):
 
                 # for each edge, add key and all attributes in data dict to the
                 # edge_details
-                edge_details = {'u': u, 'v': v}
+                edge_details = {"u": u, "v": v}
                 for attr_key in data:
                     edge_details[attr_key] = data[attr_key]
 
                 # if edge doesn't already have a geometry attribute, create one now
                 # if fill_edge_geometry==True
-                if 'geometry' not in data:
+                if "geometry" not in data:
                     if fill_edge_geometry:
-                        point_u = Point((G.nodes[u]['x'], G.nodes[u]['y']))
-                        point_v = Point((G.nodes[v]['x'], G.nodes[v]['y']))
-                        edge_details['geometry'] = LineString([point_u, point_v])
+                        point_u = Point((G.nodes[u]["x"], G.nodes[u]["y"]))
+                        point_v = Point((G.nodes[v]["x"], G.nodes[v]["y"]))
+                        edge_details["geometry"] = LineString([point_u, point_v])
                     else:
-                        edge_details['geometry'] = np.nan
+                        edge_details["geometry"] = np.nan
 
                 edges.append(edge_details)
 
             # create a GeoDataFrame from the list of edges and set the CRS
             gdf_edges = gpd.GeoDataFrame(edges)
-            gdf_edges.crs = G.graph['crs']
-            gdf_edges.gdf_name = '{}_edges'.format(G.name)
+            gdf_edges.crs = G.graph["crs"]
+            gdf_edges.gdf_name = "{}_edges".format(G.name)
 
             to_return.append(gdf_edges)
 
@@ -315,8 +334,8 @@ class OSMNetworkImporter(NetworkImporter):
 
         building_midpoints = gpd.GeoDataFrame(
             footprints.geometry.centroid,
-            columns=['geometry'],
-            crs=footprints.geometry.centroid.crs
+            columns=["geometry"],
+            crs=footprints.geometry.centroid.crs,
         )
 
         return building_midpoints
@@ -326,9 +345,9 @@ class OSMNetworkImporter(NetworkImporter):
         # get nodes and edges from graph
         nodes, edges = self.graph_to_gdfs(graph)
 
-        nodes = nodes.loc[:, ['geometry']]
+        nodes = nodes.loc[:, ["geometry"]]
 
-        edges = edges.loc[:, ['u', 'v', 'geometry']]
+        edges = edges.loc[:, ["u", "v", "geometry"]]
 
         nodes = nodes.to_crs("epsg:4326")
 
@@ -337,39 +356,36 @@ class OSMNetworkImporter(NetworkImporter):
         building_midpoints = building_midpoints.to_crs("epsg:4326")
 
         endpoints, forks, pipes = connect_points_to_network(
-            building_midpoints, nodes, edges)
+            building_midpoints, nodes, edges
+        )
 
-        pipes = pipes.rename(columns={'u': 'from_node', 'v': 'to_node'})
+        pipes = pipes.rename(columns={"u": "from_node", "v": "to_node"})
 
-        forks['component_type'] = 'Fork'
+        forks["component_type"] = "Fork"
 
         consumers = endpoints
 
-        consumers['component_type'] = 'Consumer'
+        consumers["component_type"] = "Consumer"
 
         # Update names of nodes in pipe's from_node/to_node
-        rename_nodes = {i: 'forks-' + str(i) for i in forks.index}
+        rename_nodes = {i: "forks-" + str(i) for i in forks.index}
 
-        rename_nodes.update({i: 'consumers-' + str(i) for i in consumers.index})
+        rename_nodes.update({i: "consumers-" + str(i) for i in consumers.index})
 
-        pipes['from_node'].replace(rename_nodes, inplace=True)
+        pipes["from_node"].replace(rename_nodes, inplace=True)
 
-        pipes['to_node'].replace(rename_nodes, inplace=True)
+        pipes["to_node"].replace(rename_nodes, inplace=True)
 
-        pipes['length'] = pipes['geometry'].length
+        pipes["length"] = pipes["geometry"].length
 
         for node in [consumers, forks]:
-            node['lat'] = node.geometry.y
-            node['lon'] = node.geometry.x
+            node["lat"] = node.geometry.y
+            node["lon"] = node.geometry.x
 
-        component_dfs = {
-            'consumers': consumers,
-            'forks': forks,
-            'pipes': pipes
-        }
+        component_dfs = {"consumers": consumers, "forks": forks, "pipes": pipes}
 
         for df in component_dfs.values():
-            df.index.name = 'id'
+            df.index.name = "id"
 
         return component_dfs
 
@@ -382,7 +398,7 @@ class OSMNetworkImporter(NetworkImporter):
 
     def process(self, graph, footprints):
 
-        print('Processing...')
+        print("Processing...")
 
         graph = self.remove_self_loops(graph)
 
@@ -425,8 +441,9 @@ def load_component_attrs(dir_name, available_components):
 
         list_name = os.path.splitext(file_name)[0]
 
-        assert list_name in available_components.list_name.values, f"Unknown component {list_name}"\
-                                                                   " not in available components."
+        assert list_name in available_components.list_name.values, (
+            f"Unknown component {list_name}" " not in available components."
+        )
 
         df = pd.read_csv(os.path.join(dir_name, file_name), index_col=0)
 
@@ -481,7 +498,7 @@ def load_invest_options(path):
         dict_sub = {}
 
         for sub in os.listdir(os.path.join(path, name)):
-            key = sub.split('.csv')[0]
+            key = sub.split(".csv")[0]
             val = pd.read_csv(os.path.join(path, name, sub))
             dict_sub.update([(key, val)])
 
@@ -497,4 +514,4 @@ def save_results(results, results_dir):
 
     for k, v in results.items():
         if v is not None:
-            v.to_csv(os.path.join(results_dir, k + '.csv'), header=True)
+            v.to_csv(os.path.join(results_dir, k + ".csv"), header=True)

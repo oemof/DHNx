@@ -28,26 +28,32 @@ from .simulation import simulate
 
 dir_name = os.path.dirname(__file__)
 
-available_components = pd.read_csv(os.path.join(dir_name, 'components.csv'), index_col=0)
+available_components = pd.read_csv(
+    os.path.join(dir_name, "components.csv"), index_col=0
+)
 
-component_attrs = load_component_attrs(os.path.join(dir_name, 'component_attrs'),
-                                       available_components)
+component_attrs = load_component_attrs(
+    os.path.join(dir_name, "component_attrs"), available_components
+)
 
 required_attrs = {
     list_name: [
-        attr for attr, specs in attrs.items() if specs.requirement == 'required'
-    ] for list_name, attrs in component_attrs.items()
+        attr for attr, specs in attrs.items() if specs.requirement == "required"
+    ]
+    for list_name, attrs in component_attrs.items()
 }
 
 default_attrs = {
     list_name: {
-        attr: specs.default for attr, specs in attrs.items()
+        attr: specs.default
+        for attr, specs in attrs.items()
         if not pd.isnull(specs.default)
-    } for list_name, attrs in component_attrs.items()
+    }
+    for list_name, attrs in component_attrs.items()
 }
 
 
-class ThermalNetwork():
+class ThermalNetwork:
     r"""
     Class representing thermal (heating/cooling) networks.
 
@@ -67,11 +73,14 @@ class ThermalNetwork():
     >>> tnw.is_consistent()
     True
     """
+
     def __init__(self, dirname=None):
 
         self.available_components = available_components
         self.component_attrs = component_attrs
-        self.components = Dict({key: pd.DataFrame() for key in available_components.list_name})
+        self.components = Dict(
+            {key: pd.DataFrame() for key in available_components.list_name}
+        )
         self.sequences = Dict()
         self.results = Dict()
         self.timeindex = None
@@ -82,20 +91,20 @@ class ThermalNetwork():
                 self.from_csv_folder(dirname)
 
             except ImportError:
-                print('Failed to import file.')
+                print("Failed to import file.")
 
     def __repr__(self):
         r"""
         This method defines what is returned if you perform print() or str()
         on a ThermalNetwork.
         """
-        summary = ''
+        summary = ""
         for component, data in self.components.items():
             count = len(data)
             if count > 0:
-                summary += ' * ' + str(count) + ' ' + component + '\n'
+                summary += " * " + str(count) + " " + component + "\n"
 
-        if summary == '':
+        if summary == "":
             return "Empty dhnx.network.ThermalNetwork object containing no components."
 
         return f"dhnx.network.ThermalNetwork object with these components\n{summary}"
@@ -114,14 +123,16 @@ class ThermalNetwork():
 
     def to_nx_graph(self):
         nx_graph = thermal_network_to_nx_graph(
-            self, type_of_graph=nx.DiGraph(),
+            self,
+            type_of_graph=nx.DiGraph(),
         )
 
         return nx_graph
 
     def to_nx_undirected_graph(self):
         nx_graph = thermal_network_to_nx_graph(
-            self, type_of_graph=nx.Graph(),
+            self,
+            type_of_graph=nx.Graph(),
         )
 
         return nx_graph
@@ -150,19 +161,21 @@ class ThermalNetwork():
         id
         kwargs
         """
-        assert class_name in available_components.index, \
-            f"Component class {class_name} is not within the available components" \
+        assert class_name in available_components.index, (
+            f"Component class {class_name} is not within the available components"
             f" {available_components.index}."
+        )
 
         list_name = available_components.loc[class_name].list_name
 
-        assert id not in self.components[list_name].index, \
-            f"There is already a component with the id {id}."
+        assert (
+            id not in self.components[list_name].index
+        ), f"There is already a component with the id {id}."
 
         # check if required parameters are in kwargs
         missing_required = list(set(required_attrs[list_name]) - kwargs.keys())
 
-        missing_required.remove('id')
+        missing_required.remove("id")
 
         if bool(missing_required):
             raise ValueError(f"Required attributes {missing_required} are not given")
@@ -187,13 +200,15 @@ class ThermalNetwork():
         id : int
             id of the component to remove
         """
-        assert class_name in available_components.index, \
-            "Component class '{}' is not within the available_components."
+        assert (
+            class_name in available_components.index
+        ), "Component class '{}' is not within the available_components."
 
         list_name = available_components.loc[class_name].list_name
 
-        assert id in self.components[list_name].index, \
-            f"There is no component with the id {id}."
+        assert (
+            id in self.components[list_name].index
+        ), f"There is no component with the id {id}."
 
         self.components[list_name].drop(id, inplace=True)
 
@@ -204,14 +219,13 @@ class ThermalNetwork():
          * pipes do not connect a node with itself,
          * there are no duplicate pipes between two nodes.
         """
-        nodes = {list_name: self.components[list_name].copy() for list_name in [
-            'consumers',
-            'producers',
-            'forks'
-        ]}
+        nodes = {
+            list_name: self.components[list_name].copy()
+            for list_name in ["consumers", "producers", "forks"]
+        }
 
         for k, v in nodes.items():
-            v.index = [k + '-' + str(id) for id in v.index]
+            v.index = [k + "-" + str(id) for id in v.index]
 
         nodes = pd.concat(nodes.values(), sort=True)
 
@@ -219,25 +233,30 @@ class ThermalNetwork():
 
         for id, data in self.components.pipes.iterrows():
 
-            if not data['from_node'] in node_indices:
+            if not data["from_node"] in node_indices:
                 raise ValueError(f"Node {data['from_node']} not defined.")
 
-            if not data['to_node'] in node_indices:
+            if not data["to_node"] in node_indices:
                 raise ValueError(f"Node {data['to_node']} not defined.")
 
-            assert data['from_node'] != data['to_node'], \
-                f"Pipe {id} connects {data['from_node']} to itself"
+            assert (
+                data["from_node"] != data["to_node"]
+            ), f"Pipe {id} connects {data['from_node']} to itself"
 
         if not self.components.pipes.empty:
 
             duplicate_pipes = [
-                name for name, group in self.components.pipes.groupby(['from_node', 'to_node'])
+                name
+                for name, group in self.components.pipes.groupby(
+                    ["from_node", "to_node"]
+                )
                 if len(group) > 1
             ]
 
             assert not duplicate_pipes, (
                 f"There is more than one pipe that connects "
-                f"{[pipe[0] + ' to ' + pipe[1] for pipe in duplicate_pipes]}")
+                f"{[pipe[0] + ' to ' + pipe[1] for pipe in duplicate_pipes]}"
+            )
 
         return True
 
@@ -316,13 +335,9 @@ class ThermalNetwork():
 
     def optimize_investment(self, invest_options, **kwargs):
 
-        oemof_opti_model = setup_optimise_investment(
-            self, invest_options, **kwargs
-        )
+        oemof_opti_model = setup_optimise_investment(self, invest_options, **kwargs)
 
-        self.results.optimization = solve_optimisation_investment(
-            oemof_opti_model
-        )
+        self.results.optimization = solve_optimisation_investment(oemof_opti_model)
 
     def simulate(self, *args, **kwargs):
         self.results.simulation = simulate(self, *args, **kwargs)

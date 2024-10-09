@@ -34,32 +34,29 @@ def thermal_network_to_nx_graph(thermal_network, type_of_graph=None):
 
     nx_graph = type_of_graph
 
-    edges = thermal_network.components['pipes'].copy()
+    edges = thermal_network.components["pipes"].copy()
 
     edge_attr = list(edges.columns)
 
-    edge_attr.remove('from_node')
+    edge_attr.remove("from_node")
 
-    edge_attr.remove('to_node')
+    edge_attr.remove("to_node")
 
     nx_graph = nx.from_pandas_edgelist(
-        edges,
-        'from_node',
-        'to_node',
-        edge_attr=edge_attr,
-        create_using=nx_graph
+        edges, "from_node", "to_node", edge_attr=edge_attr, create_using=nx_graph
     )
 
     nodes = {
-        list_name: thermal_network.components[list_name].copy() for list_name in [
-            'consumers',  # TODO: Do not hard code these here
-            'producers',
-            'forks'
+        list_name: thermal_network.components[list_name].copy()
+        for list_name in [
+            "consumers",  # TODO: Do not hard code these here
+            "producers",
+            "forks",
         ]
     }
 
     for k, v in nodes.items():
-        v.index = [k + '-' + str(id) for id in v.index]
+        v.index = [k + "-" + str(id) for id in v.index]
 
     nodes = pd.concat(nodes.values(), sort=True)
 
@@ -82,7 +79,7 @@ def nx_graph_to_thermal_network(nx_graph):
     -------
     thermal_network : ThermalNetwork
     """
-    raise NotImplementedError('This feature is not implemented yet.')
+    raise NotImplementedError("This feature is not implemented yet.")
 
 
 def write_edge_data_to_graph(series, graph_in, var_name=None):
@@ -104,8 +101,7 @@ def write_edge_data_to_graph(series, graph_in, var_name=None):
     """
     graph = graph_in.copy()
 
-    assert isinstance(series, pd.Series), \
-        "Have to pass a pandas Series."
+    assert isinstance(series, pd.Series), "Have to pass a pandas Series."
 
     if var_name:
         pass

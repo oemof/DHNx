@@ -77,15 +77,15 @@ def connect_points_to_network(points, nodes, edges):
 
         n_edges.append([id_point, id_nearest_point, LineString([point, nearest_point])])
 
-    n_points = gpd.GeoDataFrame(
-        n_points,
-        columns=['index', 'geometry']).set_index('index')
+    n_points = gpd.GeoDataFrame(n_points, columns=["index", "geometry"]).set_index(
+        "index"
+    )
 
     n_nearest_points = gpd.GeoDataFrame(
-        n_nearest_points,
-        columns=['index', 'geometry']).set_index('index')
+        n_nearest_points, columns=["index", "geometry"]
+    ).set_index("index")
 
-    n_edges = gpd.GeoDataFrame(n_edges, columns=['u', 'v', 'geometry'])
+    n_edges = gpd.GeoDataFrame(n_edges, columns=["u", "v", "geometry"])
 
     joined_nodes = pd.concat([nodes, n_nearest_points], sort=True)
     joined_edges = pd.concat([edges, n_edges], sort=True)
