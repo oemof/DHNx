@@ -41,7 +41,7 @@ setup(
     extras_require={
         'cartopy': ['cartopy'],
         'geopandas': ['geopandas'],
-        'osmnx': ['osmnx >= 0.16.1'],
+        'osmnx': ['osmnx >= 2.0.0'],
         "tests": [
             "geopandas", "osmnx",
             "CoolProp",
