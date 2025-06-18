@@ -295,7 +295,7 @@ everybody is free to choose his own units (energy, mass flow, etc.).
   Recommended to use with `nonconvex` is `True`.
 * **cap_max**: Maximum installable capacity (e.g. [kW]).
 * **cap_min**: Minimum installable capacity (e.g. [kW]). Note that there is a difference if a
-  *nonconvex* investment is applied (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/latest/usage.html#investment-optimisation>`_
+  *nonconvex* investment is applied (see `oemof-solph documentation <https://oemof-solph.readthedocs.io/en/stable/optimization/dispatch_vs_invest.html>`_
   for further information).
 * **capex_pipes**: Variable investment costs depending on the installed heat transport capacity
   (e.g. [€/kW]).
@@ -450,11 +450,6 @@ You can also check out the detailed results of the oemof model, which are stored
 
     # oemof-solph results "meta"
     r_oemof_meta = network.results.optimization['oemof_meta']
-
-Or you can also dump the oemof results and analyze the results as described in
-`oemof-solph handling results <https://oemof-solph.readthedocs.io/en/latest/usage.html#handling-results>`_.
-The labelling systematic will help you to easily get want you want,
-check :ref:`Label system <Label system>`.
 
 
 Introducing example
