@@ -451,7 +451,6 @@ You can also check out the detailed results of the oemof model, which are stored
     # oemof-solph results "meta"
     r_oemof_meta = network.results.optimization['oemof_meta']
 
-
 Introducing example
 -------------------
 
