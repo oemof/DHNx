@@ -8,6 +8,8 @@ This file is part of project dhnx (). It's copyrighted
 by the contributors recorded in the version control history of the file,
 available from its original location:
 
+TODO : Add class for the optimization of aggregated Networks
+
 SPDX-License-Identifier: MIT
 """
 
