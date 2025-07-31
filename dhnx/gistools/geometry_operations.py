@@ -10,6 +10,8 @@ available from its original location: https://github.com/oemof/DHNx
 
 This module is not fully tested yet, so use it with care.
 
+TODO: Add geometry aggregation
+
 SPDX-License-Identifier: MIT
 """
 
