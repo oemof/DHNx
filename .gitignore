@@ -50,6 +50,7 @@ htmlcov
 .idea
 *.iml
 *.komodoproject
+.vscode/
 
 # examples
 examples/import_export_plot/data_csv_output/*
