@@ -43,10 +43,10 @@ Testing
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* No changes
+* Update build system to pyproject.toml
 
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
-* Nobody
+* Patrik Schönfeldt (DLR)
