@@ -18,29 +18,29 @@ import dhnx
 
 from . import helpers
 
-tmpdir = helpers.extend_basic_path('tmp')
+tmpdir = helpers.extend_basic_path("tmp")
 
 basedir = os.path.dirname(__file__)
 
-dir_import_tree = os.path.join(basedir, '_files/tree_network_import')
+dir_import_tree = os.path.join(basedir, "_files/tree_network_import")
 
-dir_import_looped = os.path.join(basedir, '_files/looped_network_import')
+dir_import_looped = os.path.join(basedir, "_files/looped_network_import")
 
 tree_thermal_network = dhnx.network.ThermalNetwork(dir_import_tree)
 
 looped_thermal_network = dhnx.network.ThermalNetwork(dir_import_looped)
 
-dir_import_invest = os.path.join(basedir, '_files/investment/')
+dir_import_invest = os.path.join(basedir, "_files/investment/")
 
-tn_invest = dhnx.network.ThermalNetwork(dir_import_invest + 'network')
+tn_invest = dhnx.network.ThermalNetwork(dir_import_invest + "network")
 
 invest_opt = dhnx.input_output.load_invest_options(
-    dir_import_invest + 'invest_options'
+    dir_import_invest + "invest_options"
 )
 
 
 def test_import_export_csv():
-    dir_export = os.path.join(tmpdir, 'network_export')
+    dir_export = os.path.join(tmpdir, "network_export")
 
     network = dhnx.network.ThermalNetwork()
     network = network.from_csv_folder(dir_import_looped)
@@ -56,7 +56,7 @@ def test_access_attributes():
 
     assert isinstance(network.available_components, pd.DataFrame)
 
-    assert network.component_attrs.consumers.id.type == 'int'
+    assert network.component_attrs.consumers.id.type == "int"
 
     assert isinstance(network.components.consumers, pd.DataFrame)
 

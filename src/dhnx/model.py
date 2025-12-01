@@ -13,10 +13,11 @@ SPDX-License-Identifier: MIT
 from addict import Dict
 
 
-class Model():
+class Model:
     r"""
     Abstract base class for different kind of models.
     """
+
     def __init__(self, thermal_network):
         self.thermal_network = thermal_network
         self.setup()
@@ -39,10 +40,11 @@ class OperationOptimizationModel(Model):
     r"""
     Abstract base class for operational optimization models.
     """
+
     def __init__(self, thermal_network):
         super().__init__(thermal_network)
         self.is_consistent()
-        self.results = ['a', 'b']
+        self.results = ["a", "b"]
 
     def is_consistent(self):
         # TODO.
@@ -53,10 +55,11 @@ class InvestOptimizationModel(Model):
     r"""
     Abstract base class for investment optimization models.
     """
+
     def __init__(self, thermal_network):
         super().__init__(thermal_network)
         self.is_consistent()
-        self.results = ['a', 'b']
+        self.results = ["a", "b"]
 
     def is_consistent(self):
         # TODO.
@@ -67,10 +70,11 @@ class SimulationModel(Model):
     r"""
     Abstract base class for simulation models.
     """
+
     def __init__(self, thermal_network):
         super().__init__(thermal_network)
         self.is_consistent()
-        self.results = ['a', 'b']
+        self.results = ["a", "b"]
 
     def is_consistent(self):
         # TODO.

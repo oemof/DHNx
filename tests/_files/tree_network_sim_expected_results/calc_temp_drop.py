@@ -11,7 +11,9 @@ import numpy as np
 import pandas as pd
 
 path_file = os.path.dirname(__file__)
-path = os.path.abspath(os.path.join(path_file, os.pardir, os.pardir, os.pardir))
+path = os.path.abspath(
+    os.path.join(path_file, os.pardir, os.pardir, os.pardir)
+)
 input_data = os.path.join(path, "examples", "simulation", "tree")
 result_path = os.path.join(path_file, "sequences")
 
@@ -23,24 +25,37 @@ def read_data(input_value):
     r"""
     This function is reading the data of a csv with a name given as input value
     """
-    return pd.read_csv(os.path.join(input_data, input_value + ".csv"), index_col=0)
+    return pd.read_csv(
+        os.path.join(input_data, input_value + ".csv"), index_col=0
+    )
 
 
 # Read input data for every csv component
 pipes = read_data("pipes")
-temp_drop = pd.read_csv(input_data + "/sequences/consumers-delta_temp_drop.csv")
+temp_drop = pd.read_csv(
+    input_data + "/sequences/consumers-delta_temp_drop.csv"
+)
 mass_flow = pd.read_csv(input_data + "/sequences/consumers-mass_flow.csv")
 
 # Constants for calculation
 t_env = 10  # [°C]
-t_prod_i = pd.DataFrame(data={"t_prod_i": 130 * np.ones(len(mass_flow))})  # [°C]
+t_prod_i = pd.DataFrame(
+    data={"t_prod_i": 130 * np.ones(len(mass_flow))}
+)  # [°C]
 c = 4190  # [J/kg*K]
 pi = math.pi
 
 # Initialize variables of type dataframe (needed for later calculations)
-U_spec, t_cons_i, t_cons_r, t_fork_r, Q_loss_i, Q_loss_r, Q_cons, Q_loss_glob = [
-    pd.DataFrame() for variable in range(8)
-]
+(
+    U_spec,
+    t_cons_i,
+    t_cons_r,
+    t_fork_r,
+    Q_loss_i,
+    Q_loss_r,
+    Q_cons,
+    Q_loss_glob,
+) = [pd.DataFrame() for variable in range(8)]
 
 # Adjust mass flows and temp drop to a dataframe containing all data in correct order
 # Get mass flows of all consumers
@@ -109,7 +124,9 @@ def calc_heat_loss(m, t_in, t_out):
 
 
 # Calculate inlet temperature at fork
-t_fork_i = pd.DataFrame(data={"0": calc_temp_heat_loss(t_prod_i["t_prod_i"], 0)})
+t_fork_i = pd.DataFrame(
+    data={"0": calc_temp_heat_loss(t_prod_i["t_prod_i"], 0)}
+)
 
 # Calculate heat loss at pipe from producer to fork
 Q_loss_i["0"] = calc_heat_loss(
@@ -143,14 +160,17 @@ for index in list(temp_drop):
 t_fork_r_mix = pd.DataFrame(
     data={
         "0": (
-            mass_flow_total["1"] * t_fork_r["1"] + mass_flow_total["2"] * t_fork_r["2"]
+            mass_flow_total["1"] * t_fork_r["1"]
+            + mass_flow_total["2"] * t_fork_r["2"]
         )
         / mass_flow_total["0"]
     }
 )
 
 # Calculate return temperature at producer
-t_prod_r = pd.DataFrame(data={"0": calc_temp_heat_loss(t_fork_r_mix["0"], int("0"))})
+t_prod_r = pd.DataFrame(
+    data={"0": calc_temp_heat_loss(t_fork_r_mix["0"], int("0"))}
+)
 
 # Calculate inlet temperature of nodes
 t_nodes_i = pd.DataFrame(
@@ -173,13 +193,17 @@ t_nodes_r = pd.DataFrame(
 )
 
 # Calculate heat loss at pipe from fork to producer
-Q_loss_r["0"] = calc_heat_loss(mass_flow_total["0"], t_fork_r_mix["0"], t_prod_r["0"])
+Q_loss_r["0"] = calc_heat_loss(
+    mass_flow_total["0"], t_fork_r_mix["0"], t_prod_r["0"]
+)
 
 # Calculate total heat losses (inlet and return)
 Q_loss = Q_loss_i + Q_loss_r
 
 # Calculate global heat losses
-Q_loss_glob = pd.DataFrame(data={"global_heat_losses": np.zeros(len(mass_flow_total))})
+Q_loss_glob = pd.DataFrame(
+    data={"global_heat_losses": np.zeros(len(mass_flow_total))}
+)
 for index, node in enumerate(mass_flow_total):
     Q_loss_glob["global_heat_losses"] = (
         Q_loss_glob["global_heat_losses"] + Q_loss[str(index)]
@@ -251,4 +275,6 @@ result_name = [
 result_list = [list(parameter.keys())[0]] + list(parameter.keys())[7:11]
 
 for index, value in enumerate(result_list):
-    parameter[value].to_csv(os.path.join(result_path, result_name[index]), index=False)
+    parameter[value].to_csv(
+        os.path.join(result_path, result_name[index]), index=False
+    )

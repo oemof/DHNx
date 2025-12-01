@@ -29,8 +29,10 @@ try:
     from CoolProp.CoolProp import PropsSI
 
 except ImportError:
-    print("Need to install CoolProp to use the hydraulic "
-          "pre-calculation module.")
+    print(
+        "Need to install CoolProp to use the hydraulic "
+        "pre-calculation module."
+    )
 
 logger = logging.getLogger(__name__)  # Create a logger for this module
 
@@ -194,7 +196,7 @@ def calc_d_p(lam, length, d_i, d, v):
     -------
     Pressure drop [Pa]: numeric
     """
-    return lam * length / d_i * d / 2 * v ** 2
+    return lam * length / d_i * d / 2 * v**2
 
 
 def calc_lambda_turb1(Re):
@@ -259,7 +261,7 @@ def calc_lambda_turb3(Re):
     Darcy friction factor [-] : numeric
 
     """
-    lam_init = 0.3164 / (Re ** 0.25)
+    lam_init = 0.3164 / (Re**0.25)
 
     x = fsolve(eq_smooth, x0=lam_init, args=Re)
 
@@ -315,14 +317,21 @@ def calc_lambda_transition(R_e, k, d_i):
     Darcy friction factor [-] : numeric
 
     """
-    lam_init = 0.25 / R_e ** 0.2
+    lam_init = 0.25 / R_e**0.2
     x = fsolve(eq_transition, x0=lam_init, args=(R_e, k, d_i))
     return 1 / x[0] ** 2
 
 
-def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
-            pressure=101325, R_crit=2320, fluid='IF97::Water'):
-
+def delta_p(
+    v,
+    d_i,
+    k=0.1,
+    T_medium=90,
+    length=1,
+    pressure=101325,
+    R_crit=2320,
+    fluid="IF97::Water",
+):
     r"""
     Function to calculate the pressure loss in a pipeline
 
@@ -360,9 +369,9 @@ def delta_p(v, d_i, k=0.1, T_medium=90, length=1,
     k = k * 0.001
 
     # get density of water [kg/m^3]
-    d = PropsSI('D', 'T', T_medium + 273.15, 'P', pressure, fluid)
+    d = PropsSI("D", "T", T_medium + 273.15, "P", pressure, fluid)
     # dynamic viscosity eta [kg/(m*s)]
-    d_v = PropsSI('V', 'T', T_medium + 273.15, 'P', pressure, fluid)
+    d_v = PropsSI("V", "T", T_medium + 273.15, "P", pressure, fluid)
     k_v = calc_k_v(d_v, d)
 
     # Reynolds number
@@ -421,12 +430,20 @@ def calc_v(vol_flow, d_i):
     flow velocity [m/s] : numeric
 
     """
-    return vol_flow / ((d_i * 0.5)**2 * math.pi * 3600)
+    return vol_flow / ((d_i * 0.5) ** 2 * math.pi * 3600)
 
 
-def v_max_secant(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
-                 v_0=1, v_1=2,
-                 pressure=101325, fluid='IF97::Water'):
+def v_max_secant(
+    d_i,
+    T_average,
+    k=0.1,
+    p_max=100,
+    p_epsilon=1,
+    v_0=1,
+    v_1=2,
+    pressure=101325,
+    fluid="IF97::Water",
+):
     r"""Calculates the maximum velocity via iterative approach
     using the secant method.
 
@@ -473,16 +490,34 @@ def v_max_secant(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
     while n < 100:
         n += 1
 
-        p_0 = delta_p(v_0, k=k, d_i=d_i, T_medium=T_average,
-                      pressure=pressure, fluid=fluid)
+        p_0 = delta_p(
+            v_0,
+            k=k,
+            d_i=d_i,
+            T_medium=T_average,
+            pressure=pressure,
+            fluid=fluid,
+        )
 
-        p_1 = delta_p(v_1, k=k, d_i=d_i, T_medium=T_average,
-                      pressure=pressure, fluid=fluid)
+        p_1 = delta_p(
+            v_1,
+            k=k,
+            d_i=d_i,
+            T_medium=T_average,
+            pressure=pressure,
+            fluid=fluid,
+        )
 
         v_new = v_1 - (p_1 - p_max) * (v_1 - v_0) / (p_1 - p_0)
 
-        p_new = delta_p(v_new, k=k, d_i=d_i, T_medium=T_average,
-                        pressure=pressure, fluid=fluid)
+        p_new = delta_p(
+            v_new,
+            k=k,
+            d_i=d_i,
+            T_medium=T_average,
+            pressure=pressure,
+            fluid=fluid,
+        )
 
         if abs(p_new - p_max) < p_epsilon:
             break
@@ -500,10 +535,18 @@ def v_max_secant(d_i, T_average, k=0.1, p_max=100, p_epsilon=1,
     return v_new
 
 
-def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
-                    p_epsilon=0.1, v_epsilon=0.001,
-                    v_0=0.01, v_1=10,
-                    pressure=101325, fluid='IF97::Water'):
+def v_max_bisection(
+    d_i,
+    T_average,
+    k=0.1,
+    p_max=100,
+    p_epsilon=0.1,
+    v_epsilon=0.001,
+    v_0=0.01,
+    v_1=10,
+    pressure=101325,
+    fluid="IF97::Water",
+):
     r"""Calculates the maximum velocity via bisection for a given pressure drop.
 
     The two starting values `v_0` and `v_1` need to be given,
@@ -550,11 +593,13 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
     maximum flow velocity [m/s] : numeric
 
     """
-    p_0 = delta_p(v_0, k=k, d_i=d_i, T_medium=T_average,
-                  pressure=pressure, fluid=fluid)
+    p_0 = delta_p(
+        v_0, k=k, d_i=d_i, T_medium=T_average, pressure=pressure, fluid=fluid
+    )
 
-    p_1 = delta_p(v_1, k=k, d_i=d_i, T_medium=T_average,
-                  pressure=pressure, fluid=fluid)
+    p_1 = delta_p(
+        v_1, k=k, d_i=d_i, T_medium=T_average, pressure=pressure, fluid=fluid
+    )
 
     if (p_0 - p_max) * (p_1 - p_max) >= 0:
         raise AttributeError(
@@ -568,16 +613,34 @@ def v_max_bisection(d_i, T_average, k=0.1, p_max=100,
     while n < 200:
         n += 1
 
-        p_0 = delta_p(v_0, k=k, d_i=d_i, T_medium=T_average,
-                      pressure=pressure, fluid=fluid)
+        p_0 = delta_p(
+            v_0,
+            k=k,
+            d_i=d_i,
+            T_medium=T_average,
+            pressure=pressure,
+            fluid=fluid,
+        )
 
-        p_1 = delta_p(v_1, k=k, d_i=d_i, T_medium=T_average,
-                      pressure=pressure, fluid=fluid)
+        p_1 = delta_p(
+            v_1,
+            k=k,
+            d_i=d_i,
+            T_medium=T_average,
+            pressure=pressure,
+            fluid=fluid,
+        )
 
         v_new = 0.5 * (v_1 + v_0)
 
-        p_new = delta_p(v_new, k=k, d_i=d_i, T_medium=T_average,
-                        pressure=pressure, fluid=fluid)
+        p_new = delta_p(
+            v_new,
+            k=k,
+            d_i=d_i,
+            T_medium=T_average,
+            pressure=pressure,
+            fluid=fluid,
+        )
 
         if abs(p_new - p_max) < p_epsilon:
             logger.info("Bi-section method: p_epsilon criterion reached.")
@@ -631,9 +694,9 @@ def calc_power(T_vl=80, T_rl=50, mf=3, p=101325):
     thermal power [W] : numeric
 
     """
-    cp_vl = PropsSI('C', 'T', T_vl + 273.15, 'P', p, 'IF97::Water')
+    cp_vl = PropsSI("C", "T", T_vl + 273.15, "P", p, "IF97::Water")
 
-    cp_rl = PropsSI('C', 'T', T_rl + 273.15, 'P', p, 'IF97::Water')
+    cp_rl = PropsSI("C", "T", T_rl + 273.15, "P", p, "IF97::Water")
 
     return mf * (cp_vl * (T_vl + 273.15) - cp_rl * (T_rl + 273.15))
 
@@ -666,7 +729,7 @@ def calc_mass_flow(v, di, T_av, p=101325):
     mass flow [kg/s] : numeric
 
     """
-    rho = PropsSI('D', 'T', T_av + 273.15, 'P', p, 'IF97::Water')
+    rho = PropsSI("D", "T", T_av + 273.15, "P", p, "IF97::Water")
 
     return rho * v * (0.5 * di) ** 2 * math.pi
 
@@ -699,7 +762,7 @@ def calc_mass_flow_P(P, T_av, delta_T, p=101325):
     mass flow [kg/s]: numeric
 
     """
-    cp = PropsSI('C', 'T', T_av + 273.15, 'P', p, 'IF97::Water')
+    cp = PropsSI("C", "T", T_av + 273.15, "P", p, "IF97::Water")
 
     return P / (cp * delta_T)
 
@@ -732,8 +795,7 @@ def calc_v_mf(mf, di, T_av, p=101325):
     flow velocity [m/s]: numeric
 
     """
-    rho = PropsSI(
-        'D', 'T', T_av + 273.15, 'P', p, 'IF97::Water')  # [kg/m^3]
+    rho = PropsSI("D", "T", T_av + 273.15, "P", p, "IF97::Water")  # [kg/m^3]
 
     return mf / (rho * (0.5 * di) ** 2 * math.pi)
 

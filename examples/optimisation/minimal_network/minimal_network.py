@@ -29,7 +29,10 @@ results_edges = network.results.optimization["components"]["pipes"]
 print("*Results*")
 print(results_edges)
 print("")
-print("Objective Value: ", network.results.optimization["oemof_meta"]["objective"])
+print(
+    "Objective Value: ",
+    network.results.optimization["oemof_meta"]["objective"],
+)
 
 # manually recalculate total costs
 total_costs = (33 * 3.162 + 15 * 1 + 18 * 1 + 18 * 0.5) * 0.5

@@ -19,18 +19,20 @@ import dhnx
 
 basedir = os.path.dirname(__file__)
 
-dir_import = os.path.join(basedir, '_files/looped_network_import')
+dir_import = os.path.join(basedir, "_files/looped_network_import")
 
-dir_import_inconsistent = os.path.join(basedir, '_files/inconsistent_network_import')
+dir_import_inconsistent = os.path.join(
+    basedir, "_files/inconsistent_network_import"
+)
 
 thermal_network = dhnx.network.ThermalNetwork(dir_import)
 
-dir_import_invest = os.path.join(basedir, '_files/investment/')
+dir_import_invest = os.path.join(basedir, "_files/investment/")
 
-tn_invest = dhnx.network.ThermalNetwork(dir_import_invest + 'network')
+tn_invest = dhnx.network.ThermalNetwork(dir_import_invest + "network")
 
 invest_opt = dhnx.input_output.load_invest_options(
-    dir_import_invest + 'invest_options'
+    dir_import_invest + "invest_options"
 )
 
 
@@ -64,14 +66,14 @@ def test_load_inconsistent_thermal_network():
 def test_add():
     # missing required attributes
     with pytest.raises(ValueError):
-        thermal_network.add('Pipe', 10)
+        thermal_network.add("Pipe", 10)
 
 
 def test_prod_prod():
     # there is a direct producer to producer connection
     with pytest.raises(ValueError, match=r"goes from producers to producers."):
         tn_invest_wrong_1 = copy.deepcopy(tn_invest)
-        tn_invest_wrong_1.components['pipes'].at[0, 'to_node'] = 'producers-0'
+        tn_invest_wrong_1.components["pipes"].at[0, "to_node"] = "producers-0"
         dhnx.optimization.optimization_models.setup_optimise_investment(
             tn_invest_wrong_1, invest_opt
         )
@@ -81,7 +83,9 @@ def test_cons_cons():
     # there is a edge from consumer to consumer
     with pytest.raises(ValueError, match=r"goes from consumer to consumer"):
         tn_invest_wrong_2 = copy.deepcopy(tn_invest)
-        tn_invest_wrong_2.components['pipes'].at[10, 'from_node'] = 'consumers-0'
+        tn_invest_wrong_2.components["pipes"].at[
+            10, "from_node"
+        ] = "consumers-0"
         dhnx.optimization.optimization_models.setup_optimise_investment(
             tn_invest_wrong_2, invest_opt
         )
@@ -89,9 +93,12 @@ def test_cons_cons():
 
 def test_prod_cons():
     # there is a direct producer to consumer connection
-    with pytest.raises(ValueError, match=r"goes from producers directly to consumers, or vice "):
+    with pytest.raises(
+        ValueError,
+        match=r"goes from producers directly to consumers, or vice ",
+    ):
         tn_invest_wrong_3 = copy.deepcopy(tn_invest)
-        tn_invest_wrong_3.components['pipes'].at[0, 'to_node'] = 'consumers-0'
+        tn_invest_wrong_3.components["pipes"].at[0, "to_node"] = "consumers-0"
         dhnx.optimization.optimization_models.setup_optimise_investment(
             tn_invest_wrong_3, invest_opt
         )

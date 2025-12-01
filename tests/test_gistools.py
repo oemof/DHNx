@@ -27,7 +27,9 @@ def test_lot_foot_calc():
 
 def test_split_linestring():
     line1 = LineString([(0, 0), (1, 3), (2, 0)])
-    line2 = MultiLineString(lines=[line1, LineString([(5, 5), (7, 9), (3, 4)])])
+    line2 = MultiLineString(
+        lines=[line1, LineString([(5, 5), (7, 9), (3, 4)])]
+    )
     line3 = LineString([(1, 1), (5, 1)])
     gdf_line = gpd.GeoDataFrame(geometry=[line1, line2, line3])
     results = go.split_multilinestr_to_linestr(gdf_line)
