@@ -20,6 +20,7 @@ import numpy as np
 import osmnx as ox
 from shapely import geometry
 import matplotlib.pyplot as plt
+import os
 
 import logging
 from oemof.tools import logger
@@ -32,6 +33,8 @@ logger.define_logging(
     screen_level=logging.INFO,
     logfile="dhnx.log"
 )
+
+os.chdir(os.path.dirname(__file__))
 
 # Part I: Get OSM data #############
 
@@ -144,7 +147,7 @@ for k, v in tn_input.items():
 network.is_consistent()
 
 # load the specification of the oemof-solph components
-invest_opt = load_invest_options('invest_data')
+invest_opt = load_invest_options('./invest_data')
 
 
 # optionally, define some settings for the solver. Especially increasing the

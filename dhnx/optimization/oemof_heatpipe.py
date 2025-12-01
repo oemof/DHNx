@@ -14,7 +14,7 @@ SPDX-License-Identifier: MIT
 import warnings
 from collections import namedtuple
 
-from oemof.network import Transformer
+from oemof.network import Node
 from oemof.solph import Investment
 from oemof.solph._plumbing import sequence
 from pyomo.core.base.block import ScalarBlock
@@ -32,7 +32,7 @@ class Label(namedtuple('solph_label', ['tag1', 'tag2', 'tag3', 'tag4'])):
         return '_'.join(map(str, self._asdict().values()))
 
 
-class HeatPipeline(Transformer):
+class HeatPipeline(Node):
     r"""A HeatPipeline represent a Pipeline in a district heating system.
 
     This is done by a Transformer with a constant energy loss independent of

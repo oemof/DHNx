@@ -204,9 +204,10 @@ def add_demand(it, labels, series, nodes, busd):
         labels['l_3'] = 'demand'
         labels['l_2'] = de['label_2']
         # set static inflow values
-        inflow_args = {'nominal_value': de['nominal_value'],
-                       'fix': series['heat_flow'][
-                           labels['l_4'].split('-', 1)[1]].values}
+        inflow_args = {
+            "nominal_capacity": de["nominal_capacity"],
+            "fix": series["heat_flow"][labels["l_4"].split("-", 1)[1]].values,
+        }
 
         # create
         nodes.append(
@@ -268,7 +269,7 @@ def add_transformer(it, labels, nodes, busd):
                         outputs={b_out_1: solph.Flow(
                             variable_costs=t['variable_costs'],
                             summed_max=t['in_1_sum_max'],
-                            investment=solph.Investment(
+                            nominal_capacity=solph.Investment(
                                 ep_costs=epc_t + t['service'],
                                 maximum=t['max_invest'],
                                 minimum=t['min_invest']))},
@@ -290,7 +291,7 @@ def add_transformer(it, labels, nodes, busd):
                                        labels['l_4']),
                         inputs={b_in_1: solph.Flow()},
                         outputs={b_out_1: solph.Flow(
-                            nominal_value=t['installed'],
+                            nominal_capacity=t['installed'],
                             summed_max=t['in_1_sum_max'],
                             variable_costs=t['variable_costs'])},
                         conversion_factors={b_out_1: t['eff_out_1']}))
@@ -346,7 +347,7 @@ def add_storage(it, labels, nodes, busd):
                     inflow_conversion_factor=s['inflow_conversion_factor'],
                     outflow_conversion_factor=s[
                         'outflow_conversion_factor'],
-                    investment=solph.Investment(ep_costs=epc_s)))
+                    nominal_capacity=solph.Investment(ep_costs=epc_s)))
 
         else:
             nodes.append(
@@ -411,13 +412,12 @@ def add_heatpipes(it, labels, bidirectional, length, b_in, b_out, nodes):
             label=oh.Label(labels['l_1'], labels['l_2'],
                            labels['l_3'], labels['l_4']),
             inputs={b_in: solph.Flow(
-                investment=solph.Investment(),
+                nominal_capacity=solph.Investment(),
                 **flow_bi_args,
             )},
             outputs={b_out: solph.Flow(
-                nominal_value=None,
                 **flow_bi_args,
-                investment=solph.Investment(
+                nominal_capacity=solph.Investment(
                     ep_costs=epc_p, maximum=t['cap_max'],
                     minimum=t['cap_min'], nonconvex=nc, offset=epc_fix,
                 ))},
@@ -473,11 +473,11 @@ def add_heatpipes_exist(pipes, labels, gd, q, b_in, b_out, nodes):
         label=oh.Label(labels['l_1'], labels['l_2'],
                        labels['l_3'], labels['l_4']),
         inputs={b_in: solph.Flow(
-            nominal_value=q['capacity'],
+            nominal_capacity=q['capacity'],
             **flow_bi_args,
         )},
         outputs={b_out: solph.Flow(
-            nominal_value=q['capacity'],
+            nominal_capacity=q['capacity'],
             **flow_bi_args,
             **outflow_args,
         )},
