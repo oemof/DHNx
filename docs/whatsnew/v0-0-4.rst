@@ -1,32 +1,5 @@
-﻿v0.0.4 (???)
-==========================
-
-
-API changes
-^^^^^^^^^^^^^^^^^^^^
-
-* No changes
-
-
-New features
-^^^^^^^^^^^^^^^^^^^^
-
-* No changes
-
-New components/constraints
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* No changes
-
-Documentation
-^^^^^^^^^^^^^^^^^^^^
-
-* No changes
-
-Bug fixes
-^^^^^^^^^^^^^^^^^^^^
-
-* No changes
+﻿v0.0.4 (December, 1st 2025)
+===========================
 
 Known issues
 ^^^^^^^^^^^^^^^^^^^^
@@ -35,18 +8,13 @@ Known issues
   from helpers module is incomplete.
 
 
-Testing
-^^^^^^^^^^^^^^^^^^^^
-
-* No changes
-
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* No changes
+* Made compatible with oemof.solph v0.6
 
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
-* somebody
+* Patrik Schönfeldt (DLR)
