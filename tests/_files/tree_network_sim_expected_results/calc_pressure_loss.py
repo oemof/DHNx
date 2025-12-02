@@ -123,8 +123,10 @@ for index, node in enumerate(mass_flow_total):
         * v[str(index)] ** 2
         / (2 * (pipes["diameter"].iloc[index] / 1000))
     )
-    # Calculate local pressure losses resulted from separating Tee (T-Stück) -> i - inlet
-    # Localized Pressure losses only occur in the outlet pipes of the tee separator
+    # Calculate local pressure losses resulted from separating Tee (T-Stück)
+    # -> i - inlet.
+    # Localized Pressure losses only occur in the outlet pipes
+    # of the tee separator
     if node == "0":
         dp_loc_tee_i[str(index)] = (
             0 * zeta_tee_separation * v[str(index)] ** 2 * rho / 2
@@ -133,8 +135,10 @@ for index, node in enumerate(mass_flow_total):
         dp_loc_tee_i[str(index)] = (
             zeta_tee_separation * v[str(index)] ** 2 * rho / 2
         )
-    # Calculate local pressure losses resulted from connecting Tee (T-Stück) -> r - return
-    # Localized Pressure losses only occur in the outlet pipes of the tee connector
+    # Calculate local pressure losses resulted from connecting Tee (T-Stück)
+    # -> r - return
+    # Localized Pressure losses only occur in the outlet pipes
+    # of the tee connector
     if node == "0":
         dp_loc_tee_r[str(index)] = (
             zeta_tee_connect * v[str(index)] ** 2 * rho / 2
@@ -151,7 +155,7 @@ for index, node in enumerate(mass_flow_total):
     elif node != "0":
         dp_loc_valve[str(index)] = zeta_valve * v[str(index)] ** 2 * rho / 2
 
-# Calculate distributed pressure losses for inlet and return direction (dp_diss * 2)
+# Calculate distributed pressure losses for inlet and return direction
 dp_diss = dp_diss * 2
 
 # Calculate sum of local pressure losses

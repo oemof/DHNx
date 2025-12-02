@@ -57,7 +57,9 @@ pi = math.pi
     Q_loss_glob,
 ) = [pd.DataFrame() for variable in range(8)]
 
-# Adjust mass flows and temp drop to a dataframe containing all data in correct order
+# Adjust mass flows and temp drop to a dataframe containing all data in
+# correct order
+
 # Get mass flows of all consumers
 mass_flow_total = mass_flow.iloc[:, 1:]
 # Rename the columns to pipes naming convention

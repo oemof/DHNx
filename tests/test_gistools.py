@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-These tests test if proper errors are raised when the data is not consistent, of the
-wrong type or not all required data are given.
+These tests test if proper errors are raised when the data is not consistent,
+of the wrong type or not all required data are given.
 
 This file is part of project oemof (). It's copyrighted
 by the contributors recorded in the version control history of the file,

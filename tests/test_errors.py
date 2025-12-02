@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-These tests test if proper errors are raised when the data is not consistent, of the
-wrong type or not all required data are given.
+These tests test if proper errors are raised when the data is not consistent,
+of the wrong type or not all required data are given.
 
 This file is part of project oemof (). It's copyrighted
 by the contributors recorded in the version control history of the file,
@@ -40,7 +40,9 @@ invest_opt = dhnx.input_output.load_invest_options(
 #
 # def test_datatype_param_nodes():
 #     with pytest.raises(TypeError):
-#         thermal_network.producers['id'] = np.float(thermal_network.producers['node_id'])
+#         thermal_network.producers['id'] = np.float(
+#             thermal_network.producers['node_id']
+#         )
 #
 #
 # def test_datatype_param_pipes():
@@ -50,12 +52,16 @@ invest_opt = dhnx.input_output.load_invest_options(
 #
 # def test_required_param_nodes():
 #     with pytest.raises(ValueError):
-#         thermal_network.producers = thermal_network.producers.drop('lat', axis=1)
+#         thermal_network.producers = thermal_network.producers.drop(
+#             'lat', axis=1
+#         )
 #
 #
 # def test_required_param_pipes():
 #     with pytest.raises(ValueError):
-#         thermal_network.pipes = thermal_network.pipes.drop('from_node', axis=1)
+#         thermal_network.pipes = thermal_network.pipes.drop(
+#             'from_node', axis=1
+#         )
 
 
 def test_load_inconsistent_thermal_network():
