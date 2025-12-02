@@ -107,9 +107,15 @@ class ThermalNetwork:
                 summary += " * " + str(count) + " " + component + "\n"
 
         if summary == "":
-            return "Empty dhnx.network.ThermalNetwork object containing no components."
+            return (
+                "Empty dhnx.network.ThermalNetwork object"
+                " containing no components."
+            )
 
-        return f"dhnx.network.ThermalNetwork object with these components\n{summary}"
+        return (
+            f"dhnx.network.ThermalNetwork object"
+            f" with these components\n{summary}"
+        )
 
     def from_csv_folder(self, dirname):
         importer = CSVNetworkImporter(self, dirname)
@@ -166,8 +172,8 @@ class ThermalNetwork:
         kwargs
         """
         assert class_name in available_components.index, (
-            f"Component class {class_name} is not within the available components"
-            f" {available_components.index}."
+            f"Component class {class_name} is not within the available"
+            f" components {available_components.index}."
         )
 
         list_name = available_components.loc[class_name].list_name
@@ -197,7 +203,8 @@ class ThermalNetwork:
 
     def remove(self, class_name, id):
         r"""
-        Removes the row with id from the component DataFrame specified by class_name.
+        Removes the row with id from the component DataFrame specified by
+        class_name.
 
         Parameters
         ----------
@@ -239,10 +246,10 @@ class ThermalNetwork:
 
         for id, data in self.components.pipes.iterrows():
 
-            if not data["from_node"] in node_indices:
+            if data["from_node"] not in node_indices:
                 raise ValueError(f"Node {data['from_node']} not defined.")
 
-            if not data["to_node"] in node_indices:
+            if data["to_node"] not in node_indices:
                 raise ValueError(f"Node {data['to_node']} not defined.")
 
             assert (
@@ -306,7 +313,8 @@ class ThermalNetwork:
         """
         if len(indices) == 1:
             print(
-                "Only one sequence given. Need more than one time-index to compare."
+                "Only one sequence given. Need more than one time-index to"
+                " compare."
             )
             return True
 
@@ -319,8 +327,8 @@ class ThermalNetwork:
         r"""
         Takes all sequences and checks if their timeindex is identical.
         If that is the case, it sets the timeindex attribute of the
-        class.
-        If there are no sequences given, the timeindex will keep the default value.
+        class. If there are no sequences given, the timeindex will keep the
+        default value.
         """
         sequence_dfs = self._list_nested_dict_values(self.sequences)
 

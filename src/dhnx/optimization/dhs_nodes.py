@@ -21,10 +21,11 @@ import dhnx.optimization.oemof_heatpipe as oh
 def add_nodes_dhs(opti_network, gd, nodes, busd):
     """
     Based on the *forks* and *pipes* of the *ThermalNetwork* of the
-    *OemofInvestOptimisationModel*, the oemof-solph components for the district heating
-    network optimisation are initialised.
+    *OemofInvestOptimisationModel*, the oemof-solph components for the district
+    heating network optimisation are initialised.
 
-    For all *forks*, a `solph.Bus` with the label `infrastructure_heat_bus_forks-<id>`
+    For all *forks*, a `solph.Bus` with the label
+    `infrastructure_heat_bus_forks-<id>`
     (string representation) is generated.
 
     For all *pipes*, a 'HeatPipeline' with the label
@@ -41,12 +42,14 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
     nodes : list
         List for collecting all oemof-solph objects.
     busd : dict
-        Dictionary collecting all oemof-solph Buses. Keys: labels of the oemof-solph Buses;
+        Dictionary collecting all oemof-solph Buses. Keys: labels of the
+        oemof-solph Buses;
         Values: oemof-solph Buses.
 
     Returns
     -------
-    list, dict : List of all oemof-solph objects and dictionary of oemof-solph Buses.
+    list, dict : List of all oemof-solph objects and dictionary of oemof-solph
+    Buses.
     """
 
     d_labels = {}
@@ -253,19 +256,21 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 def add_nodes_houses(opti_network, nodes, busd, label_1):
     """
     For each *consumers*/*producers* of the *ThermalNetwork* of the
-    *OemofInvestOptimisationModel*, the oemof-solph components for the *consumers*/*producers*
-    are initialised depending on the given tables of the ``invest_options`` of the
-    *OemofInvestOptimisationModel*.
+    *OemofInvestOptimisationModel*, the oemof-solph components for the
+    *consumers*/*producers* are initialised depending on the given tables
+    of the ``invest_options`` of the *OemofInvestOptimisationModel*.
 
-    The tables of `invest_options` provide the information and attributes for the oemof-solph
-    components, which should be build at every *consumer*/*producer*.
+    The tables of `invest_options` provide the information and attributes
+    for the oemof-solph components, which should be build at every
+    *consumer*/*producer*.
 
-    The minimum requirement is to provide table with at least one *heat Bus* for all consumers
-    and all producers, a table with a *heat sink* as demand for all consumers, and
-    a table with at least one *heat source* for all producers.
+    The minimum requirement is to provide table with at least one *heat Bus*
+    for all consumers and all producers, a table with a *heat sink* as demand
+    for all consumers, and a table with at least one *heat source*
+    for all producers.
 
-    Additionally, further tables with *Transformer*, *Storages*, and further *Sources* and
-    *Sinks* can be added.
+    Additionally, further tables with *Transformer*, *Storages*, and further
+    *Sources* and *Sinks* can be added.
 
     For the attributes for each table, you need to provide, please see:
 
@@ -280,14 +285,15 @@ def add_nodes_houses(opti_network, nodes, busd, label_1):
     nodes : list
         List for collecting all oemof-solph objects.
     busd : dict
-        Dictionary collecting all oemof-solph Buses. Keys: labels of the oemof-solph Buses;
+        Dictionary collecting all oemof-solph Buses.
+        Keys: labels of the oemof-solph Buses;
         Values: oemof-solph Buses.
     label_1 : str
         First tag of the label, which is either `producers` or `consumers`.
 
     Returns
     -------
-    list, dict : List of all oemof-solph objects and dictionary of oemof-solph Buses.
+    list, dict : List of all solph objects and dictionary of solph Buses.
 
     """
 

@@ -45,8 +45,9 @@ def create_forks(lines):
     Creates a forks(nodes) GeoDataFrame from a "line"-GeoDataFrame
     based on the end-points of each LineString.
 
-    Also, an index for every fork is given, and the columns 'full-id' (="forks-" + index"),
-    'lat' and 'lon', which results from the geometry, are added to the GeoDataFrame.
+    Also, an index for every fork is given, and the columns 'full-id'
+    (="forks-" + index"), 'lat' and 'lon', which results from the geometry,
+    are added to the GeoDataFrame.
 
     Parameters
     ----------
@@ -229,7 +230,8 @@ def check_double_points(gdf, radius=0.001, id_column=None):
 
 
 def gdf_to_df(gdf):
-    """Converts a GeoDataFrame to a pandas.DataFrame by deleting the geometry column."""
+    """Converts a GeoDataFrame to a pandas.DataFrame by deleting the geometry
+    column."""
 
     df = pd.DataFrame(gdf[[col for col in gdf.columns if col != "geometry"]])
 

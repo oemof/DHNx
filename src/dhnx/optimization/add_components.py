@@ -147,7 +147,7 @@ def add_sources(on, it, c, labels, nodes, busd):
     # by what comes after 'label_2'
     flow_attr = list(it.columns)
     idx = flow_attr.index("label_2")
-    flow_attr = flow_attr[idx + 1 :]
+    flow_attr = flow_attr[idx + 1:]
 
     for _, cs in it.iterrows():
         labels["l_3"] = "source"
@@ -355,7 +355,8 @@ def add_transformer(it, labels, nodes, busd):
 
 
 def add_storage(it, labels, nodes, busd):
-    """Adds oemof.solph.components.GenericStorage objects to the list of components.
+    """Adds oemof.solph.components.GenericStorage objects to the list of
+    components.
 
     If attribute `invest` is *True*, the investment version of the Storage is
     created.

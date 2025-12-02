@@ -57,11 +57,13 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     settings : dict
         Dictionary holding the optimisation settings. See .
     invest_options : dict
-        Dictionary holding the investment options for the district heating system.
+        Dictionary holding the investment options for the district heating
+        system.
     nodes : list
         Empty list for collecting all oemof.solph nodes.
     buses : dict
-        Empty dictionary for collecting all oemof.solph.Buses of the energy system.
+        Empty dictionary for collecting all oemof.solph.Buses of the energy
+        system.
     es : oemof.solph.EnergySystem
         Empty oemof.solph.EnergySystem.
     om : oemof.solph.Model
@@ -83,7 +85,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     setup_oemof_es():
         The energy system *es* is build.
     setup():
-        Calls *check_input()*, *complete_exist_data()*, *get_pipe_data()*, and *setup_oemof_es()*.
+        Calls *check_input()*, *complete_exist_data()*, *get_pipe_data()*,
+        and *setup_oemof_es()*.
 
     """
 
@@ -117,15 +120,16 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         Check 2:
 
-        Firstly, it is checked, if there are any not-allowed connection in the *pipe* data.
-        The following connections are not allowed:
+        Firstly, it is checked, if there are any not-allowed connection in the
+        *pipe* data. The following connections are not allowed:
 
           * consumer -> consumer
           * producer -> producer
           * producer -> consumer
           * consumer -> fork
 
-        Secondly, it is checked, if a pipes goes to a consumer, which does not exist.
+        Secondly, it is checked, if a pipes goes to a consumer, which does not
+        exist.
 
         Check 3
 
@@ -215,9 +219,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         for id in list(self.thermal_network.components["consumers"].index):
             if id not in pipe_to_cons_ids:
                 raise ValueError(
-                    "The consumer id {} has no connection the the grid!".format(
-                        id
-                    )
+                    "The consumer id {} has no connection the the"
+                    "grid!".format(id)
                 )
 
         # Check 3
@@ -235,7 +238,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 nx.connected_components(g), key=len, reverse=True
             )
             raise ValueError(
-                "Network not connected! There are {} parts, with the following number of nodes: \n"
+                "Network not connected! There are {} parts, with the following"
+                "number of nodes: \n"
                 "{} \n"
                 "These are the separated elements/networks: \n"
                 "{}".format(len(nx_sum), nx_sum, nx_detail)
@@ -268,16 +272,20 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
     def prepare_heat_demand(self):
         """
-        This method performs the pre-processing of the heat demand data, depending on
-        the given optimisation settings.
+        This method performs the pre-processing of the heat demand data,
+        depending on the given optimisation settings.
 
-        - If attribute 'P_heat_max' not given at the consumers, the maximum heat demand
+        - If attribute 'P_heat_max' not given at the consumers, the maximum
+          heat demand
           is calculated from the timeseries and added the consumers table.
-        - If the optimisation setting 'heat_demand' == scalar, the number of time steps
-          of the optimisation is set to 1, and the 'P_heat_max' values are copied to the
-          consumers heat flow sequences (which is always the input for the optimisation model).
-        - The consumers heat flow sequences are multiplied by the simultaneity factor.
-        - Finally, a sufficient length of the heat demand timeseries is checked.
+        - If the optimisation setting 'heat_demand' == scalar, the number of
+          time steps of the optimisation is set to 1, and the 'P_heat_max'
+          values are copied to the consumers heat flow sequences (which is
+          always the input for the optimisation model).
+        - The consumers heat flow sequences are multiplied by the simultaneity
+          factor.
+        - Finally, a sufficient length of the heat demand timeseries is
+          checked.
 
         Returns
         -------
@@ -287,15 +295,15 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         def check_len_timeseries():
             """
-            Check, if given number of timesteps of optimization exceeds the length
-            of the given heat demand timeseries.
+            Check, if given number of timesteps of optimization exceeds the
+            length of the given heat demand timeseries.
             """
             if self.settings["num_ts"] > len(
                 self.thermal_network.sequences["consumers"]["heat_flow"].index
             ):
                 raise ValueError(
-                    "The length of the heat demand timeseries is not sufficient "
-                    "for the given number of {} timesteps.".format(
+                    "The length of the heat demand timeseries is not"
+                    " sufficient for the given number of {} timesteps.".format(
                         self.settings["num_ts"]
                     )
                 )
@@ -340,11 +348,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
     def check_existing(self):
         """
-        Checks if the attributes `existing` and `hp_type` are given in the `pipes` table.
-        If not, the attribute is added, and set to `None` / 0.
+        Checks if the attributes `existing` and `hp_type` are given in the
+        `pipes` table. If not, the attribute is added, and set to `None` / 0.
 
-        Checks for all existing pipes, if the heatpipe type is given in the pipe type table
-        `.invest_options['network']['pipes']`, and if the capacity is greater than zero.
+        Checks for all existing pipes, if the heatpipe type is given in the
+        pipe type table `.invest_options['network']['pipes']`,
+        and if the capacity is greater than zero.
         """
 
         # check whether there the 'existing' attribute is present at the pipes
@@ -374,19 +383,20 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         for r, c in edges[edges["existing"] == 1].iterrows():
             if c["capacity"] <= 0:
                 raise ValueError(
-                    "The `capacity` of the existing pipe with id {} must be greater than 0!"
-                    "".format(r)
+                    "The `capacity` of the existing pipe with id {}"
+                    "must be greater than 0!".format(r)
                 )
 
     def setup_oemof_es(self):
         """The oemof solph energy system is initialised based on the settings,
         and filled with oemof-solph object:
 
-        The oemof-solph objects of the *consumers* and *producers* are defined at the consumers
-        and producers investment options.
+        The oemof-solph objects of the *consumers* and *producers* are defined
+        at the consumers and producers investment options.
 
-        For the heating infrastructure, there is a *oemof.solph.Bus* added for every fork,
-        and a pipe component for every pipe as defined in */network/pipes.csv*.
+        For the heating infrastructure, there is a *oemof.solph.Bus* added
+        for every fork, and a pipe component for every pipe as defined in
+        */network/pipes.csv*.
         """
 
         date_time_index = pd.date_range(
@@ -591,7 +601,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         > 1
                     ):
                         logger.warning(
-                            "Investment status of pipe id {} is 1 for both dircetions!"
+                            "Investment status of pipe id {} is 1"
+                            " for both dircetions!"
                             " This is not allowed!".format(r)
                         )
                     if (
@@ -602,8 +613,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         and df.at[r, hp_lab + "." + "size-2"] == 0
                     ):
                         logger.warning(
-                            "Investment status of pipe id {} is 1, and capacity is 0!"
-                            "What happend?!".format(r)
+                            "Investment status of pipe id {} is 1,"
+                            " and capacity is 0! What happend?!".format(r)
                         )
 
             return df
@@ -669,7 +680,8 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df["status"] = float(0)
 
             for ahp in active_hp:
-                # p = df_hp[df_hp['label_3'] == ahp].squeeze()   # series of heatpipe
+                # series of heatpipe
+                # p = df_hp[df_hp['label_3'] == ahp].squeeze()
                 for r, c in df.iterrows():
                     if c[ahp + ".size"] > 0:
                         check_invest_label(c["hp_type"], id)
@@ -709,11 +721,11 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     hp_p = df_hp[df_hp["label_3"] == hp_lab].squeeze()
                     if hp_p["nonconvex"] == 1:
                         df.at[r, "costs"] = c["length"] * (
-                            c["capacity"] * hp_p["capex_pipes"]  # noqa: W504
+                            c["capacity"] * hp_p["capex_pipes"]
                             + hp_p["fix_costs"] * c["status"]
                         )
                         df.at[r, "losses"] = c["length"] * (
-                            c["capacity"] * hp_p["l_factor"]  # noqa: W504
+                            c["capacity"] * hp_p["l_factor"]
                             + hp_p["l_factor_fix"] * c["status"]
                         )
 
@@ -721,7 +733,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         df.at[r, "costs"] = (
                             c["length"] * c["capacity"] * hp_p["capex_pipes"]
                         )
-                        # Note, that a constant loss is possible also for convex
+                        # Note that a constant loss is possible also for convex
                         df.at[r, "losses"] = c["length"] * (
                             c["capacity"] * hp_p["l_factor"]
                             + hp_p["l_factor_fix"]
@@ -805,7 +817,8 @@ def setup_optimise_investment(
     thermal_network : ThermalNetwork
         See the ThermalNetwork class.
     invest_options : dict
-        Dictionary holding the investment options for the district heating system.
+        Dictionary holding the investment options
+        for the district heating system.
     heat_demand : str
         'scalar': Peak heat load is used as heat consumers’ heat demand.
         'series': Heat load time-series is used.
@@ -826,8 +839,8 @@ def setup_optimise_investment(
     simultaneity : float
         Simultaneity factor.
     bidirectional_pipes : bool
-        Bidirectional pipes leads to bi-directional flow attributes at the heatpipeline components
-        {‘min’: -1, bidirectional: True}.
+        Bidirectional pipes leads to bi-directional flow attributes at the
+        heatpipeline components {‘min’: -1, bidirectional: True}.
     dump_path : str
         If a dump path is provided, the oemof dump file is stored.
     dump_name : str
@@ -843,7 +856,8 @@ def setup_optimise_investment(
     """
     if heat_demand not in ["scalar", "series"]:
         raise ValueError(
-            'The settings attribute *heat_demand* must be "scalar" or "series"!'
+            'The settings attribute *heat_demand*'
+            + ' must be "scalar" or "series"!'
         )
 
     if solver_cmdline_options is None:
@@ -884,7 +898,8 @@ def solve_optimisation_investment(model):
     Returns
     -------
     dict : Results of optimisation. Contains:
-        - 'oemof' : Complete "oemof" results of the energy system optimisation (.results['main']).
+        - 'oemof' : Complete "oemof" results of the energy system optimisation
+          (.results['main']).
         - 'oemof_meta' : Meta results of oemof solph optimisation.
         - 'components' : 'pipes' : Investment results of pipes.
     """

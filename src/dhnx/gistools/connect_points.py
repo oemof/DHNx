@@ -53,9 +53,9 @@ def line_of_point(point, gdf_lines):
     """
     ind = None
 
-    for k, l in gdf_lines.iterrows():
+    for k, line in gdf_lines.iterrows():
 
-        if l["geometry"].distance(point) < 1e-8:
+        if line["geometry"].distance(point) < 1e-8:
             ind = k
 
     if ind is None:
@@ -121,34 +121,40 @@ def create_object_connections(
 ):
     """Connect points to a line network.
 
-    Generally, the nearest point of the next line is used as connection the point.
-    Depending on the geometry, there are 3 options, the connection is created:
+    Generally, the nearest point of the next line is used as connection the
+    point. Depending on the geometry, there are 3 options, the connection is
+    created:
 
-    - nearest point is line ending => the connection line starts from this line ending
+    - nearest point is line ending => the connection line starts from this
+      line ending
 
     - nearest point is on the next line:
 
-      a) line endings are outside the tolerance => line is split and the nearest point
-      is used as connection point
+      a) line endings are outside the tolerance => line is split and the
+         nearest point is used as connection point
 
-      b) line endings are within the tolerance distance => the next line ending is
-      used as connection point
+      b) line endings are within the tolerance distance => the next line
+         ending is used as connection point
 
     The tolerance distance avoids the generation of short line elements.
-    This is for example the case if two buildings are directly opposite of the street.
-    Using simply the nearest point method could result in very short lines.
+    This is for example the case if two buildings are directly opposite of
+    the street. Using simply the nearest point method could result in
+    very short lines.
 
 
     Parameters
     ----------
     points : geopandas.GeoDataFrame
-        Points which should be connected to the line. GeoDataFrame with Points as geometry.
+        Points which should be connected to the line. GeoDataFrame with Points
+        as geometry.
     lines : geopandas.GeoDataFrame
-        The line-network to which the Points should be connected. The line geometry needs to
-        consists of simple lines based on one starting and one ending point. LineStrings
-        which contain more than 2 points are not allowed.
+        The line-network to which the Points should be connected. The line
+        geometry needs to consists of simple lines based on one starting and
+        one ending point. LineStrings which contain more than 2 points are
+        not allowed.
     tol_distance : float
-        Tolerance distance for choosing the end of the line instead of the nearest point.
+        Tolerance distance for choosing the end of the line instead of the
+        nearest point.
     n_conn : int, optional
         Number of connection lines created from each consumer/producer to
         the nearest line segments in the street network. This allows the
@@ -296,7 +302,8 @@ def create_object_connections(
 
 def check_geometry_type(gdf, types):
     """
-    Checks, if a geodataframe has only the given geometry types in its GeoSeries.
+    Checks, if a geodataframe has only the given geometry types in its
+    GeoSeries.
 
     Parameters
     ----------
@@ -545,16 +552,17 @@ def process_geometry(
     welding=True,
 ):
     """
-    This function connects the consumers and producers to the line network, and prepares the
-    attributes of the geopandas.GeoDataFrames for importing as dhnx.ThermalNetwork.
+    This function connects the consumers and producers to the line network,
+    and prepares the attributes of the geopandas.GeoDataFrames for importing
+    as dhnx.ThermalNetwork.
 
     The ids of the lines are overwritten.
 
     Parameters
     ----------
     lines : geopandas.GeoDataFrame
-        Potential routes for the DHS. Expected geometry Linestrings or MultilineStrings.
-        The graph of this line network should be connected.
+        Potential routes for the DHS. Expected geometry Linestrings or
+        MultilineStrings. The graph of this line network should be connected.
     consumers : geopandas.GeoDataFrame
         Location of demand/consumers. Expected geometry: Polygons or Points.
     producers : geopandas.GeoDataFrame
@@ -595,8 +603,8 @@ def process_geometry(
     Returns
     -------
     dict : Dictionary with 4 geopandas.GeoDataFrames: The keys of the Dict are
-           equal to the components of the dhnx.ThermalNetwork: 'forks', 'consumers',
-           'producers', 'pipes'.
+           equal to the components of the dhnx.ThermalNetwork: 'forks',
+           'consumers', 'producers', 'pipes'.
 
     """
     if not reset_index:
@@ -615,7 +623,8 @@ def process_geometry(
         check_geometry_type(gdf, types=["Polygon", "Point", "MultiPolygon"])
         check_duplicate_geometries(gdf)
 
-    # split multilinestrings to single lines with only 1 starting and 1 ending point
+    # split multilinestrings to single lines with only 1 starting
+    # and 1 ending point
     lines = go.split_multilinestr_to_linestr(lines)
 
     # check and convert crs if it is not already the `projected_crs`

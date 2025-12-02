@@ -138,3 +138,7 @@ known_first_party = "dhnx"
 default_section = "THIRDPARTY"
 forced_separate = "test_dhnx"
 skip = "migrations"
+
+[tool.ruff]
+line-length = 79
+

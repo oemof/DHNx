@@ -129,10 +129,10 @@ class InteractiveMap:
         # note that I'm discarding the first and last for aesthetics
         # as I'm using markers to denote the start and end
         arrow_lats = np.linspace(p1.lat, p2.lat, n_arrows + 2)[
-            1 : n_arrows + 1
+            1: n_arrows + 1
         ]
         arrow_lons = np.linspace(p1.lon, p2.lon, n_arrows + 2)[
-            1 : n_arrows + 1
+            1: n_arrows + 1
         ]
 
         arrows = []
@@ -295,13 +295,13 @@ class StaticMap:
         lines = []
         for u, v, data in self.graph.edges(data=True):
             if "geometry" in data and use_geom:
-                # if it has a geometry attribute (a list of line segments), add them
-                # to the list of lines to plot
+                # if it has a geometry attribute (a list of line segments),
+                # add them to the list of lines to plot
                 xs, ys = data["geometry"].xy
                 lines.append(list(zip(xs, ys)))
             else:
-                # if it doesn't have a geometry attribute, the edge is a straight
-                # line from node to node
+                # if it doesn't have a geometry attribute, the edge is a
+                # straight line from node to node
                 x1 = self.graph.nodes[u]["lon"]
                 y1 = self.graph.nodes[u]["lat"]
                 x2 = self.graph.nodes[v]["lon"]

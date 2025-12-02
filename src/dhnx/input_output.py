@@ -1,7 +1,8 @@
 # -*- coding: utf-8
 
 """
-This module is designed to hold importers and exporters to different file formats.
+This module is designed to hold importers and exporters to different file
+formats.
 
 This file is part of project dhnx (). It's copyrighted
 by the contributors recorded in the version control history of the file,
@@ -272,7 +273,8 @@ class OSMNetworkImporter(NetworkImporter):
         G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True
     ):
         """
-        Convert a graph into node and/or edge GeoDataFrames. Adapted from osmnx for DiGraph.
+        Convert a graph into node and/or edge GeoDataFrames. Adapted from osmnx
+        for DiGraph.
 
         Parameters
         ----------
@@ -313,8 +315,8 @@ class OSMNetworkImporter(NetworkImporter):
 
         if edges:
 
-            # create a list to hold our edges, then loop through each edge in the
-            # graph
+            # create a list to hold our edges, then loop through each edge in
+            # the graph
             edges = []
             for u, v, data in G.edges(data=True):
 
@@ -324,8 +326,8 @@ class OSMNetworkImporter(NetworkImporter):
                 for attr_key in data:
                     edge_details[attr_key] = data[attr_key]
 
-                # if edge doesn't already have a geometry attribute, create one now
-                # if fill_edge_geometry==True
+                # if edge doesn't already have a geometry attribute,
+                # create one now if fill_edge_geometry==True
                 if "geometry" not in data:
                     if fill_edge_geometry:
                         point_u = Point((G.nodes[u]["x"], G.nodes[u]["y"]))

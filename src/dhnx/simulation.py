@@ -73,7 +73,8 @@ class SimulationModelNumpy(SimulationModel):
 
         if self._concat_scalars("height") is not None:
             warnings.warn(
-                "Pressure differences due to height differences are not implemented yet."
+                "Pressure differences due to height differences are not"
+                " implemented yet."
             )
 
     def prepare(self):
@@ -290,17 +291,19 @@ class SimulationModelNumpy(SimulationModel):
 
         for t in self.thermal_network.timeindex:
 
-            # The order of columns in self.input_data.mass_flow fit with those of self.inc_mat
-            # because the columns have been generated from the graph's nodes in
-            # prepare_hydraulic_eqn()
+            # The order of columns in self.input_data.mass_flow fit with those
+            # of self.inc_mat because the columns have been generated from
+            # the graph's nodes in prepare_hydraulic_eqn()
 
             x, residuals, _, _ = np.linalg.lstsq(
                 self.inc_mat, self.input_data.mass_flow.loc[t, :], rcond=None
             )
 
-            assert (
-                residuals < self.tolerance
-            ), f"Residuals {residuals} are larger than tolerance {self.tolerance}!"
+            if residuals >= self.tolerance:
+                raise RuntimeError(
+                    f"Residuals {residuals} are larger than"
+                    f" tolerance {self.tolerance}!"
+                )
 
             pipes_mass_flow.update({t: x})
 
@@ -399,8 +402,8 @@ class SimulationModelNumpy(SimulationModel):
         Returns
         -------
         pipes_pressure_losses : pd.DataFrame
-            DataFrame with distributed pressure losses for inlet and return for every
-            time step and pipe [Pa]
+            DataFrame with distributed pressure losses for inlet and return
+            for every time step and pipe [Pa]
         """
         pipes_mass_flow = self.results["pipes-mass_flow"].copy()
 
@@ -426,8 +429,8 @@ class SimulationModelNumpy(SimulationModel):
             length, axis="columns"
         ).divide(diameter_5, axis="columns")
 
-        # We multiply by the factor of two to represent the pressure losses along inlet
-        # and return flow.
+        # We multiply by the factor of two to represent the pressure
+        # losses along inlet and return flow.
 
         pipes_pressure_losses *= 2
 
@@ -676,9 +679,9 @@ class SimulationModelNumpy(SimulationModel):
 
         paths_pressure_losses = _calculate_paths_pressure_losses()
 
-        # Here, we take the path with the maximum pressure losses and assume that the other
-        # consumer's valves are adjusted so that in sum, the pressure losses along all paths are
-        # equal.
+        # Here, we take the path with the maximum pressure losses and assume
+        # that the other consumer's valves are adjusted so that in sum,
+        # the pressure losses along all paths are equal.
 
         global_pressure_losses = paths_pressure_losses.max(axis=1)
 
@@ -690,7 +693,7 @@ class SimulationModelNumpy(SimulationModel):
 
         .. math::
 
-            P_{el. pump} = \frac{1}{\eta_{el}\eta_{hyd}}\frac{\Delta p }{\rho} \dot{m}
+            P_{el. pump} = \frac{1}{\eta_{el}\eta_{hyd}}\frac{\Delta p}{\rho} m
 
         Parameters
         ----------
@@ -769,8 +772,10 @@ class SimulationModelNumpy(SimulationModel):
 
         .. math::
 
-            T_{out} = T_{env} + (T_{in} - T_{env}) \cdot exp\{exp_{const} \cdot exp_{var}\} =
-            T_{out} = T_{env} + (T_{in} - T_{env}) \cdot exp\{-\frac{U \pi D L}{c \cdot \dot{m}}\}
+            T_{out} = T_{env} + (T_{in} - T_{env})
+                \cdot exp\{exp_{const} \cdot exp_{var}\} =
+            T_{out} = T_{env} + (T_{in} - T_{env})
+            \cdot exp\{-\frac{U \pi D L}{c \cdot \dot{m}}\}
 
         Parameters
         ----------
@@ -811,8 +816,9 @@ class SimulationModelNumpy(SimulationModel):
 
             matrix = np.exp(exponent)
 
-            # Clear out elements where matrix was zero before exponentiation. This could be
-            # replaced by properly passing `where` to np.multiply in the line above.
+            # Clear out elements where matrix was zero before exponentiation.
+            # This could be replaced by properly passing `where` to np.multiply
+            # in the line above.
             matrix = np.multiply(
                 matrix, nx.adjacency_matrix(self.nx_graph).todense()
             )

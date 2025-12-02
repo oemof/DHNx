@@ -68,7 +68,7 @@ def eq_transition(x, R_e, k, d_i):
 
     .. eq_transition_equation
 
-    :math:`f(x)=x+2\cdot log \big(  \frac{2,51x}{Re} \cdot \frac{k}{3,71d_i} \big)`
+    :math:`f(x)=x+2\cdot log \big(\frac{2,51x}{Re} \frac{k}{3,71d_i} \big)`
 
     Parameters
     ----------
@@ -356,7 +356,8 @@ def delta_p(
         :math:`p`: pressure in the pipe [Pa]
 
     R_crit : numeric
-        :math:`Re_{crit}`: critical Reynolds number between laminar and turbulent flow [-]
+        :math:`Re_{crit}`: critical Reynolds number between laminar and
+        turbulent flow [-]
 
     fluid : str
         name of the fluid used
@@ -411,7 +412,8 @@ def delta_p(
 
 def calc_v(vol_flow, d_i):
     r"""
-    Calculates the velocity for a given volume flow and inner diameter of a pipe.
+    Calculates the velocity for a given volume flow and inner diameter
+    of a pipe.
 
     .. calc_v_equation:
 
@@ -468,10 +470,12 @@ def v_max_secant(
         :math:`p_\epsilon`: accuracy of pressure [Pa]
 
     v_0: numeric
-        :math:`v_0`: first value of initial guess for maximum flow velocity [m/s]
+        :math:`v_0`: first value of initial guess for
+        maximum flow velocity [m/s]
 
     v_1: numeric
-        :math:`v_1`: second value of initial guess for maximum flow velocity [m/s]
+        :math:`v_1`: second value of initial guess for
+        maximum flow velocity [m/s]
 
     pressure: numeric
         :math:`p`: pressure level [pa]
@@ -547,7 +551,8 @@ def v_max_bisection(
     pressure=101325,
     fluid="IF97::Water",
 ):
-    r"""Calculates the maximum velocity via bisection for a given pressure drop.
+    r"""Calculates the maximum velocity via bisection for a
+    given pressure drop.
 
     The two starting values `v_0` and `v_1` need to be given,
     with `v_0` below the expected flow velocity and `v_1` above.
@@ -577,10 +582,12 @@ def v_max_bisection(
         :math:`v_\epsilon`: accuracy of velocity [m/s]
 
     v_0 : numeric
-        :math:`v_0`: first value of initial guess for maximum flow velocity [m/s]
+        :math:`v_0`: first value of initial guess for
+        maximum flow velocity [m/s]
 
     v_1: numeric
-        :math:`v_1`: second value of initial guess for maximum flow velocity [m/s]
+        :math:`v_1`: second value of initial guess for
+        maximum flow velocity [m/s]
 
     pressure: numeric
         :math:`p`: pressure level [Pa]
@@ -669,11 +676,12 @@ def v_max_bisection(
 
 def calc_power(T_vl=80, T_rl=50, mf=3, p=101325):
     r"""
-    Function to calculate the thermal power based on mass flow and temperature difference.
+    Function to calculate the thermal power based on mass flow and
+    temperature difference.
 
     .. calc_power_equation:
 
-    :math:`P_{th} = \dot{m} \cdot (c_{p_{VL}} \cdot T_{VL} - c_{p_{RL}} \cdot T_{RL})`
+    :math:`P_{th} = \dot{m} \cdot (c_{p_{VL}} T_{VL} - c_{p_{RL}} T_{RL})`
 
     Parameters
     ----------
@@ -703,7 +711,8 @@ def calc_power(T_vl=80, T_rl=50, mf=3, p=101325):
 
 def calc_mass_flow(v, di, T_av, p=101325):
     r"""
-    Calculates the mass flow in a pipe for a given density, diameter and flow velocity.
+    Calculates the mass flow in a pipe for a given density, diameter, and
+    flow velocity.
     The average temperature is needed for a correct value of the density.
 
     .. calc_mass_flow_equation:
