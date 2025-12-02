@@ -6,8 +6,8 @@ class Dict(addict.Dict):
         super().__init__(self, *args, **kwargs)
 
     def __repr__(self):
-        overview = ['* ' + str(key) for key, value in self.items()]
-        return '\n'.join(overview)
+        overview = ["* " + str(key) for key, value in self.items()]
+        return "\n".join(overview)
 
 
 def sum_ignore_none(*items):

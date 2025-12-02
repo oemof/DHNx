@@ -17,7 +17,9 @@ import numpy as np
 import pandas as pd
 
 path_file = os.path.dirname(__file__)
-path = os.path.abspath(os.path.join(path_file, os.pardir, os.pardir, os.pardir))
+path = os.path.abspath(
+    os.path.join(path_file, os.pardir, os.pardir, os.pardir)
+)
 input_data = os.path.join(path, "examples", "simulation", "tree")
 result_path = os.path.join(path_file, "sequences")
 
@@ -29,7 +31,9 @@ def read_data(input_value):
     r"""
     This function is reading the data of a csv with a name given as input value
     """
-    return pd.read_csv(os.path.join(input_data, input_value + ".csv"), index_col=0)
+    return pd.read_csv(
+        os.path.join(input_data, input_value + ".csv"), index_col=0
+    )
 
 
 # Read input data for every csv component
@@ -90,7 +94,11 @@ for index, node in enumerate(mass_flow_total):
 
     # Calculation of Re number
     re[str(index)] = (
-        pipes["diameter"].iloc[index] / 1000 * v[str(index)] * rho / (mu / 1000)
+        pipes["diameter"].iloc[index]
+        / 1000
+        * v[str(index)]
+        * rho
+        / (mu / 1000)
     )
     # Calculation of lambda with simple approach
     lambda_simp[str(index)] = (
@@ -115,20 +123,30 @@ for index, node in enumerate(mass_flow_total):
         * v[str(index)] ** 2
         / (2 * (pipes["diameter"].iloc[index] / 1000))
     )
-    # Calculate local pressure losses resulted from separating Tee (T-Stück) -> i - inlet
-    # Localized Pressure losses only occur in the outlet pipes of the tee separator
+    # Calculate local pressure losses resulted from separating Tee (T-Stück)
+    # -> i - inlet.
+    # Localized Pressure losses only occur in the outlet pipes
+    # of the tee separator
     if node == "0":
         dp_loc_tee_i[str(index)] = (
             0 * zeta_tee_separation * v[str(index)] ** 2 * rho / 2
         )
     elif node != "0":
-        dp_loc_tee_i[str(index)] = zeta_tee_separation * v[str(index)] ** 2 * rho / 2
-    # Calculate local pressure losses resulted from connecting Tee (T-Stück) -> r - return
-    # Localized Pressure losses only occur in the outlet pipes of the tee connector
+        dp_loc_tee_i[str(index)] = (
+            zeta_tee_separation * v[str(index)] ** 2 * rho / 2
+        )
+    # Calculate local pressure losses resulted from connecting Tee (T-Stück)
+    # -> r - return
+    # Localized Pressure losses only occur in the outlet pipes
+    # of the tee connector
     if node == "0":
-        dp_loc_tee_r[str(index)] = zeta_tee_connect * v[str(index)] ** 2 * rho / 2
+        dp_loc_tee_r[str(index)] = (
+            zeta_tee_connect * v[str(index)] ** 2 * rho / 2
+        )
     elif node != "0":
-        dp_loc_tee_r[str(index)] = 0 * zeta_tee_connect * v[str(index)] ** 2 * rho / 2
+        dp_loc_tee_r[str(index)] = (
+            0 * zeta_tee_connect * v[str(index)] ** 2 * rho / 2
+        )
     # Calculate local pressure losses resulted from consumer valves
     if node == "0":
         dp_loc_valve[str(index)] = (
@@ -137,7 +155,7 @@ for index, node in enumerate(mass_flow_total):
     elif node != "0":
         dp_loc_valve[str(index)] = zeta_valve * v[str(index)] ** 2 * rho / 2
 
-# Calculate distributed pressure losses for inlet and return direction (dp_diss * 2)
+# Calculate distributed pressure losses for inlet and return direction
 dp_diss = dp_diss * 2
 
 # Calculate sum of local pressure losses
@@ -146,7 +164,10 @@ dp_loc = dp_loc_tee
 
 # Calculate hydrostatic pressure difference
 dp_hyd["0"] = (
-    -rho * g * abs(producers["m_over_NHN"][0] - forks["m_over_NHN"][0]) * v["0"] ** 0
+    -rho
+    * g
+    * abs(producers["m_over_NHN"][0] - forks["m_over_NHN"][0])
+    * v["0"] ** 0
 )
 dp_hyd["1"] = (
     -rho
@@ -246,4 +267,6 @@ result_list = (
 )
 
 for index, value in enumerate(result_list):
-    parameter[value].to_csv(os.path.join(result_path, result_name[index]), index=False)
+    parameter[value].to_csv(
+        os.path.join(result_path, result_name[index]), index=False
+    )

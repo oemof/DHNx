@@ -15,18 +15,22 @@ import dhnx
 
 basedir = os.path.dirname(__file__)
 
-dir_import = os.path.join(basedir, '_files/looped_network_import')
+dir_import = os.path.join(basedir, "_files/looped_network_import")
 
 thermal_network = dhnx.network.ThermalNetwork(dir_import)
 
 
 def test_add():
-    thermal_network.add('Producer', 5, lat=1, lon=1)
+    thermal_network.add("Producer", 5, lat=1, lon=1)
 
-    assert thermal_network.components['producers'].loc[5].to_list() == [1., 1., "Producer"]
+    assert thermal_network.components["producers"].loc[5].to_list() == [
+        1.0,
+        1.0,
+        "Producer",
+    ]
 
 
 def test_remove():
-    thermal_network.remove('Consumer', 1)
+    thermal_network.remove("Consumer", 1)
 
-    assert 4 not in thermal_network.components['consumers'].index
+    assert 4 not in thermal_network.components["consumers"].index

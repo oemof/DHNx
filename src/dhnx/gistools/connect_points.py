@@ -53,13 +53,13 @@ def line_of_point(point, gdf_lines):
     """
     ind = None
 
-    for k, l in gdf_lines.iterrows():
+    for k, line in gdf_lines.iterrows():
 
-        if l['geometry'].distance(point) < 1e-8:
+        if line["geometry"].distance(point) < 1e-8:
             ind = k
 
     if ind is None:
-        return Warning('No line found which has point on it!')
+        return Warning("No line found which has point on it!")
     return ind
 
 
@@ -116,38 +116,45 @@ def calc_lot_foot(line, point):
     return lot_foot_point
 
 
-def create_object_connections(points, lines, tol_distance=1, n_conn=1,
-                              drop_neighbours=True):
+def create_object_connections(
+    points, lines, tol_distance=1, n_conn=1, drop_neighbours=True
+):
     """Connect points to a line network.
 
-    Generally, the nearest point of the next line is used as connection the point.
-    Depending on the geometry, there are 3 options, the connection is created:
+    Generally, the nearest point of the next line is used as connection the
+    point. Depending on the geometry, there are 3 options, the connection is
+    created:
 
-    - nearest point is line ending => the connection line starts from this line ending
+    - nearest point is line ending => the connection line starts from this
+      line ending
 
     - nearest point is on the next line:
 
-      a) line endings are outside the tolerance => line is split and the nearest point
-      is used as connection point
+      a) line endings are outside the tolerance => line is split and the
+         nearest point is used as connection point
 
-      b) line endings are within the tolerance distance => the next line ending is
-      used as connection point
+      b) line endings are within the tolerance distance => the next line
+         ending is used as connection point
 
     The tolerance distance avoids the generation of short line elements.
-    This is for example the case if two buildings are directly opposite of the street.
-    Using simply the nearest point method could result in very short lines.
+    This is for example the case if two buildings are directly opposite of
+    the street. Using simply the nearest point method could result in
+    very short lines.
 
 
     Parameters
     ----------
     points : geopandas.GeoDataFrame
-        Points which should be connected to the line. GeoDataFrame with Points as geometry.
+        Points which should be connected to the line. GeoDataFrame with Points
+        as geometry.
     lines : geopandas.GeoDataFrame
-        The line-network to which the Points should be connected. The line geometry needs to
-        consists of simple lines based on one starting and one ending point. LineStrings
-        which contain more than 2 points are not allowed.
+        The line-network to which the Points should be connected. The line
+        geometry needs to consists of simple lines based on one starting and
+        one ending point. LineStrings which contain more than 2 points are
+        not allowed.
     tol_distance : float
-        Tolerance distance for choosing the end of the line instead of the nearest point.
+        Tolerance distance for choosing the end of the line instead of the
+        nearest point.
     n_conn : int, optional
         Number of connection lines created from each consumer/producer to
         the nearest line segments in the street network. This allows the
@@ -173,28 +180,32 @@ def create_object_connections(points, lines, tol_distance=1, n_conn=1,
         # Find the nearest line and its nearest point
         lines_merged = unary_union(lines.geometry)
         nearest_line_point = nearest_points(point_geom, lines_merged)[1]
-        nearest_line_idx = lines[nearest_line_point.distance(lines.geometry)
-                                 < 1e-8].index
+        nearest_line_idx = lines[
+            nearest_line_point.distance(lines.geometry) < 1e-8
+        ].index
         nearest_line = lines.geometry[nearest_line_idx[0]]
 
         # Check if the nearest point is an end point of the line
         line_start, line_end = nearest_line.boundary.geoms
-        if (nearest_line_point.equals(line_start)
-           or nearest_line_point.equals(line_end)):
+        if nearest_line_point.equals(line_start) or nearest_line_point.equals(
+            line_end
+        ):
             connection_point = nearest_line_point
         else:
             # Check if the distance of nearest_point_on_line is close
             # to an existing point on the line
             points_on_line = nearest_line.boundary
             closest_existing_point = nearest_points(
-                nearest_line_point, points_on_line)[1]
+                nearest_line_point, points_on_line
+            )[1]
             dist_on_line = nearest_line_point.distance(closest_existing_point)
             if dist_on_line <= tol_distance:
                 connection_point = closest_existing_point
                 # If connection_point changes, the nearest lines have to be
                 # updated. There are probably two nearest lines instead of one
                 nearest_line_idx = lines[
-                    connection_point.distance(lines.geometry) < 1e-8].index
+                    connection_point.distance(lines.geometry) < 1e-8
+                ].index
             else:
                 # Split the line and use the nearest point as connection point
                 connection_point = nearest_line_point
@@ -204,7 +215,7 @@ def create_object_connections(points, lines, tol_distance=1, n_conn=1,
         return conn_line, nearest_line_idx
 
     conn_lines_list = []
-    for id_full, point_geom in zip(points['id_full'], points.geometry):
+    for id_full, point_geom in zip(points["id_full"], points.geometry):
         # For each point (building), find the n closest connection lines
         # to the street lines, by dropping the previous closest street
         # sections before searching the next connection line
@@ -212,9 +223,8 @@ def create_object_connections(points, lines, tol_distance=1, n_conn=1,
         conn_lines_id = []
         for i in range(n_conn):
             conn_line, nearest_line_idx = create_object_connection(
-                point_geom,
-                lines.drop(lines_drop),
-                tol_distance=tol_distance)
+                point_geom, lines.drop(lines_drop), tol_distance=tol_distance
+            )
 
             lines_drop.extend(nearest_line_idx)
             if drop_neighbours and i + 1 < n_conn:
@@ -222,23 +232,30 @@ def create_object_connections(points, lines, tol_distance=1, n_conn=1,
                 # as well. Chances are that they do not provide an advantage
                 # over the nearest segment. This allows the next connection
                 # line to find a more relevant alternative
-                neighbours = lines[lines.touches(
-                    unary_union(lines.geometry[nearest_line_idx]))]
+                neighbours = lines[
+                    lines.touches(
+                        unary_union(lines.geometry[nearest_line_idx])
+                    )
+                ]
                 lines_drop.extend(neighbours.index)
-                neighbours2 = lines[lines.touches(
-                    unary_union(neighbours.geometry))]
+                neighbours2 = lines[
+                    lines.touches(unary_union(neighbours.geometry))
+                ]
                 lines_drop.extend(neighbours2.index)
 
             conn_lines_id.append(conn_line)
 
         # Create a GeoDataFrame with the connection lines of the current id
         gdf_conn_lines_id = gpd.GeoDataFrame(
-            data={'id_full': [id_full] * len(conn_lines_id)},
-            geometry=conn_lines_id, crs=lines.crs)
+            data={"id_full": [id_full] * len(conn_lines_id)},
+            geometry=conn_lines_id,
+            crs=lines.crs,
+        )
 
         # Drop duplicate geometries in connection lines
         gdf_conn_lines_id = gdf_conn_lines_id.drop_duplicates(
-            subset=gdf_conn_lines_id.geometry.name).reset_index(drop=True)
+            subset=gdf_conn_lines_id.geometry.name
+        ).reset_index(drop=True)
         # Make sure that the street network is split into new sections
         # where the connection lines meet the street lines
         for conn_line in gdf_conn_lines_id.geometry:
@@ -248,25 +265,33 @@ def create_object_connections(points, lines, tol_distance=1, n_conn=1,
                 # Connection point is one of the existing street line points
                 continue
             else:
-                nearest_line_idx = lines[conn_point.distance(lines.geometry)
-                                         < 1e-8].index[0]
+                nearest_line_idx = lines[
+                    conn_point.distance(lines.geometry) < 1e-8
+                ].index[0]
                 nearest_line = lines.geometry[nearest_line_idx]
                 # Identify start and end points for new lines
                 line_start, line_end = nearest_line.boundary.geoms
                 # Store any existing attributes from original data
                 attributes = lines.loc[[nearest_line_idx]].drop(
-                    columns=[lines.geometry.name])
+                    columns=[lines.geometry.name]
+                )
                 # Remove the line that is to be replaced
                 lines.drop([nearest_line_idx], inplace=True)
                 # Combine remaining lines with two new replacement lines
-                lines = pd.concat([
-                    gpd.GeoDataFrame(lines, crs=lines.crs),
-                    gpd.GeoDataFrame(
-                        geometry=[LineString([line_start, conn_point]),
-                                  LineString([conn_point, line_end])],
-                        crs=lines.crs,
-                        data=pd.concat([attributes, attributes]))],
-                    ignore_index=True)
+                lines = pd.concat(
+                    [
+                        gpd.GeoDataFrame(lines, crs=lines.crs),
+                        gpd.GeoDataFrame(
+                            geometry=[
+                                LineString([line_start, conn_point]),
+                                LineString([conn_point, line_end]),
+                            ],
+                            crs=lines.crs,
+                            data=pd.concat([attributes, attributes]),
+                        ),
+                    ],
+                    ignore_index=True,
+                )
 
         conn_lines_list.append(gdf_conn_lines_id)
 
@@ -277,7 +302,8 @@ def create_object_connections(points, lines, tol_distance=1, n_conn=1,
 
 def check_geometry_type(gdf, types):
     """
-    Checks, if a geodataframe has only the given geometry types in its GeoSeries.
+    Checks, if a geodataframe has only the given geometry types in its
+    GeoSeries.
 
     Parameters
     ----------
@@ -287,7 +313,7 @@ def check_geometry_type(gdf, types):
         List of types allowed for GeoDataFrame.
 
     """
-    actual_types = set(gdf['geometry'].type)
+    actual_types = set(gdf["geometry"].type)
 
     for type in actual_types:
         if type not in types:
@@ -297,7 +323,7 @@ def check_geometry_type(gdf, types):
             )
 
 
-def create_points_from_polygons(gdf, method='midpoint'):
+def create_points_from_polygons(gdf, method="midpoint"):
     """
     Converts the geometry of a polygon layer to a point layer.
 
@@ -313,12 +339,12 @@ def create_points_from_polygons(gdf, method='midpoint'):
 
     """
 
-    if gdf['geometry'].values[0].geom_type == 'Point':
+    if gdf["geometry"].values[0].geom_type == "Point":
         return gdf
 
-    if method == 'midpoint' or method == 'boundary':
+    if method == "midpoint" or method == "boundary":
         # (method 'boundary' is performed later and needs the centroid)
-        gdf['geometry'] = gdf['geometry'].centroid
+        gdf["geometry"] = gdf["geometry"].centroid
         return gdf
 
     raise ValueError(
@@ -371,11 +397,13 @@ def run_point_method_boundary(consumers_poly, consumers, lines_consumers):
     logger.info('Run "boundary" method for finding the building connections')
     # lines_consumers may represent multiple lines per consumer
     # Duplicate geometries in consumers_poly have to be created accordingly
-    consumers_poly['id_full'] = consumers['id_full']
+    consumers_poly["id_full"] = consumers["id_full"]
     consumers_poly = pd.merge(
         left=consumers_poly,
         right=lines_consumers.drop(columns=[lines_consumers.geometry.name]),
-        how='right', on='id_full')
+        how="right",
+        on="id_full",
+    )
 
     # When using the original consumer points as a fallback later, we
     # require it to have the same index as lines_consumers. Therefore
@@ -383,20 +411,27 @@ def run_point_method_boundary(consumers_poly, consumers, lines_consumers):
     consumers_d = pd.merge(
         left=consumers,
         right=lines_consumers.drop(columns=[lines_consumers.geometry.name]),
-        how='right', on='id_full')
+        how="right",
+        on="id_full",
+    )
 
     # Cut the part off of each "line_consumer" that is within the building
     # polygon. As a result, the heating grid will only reach to the wall of
     # the building.
     lines_consumers_n = gpd.GeoDataFrame(
-        geometry=lines_consumers.difference(consumers_poly, align=False))
+        geometry=lines_consumers.difference(consumers_poly, align=False)
+    )
     # This produces a MultiLineString for complex building polygons, where
     # the boundary and the simple lines from centroid to street intersect
     # multiple times. This would not be a valid connection line. In those
     # cases the 'convex hull' of the building is used instead.
-    lines_consumers_n.loc[lines_consumers_n.type == "MultiLineString"] = \
-        gpd.GeoDataFrame(geometry=lines_consumers.difference(
-            consumers_poly.convex_hull, align=False))
+    lines_consumers_n.loc[lines_consumers_n.type == "MultiLineString"] = (
+        gpd.GeoDataFrame(
+            geometry=lines_consumers.difference(
+                consumers_poly.convex_hull, align=False
+            )
+        )
+    )
     # Only keep the new consumer lines if they have a useful minimum length.
     # There was an edgecase where a street 'almost' touched a building,
     # and the cut consumer line had a length of 1e-9 m
@@ -404,11 +439,16 @@ def run_point_method_boundary(consumers_poly, consumers, lines_consumers):
 
     # Now the "consumers" (point objects for each building) need to be
     # updated to touch the end of the consumer_lines
-    consumers_n = gpd.GeoDataFrame(geometry=lines_consumers.intersection(
-        consumers_poly.boundary, align=False))
-    consumers_n.loc[consumers_n.type == "MultiPoint"] = \
-        gpd.GeoDataFrame(geometry=lines_consumers.intersection(
-            consumers_poly.convex_hull.boundary, align=False))
+    consumers_n = gpd.GeoDataFrame(
+        geometry=lines_consumers.intersection(
+            consumers_poly.boundary, align=False
+        )
+    )
+    consumers_n.loc[consumers_n.type == "MultiPoint"] = gpd.GeoDataFrame(
+        geometry=lines_consumers.intersection(
+            consumers_poly.convex_hull.boundary, align=False
+        )
+    )
 
     # Sometimes the centroid does not lie within a building and there may be
     # no intersetions, i.e. the new point is an 'empty' geometry. This can
@@ -416,7 +456,7 @@ def run_point_method_boundary(consumers_poly, consumers, lines_consumers):
     # Sometimes the new lines are empty (e.g. because a street and a building
     # object cross each other).
     # In these cases the original geometry is used for points and lines.
-    mask1 = (consumers_n.is_empty | lines_consumers_n.is_empty)
+    mask1 = consumers_n.is_empty | lines_consumers_n.is_empty
 
     # Another special case has to be covered. If the original street lines
     # already touch the building wall, no additional connection line would be
@@ -425,18 +465,20 @@ def run_point_method_boundary(consumers_poly, consumers, lines_consumers):
     # Find the problematic cases by testing if the new connection point
     # equals the starting point of the connection line.
     mask2 = consumers_n.geom_equals(
-        lines_consumers.geometry.apply(lambda line: line.boundary.geoms[0]))
+        lines_consumers.geometry.apply(lambda line: line.boundary.geoms[0])
+    )
 
     # If for whatever reason the street-side "start" of the new connection
     # line is not the same point as the original connection line start, use
     # the original line. This may happen for complex geometries, where the
     # street line lies within the building geometry
     lines_consumers_n_start = lines_consumers_n.copy()
-    lines_consumers_n_start.geometry = (
-        lines_consumers_n_start[~mask1 & ~mask2].boundary.apply(
-            lambda g: g.geoms[0]))
+    lines_consumers_n_start.geometry = lines_consumers_n_start[
+        ~mask1 & ~mask2
+    ].boundary.apply(lambda g: g.geoms[0])
     mask3 = lines_consumers_n_start.geom_equals(
-        lines_consumers.geometry.apply(lambda line: line.boundary.geoms[0]))
+        lines_consumers.geometry.apply(lambda line: line.boundary.geoms[0])
+    )
 
     # Now apply all the filters above to reset the geometries
     mask = mask1 | mask2 | ~mask3
@@ -444,25 +486,28 @@ def run_point_method_boundary(consumers_poly, consumers, lines_consumers):
     lines_consumers_n.loc[mask] = lines_consumers.loc[mask].geometry
 
     # Now update all the original variables with the new data
-    lines_consumers_n['id_full'] = lines_consumers['id_full']
-    consumers_n['id_full'] = lines_consumers_n['id_full']
+    lines_consumers_n["id_full"] = lines_consumers["id_full"]
+    consumers_n["id_full"] = lines_consumers_n["id_full"]
 
     # If multiple building connection lines existed before, we now also
     # have created multiple building points for each building.
     # We need to group those points into one MultiPoint per initial unique
     # building, to keep the original index structure intact.
-    consumers_n = (pd.DataFrame(consumers_n)  # convert gdf to df
-                   .groupby('id_full', sort=False, as_index=False)
-                   .agg(lambda x: MultiPoint(x.values))  # returns df
-                   .set_geometry(consumers_n.geometry.name,  # convert to gdf
-                                 crs=consumers_n.crs)
-                   )
+    consumers_n = (
+        pd.DataFrame(consumers_n)  # convert gdf to df
+        .groupby("id_full", sort=False, as_index=False)
+        .agg(lambda x: MultiPoint(x.values))  # returns df
+        .set_geometry(
+            consumers_n.geometry.name, crs=consumers_n.crs
+        )  # convert to gdf
+    )
 
     # For each new consumer point(s), test if they actually touch
     # the new conumser line(s) that have the same 'id_full' assigned
-    for id_full, points in zip(consumers_n['id_full'], consumers_n.geometry):
-        if not points.touches(lines_consumers_n[
-                lines_consumers_n['id_full'] == id_full].geometry).all():
+    for id_full, points in zip(consumers_n["id_full"], consumers_n.geometry):
+        if not points.touches(
+            lines_consumers_n[lines_consumers_n["id_full"] == id_full].geometry
+        ).all():
             raise ValueError(f"Points from {id_full} have no matching lines")
 
     consumers.geometry = consumers_n.geometry
@@ -476,33 +521,48 @@ def check_duplicate_geometries(gdf):
         idx = gdf.duplicated(subset="geometry")
         try:
             import matplotlib.pyplot as plt
+
             fig, ax = plt.subplots(dpi=400)
-            gdf.loc[~idx].plot(ax=ax, color='green')
-            gdf.loc[idx].plot(ax=ax, color='red')
+            gdf.loc[~idx].plot(ax=ax, color="green")
+            gdf.loc[idx].plot(ax=ax, color="red")
             plt.title("Red are duplicate geometries. Please fix!")
             plt.show()
         except ImportError:
-            logger.info("Install matplotlib to show a plot of the duplicate "
-                        "geometries.")
-        raise ValueError("GeoDataFrame has {} duplicate geometries"
-                         .format(len(gdf.loc[idx])))
+            logger.info(
+                "Install matplotlib to show a plot of the duplicate "
+                "geometries."
+            )
+        raise ValueError(
+            "GeoDataFrame has {} duplicate geometries".format(
+                len(gdf.loc[idx])
+            )
+        )
 
 
-def process_geometry(lines, consumers, producers,
-                     method='midpoint', projected_crs=4647,
-                     tol_distance=2, reset_index=True, n_conn=1, n_conn_prod=1,
-                     welding=True):
+def process_geometry(
+    lines,
+    consumers,
+    producers,
+    method="midpoint",
+    projected_crs=4647,
+    tol_distance=2,
+    reset_index=True,
+    n_conn=1,
+    n_conn_prod=1,
+    welding=True,
+):
     """
-    This function connects the consumers and producers to the line network, and prepares the
-    attributes of the geopandas.GeoDataFrames for importing as dhnx.ThermalNetwork.
+    This function connects the consumers and producers to the line network,
+    and prepares the attributes of the geopandas.GeoDataFrames for importing
+    as dhnx.ThermalNetwork.
 
     The ids of the lines are overwritten.
 
     Parameters
     ----------
     lines : geopandas.GeoDataFrame
-        Potential routes for the DHS. Expected geometry Linestrings or MultilineStrings.
-        The graph of this line network should be connected.
+        Potential routes for the DHS. Expected geometry Linestrings or
+        MultilineStrings. The graph of this line network should be connected.
     consumers : geopandas.GeoDataFrame
         Location of demand/consumers. Expected geometry: Polygons or Points.
     producers : geopandas.GeoDataFrame
@@ -543,25 +603,28 @@ def process_geometry(lines, consumers, producers,
     Returns
     -------
     dict : Dictionary with 4 geopandas.GeoDataFrames: The keys of the Dict are
-           equal to the components of the dhnx.ThermalNetwork: 'forks', 'consumers',
-           'producers', 'pipes'.
+           equal to the components of the dhnx.ThermalNetwork: 'forks',
+           'consumers', 'producers', 'pipes'.
 
     """
     if not reset_index:
-        raise ValueError("Keeping the orginal index is currently not "
-                         "supported. Use 'reset_index=True'.")
+        raise ValueError(
+            "Keeping the orginal index is currently not "
+            "supported. Use 'reset_index=True'."
+        )
 
     # Copies of the original polygons are needed for method 'boundary'
     consumers_poly = go.check_crs(consumers, crs=projected_crs).copy()
     producers_poly = go.check_crs(producers, crs=projected_crs).copy()
 
     # check whether the expected geometry is used for geo dataframes
-    check_geometry_type(lines, types=['LineString', 'MultiLineString'])
+    check_geometry_type(lines, types=["LineString", "MultiLineString"])
     for gdf in [producers, consumers, producers_poly, consumers_poly]:
-        check_geometry_type(gdf, types=['Polygon', 'Point', 'MultiPolygon'])
+        check_geometry_type(gdf, types=["Polygon", "Point", "MultiPolygon"])
         check_duplicate_geometries(gdf)
 
-    # split multilinestrings to single lines with only 1 starting and 1 ending point
+    # split multilinestrings to single lines with only 1 starting
+    # and 1 ending point
     lines = go.split_multilinestr_to_linestr(lines)
 
     # check and convert crs if it is not already the `projected_crs`
@@ -570,45 +633,53 @@ def process_geometry(lines, consumers, producers,
     for layer in [producers, consumers]:
         layer = go.check_crs(layer, crs=projected_crs)
         layer = create_points_from_polygons(layer, method=method)
-        layer['lat'] = layer['geometry'].apply(lambda x: x.y)
-        layer['lon'] = layer['geometry'].apply(lambda x: x.x)
+        layer["lat"] = layer["geometry"].apply(lambda x: x.y)
+        layer["lon"] = layer["geometry"].apply(lambda x: x.x)
 
     for layer in [producers, consumers, producers_poly, consumers_poly]:
         if reset_index:
             layer.reset_index(inplace=True, drop=True)
-            layer.index.name = 'id'
-            layer.drop(columns=['id'], inplace=True, errors='ignore')
+            layer.index.name = "id"
+            layer.drop(columns=["id"], inplace=True, errors="ignore")
         else:
             if layer.index.has_duplicates:
-                raise ValueError("The index of input data has duplicate "
-                                 "values, which is not allowed")
+                raise ValueError(
+                    "The index of input data has duplicate "
+                    "values, which is not allowed"
+                )
 
-    producers['id_full'] = 'producers-' + producers.index.astype('str')
-    producers['type'] = 'G'
-    consumers['id_full'] = 'consumers-' + consumers.index.astype('str')
-    consumers['type'] = 'H'
+    producers["id_full"] = "producers-" + producers.index.astype("str")
+    producers["type"] = "G"
+    consumers["id_full"] = "consumers-" + consumers.index.astype("str")
+    consumers["type"] = "H"
 
     # Add lines to consumers and producers
     lines_consumers, lines = create_object_connections(
-        consumers, lines, tol_distance=tol_distance, n_conn=n_conn)
+        consumers, lines, tol_distance=tol_distance, n_conn=n_conn
+    )
     lines_producers, lines = create_object_connections(
-        producers, lines, tol_distance=tol_distance, n_conn=n_conn_prod)
+        producers, lines, tol_distance=tol_distance, n_conn=n_conn_prod
+    )
     if not reset_index:
         # Connection lines are ordered the same as points. Match their indexes
         lines_consumers.index = consumers.index
         lines_producers.index = producers.index
 
-    if method == 'boundary':
+    if method == "boundary":
         # Can only be performed after 'midpoint' method
         consumers, lines_consumers = run_point_method_boundary(
-            consumers_poly, consumers, lines_consumers)
+            consumers_poly, consumers, lines_consumers
+        )
         producers, lines_producers = run_point_method_boundary(
-            producers_poly, producers, lines_producers)
+            producers_poly, producers, lines_producers
+        )
 
     if welding:
         # Weld continuous line segments together and cut loose ends
         lines = go.weld_segments(
-            lines, lines_producers, lines_consumers,
+            lines,
+            lines_producers,
+            lines_consumers,
             # debug_plotting=True,
         )
 
@@ -616,44 +687,49 @@ def process_geometry(lines, consumers, producers,
     lines = go.drop_parallel_lines(lines)
 
     # add additional line identifier
-    lines_producers['type'] = 'GL'  # GL for generation line
-    lines['type'] = 'DL'  # DL for distribution line
-    lines_consumers['type'] = 'HL'  # HL for house line
+    lines_producers["type"] = "GL"  # GL for generation line
+    lines["type"] = "DL"  # DL for distribution line
+    lines_consumers["type"] = "HL"  # HL for house line
 
     # generate forks point layer
     forks = go.create_forks(lines)
 
     # concat lines
-    lines_all = pd.concat([lines, lines_consumers, lines_producers], sort=False)
+    lines_all = pd.concat(
+        [lines, lines_consumers, lines_producers], sort=False
+    )
     lines_all.reset_index(inplace=True, drop=True)
     if reset_index:
-        lines_all.index.name = 'id'
-        lines_all.drop(columns=['id'], inplace=True, errors='ignore')
+        lines_all.index.name = "id"
+        lines_all.drop(columns=["id"], inplace=True, errors="ignore")
 
     # concat point layer
-    points_all = pd.concat([
-        consumers[['id_full', 'geometry']],
-        producers[['id_full', 'geometry']],
-        forks[['id_full', 'geometry']]],
-        sort=False
+    points_all = pd.concat(
+        [
+            consumers[["id_full", "geometry"]],
+            producers[["id_full", "geometry"]],
+            forks[["id_full", "geometry"]],
+        ],
+        sort=False,
     )
 
     # add from_node, to_node to lines layer
     lines_all = go.insert_node_ids(lines_all, points_all)
 
-    lines_all['length'] = lines_all.length
+    lines_all["length"] = lines_all.length
     logger.info(
-        "Total line length is {:.0f} m".format(lines_all['length'].sum()))
+        "Total line length is {:.0f} m".format(lines_all["length"].sum())
+    )
 
     # Convert all MultiLineStrings to LineStrings
-    check_geometry_type(lines_all, types=['LineString'])
+    check_geometry_type(lines_all, types=["LineString"])
 
     # ## check for near points
-    go.check_double_points(points_all, id_column='id_full')
+    go.check_double_points(points_all, id_column="id_full")
 
     return {
-        'forks': forks,
-        'consumers': consumers,
-        'producers': producers,
-        'pipes': lines_all,
+        "forks": forks,
+        "consumers": consumers,
+        "producers": producers,
+        "pipes": lines_all,
     }

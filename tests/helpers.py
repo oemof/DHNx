@@ -21,7 +21,7 @@ def get_basic_path():
     """Returns the basic oemof path and creates it if necessary.
     The basic path is the '.oemof' folder in the $HOME directory.
     """
-    basicpath = os.path.join(os.path.expanduser('~'), '.DHNx')
+    basicpath = os.path.join(os.path.expanduser("~"), ".DHNx")
     if not os.path.isdir(basicpath):
         os.mkdir(basicpath)
     return basicpath
@@ -29,7 +29,7 @@ def get_basic_path():
 
 def extend_basic_path(subfolder):
     """Returns a path based on the basic oemof path and creates it if
-     necessary. The subfolder is the name of the path extension.
+    necessary. The subfolder is the name of the path extension.
     """
     extended_path = os.path.join(get_basic_path(), subfolder)
     if not os.path.isdir(extended_path):
@@ -47,7 +47,9 @@ def get_all_file_paths(dir):
     return file_paths
 
 
-def check_if_csv_files_equal(csv_file_a, csv_file_b, check_arrays=False, **kwargs):
+def check_if_csv_files_equal(
+    csv_file_a, csv_file_b, check_arrays=False, **kwargs
+):
     r"""
     Compares two csv files.
 
@@ -96,8 +98,8 @@ def check_if_csv_dirs_equal(dir_a, dir_b, **kwargs):
     files_a = get_all_file_paths(dir_a)
     files_b = get_all_file_paths(dir_b)
 
-    files_a = [file for file in files_a if file.split('.')[-1] == 'csv']
-    files_b = [file for file in files_b if file.split('.')[-1] == 'csv']
+    files_a = [file for file in files_a if file.split(".")[-1] == "csv"]
+    files_b = [file for file in files_b if file.split(".")[-1] == "csv"]
 
     files_a.sort()
     files_b.sort()
@@ -107,9 +109,9 @@ def check_if_csv_dirs_equal(dir_a, dir_b, **kwargs):
 
     diff = list(set(f_names_a).symmetric_difference(set(f_names_b)))
 
-    assert not diff, \
-        f"Lists of filenames are not the same." \
-        f" The diff is: {diff}"
+    assert not diff, (
+        f"Lists of filenames are not the same." f" The diff is: {diff}"
+    )
 
     for file_a, file_b in zip(files_a, files_b):
         try:
@@ -118,10 +120,14 @@ def check_if_csv_dirs_equal(dir_a, dir_b, **kwargs):
             diff.append([file_a, file_b])
 
     if diff:
-        error_message = ''
+        error_message = ""
         for pair in diff:
-            short_name_a, short_name_b = (os.path.join(*f.split(os.sep)[-4:]) for f in pair)
-            line = ' - ' + short_name_a + ' and ' + short_name_b + '\n'
+            short_name_a, short_name_b = (
+                os.path.join(*f.split(os.sep)[-4:]) for f in pair
+            )
+            line = " - " + short_name_a + " and " + short_name_b + "\n"
             error_message += line
 
-        raise AssertionError(f" The contents of these file are different:\n{error_message}")
+        raise AssertionError(
+            f" The contents of these file are different:\n{error_message}"
+        )

@@ -45,8 +45,9 @@ def create_forks(lines):
     Creates a forks(nodes) GeoDataFrame from a "line"-GeoDataFrame
     based on the end-points of each LineString.
 
-    Also, an index for every fork is given, and the columns 'full-id' (="forks-" + index"),
-    'lat' and 'lon', which results from the geometry, are added to the GeoDataFrame.
+    Also, an index for every fork is given, and the columns 'full-id'
+    (="forks-" + index"), 'lat' and 'lon', which results from the geometry,
+    are added to the GeoDataFrame.
 
     Parameters
     ----------
@@ -60,12 +61,13 @@ def create_forks(lines):
     nodes = gpd.GeoDataFrame(geometry=[], crs=lines.crs)
 
     for _, j in lines.iterrows():
-        geom = j['geometry']
+        geom = j["geometry"]
         p_0 = Point(geom.boundary.geoms[0])
         p_1 = Point(geom.boundary.geoms[-1])
         nodes = pd.concat(
             [nodes, gpd.GeoDataFrame(geometry=[p_0, p_1], crs=lines.crs)],
-            ignore_index=True)
+            ignore_index=True,
+        )
 
     # transform geometry into wkt
     nodes["geometry_wkt"] = nodes["geometry"].apply(lambda geom: geom.wkt)
@@ -75,15 +77,16 @@ def create_forks(lines):
 
     # create shapely geometry again
     nodes["geometry"] = nodes["geometry_wkt"].apply(
-        lambda geom: wkt.loads(geom))  # pylint: disable=unnecessary-lambda
+        lambda geom: wkt.loads(geom)
+    )  # pylint: disable=unnecessary-lambda
 
     # set index for forks
     nodes = nodes.reset_index(drop=True)
-    nodes['id'] = nodes.index
-    nodes['id_full'] = 'forks-' + nodes['id'].apply(str)
-    nodes['lat'] = nodes['geometry'].apply(lambda x: x.y)
-    nodes['lon'] = nodes['geometry'].apply(lambda x: x.x)
-    nodes.set_index('id', drop=True, inplace=True)
+    nodes["id"] = nodes.index
+    nodes["id_full"] = "forks-" + nodes["id"].apply(str)
+    nodes["lat"] = nodes["geometry"].apply(lambda x: x.y)
+    nodes["lon"] = nodes["geometry"].apply(lambda x: x.x)
+    nodes.set_index("id", drop=True, inplace=True)
 
     return nodes
 
@@ -103,15 +106,18 @@ def insert_node_ids(lines, nodes):
     -------
     geopandas.GeoDataFrame
     """
-    nodes['geo_wkt'] = nodes.geometry.apply(
-        lambda x: wkt.dumps(x, output_dimension=2))
-    nodes.set_index('geo_wkt', drop=True, inplace=True)
+    nodes["geo_wkt"] = nodes.geometry.apply(
+        lambda x: wkt.dumps(x, output_dimension=2)
+    )
+    nodes.set_index("geo_wkt", drop=True, inplace=True)
 
     # add id to gdf_lines for starting and ending node point as wkt
-    lines['b0_wkt'] = lines.geometry.apply(
-        lambda geom: wkt.dumps(geom.boundary.geoms[0], output_dimension=2))
-    lines['b1_wkt'] = lines.geometry.apply(
-        lambda geom: wkt.dumps(geom.boundary.geoms[-1], output_dimension=2))
+    lines["b0_wkt"] = lines.geometry.apply(
+        lambda geom: wkt.dumps(geom.boundary.geoms[0], output_dimension=2)
+    )
+    lines["b1_wkt"] = lines.geometry.apply(
+        lambda geom: wkt.dumps(geom.boundary.geoms[-1], output_dimension=2)
+    )
 
     def match_multipoint(point_wkt):
         """Return id_full from matching 'nodes' for each point in point_wkt.
@@ -123,37 +129,42 @@ def insert_node_ids(lines, nodes):
         point_line = wkt.loads(point_wkt)
         for point_node in nodes.index:
             if point_line.within(wkt.loads(point_node)):
-                return nodes.loc[point_node, 'id_full']
+                return nodes.loc[point_node, "id_full"]
         logger.error("Point not found: %s", point_wkt)
         return False
 
     try:
-        lines['from_node'] = lines['b0_wkt'].apply(
-            lambda x: nodes.at[x, 'id_full'])
-        lines['to_node'] = lines['b1_wkt'].apply(lambda x: match_multipoint(x))
+        lines["from_node"] = lines["b0_wkt"].apply(
+            lambda x: nodes.at[x, "id_full"]
+        )
+        lines["to_node"] = lines["b1_wkt"].apply(lambda x: match_multipoint(x))
     except KeyError as e:
-        errors = ([wkt.loads(x) for x in lines['b0_wkt']
-                   if x not in nodes['id_full']])
-        errors.extend([wkt.loads(x) for x in lines['b1_wkt']
-                       if not match_multipoint(x)])
+        errors = [
+            wkt.loads(x) for x in lines["b0_wkt"] if x not in nodes["id_full"]
+        ]
+        errors.extend(
+            [wkt.loads(x) for x in lines["b1_wkt"] if not match_multipoint(x)]
+        )
         gdf_errors = gpd.GeoDataFrame(geometry=errors, crs=lines.crs)
         ax = lines.plot()
-        gdf_errors.plot(ax=ax, color='red', label='Point(s) causing error')
+        gdf_errors.plot(ax=ax, color="red", label="Point(s) causing error")
         plt.legend()
         plt.show()
         try:
-            nodes.to_file('debug_nodes.geojson')
-            gdf_errors.to_file('debug_error_points.geojson')
+            nodes.to_file("debug_nodes.geojson")
+            gdf_errors.to_file("debug_error_points.geojson")
             # lines[[lines.geometry.name, 'type', 'b0_wkt', 'b1_wkt']
             #       ].to_file('debug_lines.geojson')
         except Exception as e:
             breakpoint()
             logger.error(e)
 
-        raise KeyError("This error indicates specific problems with the data. "
-                       "A plot of the problematic point(s) is shown.") from e
+        raise KeyError(
+            "This error indicates specific problems with the data. "
+            "A plot of the problematic point(s) is shown."
+        ) from e
 
-    lines.drop(axis=1, inplace=True, labels=['b0_wkt', 'b1_wkt'])
+    lines.drop(axis=1, inplace=True, labels=["b0_wkt", "b1_wkt"])
 
     return lines
 
@@ -183,10 +194,10 @@ def check_double_points(gdf, radius=0.001, id_column=None):
 
     for r, c in gdf.iterrows():
 
-        point = c['geometry']
+        point = c["geometry"]
         gdf_other = gdf.drop([r])
         # Prevent OSError, see https://github.com/oemof/DHNx/issues/107
-        other_points = unary_union(list(gdf_other['geometry']))
+        other_points = unary_union(list(gdf_other["geometry"]))
 
         # x1 = nearest_points(point, other_points)[0]
         x2 = nearest_points(point, other_points)[1]
@@ -200,26 +211,29 @@ def check_double_points(gdf, radius=0.001, id_column=None):
                 print_name = c[id_column]
 
             logger.info(
-                'Node {} has a near neighbour! '
-                'Distance {}'.format(print_name, point.distance(x2))
+                "Node {} has a near neighbour! "
+                "Distance {}".format(print_name, point.distance(x2))
             )
 
             count += 1
 
     if count > 0:
-        logger.info('Number of duplicated points: %s', count)
+        logger.info("Number of duplicated points: %s", count)
     else:
         logger.info(
-            'Check passed: No points with a distance closer than {}'.format(radius))
+            "Check passed: No points with a distance closer than {}".format(
+                radius
+            )
+        )
 
     return l_ids
 
 
 def gdf_to_df(gdf):
-    """Converts a GeoDataFrame to a pandas.DataFrame by deleting the geometry column."""
+    """Converts a GeoDataFrame to a pandas.DataFrame by deleting the geometry
+    column."""
 
-    df = pd.DataFrame(
-        gdf[[col for col in gdf.columns if col != 'geometry']])
+    df = pd.DataFrame(gdf[[col for col in gdf.columns if col != "geometry"]])
 
     return df
 
@@ -248,9 +262,9 @@ def split_multilinestr_to_linestr(gdf_input):
     # first: split MultiLineString into LineStrings
     for i, b in gdf_lines.iterrows():
 
-        geom = b['geometry']
+        geom = b["geometry"]
 
-        if geom.geom_type == 'MultiLineString':
+        if geom.geom_type == "MultiLineString":
 
             multilinestrings = []
 
@@ -259,22 +273,26 @@ def split_multilinestr_to_linestr(gdf_input):
 
             for multiline in multilinestrings:
                 new_row = b.copy()
-                new_row['geometry'] = multiline
-                new_lines = pd.concat([new_lines, new_row.to_frame().T],
-                                      ignore_index=True, sort=False)
+                new_row["geometry"] = multiline
+                new_lines = pd.concat(
+                    [new_lines, new_row.to_frame().T],
+                    ignore_index=True,
+                    sort=False,
+                )
 
             gdf_lines.drop(index=i, inplace=True)
 
-    gdf_lines = pd.concat([gdf_lines, new_lines], ignore_index=True,
-                          sort=False)
+    gdf_lines = pd.concat(
+        [gdf_lines, new_lines], ignore_index=True, sort=False
+    )
 
-    gdf_lines['geometry'].crs = gdf_input.crs
+    gdf_lines["geometry"].crs = gdf_input.crs
 
     # second: split LineStrings into single Linestrings
     new_lines = gpd.GeoDataFrame()
     for i, b in gdf_lines.iterrows():
 
-        geom = b['geometry']
+        geom = b["geometry"]
 
         if len(geom.coords) > 2:
 
@@ -282,23 +300,29 @@ def split_multilinestr_to_linestr(gdf_input):
 
             for num in range(num_new_lines):
                 new_row = b.copy()
-                new_row['geometry'] = \
-                    LineString([geom.coords[num], geom.coords[num + 1]])
-                new_lines = pd.concat([new_lines, new_row.to_frame().T],
-                                      ignore_index=True, sort=False)
+                new_row["geometry"] = LineString(
+                    [geom.coords[num], geom.coords[num + 1]]
+                )
+                new_lines = pd.concat(
+                    [new_lines, new_row.to_frame().T],
+                    ignore_index=True,
+                    sort=False,
+                )
 
             gdf_lines.drop(index=i, inplace=True)
 
-    gdf_lines = pd.concat([gdf_lines, new_lines], ignore_index=True,
-                          sort=False)
+    gdf_lines = pd.concat(
+        [gdf_lines, new_lines], ignore_index=True, sort=False
+    )
 
-    gdf_lines['geometry'].crs = gdf_input.crs
+    gdf_lines["geometry"].crs = gdf_input.crs
 
     return gdf_lines
 
 
-def weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
-                  debug_plotting=False):
+def weld_segments(
+    gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False
+):
     """Weld continuous line segments together and cut loose ends.
 
     This is a public function that recursively calls the internal function
@@ -326,21 +350,27 @@ def weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
 
     """
     gdf_line_net_last = gdf_line_net
-    gdf_line_net_new = _weld_segments(gdf_line_net, gdf_line_gen,
-                                      gdf_line_houses, debug_plotting)
+    gdf_line_net_new = _weld_segments(
+        gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting
+    )
     # Now do all of this recursively
     while len(gdf_line_net_new) < len(gdf_line_net_last):
-        logger.info('Welding lines... reduced from {} to {} lines'.format(
-            len(gdf_line_net_last), len(gdf_line_net_new)))
+        logger.info(
+            "Welding lines... reduced from {} to {} lines".format(
+                len(gdf_line_net_last), len(gdf_line_net_new)
+            )
+        )
         gdf_line_net_last = gdf_line_net_new
-        gdf_line_net_new = _weld_segments(gdf_line_net_new, gdf_line_gen,
-                                          gdf_line_houses, debug_plotting)
-    logger.info('Welding lines... done')
+        gdf_line_net_new = _weld_segments(
+            gdf_line_net_new, gdf_line_gen, gdf_line_houses, debug_plotting
+        )
+    logger.info("Welding lines... done")
     return gdf_line_net_new
 
 
-def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
-                   debug_plotting=False):
+def _weld_segments(
+    gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False
+):
     """Weld continuous line segments together and cut loose ends.
 
     Find all lines that only connect to one other line and connect those
@@ -372,14 +402,15 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
     gdf_line_ext = pd.concat([gdf_line_gen, gdf_line_houses])
 
     for _, b in gdf_line_net.iterrows():
-        def debug_plot(neighbours, color='red'):
+
+        def debug_plot(neighbours, color="red"):
             """Plot base map, current segment (with color) and neighbours."""
             if debug_plotting:
                 _, ax = plt.subplots(1, 1, dpi=300)
-                gdf_line_net.plot(ax=ax, color='blue')
-                gdf_line_ext.plot(ax=ax, color='green')
+                gdf_line_net.plot(ax=ax, color="blue")
+                gdf_line_ext.plot(ax=ax, color="green")
                 if len(neighbours) > 0:  # Prevent empty plot warning
-                    neighbours.plot(ax=ax, color='orange')
+                    neighbours.plot(ax=ax, color="orange")
                 gpd.GeoDataFrame(geometry=[geom]).plot(ax=ax, color=color)
 
         geom = b.geometry  # The current line segment
@@ -400,16 +431,24 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         # themselves, e.g. for spiral ramps. Also they must not be equal
         # to the current segment.
         neighbours = gdf_line_net[
-            (gdf_line_net.geometry.boundary.touches(geom)
-             & ~gdf_line_net.geometry.geom_equals(geom)
-             )]
+            (
+                gdf_line_net.geometry.boundary.touches(geom)
+                & ~gdf_line_net.geometry.geom_equals(geom)
+            )
+        ]
         # If all of the neighbours touch each other, it is the
         # last segment before an intersection, which can be removed.
         # The tests needs to be "touches" OR "equals", since per definition
         # a line geometry cannot "touch" itself
-        if all([all(neighbours.geometry.touches(neighbour)
-                    | neighbours.geometry.geom_equals(neighbour))
-                for neighbour in neighbours.geometry]):
+        if all(
+            [
+                all(
+                    neighbours.geometry.touches(neighbour)
+                    | neighbours.geometry.geom_equals(neighbour)
+                )
+                for neighbour in neighbours.geometry
+            ]
+        ):
             # Treat as if there was only one neighbour (like end segment)
             neighbours = neighbours.head(1)
 
@@ -424,23 +463,32 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             p1_neighbours = neighbours.geometry.intersects(p1).to_list()
             p2_neighbours = neighbours.geometry.intersects(p2).to_list()
 
-            if (any(gdf_line_ext.geometry.touches(p1))
-               and p2_neighbours.count(True) > 0):
+            if (
+                any(gdf_line_ext.geometry.touches(p1))
+                and p2_neighbours.count(True) > 0
+            ):
                 unused = False
-            elif (any(gdf_line_ext.geometry.touches(p2))
-                  and p1_neighbours.count(True) > 0):
+            elif (
+                any(gdf_line_ext.geometry.touches(p2))
+                and p1_neighbours.count(True) > 0
+            ):
                 unused = False
-            elif (any(gdf_line_ext.geometry.touches(geom))
-                  and not any(gdf_line_net.geometry.touches(geom))):
+            elif any(gdf_line_ext.geometry.touches(geom)) and not any(
+                gdf_line_net.geometry.touches(geom)
+            ):
                 # The current segment is touched by an external line, but not
                 # by any other network segment. Select connected external line
-                geom_ext = unary_union(gdf_line_ext[
-                    gdf_line_ext.geometry.touches(geom)].geometry)
+                geom_ext = unary_union(
+                    gdf_line_ext[gdf_line_ext.geometry.touches(geom)].geometry
+                )
                 # Test if the network line touched by the external line
                 # is equal to the current line segement, i.e. the external
                 # line is not connected to any other network line
-                if gdf_line_net[gdf_line_net.geometry.touches(geom_ext)
-                                ].geometry.geom_equals(geom).all():
+                if (
+                    gdf_line_net[gdf_line_net.geometry.touches(geom_ext)]
+                    .geometry.geom_equals(geom)
+                    .all()
+                ):
                     logger.warning(
                         "Welding is about to remove a street network line "
                         "segment that is connected to nothing but a building "
@@ -449,19 +497,22 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
                         "This indicates a bug in the welding logic or an "
                         "issue in the input data, e.g. an initial street "
                         "network where not all lines are connected. If the "
-                        "remaining process fails, this may be the cause.")
+                        "remaining process fails, this may be the cause."
+                    )
                     unused = False  # Keep line, despite not being useful
 
             if unused:
                 # If truly unused, we can discard it to simplify the network
-                debug_plot(neighbours, color='white')
-                gdf_deleted = pd.concat([gdf_deleted, gdf_b],
-                                        ignore_index=True)
+                debug_plot(neighbours, color="white")
+                gdf_deleted = pd.concat(
+                    [gdf_deleted, gdf_b], ignore_index=True
+                )
             else:
                 # Keep it, if it touches a generator or a house
-                debug_plot(neighbours, color='black')
-                gdf_line_net_new = pd.concat([gdf_line_net_new, gdf_b],
-                                             ignore_index=True)
+                debug_plot(neighbours, color="black")
+                gdf_line_net_new = pd.concat(
+                    [gdf_line_net_new, gdf_b], ignore_index=True
+                )
             continue  # Continue with the next line segment
 
         if len(neighbours) > 2:
@@ -478,9 +529,10 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
             elif p2_neighbours.count(True) == 1:  # Only one neighbour allowed
                 neighbours = neighbours[p2_neighbours]  # Neighbour to merge
             else:  # Keep this segment. Multiple lines meet at an intersection
-                gdf_line_net_new = pd.concat([gdf_line_net_new, gdf_b],
-                                             ignore_index=True)
-                debug_plot(neighbours, color='green')
+                gdf_line_net_new = pd.concat(
+                    [gdf_line_net_new, gdf_b], ignore_index=True
+                )
+                debug_plot(neighbours, color="green")
                 continue  # Continue with the next line segment
 
         if len(neighbours) == 2:
@@ -511,8 +563,9 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
 
         if len(neighbours) == 0:
             # If no neighbours are left now, continue with next line segment
-            gdf_line_net_new = pd.concat([gdf_line_net_new, gdf_b],
-                                         ignore_index=True)
+            gdf_line_net_new = pd.concat(
+                [gdf_line_net_new, gdf_b], ignore_index=True
+            )
             continue
 
         # Create list of all elements that should be merged
@@ -523,7 +576,7 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         except NotImplementedError:  # Fails if there is a MultiLineString
             lines_ = []  # Create a new list of lines, without MultiLineStrings
             for line in lines:
-                if line.type == 'MultiLineString':
+                if line.type == "MultiLineString":
                     lines_ += list(line)  # Split the MultiLineString
                 else:  # Linestring
                     lines_.append(line)
@@ -534,11 +587,13 @@ def _weld_segments(gdf_line_net, gdf_line_gen, gdf_line_houses,
         merged_line = linemerge(multi_line)
         gdf_merged = gpd.GeoDataFrame(geometry=[merged_line], crs=crs)
         debug_plot(neighbours)  # Plot the segments before the merge
-        debug_plot(gdf_merged, color='orange')  # ...and after the merge
-        gdf_line_net_new = pd.concat([gdf_line_net_new, gdf_merged],
-                                     ignore_index=True)
-        gdf_merged_all = pd.concat([gdf_merged_all, gdf_merged],
-                                   ignore_index=True)
+        debug_plot(gdf_merged, color="orange")  # ...and after the merge
+        gdf_line_net_new = pd.concat(
+            [gdf_line_net_new, gdf_merged], ignore_index=True
+        )
+        gdf_merged_all = pd.concat(
+            [gdf_merged_all, gdf_merged], ignore_index=True
+        )
 
     return gdf_line_net_new
 
@@ -557,17 +612,20 @@ def drop_parallel_lines(gdf):
     This function modifies the GeoDataFrame in place and resets the index.
     """
     # Stores each LineString's endpoints and length in temporary columns
-    gdf['5d7u6j_endpoints'] = gdf.geometry.apply(
-        lambda line: tuple(sorted([line.coords[0], line.coords[-1]])))
-    gdf['5d7u6j_length'] = gdf.geometry.length
+    gdf["5d7u6j_endpoints"] = gdf.geometry.apply(
+        lambda line: tuple(sorted([line.coords[0], line.coords[-1]]))
+    )
+    gdf["5d7u6j_length"] = gdf.geometry.length
 
     # Group by endpoints and keep only the shortest LineString for each group
-    gdf = (gdf.sort_values('5d7u6j_length')
-           .groupby('5d7u6j_endpoints').first()
-           .set_crs(gdf.crs)  # The groupby operation removes crs info
-           .reset_index(drop=True)  # Drop the temporary columns
-           .drop(columns=['5d7u6j_length'])  # Drop the temporary columns
-           )
+    gdf = (
+        gdf.sort_values("5d7u6j_length")
+        .groupby("5d7u6j_endpoints")
+        .first()
+        .set_crs(gdf.crs)  # The groupby operation removes crs info
+        .reset_index(drop=True)  # Drop the temporary columns
+        .drop(columns=["5d7u6j_length"])  # Drop the temporary columns
+    )
     return gdf
 
 
@@ -605,7 +663,7 @@ def check_crs(gdf, crs=4647, force_2d=True):
     """
     if gdf.crs.to_epsg() != crs:
         gdf.to_crs(epsg=crs, inplace=True)
-        logger.info('CRS of GeoDataFrame converted to EPSG:{0}'.format(crs))
+        logger.info("CRS of GeoDataFrame converted to EPSG:{0}".format(crs))
 
     if force_2d and gdf.has_z.any():
         logger.debug("Reducing 3D geometry to 2D for compatibility")

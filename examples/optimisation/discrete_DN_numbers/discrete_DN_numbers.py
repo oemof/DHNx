@@ -64,16 +64,29 @@ network.optimize_investment(invest_options=invest_opt)
 results_edges = network.results.optimization["components"]["pipes"]
 print(
     results_edges[
-        ["from_node", "to_node", "hp_type", "capacity", "direction", "costs", "losses"]
+        [
+            "from_node",
+            "to_node",
+            "hp_type",
+            "capacity",
+            "direction",
+            "costs",
+            "losses",
+        ]
     ]
 )
 
 # print(results_edges[['invest_costs[€]']].sum())
-print("Objective value: ", network.results.optimization["oemof_meta"]["objective"])
+print(
+    "Objective value: ",
+    network.results.optimization["oemof_meta"]["objective"],
+)
 
 # assign new ThermalNetwork with invested pipes
 twn_results = network
-twn_results.components["pipes"] = results_edges[results_edges["capacity"] > 0.001]
+twn_results.components["pipes"] = results_edges[
+    results_edges["capacity"] > 0.001
+]
 
 # plot invested edges
 static_map_2 = dhnx.plotting.StaticMap(twn_results)

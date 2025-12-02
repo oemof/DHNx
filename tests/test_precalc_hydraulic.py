@@ -102,47 +102,60 @@ def test_wrong_initial_guess_error():
 
 def test_bisection_method_velocity():
     bi_1 = v_max_bisection(
-        0.1, 65, k=0.1, p_max=100,
-        p_epsilon=0.1, v_epsilon=0.001, v_0=1, v_1=0.1,
-        pressure=101325, fluid='IF97::Water'
+        0.1,
+        65,
+        k=0.1,
+        p_max=100,
+        p_epsilon=0.1,
+        v_epsilon=0.001,
+        v_0=1,
+        v_1=0.1,
+        pressure=101325,
+        fluid="IF97::Water",
     )
     assert round(bi_1, 7) == 0.9876953
 
 
 def test_secant_method_velocity():
     se_1 = v_max_secant(
-        0.4, 80, k=0.1, p_max=250, p_epsilon=1,
-        v_0=1, v_1=2,
-        pressure=101325, fluid='IF97::Water'
+        0.4,
+        80,
+        k=0.1,
+        p_max=250,
+        p_epsilon=1,
+        v_0=1,
+        v_1=2,
+        pressure=101325,
+        fluid="IF97::Water",
     )
     assert round(se_1, 7) == 3.7593294
 
 
 def test_delta_p1():  # laminar
-    dp = delta_p(1E-6, 1)
-    assert round(dp, 13) == 1.00538E-8
+    dp = delta_p(1e-6, 1)
+    assert round(dp, 13) == 1.00538e-8
 
 
 def test_delta_p2():  # turb, Re < 10**5
-    dp = delta_p(1, 5E-3, k=0.01)
+    dp = delta_p(1, 5e-3, k=0.01)
     assert round(dp, 5) == 2743.41722
 
 
 def test_delta_p3():  # turb, 10**5 < Re < 10**6
-    dp = delta_p(10, 5E-3, k=0.001)
+    dp = delta_p(10, 5e-3, k=0.001)
     assert round(dp, 5) == 156745.5396
 
 
 def test_delta_p4():  # turb, Re > 10**6
-    dp = delta_p(100, 5E-3, k=0.0001)
+    dp = delta_p(100, 5e-3, k=0.0001)
     assert round(dp, 5) == 10456325.31958
 
 
 def test_delta_p5():  # turb, Re*k/di > 1300
-    dp = delta_p(100, 5E-3, k=0.01)
+    dp = delta_p(100, 5e-3, k=0.01)
     assert round(dp, 5) == 22592027.65789
 
 
 def test_delta_p6():  # turb, transition
-    dp = delta_p(100, 5E-3, k=0.0003)
+    dp = delta_p(100, 5e-3, k=0.0003)
     assert round(dp, 5) == 11865210.59373
