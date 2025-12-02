@@ -724,6 +724,8 @@ def process_geometry(
     # Convert all MultiLineStrings to LineStrings
     check_geometry_type(lines_all, types=["LineString"])
 
+    go.drop_detours(lines_all)
+
     # ## check for near points
     go.check_double_points(points_all, id_column="id_full")
 

@@ -15,9 +15,10 @@ SPDX-License-Identifier: MIT
 
 try:
     import geopandas as gpd
-
 except ImportError:
     print("Need to install geopandas to process geometry data.")
+
+import networkx as nx
 
 try:
     import shapely
@@ -627,6 +628,36 @@ def drop_parallel_lines(gdf):
         .drop(columns=["5d7u6j_length"])  # Drop the temporary columns
     )
     return gdf
+
+
+def drop_detours(lines_all):
+    """Keep only lines that are the shortest connections between two points.
+    """
+    graph = nx.Graph()
+    graph.add_edges_from([
+        (a, b, {"weight": length})
+        for a,b,length
+        in zip(
+            lines_all["from_node"],
+            lines_all["to_node"],
+            lines_all["length"],
+        )
+    ])
+
+    # identify rows contaning "detour" lines
+    lines_to_drop = []
+    for row, line in lines_all.iterrows():
+        if line["length"] > nx.shortest_path_length(
+            graph,
+            source=line["from_node"],
+            target=line["to_node"],
+            weight="weight",
+        ):
+            lines_to_drop.append(row)
+
+    lines_all.drop(lines_to_drop, inplace=True)
+
+    return lines_all
 
 
 def check_crs(gdf, crs=4647, force_2d=True):
