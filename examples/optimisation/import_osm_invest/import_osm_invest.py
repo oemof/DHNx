@@ -40,6 +40,7 @@ os.chdir(os.path.dirname(__file__))
 streets = dict(
     {
         "highway": [
+            "tertiary",
             "residential",
             "service",
             "unclassified",
