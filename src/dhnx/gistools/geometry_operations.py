@@ -636,7 +636,7 @@ def drop_detours(lines_all):
     graph = nx.Graph()
     graph.add_edges_from([
         (a, b, {"weight": length})
-        for a,b,length
+        for a, b, length
         in zip(
             lines_all["from_node"],
             lines_all["to_node"],
@@ -658,6 +658,41 @@ def drop_detours(lines_all):
     lines_all.drop(lines_to_drop, inplace=True)
 
     return lines_all
+
+
+def _drop_detours(
+    graph: nx.Graph,
+) -> nx.Graph:
+    for (source, target) in list(graph.edges()):
+        edge_weight = graph[source][target]["weight"]
+        if edge_weight > nx.shortest_path_length(
+            graph,
+            source=source,
+            target=target,
+            weight="weight",
+        ):
+            graph.remove_edge(source, target)
+
+    return graph
+
+
+def _weld_edges(
+    graph: nx.Graph,
+) -> nx.Graph:
+    for node in list(graph.nodes()):
+        if graph.degree(node) == 2:
+            edges = list(graph.edges(node))
+            edge_weight = (
+                graph[edges[0][0]][edges[0][1]]["weight"]
+                + graph[edges[1][0]][edges[1][1]]["weight"]
+            )
+            graph.add_edge(
+                edges[0][1],
+                edges[1][1],
+                weight=edge_weight,
+            )
+            graph.remove_node(node)
+    return graph
 
 
 def check_crs(gdf, crs=4647, force_2d=True):

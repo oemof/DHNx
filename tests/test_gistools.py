@@ -15,6 +15,8 @@ from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely.geometry import Point
 
+import networkx as nx
+
 from dhnx.gistools import connect_points as cp
 from dhnx.gistools import geometry_operations as go
 
@@ -35,3 +37,30 @@ def test_split_linestring():
     results = go.split_multilinestr_to_linestr(gdf_line)
     assert gdf_line.geometry.length.sum() == results.length.sum()
     assert len(results.index) == 7
+
+def test_drop_detours():
+    edgelist = [
+        (0, 1, {"weight": 5}),
+        (1, 2, {"weight": 2}),
+        (2, 0, {"weight": 2}),
+    ]
+    graph = nx.Graph(edgelist)
+
+    go._drop_detours(graph)
+
+    # longer connection with direct edge has been dropped
+    assert list(graph.edges()) == [(0, 2), (1, 2)]
+
+
+def test_weld_edges():
+    edgelist = [
+        (0, 1, {"weight": 5}),
+        (1, 2, {"weight": 2}),
+        (2, 3, {"weight": 2}),
+    ]
+    graph = nx.Graph(edgelist)
+    go._weld_edges(graph)
+
+    # connection has been merged
+    assert list(graph.edges()) == [(0, 3)]
+    assert graph[0][3]["weight"] == 5 + 2 + 2
