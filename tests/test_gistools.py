@@ -52,15 +52,29 @@ def test_drop_detours():
     assert list(graph.edges()) == [(0, 2), (1, 2)]
 
 
-def test_weld_edges():
+def test_remove_useless_forks():
+    nodelist = [
+        (0, {"type": "fork"}),
+        (1, {"type": "fork"}),
+        (2, {"type": "fork"}),
+        (3, {"type": "fork"}),
+        (4, {"type": "fork"}),
+        ("s1", {"type": "sink"}),
+        ("s2", {"type": "sink"}),
+    ]
     edgelist = [
+        ("s1", 0, {"weight": 1}),
         (0, 1, {"weight": 5}),
         (1, 2, {"weight": 2}),
+        (2, 4, {"weight": 7}),
         (2, 3, {"weight": 2}),
+        ("s2", 3, {"weight": 1}),
     ]
-    graph = nx.Graph(edgelist)
-    go._weld_edges(graph)
+    graph = nx.Graph()
+    graph.add_nodes_from(nodelist)
+    graph.add_edges_from(edgelist)
+    graph_was_updated = go.simplify_graph(graph)
 
-    # connection has been merged
-    assert list(graph.edges()) == [(0, 3)]
-    assert graph[0][3]["weight"] == 5 + 2 + 2
+    assert graph_was_updated
+    assert list(graph.edges()) == [("s1", "s2")]
+    assert graph["s1"]["s2"]["weight"] == 5 + 2 + 2 + 1 + 1

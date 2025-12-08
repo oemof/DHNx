@@ -660,9 +660,29 @@ def drop_detours(lines_all):
     return lines_all
 
 
+def simplify_graph(
+    graph: nx.Graph,
+) -> bool:
+    graph_was_updated = False
+    graph_needs_iteration = True
+    while graph_needs_iteration:
+        graph_needs_iteration = False
+        detours_dropped = _drop_detours(graph)
+        forks_removed = _remove_useless_forks(graph)
+
+        # if something changed, we need a new iteration
+        graph_needs_iteration = detours_dropped or forks_removed
+
+        # graph was updated if new iteration is needed or it was updated before
+        graph_was_updated = graph_needs_iteration or graph_was_updated
+
+    return graph_was_updated
+
+
 def _drop_detours(
     graph: nx.Graph,
-) -> nx.Graph:
+) -> bool:
+    graph_was_updated = False
     for (source, target) in list(graph.edges()):
         edge_weight = graph[source][target]["weight"]
         if edge_weight > nx.shortest_path_length(
@@ -672,27 +692,39 @@ def _drop_detours(
             weight="weight",
         ):
             graph.remove_edge(source, target)
+            graph_was_updated = True
 
-    return graph
+    return graph_was_updated
 
 
-def _weld_edges(
+def _remove_useless_forks(
     graph: nx.Graph,
-) -> nx.Graph:
+) -> bool:
+    """Removes forks that only connect two lines as well as dead ends.
+
+    You need to iterate to also remove forks
+    that connected dead ends to meaningful lines.
+    """
+    graph_was_updated = False
     for node in list(graph.nodes()):
-        if graph.degree(node) == 2:
-            edges = list(graph.edges(node))
-            edge_weight = (
-                graph[edges[0][0]][edges[0][1]]["weight"]
-                + graph[edges[1][0]][edges[1][1]]["weight"]
-            )
-            graph.add_edge(
-                edges[0][1],
-                edges[1][1],
-                weight=edge_weight,
-            )
-            graph.remove_node(node)
-    return graph
+        if graph.nodes[node]['type'] == "fork":
+            if graph.degree(node) == 1:
+                graph.remove_node(node)
+                graph_was_updated = True
+            elif graph.degree(node) == 2:
+                edges = list(graph.edges(node))
+                edge_weight = (
+                    graph[edges[0][0]][edges[0][1]]["weight"]
+                    + graph[edges[1][0]][edges[1][1]]["weight"]
+                )
+                graph.add_edge(
+                    edges[0][1],
+                    edges[1][1],
+                    weight=edge_weight,
+                )
+                graph.remove_node(node)
+                graph_was_updated = True
+    return graph_was_updated
 
 
 def check_crs(gdf, crs=4647, force_2d=True):
