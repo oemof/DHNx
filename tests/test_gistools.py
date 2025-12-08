@@ -38,6 +38,7 @@ def test_split_linestring():
     assert gdf_line.geometry.length.sum() == results.length.sum()
     assert len(results.index) == 7
 
+
 def test_drop_detours():
     edgelist = [
         (0, 1, {"weight": 5}),
