@@ -11,11 +11,10 @@ SPDX-License-Identifier: MIT
 """
 
 import geopandas as gpd
+import networkx as nx
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely.geometry import Point
-
-import networkx as nx
 
 from dhnx.gistools import connect_points as cp
 from dhnx.gistools import geometry_operations as go
