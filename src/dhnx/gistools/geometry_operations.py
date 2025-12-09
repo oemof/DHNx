@@ -229,11 +229,11 @@ def check_double_points(gdf, radius=0.001, id_column=None):
     return l_ids
 
 
-def gdf_to_df(gdf):
+def gdf_to_df(df):
     """Converts a GeoDataFrame to a pandas.DataFrame by deleting the geometry
     column."""
-
-    df = pd.DataFrame(gdf[[col for col in gdf.columns if col != "geometry"]])
+    if isinstance(df, gpd.GeoDataFrame):
+        df = df.drop(columns=df.geometry.name)
 
     return df
 
