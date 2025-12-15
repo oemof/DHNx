@@ -77,4 +77,5 @@ def test_remove_useless_forks():
 
     assert graph_was_updated
     assert list(graph.edges()) == [("s1", "s2")]
-    assert graph["s1"]["s2"]["weight"] == 5 + 2 + 2 + 1 + 1
+    assert len(graph["s1"]["s2"]["via"]) == 5
+    assert graph["s1"]["s2"]["weight"] == 1 + 5 + 2 + 2 + 1
