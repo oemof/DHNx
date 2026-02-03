@@ -764,10 +764,16 @@ def _remove_useless_forks(
                     graph[edges[0][0]][edges[0][1]]["weight"]
                     + graph[edges[1][0]][edges[1][1]]["weight"]
                 )
+                via = (
+                    graph[edges[0][0]][edges[0][1]].get("via", [edges[0]])
+                    + graph[edges[1][0]][edges[1][1]].get("via", [edges[1]])
+                )
+
                 graph.add_edge(
                     edges[0][1],
                     edges[1][1],
                     weight=edge_weight,
+                    via=via,
                 )
                 graph.remove_node(node)
                 graph_was_updated = True
