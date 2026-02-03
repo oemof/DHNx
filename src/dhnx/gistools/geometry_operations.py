@@ -13,6 +13,8 @@ This module is not fully tested yet, so use it with care.
 SPDX-License-Identifier: MIT
 """
 
+import math
+
 try:
     import geopandas as gpd
 except ImportError:
@@ -677,6 +679,51 @@ def simplify_graph(
         graph_was_updated = graph_needs_iteration or graph_was_updated
 
     return graph_was_updated
+
+
+def annotate_distance(
+    graph: nx.Graph,
+) -> None:
+    """Inefficient algorithm that doesthe job."""
+    for source in list(graph.nodes()):
+        source_type = graph.nodes[source]["type"]
+        for target in list(graph.nodes()):
+            target_type = graph.nodes[target]["type"]
+            if source_type != target_type:
+                source_distance = graph.nodes[source].get("distance", math.inf)
+                target_distance = graph.nodes[target].get("distance", math.inf)
+                path_length = nx.shortest_path_length(
+                    graph,
+                    source=source,
+                    target=target,
+                    weight="weight",
+                )
+                graph.nodes[source]["distance"] = min(
+                    path_length, source_distance
+                )
+                graph.nodes[target]["distance"] = min(
+                    path_length, target_distance
+                )
+
+
+def longest_distance(
+    graph: nx.Graph,
+) -> float:
+    _longest_distance = 0.0
+    for source in list(graph.nodes()):
+        if graph.nodes[source]['type'] != "fork":
+            for target in list(graph.nodes()):
+                if graph.nodes[target]['type'] != "fork":
+                    _longest_distance = max(
+                        _longest_distance,
+                        nx.shortest_path_length(
+                            graph,
+                            source=source,
+                            target=target,
+                            weight="weight",
+                        ),
+                    )
+    return _longest_distance
 
 
 def _drop_detours(

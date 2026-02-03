@@ -51,25 +51,54 @@ def test_drop_detours():
     # longer connection with direct edge has been dropped
     assert list(graph.edges()) == [(0, 2), (1, 2)]
 
+nodelist = [
+    (0, {"type": "fork"}),
+    (1, {"type": "fork"}),
+    (2, {"type": "fork"}),
+    (3, {"type": "fork"}),
+    (4, {"type": "fork"}),
+    ("s1", {"type": "sink"}),
+    ("s2", {"type": "sink"}),
+]
+edgelist = [
+    ("s1", 0, {"weight": 1}),
+    (0, 1, {"weight": 5}),
+    (1, 2, {"weight": 2}),
+    (2, 4, {"weight": 7}),
+    (2, 3, {"weight": 2}),
+    ("s2", 3, {"weight": 1}),
+]
+
+
+def test_annotate_distance():
+    graph = nx.Graph()
+    graph.add_nodes_from(nodelist)
+    graph.add_edges_from(edgelist)
+    go.annotate_distance(graph)
+
+    distances = {
+        0: 1,
+        1: 5,
+        2: 3,
+        3: 1,
+        4: 10,
+        "s1": 1,
+        "s2": 1,
+    }
+    node_list = list(graph.nodes())
+    for node in node_list:
+        assert graph.nodes[node]["distance"] == distances[node]
+
+
+def test_longest_distance():
+    graph = nx.Graph()
+    graph.add_nodes_from(nodelist)
+    graph.add_edges_from(edgelist)
+
+    assert go.longest_distance(graph) == 5 + 2 + 2 + 1 + 1
+
 
 def test_remove_useless_forks():
-    nodelist = [
-        (0, {"type": "fork"}),
-        (1, {"type": "fork"}),
-        (2, {"type": "fork"}),
-        (3, {"type": "fork"}),
-        (4, {"type": "fork"}),
-        ("s1", {"type": "sink"}),
-        ("s2", {"type": "sink"}),
-    ]
-    edgelist = [
-        ("s1", 0, {"weight": 1}),
-        (0, 1, {"weight": 5}),
-        (1, 2, {"weight": 2}),
-        (2, 4, {"weight": 7}),
-        (2, 3, {"weight": 2}),
-        ("s2", 3, {"weight": 1}),
-    ]
     graph = nx.Graph()
     graph.add_nodes_from(nodelist)
     graph.add_edges_from(edgelist)
