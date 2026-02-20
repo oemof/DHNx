@@ -51,6 +51,7 @@ def test_drop_detours():
     # longer connection with direct edge has been dropped
     assert list(graph.edges()) == [(0, 2), (1, 2)]
 
+
 nodelist = [
     (0, {"type": "fork"}),
     (1, {"type": "fork"}),
