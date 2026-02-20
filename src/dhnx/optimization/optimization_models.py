@@ -480,6 +480,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         logger.info("Solve the optimization problem")
         self.om.solve(
             solver=self.settings["solver"],
+            allow_nonoptimal=self.settings.get("allow_nonoptimal", False),
             solve_kwargs=s_kw,
             cmdline_options=self.settings.get("solver_cmdline_options", {}),
         )
@@ -808,6 +809,7 @@ def setup_optimise_investment(
     dump_name="dump.oemof",
     print_logging_info=False,
     write_lp_file=False,
+    allow_nonoptimal=False,
 ):
     """
     Function for setting up the oemof solph operational Model.
@@ -849,7 +851,10 @@ def setup_optimise_investment(
         Additional logging info is printed.
     write_lp_file : bool
         Linear program file is stored (‘User/.oemof/lp_files/DHNx.lp’).
-
+    allow_nonoptimal : bool
+        False: If no optimal solution is found, an error will be risen.
+        True: If no optimal solution is found, there will be a warning.
+        Default is False.
     Returns
     -------
     oemof.solph.Model : The oemof.solph.Model is build.
@@ -878,6 +883,7 @@ def setup_optimise_investment(
         "dump_name": dump_name,
         "print_logging_info": print_logging_info,
         "write_lp_file": write_lp_file,
+        "allow_nonoptimal": allow_nonoptimal,
     }
 
     model = OemofInvestOptimizationModel(

@@ -232,11 +232,11 @@ def check_double_points(gdf, radius=0.001, id_column=None):
     return l_ids
 
 
-def gdf_to_df(gdf):
+def gdf_to_df(df):
     """Converts a GeoDataFrame to a pandas.DataFrame by deleting the geometry
     column."""
-
-    df = pd.DataFrame(gdf[[col for col in gdf.columns if col != "geometry"]])
+    if isinstance(df, gpd.GeoDataFrame):
+        df = df.drop(columns=df.geometry.name)
 
     return df
 
@@ -367,6 +367,9 @@ def weld_segments(
         gdf_line_net_new = _weld_segments(
             gdf_line_net_new, gdf_line_gen, gdf_line_houses, debug_plotting
         )
+        if len(gdf_line_net_new) == 0:
+            gdf_line_net_new = gdf_line_net_last
+            break
     logger.info("Welding lines... done")
     return gdf_line_net_new
 
@@ -589,6 +592,7 @@ def _weld_segments(
         # Merge the MultiLineString into a single object
         merged_line = linemerge(multi_line)
         gdf_merged = gpd.GeoDataFrame(geometry=[merged_line], crs=crs)
+        gdf_merged = gdf_merged.explode()  # Explode Multi- into LineStrings
         debug_plot(neighbours)  # Plot the segments before the merge
         debug_plot(gdf_merged, color="orange")  # ...and after the merge
         gdf_line_net_new = pd.concat(

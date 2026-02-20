@@ -620,7 +620,8 @@ def process_geometry(
     # check whether the expected geometry is used for geo dataframes
     check_geometry_type(lines, types=["LineString", "MultiLineString"])
     for gdf in [producers, consumers, producers_poly, consumers_poly]:
-        check_geometry_type(gdf, types=["Polygon", "Point", "MultiPolygon"])
+        check_geometry_type(
+            gdf, types=["Polygon", "Point", "MultiPolygon", "MultiPoint"])
         check_duplicate_geometries(gdf)
 
     # split multilinestrings to single lines with only 1 starting
