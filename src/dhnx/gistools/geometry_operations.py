@@ -666,6 +666,45 @@ def drop_detours(lines_all):
     return lines_all
 
 
+def simplify(lines_all):
+    graph = nx.Graph()
+    graph.add_edges_from(
+        [
+            (a, b, {"weight": length})
+            for a, b, length in zip(
+                lines_all["from_node"],
+                lines_all["to_node"],
+                lines_all["length"],
+            )
+        ]
+    )
+    node_types = {node: {"type": node.split("-")[0][:-1]} for node in list(graph.nodes())}
+    nx.set_node_attributes(graph, node_types)
+
+    simplify_graph(graph=graph)
+
+    lines_simplified = nx.to_pandas_edgelist(
+        graph,
+        source="from_node",
+        target="to_node",
+    )
+
+    lines_simplified.rename(columns={"weight": "lentgh"}, inplace=True)
+    lines_simplified["via"].fillna(-1, inplace=True)
+
+    line_geometry = {}
+    for l, line in lines_simplified.iterrows():
+        if line["via"] == -1:
+            geometry = lines_all[
+                (lines_all["from_node"] == line["from_node"]) & (lines_all["to_node"] == line["to_node"])
+                | (lines_all["to_node"] == line["from_node"]) & (lines_all["from_node"] == line["to_node"])
+            ]["geometry"]
+            line_geometry[l] = geometry
+
+    print(lines_simplified)
+    print(line_geometry)
+
+
 def simplify_graph(
     graph: nx.Graph,
 ) -> bool:
@@ -688,7 +727,7 @@ def simplify_graph(
 def annotate_distance(
     graph: nx.Graph,
 ) -> None:
-    """Inefficient algorithm that doesthe job."""
+    """Inefficient algorithm that does the job."""
     for source in list(graph.nodes()):
         source_type = graph.nodes[source]["type"]
         for target in list(graph.nodes()):

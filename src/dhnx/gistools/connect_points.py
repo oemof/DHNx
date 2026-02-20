@@ -675,15 +675,6 @@ def process_geometry(
             producers_poly, producers, lines_producers
         )
 
-    if welding:
-        # Weld continuous line segments together and cut loose ends
-        lines = go.weld_segments(
-            lines,
-            lines_producers,
-            lines_consumers,
-            # debug_plotting=True,
-        )
-
     # Keep only the shortest of all lines connecting the same two points
     lines = go.drop_parallel_lines(lines)
 
@@ -725,7 +716,8 @@ def process_geometry(
     # Convert all MultiLineStrings to LineStrings
     check_geometry_type(lines_all, types=["LineString"])
 
-    go.drop_detours(lines_all)
+    if welding:
+        go.simplify(lines_all)
 
     # ## check for near points
     go.check_double_points(points_all, id_column="id_full")
