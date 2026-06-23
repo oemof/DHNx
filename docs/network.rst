@@ -11,7 +11,7 @@ rendered in the following table.
 
 .. csv-table::
    :header-rows: 1
-   :file: ../dhnx/components.csv
+   :file: ../src/dhnx/components.csv
 
 Every component has a number of attributes which are defined in
 `components_attrs/ <https://github.com/oemof/DHNx/blob/dev/src/dhnx/component_attrs>`_.
@@ -29,7 +29,7 @@ They are characterized by these attributes:
 
 .. csv-table::
    :header-rows: 1
-   :file: ../dhnx/component_attrs/consumers.csv
+   :file: ../src/dhnx/component_attrs/consumers.csv
 
 
 Producer
@@ -40,7 +40,7 @@ Producers are described with the following attributes:
 
 .. csv-table::
    :header-rows: 1
-   :file: ../dhnx/component_attrs/producers.csv
+   :file: ../src/dhnx/component_attrs/producers.csv
 
 
 Fork
@@ -51,7 +51,7 @@ Forks have the attributes described in the following table:
 
 .. csv-table::
    :header-rows: 1
-   :file: ../dhnx/component_attrs/forks.csv
+   :file: ../src/dhnx/component_attrs/forks.csv
 
 
 Pipe
@@ -62,4 +62,4 @@ They are characterized by these attributes:
 
 .. csv-table::
    :header-rows: 1
-   :file: ../dhnx/component_attrs/pipes.csv
+   :file: ../src/dhnx/component_attrs/pipes.csv

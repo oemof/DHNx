@@ -23,7 +23,7 @@ Scope
 The following questions can be addressed using the `optimize_investment` method
 of the *ThermalNetwork*:
 
-* What is the cost-optimal topology and dimensioning of a DHS piping system, 
+* What is the cost-optimal topology and dimensioning of a DHS piping system,
   given the locations of potential central heat supply plants, the potential
   locations for the DHS piping system (e.g. street network),
   and the position of consumers?
@@ -65,7 +65,7 @@ The optimisation of a given *ThermalNetwork* is executed by:
     import dhnx
 
     tnw = dhnx.network.ThermalNetwork()
-    
+
     tnw = network.from_csv_folder('path/to/thermal_network')
 
     invest_opt = dhnx.input_output.load_invest_options('path/to/invest_options')
@@ -246,7 +246,7 @@ the `optimize_investment()` method of the *ThermalNetwork*, you need to provide
 some additional data providing the investment parameter.
 The following sheme illustrates the structure of the investment input data:
 
-.. include:: ../dhnx/input_output.py
+.. include:: ../src/dhnx/input_output.py
   :start-after: .. _folder_structure_invest:
   :end-before: Parameters
 
@@ -323,7 +323,7 @@ The minimum requirement for doing an DHS optimisation is to provide an demand at
 Therefore, you need the following two .csv files: *bus.csv* specifies the
 *oemof-solph* *Bus* components, and *demand.csv* defines the *oemof.solph.Sink*.
 
-.. include:: ../dhnx/optimization/add_components.py
+.. include:: ../src/dhnx/optimization/add_components.py
   :start-after: .. _bus_table:
   :end-before: Parameters
 
@@ -350,7 +350,7 @@ DHS system. That means, the energy need to be supplied somewhere, which makes so
 necessary. To connect a source in the oemof logic, there needs to be a *oemof.solph.Bus* to which
 the source is connected. The two files *bus.csv* and *source.csv* need to be provided:
 
-.. include:: ../dhnx/optimization/add_components.py
+.. include:: ../src/dhnx/optimization/add_components.py
   :start-after: .. _bus_table:
   :end-before: Parameters
 
