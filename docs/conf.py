@@ -54,6 +54,8 @@ linkcheck_ignore = [r"https://requires.io/.*"] + (
     [
         r"https://github.com/oemof/DHNx/issues/*",
         r"https://github.com/oemof/DHNx/pulls/*",
+        # 'Unsupported Media Type' despite valid link in 2026
+        r"https://www.schweizer-fn.de/stroemung/rauhigkeit/rauhigkeit.php",
     ]
     if "TRAVIS" not in os.environ
     else []
