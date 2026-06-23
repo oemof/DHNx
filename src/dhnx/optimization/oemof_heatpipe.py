@@ -58,7 +58,7 @@ class HeatPipeline(Node):
      * :py:class:`~dhnx.optimization.oemof_heatpipe.HeatPipelineBlock` (if no
        Investment object present)
      * :py:class:`~dhnx.optimization.oemof_heatpipe.HeatPipelineInvestBlock`
-      (ifInvestment object present)
+       (if Investment object present)
 
     Examples
     --------
