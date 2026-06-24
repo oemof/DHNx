@@ -11,7 +11,6 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-
 import oemof.solph as solph
 
 import dhnx.optimization.add_components as ac
@@ -217,7 +216,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 end = q["to_node"]
                 b_in = busd[(d_labels["l_1"], d_labels["l_2"], "bus", start)]
                 b_out = busd[(d_labels["l_1"], d_labels["l_2"], "bus", end)]
-                d_labels["l_4"] = start + "-" +end
+                d_labels["l_4"] = start + "-" + end
 
                 nodes = ac.add_heatpipes(
                     pipe_data,
@@ -235,8 +234,11 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                     start = q["to_node"]
                     end = q["from_node"]
                     b_in = busd[
-                        (d_labels["l_1"], d_labels["l_2"], "bus", start)]
-                    b_out = busd[(d_labels["l_1"], d_labels["l_2"], "bus",end)]
+                        (d_labels["l_1"], d_labels["l_2"], "bus", start)
+                    ]
+                    b_out = busd[
+                        (d_labels["l_1"], d_labels["l_2"], "bus", end)
+                    ]
                     d_labels["l_4"] = start + "-" + end
 
                     nodes = ac.add_heatpipes(
