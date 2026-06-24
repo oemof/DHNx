@@ -146,7 +146,7 @@ def insert_node_ids(lines, nodes):
             [wkt.loads(x) for x in lines["b1_wkt"] if not match_multipoint(x)]
         )
         gdf_errors = gpd.GeoDataFrame(geometry=errors, crs=lines.crs)
-        ax = lines.plot()
+        ax = lines.plot(color='blue')
         gdf_errors.plot(ax=ax, color="red", label="Point(s) causing error")
         plt.legend()
         plt.show()
@@ -321,8 +321,9 @@ def split_multilinestr_to_linestr(gdf_input):
 
 
 def weld_segments(
-    gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False
-):
+    gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False,
+    retain_unique_values=['capacity'],
+    ):
     """Weld continuous line segments together and cut loose ends.
 
     This is a public function that recursively calls the internal function
@@ -342,6 +343,15 @@ def weld_segments(
         Houses that need to be connected.
     debug_plotting : bool, optional
         Plot the selection process.
+    retain_unique_values : list, optional
+        List of attributes where unique values must be retained when welding
+        geometries. Is used as ``gdf.dissolve(by=retain_unique_values)``.
+        When only new pipes are created, this list can be empty (or None).
+        But if there are existing pipes in the input data,
+        you will very likely not want to weld/merge/dissolve pipe segments
+        with different capacities. This is achieved by using the
+        default setting ``['capacity']``.
+        Selected attributes not present in the input data are silently ignored.
 
     Returns
     -------
@@ -349,9 +359,15 @@ def weld_segments(
         Simplified potential pipe network.
 
     """
+    retain_unique_values = [
+        c for c in retain_unique_values if c in gdf_line_net.columns]
+    if retain_unique_values is not None and len(retain_unique_values) == 0:
+        retain_unique_values = None
+
     gdf_line_net_last = gdf_line_net
     gdf_line_net_new = _weld_segments(
-        gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting
+        gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting,
+        retain_unique_values=retain_unique_values,
     )
     # Now do all of this recursively
     while len(gdf_line_net_new) < len(gdf_line_net_last):
@@ -362,7 +378,8 @@ def weld_segments(
         )
         gdf_line_net_last = gdf_line_net_new
         gdf_line_net_new = _weld_segments(
-            gdf_line_net_new, gdf_line_gen, gdf_line_houses, debug_plotting
+            gdf_line_net_new, gdf_line_gen, gdf_line_houses, debug_plotting,
+            retain_unique_values=retain_unique_values,
         )
         if len(gdf_line_net_new) == 0:
             gdf_line_net_new = gdf_line_net_last
@@ -372,8 +389,9 @@ def weld_segments(
 
 
 def _weld_segments(
-    gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False
-):
+    gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False,
+    retain_unique_values=['capacity'],
+    ):
     """Weld continuous line segments together and cut loose ends.
 
     Find all lines that only connect to one other line and connect those
@@ -390,6 +408,15 @@ def _weld_segments(
         Houses that need to be connected.
     debug_plotting : bool, optional
         Plot the selection process.
+    retain_unique_values : list, optional
+        List of attributes where unique values must be retained when welding
+        geometries. Is used as ``gdf.dissolve(by=retain_unique_values)``.
+        When only new pipes are created, this list can be empty (or None).
+        But if there are existing pipes in the input data,
+        you will very likely not want to weld/merge/dissolve pipe segments
+        with different capacities. This is achieved by using the
+        default setting ``['capacity']``.
+        Selected attributes not present in the input data are silently ignored.
 
     Returns
     -------
@@ -573,23 +600,19 @@ def _weld_segments(
 
         # Create list of all elements that should be merged
         lines = [geom] + list(neighbours.geometry)
-        try:  # Works when all elements are LineStrings
-            # Combine lines into a multi-linestring
-            multi_line = MultiLineString(lines)
-        except NotImplementedError:  # Fails if there is a MultiLineString
-            lines_ = []  # Create a new list of lines, without MultiLineStrings
-            for line in lines:
-                if line.type == "MultiLineString":
-                    lines_ += list(line)  # Split the MultiLineString
-                else:  # Linestring
-                    lines_.append(line)
-            # Now combine all of those into MultiLineString
-            multi_line = MultiLineString(lines_)
+        # Weld/merge/dissolve line segments, but only those that share the
+        # same values in the attributes defined by ``retain_unique_values``.
+        # This allows to keep the capacities of existing pipe segments.
+        mask = gdf_line_net.geometry.isin(lines)
+        if retain_unique_values is None:
+            gdf_merged = gdf_line_net.loc[mask].dissolve(
+                by=retain_unique_values, dropna=False)
+        else:  # prevent creation of new index levels
+            gdf_merged = gdf_line_net.loc[mask].dissolve(
+                by=retain_unique_values, as_index=False, dropna=False)
 
-        # Merge the MultiLineString into a single object
-        merged_line = linemerge(multi_line)
-        gdf_merged = gpd.GeoDataFrame(geometry=[merged_line], crs=crs)
-        gdf_merged = gdf_merged.explode()  # Explode Multi- into LineStrings
+        # Merge MultiLineStrings into LineStrings
+        gdf_merged.geometry = gdf_merged.line_merge()
         debug_plot(neighbours)  # Plot the segments before the merge
         debug_plot(gdf_merged, color="orange")  # ...and after the merge
         gdf_line_net_new = pd.concat(
