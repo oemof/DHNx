@@ -191,8 +191,8 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
         ":math:`\dot{Q}_{in}(t)`", ":py:obj:`flow[i, n, t]`", "V", "Heat input"
         ":math:`\dot{Q}_{loss}(t)`", ":py:obj:`heat_loss[n, t]`", "P", "Heat
         loss of heat pipeline"
-        ":math:`\dot{Q}_{nominal}`", ":py:obj:`flows[n, o].nominal_capacity`", "
-        P", "Nominal capacity of heating pipeline"
+        ":math:`\dot{Q}_{nominal}`", ":py:obj:`flows[n, o].nominal_capacity`
+        ", "P", "Nominal capacity of heating pipeline"
         ":math:`f_{loss}(t)`", ":py:obj:`heat_loss_factor`", "P", "Specific
         heat loss factor for pipeline"
         ":math:`l`", ":py:obj:`length`", "P", "Length of heating pipeline"
@@ -325,8 +325,8 @@ class HeatPipelineInvestBlock(
         ":math:`\dot{Q}_{in}(t)`", ":py:obj:`flow[i, n, t]`", "V", "Heat input"
         ":math:`\dot{Q}_{loss}(t)`", ":py:obj:`heat_loss[n, t]`", "V", "Heat
         loss of heat pipeline"
-        ":math:`\dot{Q}_{nominal}`", ":py:obj:`flows[n, o].nominal_capacity`", "
-        V", "Nominal capacity of heating pipeline"
+        ":math:`\dot{Q}_{nominal}`", ":py:obj:`flows[n, o].nominal_capacity`
+        ", "V", "Nominal capacity of heating pipeline"
         ":math:`f_{loss}(t)`", ":py:obj:`heat_loss_factor`", "P", "Specific
         heat loss factor for pipeline"
         ":math:`l`", ":py:obj:`length`", "P", "Length of heating pipeline"
