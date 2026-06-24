@@ -12,3 +12,5 @@ attribute,type,default,description
 **dump_name**,str,dump.oemof,Name of dump file
 **print_logging_info**,bool,*False*,There are still some helpful print statements.
 **write_lp_file**,bool,*False*,Option of writing lp-file. The lp-file is stored in 'User/.oemof/lp_files/DHNx.lp'
+**allow_nonoptimal**,bool,*False*,"*False*: If no optimal solution is found, an error will be raised. *True*: If no optimal solution is found, there will be a warning."
+**return_existing**,bool,*False*,"Return existing pipes in the resulting network, but only those that receive a flow. Only applies if *existing=1* was used for any input pipe segments."
