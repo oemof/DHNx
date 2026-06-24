@@ -219,7 +219,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         for id in list(self.thermal_network.components["consumers"].index):
             if id not in pipe_to_cons_ids:
                 raise ValueError(
-                    "The consumer id {} has no connection the the"
+                    "The consumer id {} has no connection the "
                     "grid!".format(id)
                 )
 
@@ -504,7 +504,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
     def get_results_edges(self):
         """Postprocessing of the investment results of the pipes."""
 
-        def get_invest_val(lab):
+        def get_result_val(lab, attr):
 
             res = self.es.results["main"]
 
@@ -519,46 +519,19 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 logger.info("Multiple IDs!")
 
             try:
-                invest = res[outflow[0]]["scalars"]["invest"]
+                val = res[outflow[0]]["scalars"][attr]
             except (KeyError, IndexError):
                 try:
                     # that's in case of a one timestep optimisation due to
                     # an oemof bug in outputlib
-                    invest = res[outflow[0]]["sequences"]["invest"].iloc[0]
+                    val = res[outflow[0]]["sequences"][attr].iloc[0]
                 except (KeyError, IndexError):
                     # this is in case there is no bi-directional heatpipe,
                     # e.g. at forks-consumers, producers-forks
-                    invest = 0
+                    val = 0
 
             # the rounding is performed due to numerical issues
-            return round(invest, 6)
-
-        def get_invest_status(lab):
-
-            res = self.es.results["main"]
-
-            outflow = [
-                x
-                for x in res.keys()
-                if x[1] is not None
-                if lab == str(x[0].label)
-            ]
-
-            try:
-                invest_status = res[outflow[0]]["scalars"]["invest_status"]
-            except (KeyError, IndexError):
-                try:
-                    # that's in case of a one timestep optimisation due to
-                    # an oemof bug in outputlib
-                    invest_status = res[outflow[0]]["sequences"][
-                        "invest_status"
-                    ].iloc[0]
-                except (KeyError, IndexError):
-                    # this is in case there is no bi-directional heatpipe,
-                    # e.g. at forks-consumers, producers-forks
-                    invest_status = 0
-
-            return invest_status
+            return round(val, 6)
 
         def get_hp_results(p):
 
@@ -568,18 +541,35 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             # maybe slow approach with lambda function
             df[hp_lab + "." + "dir-1"] = df["from_node"] + "-" + df["to_node"]
             df[hp_lab + "." + "size-1"] = df[hp_lab + "." + "dir-1"].apply(
-                lambda x: get_invest_val(label_base + x)
+                lambda x: get_result_val(label_base + x, attr="invest")
             )
+            df[hp_lab + "." + "flow-1"] = df[hp_lab + "." + "dir-1"].apply(
+                lambda x: get_result_val(label_base + x, attr="flow")
+            )
+            df[hp_lab + "." + "status_nominal-1"] = df[hp_lab + "." + "dir-1"].apply(
+                lambda x: get_result_val(label_base + x, attr="status_nominal")
+            )
+
             df[hp_lab + "." + "dir-2"] = df["to_node"] + "-" + df["from_node"]
             df[hp_lab + "." + "size-2"] = df[hp_lab + "." + "dir-2"].apply(
-                lambda x: get_invest_val(label_base + x)
+                lambda x: get_result_val(label_base + x, attr="invest")
+            )
+            df[hp_lab + "." + "flow-2"] = df[hp_lab + "." + "dir-2"].apply(
+                lambda x: get_result_val(label_base + x, attr="flow")
+            )
+            df[hp_lab + "." + "status_nominal-2"] = df[hp_lab + "." + "dir-2"].apply(
+                lambda x: get_result_val(label_base + x, attr="status_nominal")
             )
 
             df[hp_lab + "." + "size"] = df[
                 [hp_lab + "." + "size-1", hp_lab + "." + "size-2"]
             ].max(axis=1)
+            df[hp_lab + "." + "status_nominal"] = df[
+                [hp_lab + "." + "status_nominal-1",
+                 hp_lab + "." + "status_nominal-2"]
+            ].max(axis=1)
 
-            # get direction of pipes
+            # get direction of (new) pipes
             for r, c in df.iterrows():
                 if c[hp_lab + "." + "size-1"] > c[hp_lab + "." + "size-2"]:
                     df.at[r, hp_lab + ".direction"] = 1
@@ -588,13 +578,44 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 else:
                     df.at[r, hp_lab + ".direction"] = 0
 
+            # We also want to store the flow direction for existing pipes.
+            # Since there is no investment, 'size' cannot be used for these.
+            # Instead we use oemof's 'flow' attribute.
+            # When 'bidirectional_pipes' is True, "flow-1" was observed to
+            # become negative (though only for existing pipes!), which then
+            # indicated a reverse flow direction.
+            # When 'bidirectional_pipes' is False, the logic is the same
+            # as for new pipes, i.e.
+            #   flow-1 > flow-2 --> dir = 1
+            #   flow-2 > flow-1 --> dir = -1
+            for r, c in df.iterrows():
+                if abs(c[hp_lab + "." + "flow-1"]) > abs(c[hp_lab + "." + "flow-2"]):
+                    df.at[r, hp_lab + ".flow"] = df.at[r, hp_lab + ".flow-1"]
+                else:
+                    df.at[r, hp_lab + ".flow"] = df.at[r, hp_lab + ".flow-2"]
+
+                # Evaluate the following only for existing pipes
+                if df.at[r, hp_lab + ".status_nominal"] > 0:
+                    if c[hp_lab + "." + "flow-1"] > c[hp_lab + "." + "flow-2"]:
+                        df.at[r, hp_lab + ".direction_existing"] = 1
+                    elif c[hp_lab + "." + "flow-1"] < c[hp_lab + "." + "flow-2"]:
+                        # Is True if both values are positive, and also
+                        # if flow-1 < 0  (in case 'bidirectional_pipes'=True)
+                        df.at[r, hp_lab + ".direction_existing"] = -1
+                    else:
+                        df.at[r, hp_lab + ".direction_existing"] = 0
+
+                    # After direction information was saved, sign of flow value
+                    # can be removed
+                    df.at[r, hp_lab + ".flow"] = abs(df.at[r, hp_lab + ".flow"])
+
             if p["nonconvex"]:
                 df[hp_lab + "." + "status-1"] = df[
                     hp_lab + "." + "dir-1"
-                ].apply(lambda x: get_invest_status(label_base + x))
+                ].apply(lambda x: get_result_val(label_base + x, "invest_status"))
                 df[hp_lab + "." + "status-2"] = df[
                     hp_lab + "." + "dir-2"
-                ].apply(lambda x: get_invest_status(label_base + x))
+                ].apply(lambda x: get_result_val(label_base + x, "invest_status"))
                 df[hp_lab + "." + "status"] = df[
                     [hp_lab + "." + "status-1", hp_lab + "." + "status-2"]
                 ].max(axis=1)
@@ -607,7 +628,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     ):
                         logger.warning(
                             "Investment status of pipe id {} is 1"
-                            " for both dircetions!"
+                            " for both directions!"
                             " This is not allowed!".format(r)
                         )
                     if (
@@ -680,8 +701,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     )
 
             df["hp_type"] = None
-            df["capacity"] = float(0)
-            df["direction"] = 0
+            df["capacity"] = float(0)  # capacity invest for new pipes or
+                                       # given capacity for existing pipes
+            df["flow"] = float(0)  # actual flow (new and existing pipe)
+            df["direction"] = 0  # flow direction
             df["status"] = float(0)
 
             for ahp in active_hp:
@@ -695,6 +718,15 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         df.at[r, "direction"] = c[ahp + ".direction"]
                         if ahp + ".status" in c.index:
                             df.at[r, "status"] = c[ahp + ".status"]
+
+                    if c[ahp + ".status_nominal"] > 0:
+                        # Set attributes of existing pipes
+                        df.at[r, "hp_type"] = ahp
+                        df.at[r, "capacity"] = c[ahp + ".status_nominal"]
+                        df.at[r, "direction"] = c[ahp + ".direction_existing"]
+
+                    # Always set flow
+                    df.at[r, "flow"] = c[ahp + ".flow"]
 
         def recalc_costs_losses():
             """
@@ -724,34 +756,58 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     hp_lab = c["hp_type"]
                     # select row from heatpipe type table
                     hp_p = df_hp[df_hp["label_3"] == hp_lab].squeeze()
-                    if hp_p["nonconvex"] == 1:
-                        df.at[r, "costs"] = c["length"] * (
-                            c["capacity"] * hp_p["capex_pipes"]
-                            + hp_p["fix_costs"] * c["status"]
-                        )
-                        df.at[r, "losses"] = c["length"] * (
-                            c["capacity"] * hp_p["l_factor"]
-                            + hp_p["l_factor_fix"] * c["status"]
-                        )
 
-                    elif hp_p["nonconvex"] == 0:
-                        df.at[r, "costs"] = (
-                            c["length"] * c["capacity"] * hp_p["capex_pipes"]
-                        )
-                        # Note that a constant loss is possible also for convex
+                    if "existing" in c and c["existing"] in [1]:
+                        # For existing pipes, only losses need to be calculated
                         df.at[r, "losses"] = c["length"] * (
                             c["capacity"] * hp_p["l_factor"]
                             + hp_p["l_factor_fix"]
                         )
+                    else:
+                        if hp_p["nonconvex"] == 1:
+                            df.at[r, "costs"] = c["length"] * (
+                                c["capacity"] * hp_p["capex_pipes"]
+                                + hp_p["fix_costs"] * c["status"]
+                            )
+                            df.at[r, "losses"] = c["length"] * (
+                                c["capacity"] * hp_p["l_factor"]
+                                + hp_p["l_factor_fix"] * c["status"]
+                            )
+
+                        elif hp_p["nonconvex"] == 0:
+                            df.at[r, "costs"] = (
+                                c["length"] * c["capacity"] * hp_p["capex_pipes"]
+                            )
+                            # Note that a constant loss is possible also for convex
+                            df.at[r, "losses"] = c["length"] * (
+                                c["capacity"] * hp_p["l_factor"]
+                                + hp_p["l_factor_fix"]
+                            )
 
         # use pipes dataframe as base and add results as new columns to it
         df = self.thermal_network.components["pipes"]
 
-        # only select not existing pipes
-        df = df[df["existing"] == 0].copy()
+        cols_select = ["from_node", "to_node", "length"]
+        cols_return = [
+            "from_node",
+            "to_node",
+            "length",
+            "hp_type",
+            "direction",
+            "capacity",
+            "flow",
+            "losses",
+            "costs",
+        ]
+        if not self.settings.get('return_existing', False):
+            # only select not existing pipes
+            df = df[df["existing"] == 0].copy()
+        else:  # yes, return information about existing pipes
+            cols_select.append("existing")
+            cols_return.append("existing")
 
         # remove input data
-        df = df[["from_node", "to_node", "length"]].copy()
+        df = df[cols_select].copy()
 
         # putting the results of the investments in heatpipes to the pipes:
         df_hp = self.invest_options["network"]["pipes"]
@@ -768,18 +824,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
         recalc_costs_losses()
 
-        return df[
-            [
-                "from_node",
-                "to_node",
-                "length",
-                "hp_type",
-                "capacity",
-                "direction",
-                "costs",
-                "losses",
-            ]
-        ]
+        return df[cols_return]
 
 
 def optimize_operation(thermal_network):
@@ -814,6 +859,7 @@ def setup_optimise_investment(
     print_logging_info=False,
     write_lp_file=False,
     allow_nonoptimal=False,
+    return_existing=False,
 ):
     """
     Function for setting up the oemof solph operational Model.
@@ -856,9 +902,12 @@ def setup_optimise_investment(
     write_lp_file : bool
         Linear program file is stored (‘User/.oemof/lp_files/DHNx.lp’).
     allow_nonoptimal : bool
-        False: If no optimal solution is found, an error will be risen.
+        False: If no optimal solution is found, an error will be raised.
         True: If no optimal solution is found, there will be a warning.
         Default is False.
+    return_existing : bool
+        Return existing pipes in the resulting network. Only applies if
+        ``existing=1`` was used for any input pipe segments. Default is False.
     Returns
     -------
     oemof.solph.Model : The oemof.solph.Model is build.
@@ -888,6 +937,7 @@ def setup_optimise_investment(
         "print_logging_info": print_logging_info,
         "write_lp_file": write_lp_file,
         "allow_nonoptimal": allow_nonoptimal,
+        "return_existing": return_existing,
     }
 
     model = OemofInvestOptimizationModel(
