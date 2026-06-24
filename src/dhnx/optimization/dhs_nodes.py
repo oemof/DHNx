@@ -202,14 +202,11 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
             elif (q["from_node"].split("-")[0] == "forks") and (
                 q["to_node"].split("-")[0] == "forks"
             ):
-
-                b_in = busd[
-                    (d_labels["l_1"], d_labels["l_2"], "bus", q["from_node"])
-                ]
-                b_out = busd[
-                    (d_labels["l_1"], d_labels["l_2"], "bus", q["to_node"])
-                ]
-                d_labels["l_4"] = q["from_node"] + "-" + q["to_node"]
+                start = q["from_node"]
+                end = q["to_node"]
+                b_in = busd[(d_labels["l_1"], d_labels["l_2"], "bus", start)]
+                b_out = busd[(d_labels["l_1"], d_labels["l_2"], "bus", end)]
+                d_labels["l_4"] = start + "-" +end
 
                 nodes = ac.add_heatpipes(
                     pipe_data,
@@ -223,19 +220,13 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 
                 if not gd["bidirectional_pipes"]:
                     # the heatpipes from fork to fork need to be created in
-                    # both directions in this case bidiretional = False
+                    # both directions, in case of bidirectional == False
+                    start = q["to_node"]
+                    end = q["from_node"]
                     b_in = busd[
-                        (d_labels["l_1"], d_labels["l_2"], "bus", q["to_node"])
-                    ]
-                    b_out = busd[
-                        (
-                            d_labels["l_1"],
-                            d_labels["l_2"],
-                            "bus",
-                            q["from_node"],
-                        )
-                    ]
-                    d_labels["l_4"] = q["to_node"] + "-" + q["from_node"]
+                        (d_labels["l_1"], d_labels["l_2"], "bus", start)]
+                    b_out = busd[(d_labels["l_1"], d_labels["l_2"], "bus",end)]
+                    d_labels["l_4"] = start + "-" + end
 
                     nodes = ac.add_heatpipes(
                         pipe_data,
