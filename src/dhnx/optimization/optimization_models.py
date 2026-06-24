@@ -359,6 +359,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # check whether there the 'existing' attribute is present at the pipes
         if "existing" not in self.thermal_network.components["pipes"].columns:
             self.thermal_network.components["pipes"]["existing"] = 0
+        else:  # If any pipes are existing, set undefined to non-existing
+            self.thermal_network.components["pipes"] = (
+                self.thermal_network.components["pipes"].fillna(
+                    {"existing": 0}))
 
         # create pipes attribute hp_type, if not in the table so far
         if "hp_type" not in list(
