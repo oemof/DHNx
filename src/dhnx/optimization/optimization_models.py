@@ -362,7 +362,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         else:  # If any pipes are existing, set undefined to non-existing
             self.thermal_network.components["pipes"] = (
                 self.thermal_network.components["pipes"].fillna(
-                    {"existing": 0}))
+                    {"existing": 0}
+                )
+            )
 
         # create pipes attribute hp_type, if not in the table so far
         if "hp_type" not in list(
@@ -546,7 +548,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df[hp_lab + "." + "flow-1"] = df[hp_lab + "." + "dir-1"].apply(
                 lambda x: get_result_val(label_base + x, attr="flow")
             )
-            df[hp_lab + "." + "status_nominal-1"] = df[hp_lab + "." + "dir-1"].apply(
+            df[hp_lab + "." + "status_nominal-1"] = df[
+                hp_lab + "." + "dir-1"
+            ].apply(
                 lambda x: get_result_val(label_base + x, attr="status_nominal")
             )
 
@@ -557,7 +561,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             df[hp_lab + "." + "flow-2"] = df[hp_lab + "." + "dir-2"].apply(
                 lambda x: get_result_val(label_base + x, attr="flow")
             )
-            df[hp_lab + "." + "status_nominal-2"] = df[hp_lab + "." + "dir-2"].apply(
+            df[hp_lab + "." + "status_nominal-2"] = df[
+                hp_lab + "." + "dir-2"
+            ].apply(
                 lambda x: get_result_val(label_base + x, attr="status_nominal")
             )
 
@@ -565,8 +571,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 [hp_lab + "." + "size-1", hp_lab + "." + "size-2"]
             ].max(axis=1)
             df[hp_lab + "." + "status_nominal"] = df[
-                [hp_lab + "." + "status_nominal-1",
-                 hp_lab + "." + "status_nominal-2"]
+                [
+                    hp_lab + "." + "status_nominal-1",
+                    hp_lab + "." + "status_nominal-2",
+                ]
             ].max(axis=1)
 
             # get direction of (new) pipes
@@ -589,7 +597,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             #   flow-1 > flow-2 --> dir = 1
             #   flow-2 > flow-1 --> dir = -1
             for r, c in df.iterrows():
-                if abs(c[hp_lab + "." + "flow-1"]) > abs(c[hp_lab + "." + "flow-2"]):
+                if abs(c[hp_lab + "." + "flow-1"]) > abs(
+                    c[hp_lab + "." + "flow-2"]
+                ):
                     df.at[r, hp_lab + ".flow"] = df.at[r, hp_lab + ".flow-1"]
                 else:
                     df.at[r, hp_lab + ".flow"] = df.at[r, hp_lab + ".flow-2"]
@@ -598,7 +608,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 if df.at[r, hp_lab + ".status_nominal"] > 0:
                     if c[hp_lab + "." + "flow-1"] > c[hp_lab + "." + "flow-2"]:
                         df.at[r, hp_lab + ".direction_existing"] = 1
-                    elif c[hp_lab + "." + "flow-1"] < c[hp_lab + "." + "flow-2"]:
+                    elif (
+                        c[hp_lab + "." + "flow-1"] < c[hp_lab + "." + "flow-2"]
+                    ):
                         # Is True if both values are positive, and also
                         # if flow-1 < 0  (in case 'bidirectional_pipes'=True)
                         df.at[r, hp_lab + ".direction_existing"] = -1
@@ -607,15 +619,21 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
                     # After direction information was saved, sign of flow value
                     # can be removed
-                    df.at[r, hp_lab + ".flow"] = abs(df.at[r, hp_lab + ".flow"])
+                    df.at[r, hp_lab + ".flow"] = abs(
+                        df.at[r, hp_lab + ".flow"]
+                    )
 
             if p["nonconvex"]:
                 df[hp_lab + "." + "status-1"] = df[
                     hp_lab + "." + "dir-1"
-                ].apply(lambda x: get_result_val(label_base + x, "invest_status"))
+                ].apply(
+                    lambda x: get_result_val(label_base + x, "invest_status")
+                )
                 df[hp_lab + "." + "status-2"] = df[
                     hp_lab + "." + "dir-2"
-                ].apply(lambda x: get_result_val(label_base + x, "invest_status"))
+                ].apply(
+                    lambda x: get_result_val(label_base + x, "invest_status")
+                )
                 df[hp_lab + "." + "status"] = df[
                     [hp_lab + "." + "status-1", hp_lab + "." + "status-2"]
                 ].max(axis=1)
@@ -701,9 +719,9 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     )
 
             df["hp_type"] = None
-            df["capacity"] = float(0)  # capacity invest for new pipes or
-                                       # given capacity for existing pipes
-            df["flow"] = float(0)  # actual flow (new and existing pipe)
+            # capacity invest for new pipes / given capacity for existing pipes
+            df["capacity"] = float(0)
+            df["flow"] = float(0)  # actual thermal power flow
             df["direction"] = 0  # flow direction
             df["status"] = float(0)
 
@@ -776,9 +794,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
 
                         elif hp_p["nonconvex"] == 0:
                             df.at[r, "costs"] = (
-                                c["length"] * c["capacity"] * hp_p["capex_pipes"]
+                                c["length"]
+                                * c["capacity"]
+                                * hp_p["capex_pipes"]
                             )
-                            # Note that a constant loss is possible also for convex
+                            # Note that a constant loss is possible also
+                            # for convex
                             df.at[r, "losses"] = c["length"] * (
                                 c["capacity"] * hp_p["l_factor"]
                                 + hp_p["l_factor_fix"]
@@ -799,7 +820,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             "losses",
             "costs",
         ]
-        if not self.settings.get('return_existing', False):
+        if not self.settings.get("return_existing", False):
             # only select not existing pipes
             df = df[df["existing"] == 0].copy()
         else:  # yes, return information about existing pipes
@@ -914,7 +935,7 @@ def setup_optimise_investment(
     """
     if heat_demand not in ["scalar", "series"]:
         raise ValueError(
-            'The settings attribute *heat_demand*'
+            "The settings attribute *heat_demand*"
             + ' must be "scalar" or "series"!'
         )
 
