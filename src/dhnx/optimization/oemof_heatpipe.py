@@ -131,7 +131,7 @@ class HeatPipeline(Node):
                     "the results. Hopefully, you know what you are doing."
                 )
         else:
-            self._set_nominal_value()
+            self._set_nominal_capacity()
 
     def _check_flows_invest(self):
         # for flow in self.inputs.values():
@@ -148,15 +148,15 @@ class HeatPipeline(Node):
         for flow in self.inputs.values():
             flow.investment = Investment()
 
-    # set nominal values of in- and outflow equal in case of
+    # set nominal capacities of in- and outflow equal in case of
     # invest_group = False
-    def _set_nominal_value(self):
+    def _set_nominal_capacity(self):
         i = list(self.inputs.keys())[0]
         o = list(self.outputs.keys())[0]
-        if self.outputs[o].nominal_value is not None:
-            self.inputs[i].nominal_value = self.outputs[o].nominal_value
-        elif self.inputs[i].nominal_value is not None:
-            self.outputs[o].nominal_value = self.inputs[i].nominal_value
+        if self.outputs[o].nominal_capacity is not None:
+            self.inputs[i].nominal_capacity = self.outputs[o].nominal_capacity
+        elif self.inputs[i].nominal_capacity is not None:
+            self.outputs[o].nominal_capacity = self.inputs[i].nominal_capacity
 
     def constraint_group(self):
         if self._invest_group is True:
@@ -191,7 +191,7 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
         ":math:`\dot{Q}_{in}(t)`", ":py:obj:`flow[i, n, t]`", "V", "Heat input"
         ":math:`\dot{Q}_{loss}(t)`", ":py:obj:`heat_loss[n, t]`", "P", "Heat
         loss of heat pipeline"
-        ":math:`\dot{Q}_{nominal}`", ":py:obj:`flows[n, o].nominal_value`", "
+        ":math:`\dot{Q}_{nominal}`", ":py:obj:`flows[n, o].nominal_capacity`", "
         P", "Nominal capacity of heating pipeline"
         ":math:`f_{loss}(t)`", ":py:obj:`heat_loss_factor`", "P", "Specific
         heat loss factor for pipeline"
@@ -242,13 +242,13 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
 
         def _heat_loss_rule_fix(block, n, t):
             """Rule definition for the heat loss depending on the nominal
-            capacity for fix fix heat loss.
+            capacity for fix heat loss.
             """
             o = list(n.outputs.keys())[0]
 
             expr = 0
             expr += -block.heat_loss[n, t]
-            expr += n.heat_loss_factor[t] * m.flows[n, o].nominal_value
+            expr += n.heat_loss_factor[t] * m.flows[n, o].nominal_capacity
             expr += n.heat_loss_factor_fix[t]
             return expr == 0
 
@@ -265,7 +265,7 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             expr = 0
             expr += -block.heat_loss[n, t]
             expr += (
-                n.heat_loss_factor[t] * m.flows[n, o].nominal_value
+                n.heat_loss_factor[t] * m.flows[n, o].nominal_capacity
                 + n.heat_loss_factor_fix[t]
             ) * m.NonConvexFlowBlock.status[n, o, t]
             return expr == 0
@@ -325,7 +325,7 @@ class HeatPipelineInvestBlock(
         ":math:`\dot{Q}_{in}(t)`", ":py:obj:`flow[i, n, t]`", "V", "Heat input"
         ":math:`\dot{Q}_{loss}(t)`", ":py:obj:`heat_loss[n, t]`", "V", "Heat
         loss of heat pipeline"
-        ":math:`\dot{Q}_{nominal}`", ":py:obj:`flows[n, o].nominal_value`", "
+        ":math:`\dot{Q}_{nominal}`", ":py:obj:`flows[n, o].nominal_capacity`", "
         V", "Nominal capacity of heating pipeline"
         ":math:`f_{loss}(t)`", ":py:obj:`heat_loss_factor`", "P", "Specific
         heat loss factor for pipeline"
