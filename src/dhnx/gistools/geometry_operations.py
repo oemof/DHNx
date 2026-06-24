@@ -23,10 +23,8 @@ try:
     import shapely
     from shapely import wkt
     from shapely.geometry import LineString
-    from shapely.geometry import MultiLineString
     from shapely.geometry import Point
     from shapely.geometry import mapping
-    from shapely.ops import linemerge
     from shapely.ops import nearest_points
     from shapely.ops import unary_union
 except ImportError:
@@ -321,9 +319,9 @@ def split_multilinestr_to_linestr(gdf_input):
 
 
 def weld_segments(
-    gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False,
-    retain_unique_values=['capacity'],
-    ):
+        gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False,
+        retain_unique_values=['capacity'],
+        ):
     """Weld continuous line segments together and cut loose ends.
 
     This is a public function that recursively calls the internal function
@@ -389,9 +387,9 @@ def weld_segments(
 
 
 def _weld_segments(
-    gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False,
-    retain_unique_values=['capacity'],
-    ):
+        gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False,
+        retain_unique_values=['capacity'],
+        ):
     """Weld continuous line segments together and cut loose ends.
 
     Find all lines that only connect to one other line and connect those
