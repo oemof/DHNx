@@ -109,3 +109,74 @@ def test_remove_useless_forks():
     assert list(graph.edges()) == [("s1", "s2")]
     assert len(graph["s1"]["s2"]["via"]) == 5
     assert graph["s1"]["s2"]["weight"] == 1 + 5 + 2 + 2 + 1
+
+geometry = [
+    LineString([[1, 2], [1, 1]]),
+    LineString([[1, 1], [2, 3]]),
+    LineString([[2, 3], [1, 2]]),
+    LineString([[3, 2], [1, 1]]),
+    LineString([[2, 3], [4, 4]]),
+]
+from_node = ["forks-12", "forks-11", "forks-23", "forks-32", "forks-23"]
+to_node = ["forks-11", "forks-23", "forks-12", "forks-11", "forks-44"]
+length = [23, 13, 48, 4, 8]
+
+lines_all = gpd.GeoDataFrame(
+    {
+        "from_node": from_node,
+        "to_node": to_node,
+        "length": length,
+    },
+    geometry=geometry,
+)
+
+def test_line_string():
+    assert go._line_string(
+        lines_all=lines_all,
+        path_edges=[["forks-12", "forks-11"]],
+    ) == geometry[0]
+
+    assert (
+        list(
+            go._line_string(
+                lines_all=lines_all,
+                path_edges=[["forks-11", "forks-12"]],
+            ).coords
+        )
+        == list(geometry[0].coords)[::-1]
+    )
+
+    ls = list(go._line_string(
+            lines_all=lines_all,
+            path_edges=[
+                ["forks-12", "forks-11"],
+                ["forks-11", "forks-23"],
+                ["forks-23", "forks-44"],
+            ],
+        ).coords
+    )
+    assert len(ls) == 4
+    assert ls == list(geometry[0].coords) + list(geometry[4].coords)
+
+    ls = list(go._line_string(
+            lines_all=lines_all,
+            path_edges=[
+                ["forks-12", "forks-11"],
+                ["forks-23", "forks-11"],
+                ["forks-23", "forks-44"],
+            ],
+        ).coords
+    )
+    assert len(ls) == 4
+    assert ls == list(geometry[0].coords) + list(geometry[4].coords)
+
+    ls = list(go._line_string(
+            lines_all=lines_all,
+            path_edges=[
+                ["forks-12", "forks-23"],
+                ["forks-23", "forks-11"],
+                ["forks-11", "forks-32"],
+            ],
+        ).coords
+    )
+    assert len(ls) == 4
