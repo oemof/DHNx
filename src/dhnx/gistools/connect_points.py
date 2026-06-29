@@ -717,7 +717,8 @@ def process_geometry(
     check_geometry_type(lines_all, types=["LineString"])
 
     if welding:
-        go.simplify(lines_all)
+        lines_all = go.simplify(lines_all)
+        # forks = go.extract_forks(lines_all)
 
     # ## check for near points
     go.check_double_points(points_all, id_column="id_full")

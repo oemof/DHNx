@@ -636,6 +636,52 @@ def drop_parallel_lines(gdf):
     return gdf
 
 
+def _line_string(
+    path_edges: list,
+    lines_all: gpd.GeoDataFrame,
+) -> LineString:
+    """
+    Create a LineString from a list of 2-tuples of node names,
+    combined from LineStrings found in lines_all.
+    """
+    ordered = []
+    last_segment = None
+    for segment in path_edges:
+        orientation = 1
+        if last_segment:
+            if segment[0] not in last_segment:
+                # current segment pointing away from last one
+                orientation = -1
+        elif len(path_edges) >= 2 and segment[1] not in path_edges[1]:
+            # first segment pointing away from second one
+            orientation = -1
+
+        path_edge_geometry = lines_all[
+            (lines_all["from_node"] == segment[0])
+            & (lines_all["to_node"] == segment[1])
+        ]["geometry"]
+
+        if path_edge_geometry.empty:
+            # also in lines_all, the segment points away from last one
+            orientation *= -1
+            path_edge_geometry = lines_all[
+                (lines_all["from_node"] == segment[1])
+                & (lines_all["to_node"] == segment[0])
+            ]["geometry"]
+
+        path_edge_geometry = list(path_edge_geometry.iloc[0].coords)
+
+        # Append while avoiding duplicate junction point
+        if not ordered:
+            ordered.extend(path_edge_geometry[::orientation])
+        else:
+            ordered.extend(path_edge_geometry[1::orientation])
+
+        last_segment = segment
+
+    return LineString(ordered)
+
+
 def simplify(lines_all):
     graph = nx.Graph()
     graph.add_edges_from(
@@ -661,22 +707,53 @@ def simplify(lines_all):
         target="to_node",
     )
 
-    lines_simplified.rename(columns={"weight": "lentgh"}, inplace=True)
-    lines_simplified["via"].fillna(-1, inplace=True)
+    lines_simplified.rename(
+        columns={
+            "weight": "length",
+            "via": "path",
+        },
+        inplace=True,
+    )
 
     line_geometry = {}
     for i, line in lines_simplified.iterrows():
-        if line["via"] == -1:
-            geometry = lines_all[
-                (lines_all["from_node"] == line["from_node"])
-                & (lines_all["to_node"] == line["to_node"])
-                | (lines_all["to_node"] == line["from_node"])
-                & (lines_all["from_node"] == line["to_node"])
-            ]["geometry"]
-            line_geometry[i] = geometry
+        if isinstance(line["path"], list):
+            G = nx.Graph()
+            G.add_edges_from(line["path"])
+            path_edges = list(G.edges)
+        else:
+            path_edges = [(line["from_node"], line["to_node"])]
+        lines_simplified.at[i, "path"] = path_edges
+        line_geometry[i] = _line_string(path_edges, lines_all)
 
-    print(lines_simplified)
-    print(line_geometry)
+    lines_simplified["geometry"] = line_geometry
+
+    return gpd.GeoDataFrame(lines_simplified)
+
+
+def extract_forks(
+    lines_gdf: gpd.GeoDataFrame,
+) -> gpd.GeoDataFrame:
+    def id_full_str(number):
+        return f"forks-{number}"
+
+    forks = {}
+    for _, line in lines_gdf.iterrows():
+        if "forks-" in line["from_node"]:
+            forks[int(line["from_node"][len("forks-") :])] = Point(
+                line["geometry"].coords[0]
+            )
+        if "forks-" in line["to_node"]:
+            forks[int(line["from_node"][len("forks-") :])] = Point(
+                line["geometry"].coords[-1]
+            )
+
+    series = pd.Series(forks)
+    df = pd.DataFrame(series).rename(columns={0: "geometry"})
+    df["id_full"] = df.index
+    df["id_full"] = df["id_full"].map(id_full_str)
+
+    return gpd.GeoDataFrame(df)
 
 
 def simplify_graph(
@@ -740,9 +817,9 @@ def longest_distance(
 ) -> float:
     _longest_distance = 0.0
     for source in list(graph.nodes()):
-        if graph.nodes[source]['type'] != "fork":
+        if graph.nodes[source]["type"] != "fork":
             for target in list(graph.nodes()):
-                if graph.nodes[target]['type'] != "fork":
+                if graph.nodes[target]["type"] != "fork":
                     _longest_distance = max(
                         _longest_distance,
                         nx.shortest_path_length(
@@ -759,7 +836,7 @@ def _drop_detours(
     graph: nx.Graph,
 ) -> bool:
     graph_was_updated = False
-    for (source, target) in list(graph.edges()):
+    for source, target in list(graph.edges()):
         edge_weight = graph[source][target]["weight"]
         if edge_weight > nx.shortest_path_length(
             graph,
@@ -783,7 +860,7 @@ def _remove_useless_forks(
     """
     graph_was_updated = False
     for node in list(graph.nodes()):
-        if graph.nodes[node]['type'] == "fork":
+        if graph.nodes[node]["type"] == "fork":
             if graph.degree(node) == 1:
                 graph.remove_node(node)
                 graph_was_updated = True
@@ -793,10 +870,9 @@ def _remove_useless_forks(
                     graph[edges[0][0]][edges[0][1]]["weight"]
                     + graph[edges[1][0]][edges[1][1]]["weight"]
                 )
-                via = (
-                    graph[edges[0][0]][edges[0][1]].get("via", [edges[0]])
-                    + graph[edges[1][0]][edges[1][1]].get("via", [edges[1]])
-                )
+                via = graph[edges[0][0]][edges[0][1]].get(
+                    "via", [edges[0]]
+                ) + graph[edges[1][0]][edges[1][1]].get("via", [edges[1]])
 
                 graph.add_edge(
                     edges[0][1],
