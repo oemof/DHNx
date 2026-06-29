@@ -636,36 +636,6 @@ def drop_parallel_lines(gdf):
     return gdf
 
 
-def drop_detours(lines_all):
-    """Keep only lines that are the shortest connections between two points.
-    """
-    graph = nx.Graph()
-    graph.add_edges_from([
-        (a, b, {"weight": length})
-        for a, b, length
-        in zip(
-            lines_all["from_node"],
-            lines_all["to_node"],
-            lines_all["length"],
-        )
-    ])
-
-    # identify rows contaning "detour" lines
-    lines_to_drop = []
-    for row, line in lines_all.iterrows():
-        if line["length"] > nx.shortest_path_length(
-            graph,
-            source=line["from_node"],
-            target=line["to_node"],
-            weight="weight",
-        ):
-            lines_to_drop.append(row)
-
-    lines_all.drop(lines_to_drop, inplace=True)
-
-    return lines_all
-
-
 def simplify(lines_all):
     graph = nx.Graph()
     graph.add_edges_from(
@@ -678,7 +648,9 @@ def simplify(lines_all):
             )
         ]
     )
-    node_types = {node: {"type": node.split("-")[0][:-1]} for node in list(graph.nodes())}
+    node_types = {
+        node: {"type": node.split("-")[0][:-1]} for node in list(graph.nodes())
+    }
     nx.set_node_attributes(graph, node_types)
 
     simplify_graph(graph=graph)
@@ -693,13 +665,15 @@ def simplify(lines_all):
     lines_simplified["via"].fillna(-1, inplace=True)
 
     line_geometry = {}
-    for l, line in lines_simplified.iterrows():
+    for i, line in lines_simplified.iterrows():
         if line["via"] == -1:
             geometry = lines_all[
-                (lines_all["from_node"] == line["from_node"]) & (lines_all["to_node"] == line["to_node"])
-                | (lines_all["to_node"] == line["from_node"]) & (lines_all["from_node"] == line["to_node"])
+                (lines_all["from_node"] == line["from_node"])
+                & (lines_all["to_node"] == line["to_node"])
+                | (lines_all["to_node"] == line["from_node"])
+                & (lines_all["from_node"] == line["to_node"])
             ]["geometry"]
-            line_geometry[l] = geometry
+            line_geometry[i] = geometry
 
     print(lines_simplified)
     print(line_geometry)
@@ -708,6 +682,18 @@ def simplify(lines_all):
 def simplify_graph(
     graph: nx.Graph,
 ) -> bool:
+    """Simplifies graph as much as possibe based on only local information.
+
+    Parameters
+    ----------
+    graph : nx.Graph
+        graph to be simplified.
+
+    Returns
+    -------
+    bool
+        True if the graph had to be simplified, false if it was already simple.
+    """
     graph_was_updated = False
     graph_needs_iteration = True
     while graph_needs_iteration:
