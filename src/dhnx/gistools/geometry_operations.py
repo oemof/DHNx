@@ -669,13 +669,17 @@ def _line_string(
                 & (lines_all["to_node"] == segment[0])
             ]["geometry"]
 
-        path_edge_geometry = list(path_edge_geometry.iloc[0].coords)
+        # As slicing and inverting in one step needs extra caution,
+        # we invert here, if applicable.
+        path_edge_geometry = list(path_edge_geometry.iloc[0].coords)[
+            ::orientation
+        ]
 
         # Append while avoiding duplicate junction point
         if not ordered:
-            ordered.extend(path_edge_geometry[::orientation])
+            ordered.extend(path_edge_geometry)
         else:
-            ordered.extend(path_edge_geometry[1::orientation])
+            ordered.extend(path_edge_geometry[1:])
 
         last_segment = segment
 
