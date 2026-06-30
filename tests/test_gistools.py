@@ -64,9 +64,9 @@ nodelist = [
 edgelist = [
     ("s1", 0, {"weight": 1}),
     (0, 1, {"weight": 5}),
-    (1, 2, {"weight": 2}),
+    (2, 1, {"weight": 2}),
     (2, 4, {"weight": 7}),
-    (2, 3, {"weight": 2}),
+    (3, 2, {"weight": 2}),
     ("s2", 3, {"weight": 1}),
 ]
 
@@ -107,7 +107,8 @@ def test_remove_useless_forks():
 
     assert graph_was_updated
     assert list(graph.edges()) == [("s1", "s2")]
-    assert len(graph["s1"]["s2"]["via"]) == 5
+    assert len(graph["s1"]["s2"]["path"]) == 6
+    assert graph["s1"]["s2"]["path"] == ["s1", 0, 1, 2, 3, "s2"]
     assert graph["s1"]["s2"]["weight"] == 1 + 5 + 2 + 2 + 1
 
 

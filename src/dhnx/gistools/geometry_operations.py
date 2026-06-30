@@ -714,7 +714,6 @@ def simplify(lines_all):
     lines_simplified.rename(
         columns={
             "weight": "length",
-            "via": "path",
         },
         inplace=True,
     )
@@ -722,9 +721,9 @@ def simplify(lines_all):
     line_geometry = {}
     for i, line in lines_simplified.iterrows():
         if isinstance(line["path"], list):
-            G = nx.Graph()
-            G.add_edges_from(line["path"])
-            path_edges = list(G.edges)
+            path_edges = [
+                (n0, n1) for n0, n1 in zip(line["path"], line["path"][1:])
+            ]
         else:
             path_edges = [(line["from_node"], line["to_node"])]
         lines_simplified.at[i, "path"] = path_edges
@@ -844,20 +843,34 @@ def _remove_useless_forks(
                 graph.remove_node(node)
                 graph_was_updated = True
             elif graph.degree(node) == 2:
-                edges = list(graph.edges(node))
+                neighbors = list(graph.neighbors(node))
                 edge_weight = (
-                    graph[edges[0][0]][edges[0][1]]["weight"]
-                    + graph[edges[1][0]][edges[1][1]]["weight"]
+                    graph[neighbors[0]][node]["weight"]
+                    + graph[node][neighbors[1]]["weight"]
                 )
-                via = graph[edges[0][0]][edges[0][1]].get(
-                    "via", [edges[0]]
-                ) + graph[edges[1][0]][edges[1][1]].get("via", [edges[1]])
+                path_left = graph[neighbors[0]][node].get("path", [])
+                if path_left:
+                    if node == path_left[0]:
+                        path_left = path_left[::-1]
+                    path_left = path_left[:-1]
+                else:
+                    path_left = [neighbors[0]]
+
+                path_right = graph[node][neighbors[1]].get("path", [])
+                if path_right:
+                    if node == path_right[-1]:
+                        path_right = path_right[::-1]
+                    path_right = path_right[1:]
+                else:
+                    path_right = [neighbors[1]]
+
+                path = path_left + [node] + path_right
 
                 graph.add_edge(
-                    edges[0][1],
-                    edges[1][1],
+                    neighbors[0],
+                    neighbors[1],
                     weight=edge_weight,
-                    via=via,
+                    path=path,
                 )
                 graph.remove_node(node)
                 graph_was_updated = True
