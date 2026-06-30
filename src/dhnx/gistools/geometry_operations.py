@@ -740,11 +740,11 @@ def extract_forks(
     forks = {}
     for _, line in lines_gdf.iterrows():
         if "forks-" in line["from_node"]:
-            forks[int(line["from_node"][len("forks-") :])] = Point(
+            forks[int(line["from_node"][len("forks-"):])] = Point(
                 line["geometry"].coords[0]
             )
         if "forks-" in line["to_node"]:
-            forks[int(line["from_node"][len("forks-") :])] = Point(
+            forks[int(line["from_node"][len("forks-"):])] = Point(
                 line["geometry"].coords[-1]
             )
 

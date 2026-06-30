@@ -110,6 +110,7 @@ def test_remove_useless_forks():
     assert len(graph["s1"]["s2"]["via"]) == 5
     assert graph["s1"]["s2"]["weight"] == 1 + 5 + 2 + 2 + 1
 
+
 geometry = [
     LineString([[1, 2], [1, 1]]),
     LineString([[1, 1], [2, 3]]),
@@ -120,7 +121,6 @@ geometry = [
 from_node = ["forks-12", "forks-11", "forks-23", "forks-32", "forks-23"]
 to_node = ["forks-11", "forks-23", "forks-12", "forks-11", "forks-44"]
 length = [23, 13, 48, 4, 8]
-
 lines_all = gpd.GeoDataFrame(
     {
         "from_node": from_node,
@@ -129,6 +129,7 @@ lines_all = gpd.GeoDataFrame(
     },
     geometry=geometry,
 )
+
 
 def test_line_string():
     assert go._line_string(
