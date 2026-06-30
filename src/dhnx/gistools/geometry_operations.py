@@ -735,31 +735,6 @@ def simplify(lines_all):
     return gpd.GeoDataFrame(lines_simplified)
 
 
-def extract_forks(
-    lines_gdf: gpd.GeoDataFrame,
-) -> gpd.GeoDataFrame:
-    def id_full_str(number):
-        return f"forks-{number}"
-
-    forks = {}
-    for _, line in lines_gdf.iterrows():
-        if "forks-" in line["from_node"]:
-            forks[int(line["from_node"][len("forks-"):])] = Point(
-                line["geometry"].coords[0]
-            )
-        if "forks-" in line["to_node"]:
-            forks[int(line["from_node"][len("forks-"):])] = Point(
-                line["geometry"].coords[-1]
-            )
-
-    series = pd.Series(forks)
-    df = pd.DataFrame(series).rename(columns={0: "geometry"})
-    df["id_full"] = df.index
-    df["id_full"] = df["id_full"].map(id_full_str)
-
-    return gpd.GeoDataFrame(df)
-
-
 def simplify_graph(
     graph: nx.Graph,
 ) -> bool:

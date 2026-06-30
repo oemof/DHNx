@@ -718,7 +718,10 @@ def process_geometry(
 
     if welding:
         lines_all = go.simplify(lines_all)
-        # forks = go.extract_forks(lines_all)
+        remaining_forks = set(lines_all["from_node"]) | set(
+            lines_all["to_node"]
+        )
+        forks = forks.loc[forks["id_full"].isin(remaining_forks)]
 
     # ## check for near points
     go.check_double_points(points_all, id_column="id_full")
