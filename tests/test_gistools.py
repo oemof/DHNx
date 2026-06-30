@@ -113,9 +113,9 @@ def test_remove_useless_forks():
 
 geometry = [
     LineString([[1, 2], [1, 1]]),
-    LineString([[1, 1], [2, 3]]),
+    LineString([[1, 1], [1.5, 1.5], [2, 3]]),
     LineString([[2, 3], [1, 2]]),
-    LineString([[3, 2], [1, 1]]),
+    LineString([[3, 2], [2, 1], [1, 1]]),
     LineString([[2, 3], [4, 4]]),
 ]
 from_node = ["forks-12", "forks-11", "forks-23", "forks-32", "forks-23"]
@@ -156,8 +156,10 @@ def test_line_string():
             ],
         ).coords
     )
-    assert len(ls) == 4
-    assert ls == list(geometry[0].coords) + list(geometry[4].coords)
+    assert len(ls) == 5
+    assert ls == list(geometry[0].coords) + [(1.5, 1.5)] + list(
+        geometry[4].coords
+    )
 
     ls = list(go._line_string(
             lines_all=lines_all,
@@ -168,8 +170,10 @@ def test_line_string():
             ],
         ).coords
     )
-    assert len(ls) == 4
-    assert ls == list(geometry[0].coords) + list(geometry[4].coords)
+    assert len(ls) == 5
+    assert ls == list(geometry[0].coords) + [(1.5, 1.5)] + list(
+        geometry[4].coords
+    )
 
     ls = list(go._line_string(
             lines_all=lines_all,
@@ -180,4 +184,4 @@ def test_line_string():
             ],
         ).coords
     )
-    assert len(ls) == 4
+    assert len(ls) == 6
