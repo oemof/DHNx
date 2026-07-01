@@ -1,4 +1,4 @@
-__version__ = "0.1.0a1"
+__version__ = "0.1.0a2"
 
 from . import dhn_from_osm  # noqa: F401
 from . import graph  # noqa: F401
