@@ -43,7 +43,8 @@ Testing
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* Update build system to pyproject.toml
+* Updated build system to pyproject.toml
+* Improved simplifying pre-processing
 
 
 Contributors
