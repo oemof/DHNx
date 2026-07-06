@@ -70,7 +70,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         Attribute, which will be the oemof.solph.Model for optimisation.
     oemof_flow_attr : set
         Possible flow attributes, which can be used additionally:
-        {'nominal_capacity', 'min', 'max', 'variable_costs', 'fix'}
+        {'nominal_capacity', 'minimum', 'maximum', 'variable_costs', 'fix'}
     results : dict
         Empty dictionary for the results.
 
@@ -102,8 +102,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # list of possible oemof flow attributes, e.g. for producers source
         self.oemof_flow_attr = {
             "nominal_capacity",
-            "min",
-            "max",
+            "min",  # deprecated since oemof.solph 0.6.2
+            "minimum",
+            "max",  # deprecated since oemof.solph 0.6.2
+            "maximum",
             "variable_costs",
             "fix",
         }
