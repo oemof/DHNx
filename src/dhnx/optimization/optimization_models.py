@@ -524,9 +524,12 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 val = res[outflow[0]]["scalars"][attr]
             except (KeyError, IndexError):
                 try:
-                    # that's in case of a one timestep optimisation due to
-                    # an oemof bug in outputlib
-                    val = res[outflow[0]]["sequences"][attr].iloc[0]
+                    # When dhnx is solving an actual time series,
+                    # each time step may have a unique flow value.
+                    # We want the largest value in absolute terms, while
+                    # preserving the sign, which can indicate direction
+                    vals = res[outflow[0]]["sequences"][attr]
+                    val = vals.loc[vals.abs().idxmax()]
                 except (KeyError, IndexError):
                     # this is in case there is no bi-directional heatpipe,
                     # e.g. at forks-consumers, producers-forks
@@ -577,51 +580,42 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                 ]
             ].max(axis=1)
 
-            # get direction of (new) pipes
+            # Store the flow direction for new and existing pipes.
+            # Since there is no investment for existing pipes, 'size' cannot
+            # be used and the 'flow' attribute is used instead.
+            # When 'bidirectional_pipes' is True, "flow-1" was observed to
+            # become negative, which then indicated a reverse flow direction.
+            # This happened e.g.
+            # - for existing pipes
+            # - for new pipes in a network with multiple producers
+            # When 'bidirectional_pipes' is True, the concept of a flow
+            # direction only makes limited sense (e.g. when seperate time
+            # steps have different flow directions). Nevertheless we can
+            # save the direction which uses the larger flow and can therefore
+            # be called a 'primary' direction.
+            # When 'bidirectional_pipes' is False, the logic is well defined:
+            #   flow-1 > flow-2 --> dir = 1
+            #   flow-2 > flow-1 --> dir = -1
             for r, c in df.iterrows():
-                if c[hp_lab + "." + "size-1"] > c[hp_lab + "." + "size-2"]:
+                # Get flow direction
+                if c[hp_lab + "." + "flow-1"] > c[hp_lab + "." + "flow-2"]:
                     df.at[r, hp_lab + ".direction"] = 1
-                elif c[hp_lab + "." + "size-1"] < c[hp_lab + "." + "size-2"]:
+                elif c[hp_lab + "." + "flow-1"] < c[hp_lab + "." + "flow-2"]:
+                    # Is True if both values are positive, and also
+                    # if flow-1 < 0  (in case 'bidirectional_pipes' is True)
                     df.at[r, hp_lab + ".direction"] = -1
                 else:
                     df.at[r, hp_lab + ".direction"] = 0
 
-            # We also want to store the flow direction for existing pipes.
-            # Since there is no investment, 'size' cannot be used for these.
-            # Instead we use oemof's 'flow' attribute.
-            # When 'bidirectional_pipes' is True, "flow-1" was observed to
-            # become negative (though only for existing pipes!), which then
-            # indicated a reverse flow direction.
-            # When 'bidirectional_pipes' is False, the logic is the same
-            # as for new pipes, i.e.
-            #   flow-1 > flow-2 --> dir = 1
-            #   flow-2 > flow-1 --> dir = -1
-            for r, c in df.iterrows():
+                # Get largest absolute 'flow' value
                 if abs(c[hp_lab + "." + "flow-1"]) > abs(
                     c[hp_lab + "." + "flow-2"]
                 ):
                     df.at[r, hp_lab + ".flow"] = df.at[r, hp_lab + ".flow-1"]
                 else:
                     df.at[r, hp_lab + ".flow"] = df.at[r, hp_lab + ".flow-2"]
-
-                # Evaluate the following only for existing pipes
-                if df.at[r, hp_lab + ".status_nominal"] > 0:
-                    if c[hp_lab + "." + "flow-1"] > c[hp_lab + "." + "flow-2"]:
-                        df.at[r, hp_lab + ".direction_existing"] = 1
-                    elif (
-                        c[hp_lab + "." + "flow-1"] < c[hp_lab + "." + "flow-2"]
-                    ):
-                        # Is True if both values are positive, and also
-                        # if flow-1 < 0  (in case 'bidirectional_pipes'=True)
-                        df.at[r, hp_lab + ".direction_existing"] = -1
-                    else:
-                        df.at[r, hp_lab + ".direction_existing"] = 0
-
-                    # After direction information was saved, sign of flow value
-                    # can be removed
-                    df.at[r, hp_lab + ".flow"] = abs(
-                        df.at[r, hp_lab + ".flow"]
-                    )
+                # Since direction was saved, sign of flow value can be removed
+                df.at[r, hp_lab + ".flow"] = abs(df.at[r, hp_lab + ".flow"])
 
             if p["nonconvex"]:
                 df[hp_lab + "." + "status-1"] = df[
@@ -741,7 +735,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         # Set attributes of existing pipes
                         df.at[r, "hp_type"] = ahp
                         df.at[r, "capacity"] = c[ahp + ".status_nominal"]
-                        df.at[r, "direction"] = c[ahp + ".direction_existing"]
+                        df.at[r, "direction"] = c[ahp + ".direction"]
 
                     # Always set flow
                     df.at[r, "flow"] = c[ahp + ".flow"]
