@@ -5,7 +5,12 @@
 API changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* No changes
+* Adapt to oemof.solph 0.6.2
+
+  * Flow parameters ``min`` and ``max`` have been renamed to ``minimum`` and
+    ``maximum`` in oemof.solph
+  * ``min`` and ``max`` are still usable in dhnx, but will trigger an oemof
+    deprecation warning. Use ``minimum`` and ``maximum`` instead
 
 
 New features
@@ -51,3 +56,4 @@ Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
 * Patrik Schönfeldt (DLR)
+* Joris Zimmermann (siz energieplus)
