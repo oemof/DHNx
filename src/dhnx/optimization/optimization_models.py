@@ -219,7 +219,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         for id in list(self.thermal_network.components["consumers"].index):
             if id not in pipe_to_cons_ids:
                 raise ValueError(
-                    "The consumer id {} has no connection the "
+                    "The consumer id {} has no connection to the "
                     "grid!".format(id)
                 )
 
