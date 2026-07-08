@@ -402,24 +402,72 @@ def _line_string(
     return LineString(ordered)
 
 
-def simplify(lines_all):
-    graph = nx.Graph()
-    graph.add_edges_from(
-        [
-            (a, b, {"weight": length})
-            for a, b, length in zip(
-                lines_all["from_node"],
-                lines_all["to_node"],
-                lines_all["length"],
+def simplify(
+    lines_all,
+    retain_unique_values=[
+        "type",
+        "id_full",
+        "capacity",
+        "existing",
+        "hp_type",
+    ],
+):
+    """Simplify line network by dropping detours and removing useless forks.
+
+    Parameters
+    ----------
+    lines_all : GeoDataFrame
+        GeoDataFrame of lines to be simplified
+
+    retain_unique_values : list, optional
+        List of attributes of which unique values must be retained when
+        simplifiying geometries. This means adjacent pipe segments are never
+        merged if any values of the given attributes differ.
+
+        Notes on the default selection:
+
+            - ['type', 'id_full']: These are always created for new and
+              existing pipes. Different types, i.e. distribution lines
+              and building connection lines should never be merged, and
+              ``id_full`` notes the name of the connected producer or consumer.
+            - ['capacity', 'existing', 'hp_type']: These are the properties
+              the user has to set when working with existing pipes, thus
+              they need to remain intact.
+
+        Selected attributes not present in the input data are silently ignored.
+
+    Returns
+    -------
+    gdf_simple : GeoDataFrame
+        Simplified line network.
+
+    """
+    retain_unique_values = [
+        c for c in retain_unique_values if c in lines_all.columns
+    ]
+
+    edge_data_cols = ["weight"]
+    edge_data_cols.extend(retain_unique_values)
+    cols = ["from_node", "to_node"] + edge_data_cols
+
+    ebunch = [
+        (a, b, dict(zip(edge_data_cols, values)))
+        for a, b, *values in (
+            lines_all.rename(columns={"length": "weight"})[cols].itertuples(
+                index=False, name=None
             )
-        ]
-    )
+        )
+    ]
+
+    graph = nx.Graph()
+    graph.add_edges_from(ebunch)
+
     node_types = {
         node: {"type": node.split("-")[0][:-1]} for node in list(graph.nodes())
     }
     nx.set_node_attributes(graph, node_types)
 
-    simplify_graph(graph=graph)
+    simplify_graph(graph=graph, retain_unique_values=retain_unique_values)
 
     lines_simplified = nx.to_pandas_edgelist(
         graph,
@@ -447,11 +495,32 @@ def simplify(lines_all):
 
     lines_simplified["geometry"] = line_geometry
 
-    return gpd.GeoDataFrame(lines_simplified)
+    # Line orientation needs to be redefined to match the new geometries
+    lines_simplified["from_node"] = lines_simplified["path"].apply(
+        lambda x: x[0][0]
+    )
+    lines_simplified["to_node"] = lines_simplified["path"].apply(
+        lambda x: x[-1][-1]
+    )
+
+    # Drop temporary columns
+    lines_simplified = lines_simplified.drop(columns=["path"], errors="ignore")
+
+    gdf_simple = gpd.GeoDataFrame(lines_simplified, crs=lines_all.crs)
+    gdf_simple.index.set_names(lines_all.index.names, inplace=True)
+
+    logger.debug(
+        "Simplified number of lines from {} to {}".format(
+            len(lines_all), len(gdf_simple)
+        )
+    )
+
+    return gdf_simple
 
 
 def simplify_graph(
     graph: nx.Graph,
+    retain_unique_values: list = [],
 ) -> bool:
     """Simplifies graph as much as possibe based on only local information.
 
@@ -470,7 +539,9 @@ def simplify_graph(
     while graph_needs_iteration:
         graph_needs_iteration = False
         detours_dropped = _drop_detours(graph)
-        forks_removed = _remove_useless_forks(graph)
+        forks_removed = _remove_useless_forks(
+            graph, retain_unique_values=retain_unique_values
+        )
 
         # if something changed, we need a new iteration
         graph_needs_iteration = detours_dropped or forks_removed
@@ -546,6 +617,7 @@ def _drop_detours(
 
 def _remove_useless_forks(
     graph: nx.Graph,
+    retain_unique_values: list = [],
 ) -> bool:
     """Removes forks that only connect two lines as well as dead ends.
 
@@ -560,11 +632,22 @@ def _remove_useless_forks(
                 graph_was_updated = True
             elif graph.degree(node) == 2:
                 neighbors = list(graph.neighbors(node))
-                edge_weight = (
-                    graph[neighbors[0]][node]["weight"]
-                    + graph[node][neighbors[1]]["weight"]
-                )
-                path_left = graph[neighbors[0]][node].get("path", [])
+                edge0 = graph[neighbors[0]][node]
+                edge1 = graph[node][neighbors[1]]
+
+                # Do not merge if any retained attributes differ. If both
+                # values of an attribute are NaN, merging is allowed
+                def attrs_match(a, b):
+                    return (pd.isna(a) and pd.isna(b)) or (a == b)
+
+                if any(
+                    not attrs_match(edge0.get(attr), edge1.get(attr))
+                    for attr in retain_unique_values
+                ):
+                    continue
+
+                edge_weight = edge0["weight"] + edge1["weight"]
+                path_left = edge0.get("path", [])
                 if path_left:
                     if node == path_left[0]:
                         path_left = path_left[::-1]
@@ -572,7 +655,7 @@ def _remove_useless_forks(
                 else:
                     path_left = [neighbors[0]]
 
-                path_right = graph[node][neighbors[1]].get("path", [])
+                path_right = edge1.get("path", [])
                 if path_right:
                     if node == path_right[-1]:
                         path_right = path_right[::-1]
@@ -582,11 +665,16 @@ def _remove_useless_forks(
 
                 path = path_left + [node] + path_right
 
+                edge_attrs = {
+                    attr: edge0.get(attr) for attr in retain_unique_values
+                }
+
                 graph.add_edge(
                     neighbors[0],
                     neighbors[1],
                     weight=edge_weight,
                     path=path,
+                    **edge_attrs,
                 )
                 graph.remove_node(node)
                 graph_was_updated = True
