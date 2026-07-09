@@ -70,7 +70,6 @@ edgelist = [
     ("s2", 3, {"weight": 1}),
 ]
 
-
 def test_annotate_distance():
     graph = nx.Graph()
     graph.add_nodes_from(nodelist)
@@ -186,3 +185,80 @@ def test_line_string():
         ).coords
     )
     assert len(ls) == 6
+
+
+def test_remove_useless_forks_keeps_shortest():
+    edgelist = [
+        (
+            "forks-176",
+            "forks-170",
+            {"weight": 9, "type": "DL", "id_full": ""},
+        ),
+        (
+            "forks-176",
+            "forks-178",
+            {"weight": 36, "type": "DL", "id_full": ""},
+        ),
+        (
+            "forks-178",
+            "forks-182",
+            {"weight": 16, "type": "DL", "id_full": ""},
+        ),
+        (
+            "forks-178",
+            "forks-183",
+            {"weight": 65, "type": "DL", "id_full": ""},
+        ),
+        (
+            "forks-178",
+            "consumers-10",
+            {
+                "weight": 23,
+                "type": "HL",
+                "id_full": "consumers-10",
+            },
+        ),
+        (
+            "forks-182",
+            "forks-184",
+            {"weight": 14, "type": "DL", "id_full": ""},
+        ),
+        (
+            "forks-182",
+            "forks-185",
+            {"weight": 61, "type": "DL", "id_full": ""},
+        ),
+        (
+            "forks-183",
+            "forks-185",
+            {"weight": 16, "type": "DL", "id_full": ""},
+        ),
+        (
+            "forks-184",
+            "forks-187",
+            {"weight": 9, "type": "DL", "id_full": ""},
+        ),
+        (
+            "forks-184",
+            "consumers-44",
+            {
+                "weight": 14,
+                "type": "HL",
+                "id_full": "consumers-44",
+            },
+        ),
+    ]
+
+    graph = nx.Graph()
+    graph.add_edges_from(edgelist)
+    node_types = {
+        node: {"type": node.split("-")[0][:-1]} for node in list(graph.nodes())
+    }
+    nx.set_node_attributes(graph, node_types)
+
+    forks_removed = go._remove_useless_forks(graph)
+
+    assert forks_removed
+    # There is an alterantive connection between the two nodes.
+    # We make sure the shorter one is kept.
+    assert graph["forks-178"]["forks-182"]["weight"] == 16

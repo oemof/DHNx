@@ -631,7 +631,7 @@ def _remove_useless_forks(
                 graph.remove_node(node)
                 graph_was_updated = True
             elif graph.degree(node) == 2:
-                neighbors = list(graph.neighbors(node))
+                neighbors = tuple(graph.neighbors(node))
                 edge0 = graph[neighbors[0]][node]
                 edge1 = graph[node][neighbors[1]]
 
@@ -669,13 +669,22 @@ def _remove_useless_forks(
                     attr: edge0.get(attr) for attr in retain_unique_values
                 }
 
-                graph.add_edge(
-                    neighbors[0],
-                    neighbors[1],
-                    weight=edge_weight,
-                    path=path,
-                    **edge_attrs,
-                )
+                existing_edge_data = graph.get_edge_data(*neighbors)
+                if existing_edge_data is None:
+                    # direct edge does not exist, yet
+                    graph.add_edge(
+                        neighbors[0],
+                        neighbors[1],
+                        weight=edge_weight,
+                        path=path,
+                        **edge_attrs,
+                    )
+                elif edge_weight < existing_edge_data["weight"]:
+                    # direct edge already exists but is longer
+                    edge_attrs["weight"] = edge_weight
+                    edge_attrs["path"] = path
+                    nx.set_edge_attributes(graph, edge_attrs)
+
                 graph.remove_node(node)
                 graph_was_updated = True
     return graph_was_updated
