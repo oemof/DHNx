@@ -863,7 +863,7 @@ def setup_optimise_investment(
     """
     if heat_demand not in ["scalar", "series"]:
         raise ValueError(
-            'The settings attribute *heat_demand*'
+            "The settings attribute *heat_demand*"
             + ' must be "scalar" or "series"!'
         )
 

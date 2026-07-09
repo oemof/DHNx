@@ -70,6 +70,7 @@ edgelist = [
     ("s2", 3, {"weight": 1}),
 ]
 
+
 def test_annotate_distance():
     graph = nx.Graph()
     graph.add_nodes_from(nodelist)

@@ -464,9 +464,7 @@ def add_heatpipes(it, labels, bidirectional, length, b_in, b_out, nodes):
         nc = bool(t["nonconvex"])
 
         # bidirectional heatpipelines yes or no
-        flow_bi_args = (
-            {"minimum": -1} if bidirectional else {}
-        )
+        flow_bi_args = {"minimum": -1} if bidirectional else {}
 
         nodes.append(
             oh.HeatPipeline(
@@ -534,9 +532,7 @@ def add_heatpipes_exist(pipes, labels, gd, q, b_in, b_out, nodes):
     hlf = t["l_factor"] * q["length"]
     hlff = t["l_factor_fix"] * q["length"]
 
-    flow_bi_args = (
-        {"minimum": -1} if gd["bidirectional_pipes"] else {}
-    )
+    flow_bi_args = {"minimum": -1} if gd["bidirectional_pipes"] else {}
 
     outflow_args = {"nonconvex": solph.NonConvex()} if t["nonconvex"] else {}
 
