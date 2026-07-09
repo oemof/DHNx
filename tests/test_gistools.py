@@ -40,16 +40,25 @@ def test_split_linestring():
 
 def test_drop_detours():
     edgelist = [
-        (0, 1, {"length": 5}),
-        (1, 2, {"length": 2}),
-        (2, 0, {"length": 2}),
+        (0, 1, {"length": 5, "same": 0, "different": 1, "unique": 1}),
+        (1, 2, {"length": 2, "same": 0, "different": 3}),
+        (2, 0, {"length": 2, "same": 0, "different": 3}),
     ]
     graph = nx.Graph(edgelist)
-
-    go._drop_detours(graph)
-
-    # longer connection with direct edge has been dropped
+    go._drop_detours(graph, [])
     assert list(graph.edges()) == [(0, 2), (1, 2)]
+
+    graph = nx.Graph(edgelist)
+    go._drop_detours(graph, ["same"])
+    assert list(graph.edges()) == [(0, 2), (1, 2)]
+
+    graph = nx.Graph(edgelist)
+    go._drop_detours(graph, ["different"])
+    assert list(graph.edges()) == [(0, 1), (0, 2), (1, 2)]
+
+    graph = nx.Graph(edgelist)
+    go._drop_detours(graph, ["unique"])
+    assert list(graph.edges()) == [(0, 1), (0, 2), (1, 2)]
 
 
 nodelist = [
@@ -99,7 +108,7 @@ def test_longest_distance():
     assert go.longest_distance(graph) == 5 + 2 + 2 + 1 + 1
 
 
-def test_remove_useless_forks():
+def test_simplify_graph():
     graph = nx.Graph()
     graph.add_nodes_from(nodelist)
     graph.add_edges_from(edgelist)
@@ -110,6 +119,17 @@ def test_remove_useless_forks():
     assert len(graph["s1"]["s2"]["path"]) == 6
     assert graph["s1"]["s2"]["path"] == ["s1", 0, 1, 2, 3, "s2"]
     assert graph["s1"]["s2"]["length"] == 1 + 5 + 2 + 2 + 1
+
+
+def test_simplify_graph_keep_unique():
+    graph = nx.Graph()
+    graph.add_nodes_from(nodelist)
+    graph.add_edges_from(edgelist)
+    graph[1][2]["unique"] = 5
+    graph_was_updated = go.simplify_graph(graph, ["unique"])
+
+    assert graph_was_updated
+    assert list(graph.edges()) == [(1, 2), (1, "s1"), (2, "s2")]
 
 
 geometry = [
@@ -257,7 +277,7 @@ def test_remove_useless_forks_keeps_shortest():
     }
     nx.set_node_attributes(graph, node_types)
 
-    forks_removed = go._remove_useless_forks(graph)
+    forks_removed = go._remove_useless_forks(graph, [])
 
     assert forks_removed
     # There is an alterantive connection between the two nodes.

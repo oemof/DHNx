@@ -404,7 +404,7 @@ def _line_string(
 
 def simplify(
     lines_all,
-    retain_unique_values=[
+    keep_unique_values=[
         "type",
         "id_full",
         "capacity",
@@ -419,7 +419,7 @@ def simplify(
     lines_all : GeoDataFrame
         GeoDataFrame of lines to be simplified
 
-    retain_unique_values : list, optional
+    keep_unique_values : list, optional
         List of attributes of which unique values must be retained when
         simplifiying geometries. This means adjacent pipe segments are never
         merged if any values of the given attributes differ.
@@ -442,12 +442,12 @@ def simplify(
         Simplified line network.
 
     """
-    retain_unique_values = [
-        c for c in retain_unique_values if c in lines_all.columns
+    keep_unique_values = [
+        c for c in keep_unique_values if c in lines_all.columns
     ]
 
     edge_data_cols = ["length"]
-    edge_data_cols.extend(retain_unique_values)
+    edge_data_cols.extend(keep_unique_values)
     cols = ["from_node", "to_node"] + edge_data_cols
 
     ebunch = [
@@ -465,7 +465,7 @@ def simplify(
     }
     nx.set_node_attributes(graph, node_types)
 
-    simplify_graph(graph=graph, retain_unique_values=retain_unique_values)
+    simplify_graph(graph=graph, keep_unique_values=keep_unique_values)
 
     lines_simplified = nx.to_pandas_edgelist(
         graph,
@@ -511,7 +511,7 @@ def simplify(
 
 def simplify_graph(
     graph: nx.Graph,
-    retain_unique_values: list = [],
+    keep_unique_values: list = [],
 ) -> bool:
     """Simplifies graph as much as possibe based on only local information.
 
@@ -529,9 +529,11 @@ def simplify_graph(
     graph_needs_iteration = True
     while graph_needs_iteration:
         graph_needs_iteration = False
-        detours_dropped = _drop_detours(graph)
+        detours_dropped = _drop_detours(
+            graph, keep_unique_values=keep_unique_values
+        )
         forks_removed = _remove_useless_forks(
-            graph, retain_unique_values=retain_unique_values
+            graph, keep_unique_values=keep_unique_values
         )
 
         # if something changed, we need a new iteration
@@ -588,9 +590,34 @@ def longest_distance(
     return _longest_distance
 
 
+def _all_values_equal(series):
+    if series.empty:
+        return True
+    first_val = series.iloc[0]
+    if pd.isna(first_val):
+        return series.isna().all()
+    else:
+        return (series == first_val).all()
+
+
+def _have_unique_values(
+    attributes,
+    *edge_data,
+) -> bool:
+    for attribute in attributes:
+        edge_values = pd.Series([edge.get(attribute) for edge in edge_data])
+        if not _all_values_equal(edge_values):
+            return True
+
+    else:
+        return False
+
+
 def _drop_detours(
     graph: nx.Graph,
+    keep_unique_values: list,
 ) -> bool:
+    """Drops single edges that are longer than a path using multiple edges"""
     graph_was_updated = False
     for source, target in list(graph.edges()):
         edge_length = graph[source][target]["length"]
@@ -600,15 +627,31 @@ def _drop_detours(
             target=target,
             weight="length",
         ):
-            graph.remove_edge(source, target)
-            graph_was_updated = True
+            path = nx.shortest_path(
+                graph,
+                source=source,
+                target=target,
+                weight="length",
+            )
+
+            path_data = [
+                graph.get_edge_data(n0, n1)
+                for n0, n1 in zip(path[0:], path[1:])
+            ]
+            if not _have_unique_values(
+                keep_unique_values,
+                graph.get_edge_data(source, target),
+                *path_data,
+            ):
+                graph.remove_edge(source, target)
+                graph_was_updated = True
 
     return graph_was_updated
 
 
 def _remove_useless_forks(
     graph: nx.Graph,
-    retain_unique_values: list = [],
+    keep_unique_values: list,
 ) -> bool:
     """Removes forks that only connect two lines as well as dead ends.
 
@@ -628,13 +671,7 @@ def _remove_useless_forks(
 
                 # Do not merge if any retained attributes differ. If both
                 # values of an attribute are NaN, merging is allowed
-                def attrs_match(a, b):
-                    return (pd.isna(a) and pd.isna(b)) or (a == b)
-
-                if any(
-                    not attrs_match(edge0.get(attr), edge1.get(attr))
-                    for attr in retain_unique_values
-                ):
+                if _have_unique_values(keep_unique_values, edge0, edge1):
                     continue
 
                 edge_length = edge0["length"] + edge1["length"]
@@ -657,7 +694,7 @@ def _remove_useless_forks(
                 path = path_left + [node] + path_right
 
                 edge_attrs = {
-                    attr: edge0.get(attr) for attr in retain_unique_values
+                    attr: edge0.get(attr) for attr in keep_unique_values
                 }
 
                 existing_edge_data = graph.get_edge_data(*neighbors)
