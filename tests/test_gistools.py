@@ -40,9 +40,9 @@ def test_split_linestring():
 
 def test_drop_detours():
     edgelist = [
-        (0, 1, {"weight": 5}),
-        (1, 2, {"weight": 2}),
-        (2, 0, {"weight": 2}),
+        (0, 1, {"length": 5}),
+        (1, 2, {"length": 2}),
+        (2, 0, {"length": 2}),
     ]
     graph = nx.Graph(edgelist)
 
@@ -62,12 +62,12 @@ nodelist = [
     ("s2", {"type": "sink"}),
 ]
 edgelist = [
-    ("s1", 0, {"weight": 1}),
-    (0, 1, {"weight": 5}),
-    (2, 1, {"weight": 2}),
-    (2, 4, {"weight": 7}),
-    (3, 2, {"weight": 2}),
-    ("s2", 3, {"weight": 1}),
+    ("s1", 0, {"length": 1}),
+    (0, 1, {"length": 5}),
+    (2, 1, {"length": 2}),
+    (2, 4, {"length": 7}),
+    (3, 2, {"length": 2}),
+    ("s2", 3, {"length": 1}),
 ]
 
 
@@ -109,7 +109,7 @@ def test_remove_useless_forks():
     assert list(graph.edges()) == [("s1", "s2")]
     assert len(graph["s1"]["s2"]["path"]) == 6
     assert graph["s1"]["s2"]["path"] == ["s1", 0, 1, 2, 3, "s2"]
-    assert graph["s1"]["s2"]["weight"] == 1 + 5 + 2 + 2 + 1
+    assert graph["s1"]["s2"]["length"] == 1 + 5 + 2 + 2 + 1
 
 
 geometry = [
@@ -193,28 +193,28 @@ def test_remove_useless_forks_keeps_shortest():
         (
             "forks-176",
             "forks-170",
-            {"weight": 9, "type": "DL", "id_full": ""},
+            {"length": 9, "type": "DL", "id_full": ""},
         ),
         (
             "forks-176",
             "forks-178",
-            {"weight": 36, "type": "DL", "id_full": ""},
+            {"length": 36, "type": "DL", "id_full": ""},
         ),
         (
             "forks-178",
             "forks-182",
-            {"weight": 16, "type": "DL", "id_full": ""},
+            {"length": 16, "type": "DL", "id_full": ""},
         ),
         (
             "forks-178",
             "forks-183",
-            {"weight": 65, "type": "DL", "id_full": ""},
+            {"length": 65, "type": "DL", "id_full": ""},
         ),
         (
             "forks-178",
             "consumers-10",
             {
-                "weight": 23,
+                "length": 23,
                 "type": "HL",
                 "id_full": "consumers-10",
             },
@@ -222,28 +222,28 @@ def test_remove_useless_forks_keeps_shortest():
         (
             "forks-182",
             "forks-184",
-            {"weight": 14, "type": "DL", "id_full": ""},
+            {"length": 14, "type": "DL", "id_full": ""},
         ),
         (
             "forks-182",
             "forks-185",
-            {"weight": 61, "type": "DL", "id_full": ""},
+            {"length": 61, "type": "DL", "id_full": ""},
         ),
         (
             "forks-183",
             "forks-185",
-            {"weight": 16, "type": "DL", "id_full": ""},
+            {"length": 16, "type": "DL", "id_full": ""},
         ),
         (
             "forks-184",
             "forks-187",
-            {"weight": 9, "type": "DL", "id_full": ""},
+            {"length": 9, "type": "DL", "id_full": ""},
         ),
         (
             "forks-184",
             "consumers-44",
             {
-                "weight": 14,
+                "length": 14,
                 "type": "HL",
                 "id_full": "consumers-44",
             },
@@ -262,4 +262,4 @@ def test_remove_useless_forks_keeps_shortest():
     assert forks_removed
     # There is an alterantive connection between the two nodes.
     # We make sure the shorter one is kept.
-    assert graph["forks-178"]["forks-182"]["weight"] == 16
+    assert graph["forks-178"]["forks-182"]["length"] == 16

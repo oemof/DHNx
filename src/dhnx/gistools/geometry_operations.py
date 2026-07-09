@@ -446,16 +446,14 @@ def simplify(
         c for c in retain_unique_values if c in lines_all.columns
     ]
 
-    edge_data_cols = ["weight"]
+    edge_data_cols = ["length"]
     edge_data_cols.extend(retain_unique_values)
     cols = ["from_node", "to_node"] + edge_data_cols
 
     ebunch = [
         (a, b, dict(zip(edge_data_cols, values)))
         for a, b, *values in (
-            lines_all.rename(columns={"length": "weight"})[cols].itertuples(
-                index=False, name=None
-            )
+            lines_all[cols].itertuples(index=False, name=None)
         )
     ]
 
@@ -473,13 +471,6 @@ def simplify(
         graph,
         source="from_node",
         target="to_node",
-    )
-
-    lines_simplified.rename(
-        columns={
-            "weight": "length",
-        },
-        inplace=True,
     )
 
     line_geometry = {}
@@ -567,7 +558,7 @@ def annotate_distance(
                     graph,
                     source=source,
                     target=target,
-                    weight="weight",
+                    weight="length",
                 )
                 graph.nodes[source]["distance"] = min(
                     path_length, source_distance
@@ -591,7 +582,7 @@ def longest_distance(
                             graph,
                             source=source,
                             target=target,
-                            weight="weight",
+                            weight="length",
                         ),
                     )
     return _longest_distance
@@ -602,12 +593,12 @@ def _drop_detours(
 ) -> bool:
     graph_was_updated = False
     for source, target in list(graph.edges()):
-        edge_weight = graph[source][target]["weight"]
-        if edge_weight > nx.shortest_path_length(
+        edge_length = graph[source][target]["length"]
+        if edge_length > nx.shortest_path_length(
             graph,
             source=source,
             target=target,
-            weight="weight",
+            weight="length",
         ):
             graph.remove_edge(source, target)
             graph_was_updated = True
@@ -646,7 +637,7 @@ def _remove_useless_forks(
                 ):
                     continue
 
-                edge_weight = edge0["weight"] + edge1["weight"]
+                edge_length = edge0["length"] + edge1["length"]
                 path_left = edge0.get("path", [])
                 if path_left:
                     if node == path_left[0]:
@@ -675,13 +666,13 @@ def _remove_useless_forks(
                     graph.add_edge(
                         neighbors[0],
                         neighbors[1],
-                        weight=edge_weight,
+                        length=edge_length,
                         path=path,
                         **edge_attrs,
                     )
-                elif edge_weight < existing_edge_data["weight"]:
+                elif edge_length < existing_edge_data["length"]:
                     # direct edge already exists but is longer
-                    edge_attrs["weight"] = edge_weight
+                    edge_attrs["length"] = edge_length
                     edge_attrs["path"] = path
                     nx.set_edge_attributes(graph, edge_attrs)
 
