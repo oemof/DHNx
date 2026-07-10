@@ -83,12 +83,12 @@ def test_drop_detours():
     assert list(graph.edges()) == [(0, 2), (1, 2)]
 
     graph = nx.Graph(EDGELIST)
-    graph[0][1]['existing']= 1
+    graph[0][1]['existing'] = 1
     go._drop_detours(graph, [])
     assert list(graph.edges()) == [(0, 1), (0, 2), (1, 2)]
 
     graph = nx.Graph(EDGELIST)
-    graph[1][2]['existing']= 1
+    graph[1][2]['existing'] = 1
     go._drop_detours(graph, [])
     assert list(graph.edges()) == [(0, 1), (0, 2), (1, 2)]
 
