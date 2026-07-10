@@ -590,27 +590,30 @@ def longest_distance(
     return _longest_distance
 
 
-def _all_values_equal(series):
+def _all_values_equal(series, ignore_nan):
     if series.empty:
         return True
+    if ignore_nan:
+        series = series.dropna()
     first_val = series.iloc[0]
-    if pd.isna(first_val):
-        return series.isna().all()
-    else:
-        return (series == first_val).all()
+    return (series == first_val).all()
 
 
-def _have_unique_values(
+def _attribute_values_equal(
     attributes,
     *edge_data,
+    ignore_nan=False,
 ) -> bool:
     for attribute in attributes:
         edge_values = pd.Series([edge.get(attribute) for edge in edge_data])
-        if not _all_values_equal(edge_values):
-            return True
+        if not _all_values_equal(
+            edge_values,
+            ignore_nan=ignore_nan,
+        ):
+            return False
 
     else:
-        return False
+        return True
 
 
 def _drop_detours(
@@ -638,7 +641,13 @@ def _drop_detours(
                 graph.get_edge_data(n0, n1)
                 for n0, n1 in zip(path[0:], path[1:])
             ]
-            if not _have_unique_values(
+            if _attribute_values_equal(
+                ["existing"],
+                graph.get_edge_data(source, target),
+                *path_data,
+                {"existing": 0},
+                ignore_nan=True,
+            ) and _attribute_values_equal(
                 keep_unique_values,
                 graph.get_edge_data(source, target),
                 *path_data,
@@ -669,9 +678,8 @@ def _remove_useless_forks(
                 edge0 = graph[neighbors[0]][node]
                 edge1 = graph[node][neighbors[1]]
 
-                # Do not merge if any retained attributes differ. If both
-                # values of an attribute are NaN, merging is allowed
-                if _have_unique_values(keep_unique_values, edge0, edge1):
+                # Do not merge if any attributes to be kept differ.
+                if _attribute_values_equal(keep_unique_values, edge0, edge1):
                     continue
 
                 edge_length = edge0["length"] + edge1["length"]
@@ -707,11 +715,17 @@ def _remove_useless_forks(
                         path=path,
                         **edge_attrs,
                     )
-                elif edge_length < existing_edge_data["length"]:
-                    # direct edge already exists but is longer
-                    edge_attrs["length"] = edge_length
-                    edge_attrs["path"] = path
-                    nx.set_edge_attributes(graph, edge_attrs)
+                else:
+                    if (
+                        existing_edge_data.get("existing") == 1
+                        or edge_attrs.get("existing") == 1
+                    ):  # do not merge if there are existing pipes
+                        continue
+                    if edge_length < existing_edge_data["length"]:
+                        # direct edge already exists but is longer, modify it
+                        edge_attrs["length"] = edge_length
+                        edge_attrs["path"] = path
+                        nx.set_edge_attributes(graph, edge_attrs)
 
                 graph.remove_node(node)
                 graph_was_updated = True

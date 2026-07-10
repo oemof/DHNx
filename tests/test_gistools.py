@@ -12,6 +12,8 @@ SPDX-License-Identifier: MIT
 
 import geopandas as gpd
 import networkx as nx
+import numpy as np
+import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely.geometry import Point
@@ -38,25 +40,67 @@ def test_split_linestring():
     assert len(results.index) == 7
 
 
+def test_all_values_equal():
+
+    assert go._all_values_equal(
+        pd.Series([0, 0, 0]),
+        ignore_nan=True,
+    )
+
+    assert go._all_values_equal(
+        pd.Series([0, 0, 0]),
+        ignore_nan=False,
+    )
+
+    assert not go._all_values_equal(
+        pd.Series([0, 0, 1]),
+        ignore_nan=True,
+    )
+    assert not go._all_values_equal(
+        pd.Series([0, 0, 1]),
+        ignore_nan=False,
+    )
+
+    assert go._all_values_equal(
+        pd.Series([0, 0, np.nan]),
+        ignore_nan=True,
+    )
+
+    assert not go._all_values_equal(
+        pd.Series([0, 0, np.nan]),
+        ignore_nan=False,
+    )
+
+
 def test_drop_detours():
-    edgelist = [
+    EDGELIST = [
         (0, 1, {"length": 5, "same": 0, "different": 1, "unique": 1}),
         (1, 2, {"length": 2, "same": 0, "different": 3}),
         (2, 0, {"length": 2, "same": 0, "different": 3}),
     ]
-    graph = nx.Graph(edgelist)
+    graph = nx.Graph(EDGELIST)
     go._drop_detours(graph, [])
     assert list(graph.edges()) == [(0, 2), (1, 2)]
 
-    graph = nx.Graph(edgelist)
+    graph = nx.Graph(EDGELIST)
+    graph[0][1]['existing']= 1
+    go._drop_detours(graph, [])
+    assert list(graph.edges()) == [(0, 1), (0, 2), (1, 2)]
+
+    graph = nx.Graph(EDGELIST)
+    graph[1][2]['existing']= 1
+    go._drop_detours(graph, [])
+    assert list(graph.edges()) == [(0, 1), (0, 2), (1, 2)]
+
+    graph = nx.Graph(EDGELIST)
     go._drop_detours(graph, ["same"])
     assert list(graph.edges()) == [(0, 2), (1, 2)]
 
-    graph = nx.Graph(edgelist)
+    graph = nx.Graph(EDGELIST)
     go._drop_detours(graph, ["different"])
     assert list(graph.edges()) == [(0, 1), (0, 2), (1, 2)]
 
-    graph = nx.Graph(edgelist)
+    graph = nx.Graph(EDGELIST)
     go._drop_detours(graph, ["unique"])
     assert list(graph.edges()) == [(0, 1), (0, 2), (1, 2)]
 
