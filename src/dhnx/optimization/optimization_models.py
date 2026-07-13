@@ -209,22 +209,6 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         )
                     )
 
-        pipe_to_cons_ids = list(
-            self.thermal_network.components["pipes"]["to_node"].values
-        )
-        pipe_to_cons_ids = [
-            x.split("-", 1)[1]
-            for x in pipe_to_cons_ids
-            if x.split("-", 1)[0] == "consumers"
-        ]
-
-        for id in list(self.thermal_network.components["consumers"].index):
-            if id not in pipe_to_cons_ids:
-                raise ValueError(
-                    "The consumer id {} has no connection the the"
-                    "grid!".format(id)
-                )
-
         # Check 3
         # check if all components of network are connected
         self.thermal_network.nx_graph = self.thermal_network.to_nx_graph()
