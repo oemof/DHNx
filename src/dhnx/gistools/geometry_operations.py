@@ -321,37 +321,6 @@ def split_multilinestr_to_linestr(gdf_input):
     return gdf_lines
 
 
-def drop_parallel_lines(gdf):
-    """Keep only the shortest of all lines connecting the same two points.
-
-    This prevents an error in eomof.solph that will occur if multiple lines
-    connect the same two points in a network.
-
-    These can be two actually distinct paths between two points, or two
-    identical lines on top of each other. When downloading streets with osmnx,
-    this can introduce such duplicates where the two have the attributes
-    'reversed=True' and 'reversed=False'
-
-    This function modifies the GeoDataFrame in place and resets the index.
-    """
-    # Stores each LineString's endpoints and length in temporary columns
-    gdf["5d7u6j_endpoints"] = gdf.geometry.apply(
-        lambda line: tuple(sorted([line.coords[0], line.coords[-1]]))
-    )
-    gdf["5d7u6j_length"] = gdf.geometry.length
-
-    # Group by endpoints and keep only the shortest LineString for each group
-    gdf = (
-        gdf.sort_values("5d7u6j_length")
-        .groupby("5d7u6j_endpoints")
-        .first()
-        .set_crs(gdf.crs)  # The groupby operation removes crs info
-        .reset_index(drop=True)  # Drop the temporary columns
-        .drop(columns=["5d7u6j_length"])  # Drop the temporary columns
-    )
-    return gdf
-
-
 def _line_string(
     path_edges: list,
     lines_all: gpd.GeoDataFrame,

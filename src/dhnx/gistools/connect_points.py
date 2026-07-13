@@ -676,9 +676,6 @@ def process_geometry(
             producers_poly, producers, lines_producers
         )
 
-    # Keep only the shortest of all lines connecting the same two points
-    lines = go.drop_parallel_lines(lines)
-
     # add additional line identifier
     lines_producers["type"] = "GL"  # GL for generation line
     lines["type"] = "DL"  # DL for distribution line
