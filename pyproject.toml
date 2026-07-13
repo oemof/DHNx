@@ -74,7 +74,7 @@ Changelog = "https://dhnx.readthedocs.io/en/latest/whats_new.html"
 "gis" = [
     "cartopy",
     "geopandas",
-    "osmnx >= 2.0.0",
+    "osmnx >= 2.0.7",
 ]
 "hydraulic" = [
     "CoolProp",
