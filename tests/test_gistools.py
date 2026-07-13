@@ -159,7 +159,7 @@ def test_simplify_graph():
     graph_was_updated = go.simplify_graph(graph)
 
     assert graph_was_updated
-    assert list(graph.edges()) == [("s1", "s2")]
+    assert set(graph.edges()) == set([("s1", "s2")])
     assert len(graph["s1"]["s2"]["path"]) == 6
     assert graph["s1"]["s2"]["path"] == ["s1", 0, 1, 2, 3, "s2"]
     assert graph["s1"]["s2"]["length"] == 1 + 5 + 2 + 2 + 1
@@ -173,7 +173,7 @@ def test_simplify_graph_keep_unique():
     graph_was_updated = go.simplify_graph(graph, ["unique"])
 
     assert graph_was_updated
-    assert list(graph.edges()) == [(1, 2), (1, "s1"), (2, "s2")]
+    assert set(graph.edges()) == set([(1, 2), (1, "s1"), (2, "s2")])
 
 
 geometry = [

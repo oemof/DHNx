@@ -591,11 +591,13 @@ def longest_distance(
 
 
 def _all_values_equal(series, ignore_nan):
-    if series.empty:
-        return True
     if ignore_nan:
         series = series.dropna()
+    if series.empty:
+        return True
     first_val = series.iloc[0]
+    if pd.isna(first_val):
+        return series.isna().all()
     return (series == first_val).all()
 
 
@@ -612,8 +614,7 @@ def _attribute_values_equal(
         ):
             return False
 
-    else:
-        return True
+    return True
 
 
 def _drop_detours(
@@ -678,57 +679,60 @@ def _remove_useless_forks(
                 edge0 = graph[neighbors[0]][node]
                 edge1 = graph[node][neighbors[1]]
 
-                # Do not merge if any attributes to be kept differ.
-                if _attribute_values_equal(keep_unique_values, edge0, edge1):
-                    continue
+                # Merge if all attributes to be kept are the same
+                if _attribute_values_equal(
+                    keep_unique_values,
+                    edge0,
+                    edge1,
+                    ignore_nan=False,
+                ):
+                    edge_length = edge0["length"] + edge1["length"]
+                    path_left = edge0.get("path", [])
+                    if path_left:
+                        if node == path_left[0]:
+                            path_left = path_left[::-1]
+                        path_left = path_left[:-1]
+                    else:
+                        path_left = [neighbors[0]]
 
-                edge_length = edge0["length"] + edge1["length"]
-                path_left = edge0.get("path", [])
-                if path_left:
-                    if node == path_left[0]:
-                        path_left = path_left[::-1]
-                    path_left = path_left[:-1]
-                else:
-                    path_left = [neighbors[0]]
+                    path_right = edge1.get("path", [])
+                    if path_right:
+                        if node == path_right[-1]:
+                            path_right = path_right[::-1]
+                        path_right = path_right[1:]
+                    else:
+                        path_right = [neighbors[1]]
 
-                path_right = edge1.get("path", [])
-                if path_right:
-                    if node == path_right[-1]:
-                        path_right = path_right[::-1]
-                    path_right = path_right[1:]
-                else:
-                    path_right = [neighbors[1]]
+                    path = path_left + [node] + path_right
 
-                path = path_left + [node] + path_right
+                    edge_attrs = {
+                        attr: edge0.get(attr) for attr in keep_unique_values
+                    }
 
-                edge_attrs = {
-                    attr: edge0.get(attr) for attr in keep_unique_values
-                }
+                    existing_edge_data = graph.get_edge_data(*neighbors)
+                    if existing_edge_data is None:
+                        # direct edge does not exist, yet
+                        graph.add_edge(
+                            neighbors[0],
+                            neighbors[1],
+                            length=edge_length,
+                            path=path,
+                            **edge_attrs,
+                        )
+                    else:
+                        if (
+                            existing_edge_data.get("existing") == 1
+                            or edge_attrs.get("existing") == 1
+                        ):  # do not merge if there are existing pipes
+                            continue
+                        if edge_length < existing_edge_data["length"]:
+                            # direct edge already exists but is longer, modify
+                            edge_attrs["length"] = edge_length
+                            edge_attrs["path"] = path
+                            nx.set_edge_attributes(graph, edge_attrs)
 
-                existing_edge_data = graph.get_edge_data(*neighbors)
-                if existing_edge_data is None:
-                    # direct edge does not exist, yet
-                    graph.add_edge(
-                        neighbors[0],
-                        neighbors[1],
-                        length=edge_length,
-                        path=path,
-                        **edge_attrs,
-                    )
-                else:
-                    if (
-                        existing_edge_data.get("existing") == 1
-                        or edge_attrs.get("existing") == 1
-                    ):  # do not merge if there are existing pipes
-                        continue
-                    if edge_length < existing_edge_data["length"]:
-                        # direct edge already exists but is longer, modify it
-                        edge_attrs["length"] = edge_length
-                        edge_attrs["path"] = path
-                        nx.set_edge_attributes(graph, edge_attrs)
-
-                graph.remove_node(node)
-                graph_was_updated = True
+                    graph.remove_node(node)
+                    graph_was_updated = True
     return graph_was_updated
 
 
