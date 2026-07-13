@@ -45,7 +45,7 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    'pandas >= 0.18.0',
+    "pandas >= 2.2.0",
     'matplotlib',
     'networkx',
     'pillow',
@@ -66,15 +66,18 @@ Changelog = "https://dhnx.readthedocs.io/en/latest/whats_new.html"
 "Issue Tracker" = "https://github.com/oemof/DHNx/issues/"
 
 [project.optional-dependencies]
+"dev" = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "tox",
+]
 "gis" = [
     "cartopy",
     "geopandas",
     "osmnx >= 2.0.0",
 ]
-"tests" = [
-        "CoolProp",
-        "geopandas",
-        "osmnx",
+"hydraulic" = [
+    "CoolProp",
 ]
 
 [tool.black]
