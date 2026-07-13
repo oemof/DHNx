@@ -38,6 +38,7 @@ invest_opt = dhnx.input_output.load_invest_options(
     dir_import_invest + "invest_options"
 )
 
+
 def test_access_attributes():
 
     network = dhnx.network.ThermalNetwork(dir_import_looped)
