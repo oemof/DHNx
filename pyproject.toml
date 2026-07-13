@@ -51,7 +51,7 @@ dependencies = [
     'pillow',
     'folium',
     'addict',
-    'oemof.solph >= 0.6.2',
+    'oemof.solph >= 0.6.4',
     'scipy >= 1.5',
 ]
 license = "MIT"
