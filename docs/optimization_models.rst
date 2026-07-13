@@ -396,7 +396,7 @@ Label systematic
 
 In order to access the oemof-solph optimisation results, a label systematic containing a tuple
 with 4 items is used. Please check the basic example of oemof-solph for using tuple as label
-(`oemof-solph example tuple as label <https://github.com/oemof/oemof-examples/blob/master/oemof_examples/oemof.solph/v0.4.x/basic_example/basic_example_tuple_as_label.py>`_).
+(`oemof-solph example tuple as label <https://oemof-solph.readthedocs.io/en/stable/examples/nametuple.html>`_).
 
 The following table illustrates the systematic:
 
