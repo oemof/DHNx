@@ -5,7 +5,7 @@ DHNx
 ~~~~
 
 This package provides an open toolbox for district heating and cooling network
-optimization and simulation models.
+optimization models.
 
 .. contents::
 

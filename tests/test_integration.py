@@ -89,8 +89,3 @@ def test_setup_operation_optimization():
 def test_setup_investment_optimization():
 
     dhnx.optimization_models.setup_optimise_investment(tn_invest, invest_opt)
-
-
-def test_setup_simulation():
-
-    tree_thermal_network.simulate()

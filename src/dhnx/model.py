@@ -1,7 +1,7 @@
 # -*- coding: utf-8
 
 """
-This module is designed to base classes for optimization and simulation models.
+This module is designed to base classes for optimization models.
 
 This file is part of project dhnx (). It's copyrighted
 by the contributors recorded in the version control history of the file,
@@ -54,21 +54,6 @@ class OperationOptimizationModel(Model):
 class InvestOptimizationModel(Model):
     r"""
     Abstract base class for investment optimization models.
-    """
-
-    def __init__(self, thermal_network):
-        super().__init__(thermal_network)
-        self.is_consistent()
-        self.results = ["a", "b"]
-
-    def is_consistent(self):
-        # TODO.
-        pass
-
-
-class SimulationModel(Model):
-    r"""
-    Abstract base class for simulation models.
     """
 
     def __init__(self, thermal_network):
