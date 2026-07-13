@@ -91,14 +91,3 @@ dhnx.optimization.precalc_hydraulic
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-simulation
-==========
-
-.. automodule:: dhnx.simulation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-    :private-members:
-    :member-order: bysource

@@ -12,6 +12,10 @@ API changes
   * ``min`` and ``max`` are still usable in dhnx, but will trigger an oemof
     deprecation warning. Use ``minimum`` and ``maximum`` instead
 
+* Removed outdated simulation module as it was unmaintained.
+  We reccomend using PandaPipes (typically) or TESPy
+  (e.g. if phase changes need to be considered) instead.
+
 
 New features
 ^^^^^^^^^^^^^^^^^^^^
@@ -42,7 +46,7 @@ Known issues
 Testing
 ^^^^^^^^^^^^^^^^^^^^
 
-* No changes
+* Activated automatic CI pipeline
 
 
 Other changes

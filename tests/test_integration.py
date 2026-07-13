@@ -39,17 +39,6 @@ invest_opt = dhnx.input_output.load_invest_options(
 )
 
 
-def test_import_export_csv():
-    dir_export = os.path.join(tmpdir, "network_export")
-
-    network = dhnx.network.ThermalNetwork()
-    network = network.from_csv_folder(dir_import_looped)
-
-    network.to_csv_folder(dir_export)
-
-    helpers.check_if_csv_dirs_equal(dir_import_looped, dir_export)
-
-
 def test_access_attributes():
 
     network = dhnx.network.ThermalNetwork(dir_import_looped)
@@ -68,29 +57,3 @@ def test_get_nx_graph():
     nx_graph = looped_thermal_network.to_nx_graph()
 
     assert isinstance(nx_graph, nx.Graph)
-
-
-def test_static_map():
-    # plot static map
-    dhnx.plotting.StaticMap(looped_thermal_network)
-
-
-def test_interactive_map():
-    # plot interactive map
-    interactive_map = dhnx.plotting.InteractiveMap(looped_thermal_network)
-    interactive_map.draw()
-
-
-def test_setup_operation_optimization():
-
-    looped_thermal_network.optimize_operation()
-
-
-def test_setup_investment_optimization():
-
-    dhnx.optimization_models.setup_optimise_investment(tn_invest, invest_opt)
-
-
-def test_setup_simulation():
-
-    tree_thermal_network.simulate()

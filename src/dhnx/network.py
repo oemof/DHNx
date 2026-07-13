@@ -24,7 +24,6 @@ from .input_output import load_component_attrs
 from .optimization.optimization_models import optimize_operation
 from .optimization.optimization_models import setup_optimise_investment
 from .optimization.optimization_models import solve_optimisation_investment
-from .simulation import simulate
 
 dir_name = os.path.dirname(__file__)
 
@@ -358,6 +357,3 @@ class ThermalNetwork:
         self.results.optimization = solve_optimisation_investment(
             oemof_opti_model
         )
-
-    def simulate(self, *args, **kwargs):
-        self.results.simulation = simulate(self, *args, **kwargs)
