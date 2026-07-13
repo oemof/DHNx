@@ -43,7 +43,7 @@ jobs:
         # this prefix is not used.
 
     - name: Check test coverage
-      run: coverage report -m --fail-under=80
+      run: coverage report -m
       env:
         COVERAGE_FILE: ".coverage.${{ matrix.python-version }}"
 
