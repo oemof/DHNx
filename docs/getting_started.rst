@@ -4,7 +4,7 @@
 Getting started
 ~~~~~~~~~~~~~~~
 
-DHNx is a toolbox for optimization and simulation of district heating and cooling systems.
+DHNx is a toolbox for optimization of district heating and cooling systems.
 
 .. contents:: `Contents`
     :depth: 1
