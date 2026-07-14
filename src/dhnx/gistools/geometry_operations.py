@@ -287,7 +287,7 @@ def split_multilinestr_to_linestr(gdf_input):
         [gdf_lines, new_lines], ignore_index=True, sort=False
     )
 
-    gdf_lines["geometry"].crs = gdf_input.crs
+    gdf_lines.set_crs(gdf_input.crs, inplace=True)
 
     # second: split LineStrings into single Linestrings
     new_lines = gpd.GeoDataFrame()
@@ -316,7 +316,7 @@ def split_multilinestr_to_linestr(gdf_input):
         [gdf_lines, new_lines], ignore_index=True, sort=False
     )
 
-    gdf_lines["geometry"].crs = gdf_input.crs
+    gdf_lines.set_crs(gdf_input.crs, inplace=True)
 
     return gdf_lines
 
