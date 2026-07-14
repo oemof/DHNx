@@ -365,13 +365,19 @@ def test_process_geometry():
     assert [c in tn_input["pipes"].columns for c in ["type", "id_full"]]
     assert tn_input["pipes"].index.name == "id"
 
+    tn_input["pipes"] = tn_input["pipes"][sorted(tn_input["pipes"].columns)]
+
     # Update expected result (after intentional changes)
     # tn_input["pipes"].to_file(file_pipes)
 
     # Load expected result (and fix column order)
-    gdf_pipes_test = (gpd.read_file(file_pipes)
-                      .set_index("id")
-                      .reindex(tn_input["pipes"].columns, axis="columns")
-                      )
+    gdf_pipes_test = (
+        gpd.read_file(file_pipes)
+        .set_index("id")
+        .reindex(tn_input["pipes"].columns, axis="columns")
+    )
 
+    print(gdf_pipes_test.columns)
+    print(tn_input["pipes"].columns)
+    assert (gdf_pipes_test.columns == tn_input["pipes"].columns).all()
     assert gdf_pipes_test.equals(tn_input["pipes"])
