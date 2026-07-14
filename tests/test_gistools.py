@@ -10,6 +10,7 @@ available from its original location oemof/oemof/tools/helpers.py
 SPDX-License-Identifier: MIT
 """
 
+import os
 import geopandas as gpd
 import networkx as nx
 import numpy as np
@@ -327,3 +328,46 @@ def test_remove_useless_forks_keeps_shortest():
     # There is an alterantive connection between the two nodes.
     # We make sure the shorter one is kept.
     assert graph["forks-178"]["forks-182"]["length"] == 16
+
+
+def test_process_geometry():
+    """Test ``process_geometry()`` function with a simple example.
+
+    It includes pipes with ``existing=1``, due to which an otherwise
+    deleted detour must be kept.
+    """
+    base_dir = os.path.join(
+        os.path.dirname(__file__), "_files/process_geometry"
+    )
+    gdf_lines = gpd.read_file(
+        os.path.join(base_dir, "in/lines_input_existing.geojson")
+    )
+    gdf_prod = gpd.read_file(
+        os.path.join(base_dir, "in/producers_polygon.geojson")
+    )
+    gdf_cons = gpd.read_file(
+        os.path.join(base_dir, "in/consumers_polygon.geojson")
+    )
+    file_pipes = os.path.join(base_dir, "out/pipes.geojson")
+    os.makedirs(os.path.dirname(file_pipes), exist_ok=True)
+
+    tn_input = cp.process_geometry(
+        lines=gdf_lines,
+        producers=gdf_prod,
+        consumers=gdf_cons,
+        method="boundary",
+        reset_index=True,
+        welding=True,
+    )
+
+    assert tn_input["pipes"].crs is not None
+    assert [c in tn_input["pipes"].columns for c in ["type", "id_full"]]
+    assert tn_input["pipes"].index.name == "id"
+
+    # Update expected result
+    tn_input["pipes"].to_file(file_pipes)
+
+    # Load expected result
+    gdf_pipes_test = gpd.read_file(file_pipes).set_index("id")
+
+    assert gdf_pipes_test.equals(tn_input["pipes"])
