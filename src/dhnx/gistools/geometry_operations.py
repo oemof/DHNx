@@ -698,7 +698,9 @@ def _remove_useless_forks(
                             # direct edge already exists but is longer, modify
                             edge_attrs["length"] = edge_length
                             edge_attrs["path"] = path
-                            nx.set_edge_attributes(graph, edge_attrs)
+                            nx.set_edge_attributes(
+                                graph, {neighbors: edge_attrs}
+                            )
 
                     graph.remove_node(node)
                     graph_was_updated = True

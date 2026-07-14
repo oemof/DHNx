@@ -11,6 +11,7 @@ SPDX-License-Identifier: MIT
 """
 
 import os
+
 import geopandas as gpd
 import networkx as nx
 import numpy as np
@@ -364,10 +365,13 @@ def test_process_geometry():
     assert [c in tn_input["pipes"].columns for c in ["type", "id_full"]]
     assert tn_input["pipes"].index.name == "id"
 
-    # Update expected result
-    tn_input["pipes"].to_file(file_pipes)
+    # Update expected result (after intentional changes)
+    # tn_input["pipes"].to_file(file_pipes)
 
-    # Load expected result
-    gdf_pipes_test = gpd.read_file(file_pipes).set_index("id")
+    # Load expected result (and fix column order)
+    gdf_pipes_test = (gpd.read_file(file_pipes)
+                      .set_index("id")
+                      .reindex(tn_input["pipes"].columns, axis="columns")
+                      )
 
     assert gdf_pipes_test.equals(tn_input["pipes"])
