@@ -366,6 +366,7 @@ def test_process_geometry():
     assert tn_input["pipes"].index.name == "id"
 
     tn_input["pipes"] = tn_input["pipes"][sorted(tn_input["pipes"].columns)]
+    tn_input["pipes"] = tn_input["pipes"].round(5)
 
     # Update expected result (after intentional changes)
     # tn_input["pipes"].to_file(file_pipes)
@@ -377,7 +378,13 @@ def test_process_geometry():
         .reindex(tn_input["pipes"].columns, axis="columns")
     )
 
-    print(gdf_pipes_test.columns)
-    print(tn_input["pipes"].columns)
     assert (gdf_pipes_test.columns == tn_input["pipes"].columns).all()
-    assert gdf_pipes_test.equals(tn_input["pipes"])
+
+    # Compare with tolerance, due to loss of floating point precision
+    for col in tn_input["pipes"].columns:
+        if col == tn_input["pipes"].geometry.name:
+            assert gdf_pipes_test.geom_equals_exact(
+                tn_input["pipes"], tolerance=1e-7
+            ).all()
+        else:
+            assert gdf_pipes_test[[col]].equals(tn_input["pipes"][[col]])
