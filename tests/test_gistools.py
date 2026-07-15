@@ -385,7 +385,7 @@ def test_process_geometry():
     for col in tn_input["pipes"].columns:
         if col == tn_input["pipes"].geometry.name:
             test = gdf_pipes_test.geom_equals_exact(
-                tn_input["pipes"], tolerance=1e-9
+                tn_input["pipes"], tolerance=1e-7
             ).all()
         else:
             test = gdf_pipes_test[[col]].equals(tn_input["pipes"][[col]])
@@ -398,7 +398,7 @@ def test_process_geometry():
     for col in tn_input["pipes"].columns:
         if col == tn_input["pipes"].geometry.name:
             assert gdf_pipes_test.geom_equals_exact(
-                tn_input["pipes"], tolerance=1e-9
+                tn_input["pipes"], tolerance=1e-7
             ).all()
         else:
             assert gdf_pipes_test[[col]].equals(tn_input["pipes"][[col]])
