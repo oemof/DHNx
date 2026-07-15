@@ -209,20 +209,21 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         )
                     )
 
-        pipe_to_cons_ids = list(
-            self.thermal_network.components["pipes"]["to_node"].values
-        )
-        pipe_to_cons_ids = [
-            x.split("-", 1)[1]
-            for x in pipe_to_cons_ids
-            if x.split("-", 1)[0] == "consumers"
-        ]
-
+        # check if each consumer has a pipe connected to it
         for id in list(self.thermal_network.components["consumers"].index):
-            if id not in pipe_to_cons_ids:
+            id_full = "consumers-" + id
+            if id_full not in self.thermal_network.components["pipes"][
+                "to_node"
+            ].values and (
+                id_full
+                not in self.thermal_network.components["pipes"][
+                    "from_node"
+                ].values
+            ):
                 raise ValueError(
-                    "The consumer id {} has no connection the the"
-                    "grid!".format(id)
+                    "The consumer id {} has no connection to the grid!".format(
+                        id
+                    )
                 )
 
         # Check 3
@@ -863,7 +864,7 @@ def setup_optimise_investment(
     """
     if heat_demand not in ["scalar", "series"]:
         raise ValueError(
-            'The settings attribute *heat_demand*'
+            "The settings attribute *heat_demand*"
             + ' must be "scalar" or "series"!'
         )
 

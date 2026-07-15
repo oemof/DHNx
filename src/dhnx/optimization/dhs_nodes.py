@@ -156,9 +156,15 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 )
 
             elif q["from_node"].split("-")[0] == "consumers":
-                raise ValueError(
-                    "Pipes must not go from 'consumers'!"
-                    " Existing heatpipe id {}".format(p)
+                start = q["to_node"]
+                end = q["from_node"]
+                b_in = busd[(d_labels["l_1"], d_labels["l_2"], "bus", start)]
+                b_out = busd[("consumers", d_labels["l_2"], "bus", end)]
+
+                d_labels["l_4"] = start + "-" + end
+
+                nodes = ac.add_heatpipes(
+                    pipe_data, d_labels, False, q["length"], b_in, b_out, nodes
                 )
 
             elif q["to_node"].split("-")[0] == "producers":

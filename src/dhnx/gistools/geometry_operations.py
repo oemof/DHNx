@@ -287,7 +287,7 @@ def split_multilinestr_to_linestr(gdf_input):
         [gdf_lines, new_lines], ignore_index=True, sort=False
     )
 
-    gdf_lines["geometry"].crs = gdf_input.crs
+    gdf_lines.set_crs(gdf_input.crs, inplace=True)
 
     # second: split LineStrings into single Linestrings
     new_lines = gpd.GeoDataFrame()
@@ -316,40 +316,9 @@ def split_multilinestr_to_linestr(gdf_input):
         [gdf_lines, new_lines], ignore_index=True, sort=False
     )
 
-    gdf_lines["geometry"].crs = gdf_input.crs
+    gdf_lines.set_crs(gdf_input.crs, inplace=True)
 
     return gdf_lines
-
-
-def drop_parallel_lines(gdf):
-    """Keep only the shortest of all lines connecting the same two points.
-
-    This prevents an error in eomof.solph that will occur if multiple lines
-    connect the same two points in a network.
-
-    These can be two actually distinct paths between two points, or two
-    identical lines on top of each other. When downloading streets with osmnx,
-    this can introduce such duplicates where the two have the attributes
-    'reversed=True' and 'reversed=False'
-
-    This function modifies the GeoDataFrame in place and resets the index.
-    """
-    # Stores each LineString's endpoints and length in temporary columns
-    gdf["5d7u6j_endpoints"] = gdf.geometry.apply(
-        lambda line: tuple(sorted([line.coords[0], line.coords[-1]]))
-    )
-    gdf["5d7u6j_length"] = gdf.geometry.length
-
-    # Group by endpoints and keep only the shortest LineString for each group
-    gdf = (
-        gdf.sort_values("5d7u6j_length")
-        .groupby("5d7u6j_endpoints")
-        .first()
-        .set_crs(gdf.crs)  # The groupby operation removes crs info
-        .reset_index(drop=True)  # Drop the temporary columns
-        .drop(columns=["5d7u6j_length"])  # Drop the temporary columns
-    )
-    return gdf
 
 
 def _line_string(
@@ -402,36 +371,75 @@ def _line_string(
     return LineString(ordered)
 
 
-def simplify(lines_all):
+def simplify(
+    lines_all,
+    keep_unique_values=[
+        "type",
+        "id_full",
+        "capacity",
+        "existing",
+        "hp_type",
+    ],
+):
+    """Simplify line network by dropping detours and removing useless forks.
+
+    Parameters
+    ----------
+    lines_all : GeoDataFrame
+        GeoDataFrame of lines to be simplified
+
+    keep_unique_values : list, optional
+        List of attributes of which unique values must be retained when
+        simplifiying geometries. This means adjacent pipe segments are never
+        merged if any values of the given attributes differ.
+
+        Notes on the default selection:
+
+            - ['type', 'id_full']: These are always created for new and
+              existing pipes. Different types, i.e. distribution lines
+              and building connection lines should never be merged, and
+              ``id_full`` notes the name of the connected producer or consumer.
+            - ['capacity', 'existing', 'hp_type']: These are the properties
+              the user has to set when working with existing pipes, thus
+              they need to remain intact.
+
+        Selected attributes not present in the input data are silently ignored.
+
+    Returns
+    -------
+    gdf_simple : GeoDataFrame
+        Simplified line network.
+
+    """
+    keep_unique_values = [
+        c for c in keep_unique_values if c in lines_all.columns
+    ]
+
+    edge_data_cols = ["length"]
+    edge_data_cols.extend(keep_unique_values)
+    cols = ["from_node", "to_node"] + edge_data_cols
+
+    ebunch = [
+        (a, b, dict(zip(edge_data_cols, values)))
+        for a, b, *values in (
+            lines_all[cols].itertuples(index=False, name=None)
+        )
+    ]
+
     graph = nx.Graph()
-    graph.add_edges_from(
-        [
-            (a, b, {"weight": length})
-            for a, b, length in zip(
-                lines_all["from_node"],
-                lines_all["to_node"],
-                lines_all["length"],
-            )
-        ]
-    )
+    graph.add_edges_from(ebunch)
+
     node_types = {
         node: {"type": node.split("-")[0][:-1]} for node in list(graph.nodes())
     }
     nx.set_node_attributes(graph, node_types)
 
-    simplify_graph(graph=graph)
+    simplify_graph(graph=graph, keep_unique_values=keep_unique_values)
 
     lines_simplified = nx.to_pandas_edgelist(
         graph,
         source="from_node",
         target="to_node",
-    )
-
-    lines_simplified.rename(
-        columns={
-            "weight": "length",
-        },
-        inplace=True,
     )
 
     line_geometry = {}
@@ -447,11 +455,32 @@ def simplify(lines_all):
 
     lines_simplified["geometry"] = line_geometry
 
-    return gpd.GeoDataFrame(lines_simplified)
+    # Line orientation needs to be redefined to match the new geometries
+    lines_simplified["from_node"] = lines_simplified["path"].apply(
+        lambda x: x[0][0]
+    )
+    lines_simplified["to_node"] = lines_simplified["path"].apply(
+        lambda x: x[-1][-1]
+    )
+
+    # Drop temporary columns
+    lines_simplified = lines_simplified.drop(columns=["path"], errors="ignore")
+
+    gdf_simple = gpd.GeoDataFrame(lines_simplified, crs=lines_all.crs)
+    gdf_simple.index.set_names(lines_all.index.names, inplace=True)
+
+    logger.debug(
+        "Simplified number of lines from {} to {}".format(
+            len(lines_all), len(gdf_simple)
+        )
+    )
+
+    return gdf_simple
 
 
 def simplify_graph(
     graph: nx.Graph,
+    keep_unique_values: list = [],
 ) -> bool:
     """Simplifies graph as much as possibe based on only local information.
 
@@ -469,8 +498,12 @@ def simplify_graph(
     graph_needs_iteration = True
     while graph_needs_iteration:
         graph_needs_iteration = False
-        detours_dropped = _drop_detours(graph)
-        forks_removed = _remove_useless_forks(graph)
+        detours_dropped = _drop_detours(
+            graph, keep_unique_values=keep_unique_values
+        )
+        forks_removed = _remove_useless_forks(
+            graph, keep_unique_values=keep_unique_values
+        )
 
         # if something changed, we need a new iteration
         graph_needs_iteration = detours_dropped or forks_removed
@@ -496,7 +529,7 @@ def annotate_distance(
                     graph,
                     source=source,
                     target=target,
-                    weight="weight",
+                    weight="length",
                 )
                 graph.nodes[source]["distance"] = min(
                     path_length, source_distance
@@ -520,32 +553,84 @@ def longest_distance(
                             graph,
                             source=source,
                             target=target,
-                            weight="weight",
+                            weight="length",
                         ),
                     )
     return _longest_distance
 
 
+def _all_values_equal(series, ignore_nan):
+    if ignore_nan:
+        series = series.dropna()
+    if series.empty:
+        return True
+    first_val = series.iloc[0]
+    if pd.isna(first_val):
+        return series.isna().all()
+    return (series == first_val).all()
+
+
+def _attribute_values_equal(
+    attributes,
+    *edge_data,
+    ignore_nan=False,
+) -> bool:
+    for attribute in attributes:
+        edge_values = pd.Series([edge.get(attribute) for edge in edge_data])
+        if not _all_values_equal(
+            edge_values,
+            ignore_nan=ignore_nan,
+        ):
+            return False
+
+    return True
+
+
 def _drop_detours(
     graph: nx.Graph,
+    keep_unique_values: list,
 ) -> bool:
+    """Drops single edges that are longer than a path using multiple edges"""
     graph_was_updated = False
     for source, target in list(graph.edges()):
-        edge_weight = graph[source][target]["weight"]
-        if edge_weight > nx.shortest_path_length(
+        edge_length = graph[source][target]["length"]
+        if edge_length > nx.shortest_path_length(
             graph,
             source=source,
             target=target,
-            weight="weight",
+            weight="length",
         ):
-            graph.remove_edge(source, target)
-            graph_was_updated = True
+            path = nx.shortest_path(
+                graph,
+                source=source,
+                target=target,
+                weight="length",
+            )
+
+            path_data = [
+                graph.get_edge_data(n0, n1)
+                for n0, n1 in zip(path[0:], path[1:])
+            ]
+            if _attribute_values_equal(
+                ["existing"],
+                graph.get_edge_data(source, target),
+                *path_data,
+                {"existing": 0},
+                ignore_nan=True,
+            ) and _attribute_values_equal(
+                keep_unique_values,
+                graph.get_edge_data(source, target),
+                *path_data,
+            ):
+                graph.remove_edge(source, target)
+                graph_was_updated = True
 
     return graph_was_updated
 
 
 def _remove_useless_forks(
     graph: nx.Graph,
+    keep_unique_values: list,
 ) -> bool:
     """Removes forks that only connect two lines as well as dead ends.
 
@@ -559,37 +644,66 @@ def _remove_useless_forks(
                 graph.remove_node(node)
                 graph_was_updated = True
             elif graph.degree(node) == 2:
-                neighbors = list(graph.neighbors(node))
-                edge_weight = (
-                    graph[neighbors[0]][node]["weight"]
-                    + graph[node][neighbors[1]]["weight"]
-                )
-                path_left = graph[neighbors[0]][node].get("path", [])
-                if path_left:
-                    if node == path_left[0]:
-                        path_left = path_left[::-1]
-                    path_left = path_left[:-1]
-                else:
-                    path_left = [neighbors[0]]
+                neighbors = tuple(graph.neighbors(node))
+                edge0 = graph[neighbors[0]][node]
+                edge1 = graph[node][neighbors[1]]
 
-                path_right = graph[node][neighbors[1]].get("path", [])
-                if path_right:
-                    if node == path_right[-1]:
-                        path_right = path_right[::-1]
-                    path_right = path_right[1:]
-                else:
-                    path_right = [neighbors[1]]
+                # Merge if all attributes to be kept are the same
+                if _attribute_values_equal(
+                    keep_unique_values,
+                    edge0,
+                    edge1,
+                    ignore_nan=False,
+                ):
+                    edge_length = edge0["length"] + edge1["length"]
+                    path_left = edge0.get("path", [])
+                    if path_left:
+                        if node == path_left[0]:
+                            path_left = path_left[::-1]
+                        path_left = path_left[:-1]
+                    else:
+                        path_left = [neighbors[0]]
 
-                path = path_left + [node] + path_right
+                    path_right = edge1.get("path", [])
+                    if path_right:
+                        if node == path_right[-1]:
+                            path_right = path_right[::-1]
+                        path_right = path_right[1:]
+                    else:
+                        path_right = [neighbors[1]]
 
-                graph.add_edge(
-                    neighbors[0],
-                    neighbors[1],
-                    weight=edge_weight,
-                    path=path,
-                )
-                graph.remove_node(node)
-                graph_was_updated = True
+                    path = path_left + [node] + path_right
+
+                    edge_attrs = {
+                        attr: edge0.get(attr) for attr in keep_unique_values
+                    }
+
+                    existing_edge_data = graph.get_edge_data(*neighbors)
+                    if existing_edge_data is None:
+                        # direct edge does not exist, yet
+                        graph.add_edge(
+                            neighbors[0],
+                            neighbors[1],
+                            length=edge_length,
+                            path=path,
+                            **edge_attrs,
+                        )
+                    else:
+                        if (
+                            existing_edge_data.get("existing") == 1
+                            or edge_attrs.get("existing") == 1
+                        ):  # do not merge if there are existing pipes
+                            continue
+                        if edge_length < existing_edge_data["length"]:
+                            # direct edge already exists but is longer, modify
+                            edge_attrs["length"] = edge_length
+                            edge_attrs["path"] = path
+                            nx.set_edge_attributes(
+                                graph, {neighbors: edge_attrs}
+                            )
+
+                    graph.remove_node(node)
+                    graph_was_updated = True
     return graph_was_updated
 
 
