@@ -549,7 +549,7 @@ def process_geometry(
     reset_index=True,
     n_conn=1,
     n_conn_prod=1,
-    welding=True,
+    simplify=True,
 ):
     """
     This function connects the consumers and producers to the line network,
@@ -714,7 +714,7 @@ def process_geometry(
     # Convert all MultiLineStrings to LineStrings
     check_geometry_type(lines_all, types=["LineString"])
 
-    if welding:
+    if simplify:
         lines_all = go.simplify(lines_all)
         remaining_forks = set(lines_all["from_node"]) | set(
             lines_all["to_node"]

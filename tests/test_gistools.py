@@ -358,7 +358,7 @@ def test_process_geometry():
         consumers=gdf_cons,
         method="boundary",
         reset_index=True,
-        welding=True,
+        simplify=True,
     )
 
     assert tn_input["pipes"].crs is not None
