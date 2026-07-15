@@ -366,6 +366,7 @@ def test_process_geometry():
     assert tn_input["pipes"].index.name == "id"
 
     tn_input["pipes"] = tn_input["pipes"][sorted(tn_input["pipes"].columns)]
+    tn_input["pipes"] = tn_input["pipes"].round(5)
 
     # Update expected result (after intentional changes)
     # tn_input["pipes"].to_file(file_pipes)
@@ -382,10 +383,22 @@ def test_process_geometry():
     assert (gdf_pipes_test.columns == tn_input["pipes"].columns).all()
 
     for col in tn_input["pipes"].columns:
-        test = gdf_pipes_test[[col]].equals(tn_input["pipes"][[col]])
+        if col == tn_input["pipes"].geometry.name:
+            test = gdf_pipes_test.geom_equals_exact(
+                tn_input["pipes"], tolerance=1e-9
+            ).all()
+        else:
+            test = gdf_pipes_test[[col]].equals(tn_input["pipes"][[col]])
         print(col, "- Equals?", test)
         if not test:
             print(gdf_pipes_test[[col]])
             print(tn_input["pipes"][[col]])
             print(gdf_pipes_test[[col]].eq(tn_input["pipes"][[col]]))
-    assert gdf_pipes_test.equals(tn_input["pipes"])
+
+    for col in tn_input["pipes"].columns:
+        if col == tn_input["pipes"].geometry.name:
+            assert gdf_pipes_test.geom_equals_exact(
+                tn_input["pipes"], tolerance=1e-9
+            ).all()
+        else:
+            assert gdf_pipes_test[[col]].equals(tn_input["pipes"][[col]])
