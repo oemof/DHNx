@@ -380,4 +380,12 @@ def test_process_geometry():
     print(gdf_pipes_test.columns)
     print(tn_input["pipes"].columns)
     assert (gdf_pipes_test.columns == tn_input["pipes"].columns).all()
+
+    for col in tn_input["pipes"].columns:
+        test = gdf_pipes_test[[col]].equals(tn_input["pipes"][[col]])
+        print(col, "- Equals?", test)
+        if not test:
+            print(gdf_pipes_test[[col]])
+            print(tn_input["pipes"][[col]])
+            print(gdf_pipes_test[[col]].eq(tn_input["pipes"][[col]]))
     assert gdf_pipes_test.equals(tn_input["pipes"])
