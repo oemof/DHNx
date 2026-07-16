@@ -549,7 +549,7 @@ def process_geometry(
     reset_index=True,
     n_conn=1,
     n_conn_prod=1,
-    welding=True,
+    simplify=True,
 ):
     """
     This function connects the consumers and producers to the line network,
@@ -621,7 +621,8 @@ def process_geometry(
     check_geometry_type(lines, types=["LineString", "MultiLineString"])
     for gdf in [producers, consumers, producers_poly, consumers_poly]:
         check_geometry_type(
-            gdf, types=["Polygon", "Point", "MultiPolygon", "MultiPoint"])
+            gdf, types=["Polygon", "Point", "MultiPolygon", "MultiPoint"]
+        )
         check_duplicate_geometries(gdf)
 
     # split multilinestrings to single lines with only 1 starting
@@ -675,18 +676,6 @@ def process_geometry(
             producers_poly, producers, lines_producers
         )
 
-    if welding:
-        # Weld continuous line segments together and cut loose ends
-        lines = go.weld_segments(
-            lines,
-            lines_producers,
-            lines_consumers,
-            # debug_plotting=True,
-        )
-
-    # Keep only the shortest of all lines connecting the same two points
-    lines = go.drop_parallel_lines(lines)
-
     # add additional line identifier
     lines_producers["type"] = "GL"  # GL for generation line
     lines["type"] = "DL"  # DL for distribution line
@@ -724,6 +713,13 @@ def process_geometry(
 
     # Convert all MultiLineStrings to LineStrings
     check_geometry_type(lines_all, types=["LineString"])
+
+    if simplify:
+        lines_all = go.simplify(lines_all)
+        remaining_forks = set(lines_all["from_node"]) | set(
+            lines_all["to_node"]
+        )
+        forks = forks.loc[forks["id_full"].isin(remaining_forks)]
 
     # ## check for near points
     go.check_double_points(points_all, id_column="id_full")

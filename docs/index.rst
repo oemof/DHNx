@@ -21,7 +21,6 @@ Welcome to DHNx's documentation!
    network
    geometry_preparation
    optimization_models
-   simulation_models
    model_coupling
    analyze_and_plot
 

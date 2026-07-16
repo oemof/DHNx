@@ -13,11 +13,14 @@ This module is not fully tested yet, so use it with care.
 SPDX-License-Identifier: MIT
 """
 
+import math
+
 try:
     import geopandas as gpd
-
 except ImportError:
     print("Need to install geopandas to process geometry data.")
+
+import networkx as nx
 
 try:
     import shapely
@@ -284,7 +287,7 @@ def split_multilinestr_to_linestr(gdf_input):
         [gdf_lines, new_lines], ignore_index=True, sort=False
     )
 
-    gdf_lines["geometry"].crs = gdf_input.crs
+    gdf_lines.set_crs(gdf_input.crs, inplace=True)
 
     # second: split LineStrings into single Linestrings
     new_lines = gpd.GeoDataFrame()
@@ -313,345 +316,395 @@ def split_multilinestr_to_linestr(gdf_input):
         [gdf_lines, new_lines], ignore_index=True, sort=False
     )
 
-    gdf_lines["geometry"].crs = gdf_input.crs
+    gdf_lines.set_crs(gdf_input.crs, inplace=True)
 
     return gdf_lines
 
 
-def weld_segments(
-        gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False,
-        retain_unique_values=['capacity'],
-        ):
-    """Weld continuous line segments together and cut loose ends.
-
-    This is a public function that recursively calls the internal function
-    _weld_segments(), until the problem cannot be simplified further.
-
-    Find all lines that only connect to one other line and connect those
-    to a single MultiLine object. Points that connect to Generators and
-    Houses are not simplified. Loose ends are shortened where possible.
-
-    Parameters
-    ----------
-    gdf_line_net : GeoDataFrame
-        Potential pipe network.
-    gdf_line_gen : GeoDataFrame
-        Generators that need to be connected.
-    gdf_line_houses : GeoDataFrame
-        Houses that need to be connected.
-    debug_plotting : bool, optional
-        Plot the selection process.
-    retain_unique_values : list, optional
-        List of attributes where unique values must be retained when welding
-        geometries. Is used as ``gdf.dissolve(by=retain_unique_values)``.
-        When only new pipes are created, this list can be empty (or None).
-        But if there are existing pipes in the input data,
-        you will very likely not want to weld/merge/dissolve pipe segments
-        with different capacities. This is achieved by using the
-        default setting ``['capacity']``.
-        Selected attributes not present in the input data are silently ignored.
-
-    Returns
-    -------
-    gdf_line_net_new : GeoDataFrame
-        Simplified potential pipe network.
-
+def _line_string(
+    path_edges: list,
+    lines_all: gpd.GeoDataFrame,
+) -> LineString:
     """
-    retain_unique_values = [
-        c for c in retain_unique_values if c in gdf_line_net.columns]
-    if retain_unique_values is not None and len(retain_unique_values) == 0:
-        retain_unique_values = None
-
-    gdf_line_net_last = gdf_line_net
-    gdf_line_net_new = _weld_segments(
-        gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting,
-        retain_unique_values=retain_unique_values,
-    )
-    # Now do all of this recursively
-    while len(gdf_line_net_new) < len(gdf_line_net_last):
-        logger.info(
-            "Welding lines... reduced from {} to {} lines".format(
-                len(gdf_line_net_last), len(gdf_line_net_new)
-            )
-        )
-        gdf_line_net_last = gdf_line_net_new
-        gdf_line_net_new = _weld_segments(
-            gdf_line_net_new, gdf_line_gen, gdf_line_houses, debug_plotting,
-            retain_unique_values=retain_unique_values,
-        )
-        if len(gdf_line_net_new) == 0:
-            gdf_line_net_new = gdf_line_net_last
-            break
-    logger.info("Welding lines... done")
-    return gdf_line_net_new
-
-
-def _weld_segments(
-        gdf_line_net, gdf_line_gen, gdf_line_houses, debug_plotting=False,
-        retain_unique_values=['capacity'],
-        ):
-    """Weld continuous line segments together and cut loose ends.
-
-    Find all lines that only connect to one other line and connect those
-    to a single MultiLine object. Points that connect to Generators and
-    Houses are not simplified. Loose ends are shortened where possible.
-
-    Parameters
-    ----------
-    gdf_line_net : GeoDataFrame
-        Potential pipe network.
-    gdf_line_gen : GeoDataFrame
-        Generators that need to be connected.
-    gdf_line_houses : GeoDataFrame
-        Houses that need to be connected.
-    debug_plotting : bool, optional
-        Plot the selection process.
-    retain_unique_values : list, optional
-        List of attributes where unique values must be retained when welding
-        geometries. Is used as ``gdf.dissolve(by=retain_unique_values)``.
-        When only new pipes are created, this list can be empty (or None).
-        But if there are existing pipes in the input data,
-        you will very likely not want to weld/merge/dissolve pipe segments
-        with different capacities. This is achieved by using the
-        default setting ``['capacity']``.
-        Selected attributes not present in the input data are silently ignored.
-
-    Returns
-    -------
-    gdf_line_net_new : GeoDataFrame
-        Simplified potential pipe network.
-
+    Create a LineString from a list of 2-tuples of node names,
+    combined from LineStrings found in lines_all.
     """
-    crs = gdf_line_net.crs
-    gdf_line_net_new = gpd.GeoDataFrame(geometry=[], crs=crs)
-    gdf_merged_all = gpd.GeoDataFrame(geometry=[], crs=crs)
-    gdf_deleted = gpd.GeoDataFrame(geometry=[], crs=crs)
-    # Merge generator and houses line DataFrames to 'external' lines
-    gdf_line_ext = pd.concat([gdf_line_gen, gdf_line_houses])
+    ordered = []
+    last_segment = None
+    for segment in path_edges:
+        orientation = 1
+        if last_segment:
+            if segment[0] not in last_segment:
+                # current segment pointing away from last one
+                orientation = -1
+        elif len(path_edges) >= 2 and segment[1] not in path_edges[1]:
+            # first segment pointing away from second one
+            orientation = -1
 
-    for _, b in gdf_line_net.iterrows():
+        path_edge_geometry = lines_all[
+            (lines_all["from_node"] == segment[0])
+            & (lines_all["to_node"] == segment[1])
+        ]["geometry"]
 
-        def debug_plot(neighbours, color="red"):
-            """Plot base map, current segment (with color) and neighbours."""
-            if debug_plotting:
-                _, ax = plt.subplots(1, 1, dpi=300)
-                gdf_line_net.plot(ax=ax, color="blue")
-                gdf_line_ext.plot(ax=ax, color="green")
-                if len(neighbours) > 0:  # Prevent empty plot warning
-                    neighbours.plot(ax=ax, color="orange")
-                gpd.GeoDataFrame(geometry=[geom]).plot(ax=ax, color=color)
+        if path_edge_geometry.empty:
+            # also in lines_all, the segment points away from last one
+            orientation *= -1
+            path_edge_geometry = lines_all[
+                (lines_all["from_node"] == segment[1])
+                & (lines_all["to_node"] == segment[0])
+            ]["geometry"]
 
-        geom = b.geometry  # The current line segment
-        gdf_b = gpd.GeoDataFrame(b.to_frame().T, crs=crs)
-
-        if any(gdf_merged_all.geometry.contains(geom)):
-            # Drop this object, because it is contained within a merged object
-            continue  # Continue with the next line segment
-
-        if geom.is_ring:
-            # Drop this object, because rings are not valid options for street
-            # segments, since they have no start or end
-            continue  # Continue with the next line segment
-
-        # Find all neighbours of the current segment.
-        # Neighbours are geometries whose boundary "touches" the current
-        # geometry. We need to use the boundary to allow roads that cross
-        # themselves, e.g. for spiral ramps. Also they must not be equal
-        # to the current segment.
-        neighbours = gdf_line_net[
-            (
-                gdf_line_net.geometry.boundary.touches(geom)
-                & ~gdf_line_net.geometry.geom_equals(geom)
-            )
+        # As slicing and inverting in one step needs extra caution,
+        # we invert here, if applicable.
+        path_edge_geometry = list(path_edge_geometry.iloc[0].coords)[
+            ::orientation
         ]
-        # If all of the neighbours touch each other, it is the
-        # last segment before an intersection, which can be removed.
-        # The tests needs to be "touches" OR "equals", since per definition
-        # a line geometry cannot "touch" itself
-        if all(
-            [
-                all(
-                    neighbours.geometry.touches(neighbour)
-                    | neighbours.geometry.geom_equals(neighbour)
-                )
-                for neighbour in neighbours.geometry
-            ]
-        ):
-            # Treat as if there was only one neighbour (like end segment)
-            neighbours = neighbours.head(1)
 
-        if len(neighbours) <= 1:
-            # This is a potentially unused end segment
-            unused = True
+        # Append while avoiding duplicate junction point
+        if not ordered:
+            ordered.extend(path_edge_geometry)
+        else:
+            ordered.extend(path_edge_geometry[1:])
 
-            # Test if one end touches an 'external' line, while the other
-            # end touches a network line segment
-            p1 = geom.boundary.geoms[0]
-            p2 = geom.boundary.geoms[-1]
-            p1_neighbours = neighbours.geometry.intersects(p1).to_list()
-            p2_neighbours = neighbours.geometry.intersects(p2).to_list()
+        last_segment = segment
 
-            if (
-                any(gdf_line_ext.geometry.touches(p1))
-                and p2_neighbours.count(True) > 0
-            ):
-                unused = False
-            elif (
-                any(gdf_line_ext.geometry.touches(p2))
-                and p1_neighbours.count(True) > 0
-            ):
-                unused = False
-            elif any(gdf_line_ext.geometry.touches(geom)) and not any(
-                gdf_line_net.geometry.touches(geom)
-            ):
-                # The current segment is touched by an external line, but not
-                # by any other network segment. Select connected external line
-                geom_ext = unary_union(
-                    gdf_line_ext[gdf_line_ext.geometry.touches(geom)].geometry
-                )
-                # Test if the network line touched by the external line
-                # is equal to the current line segement, i.e. the external
-                # line is not connected to any other network line
-                if (
-                    gdf_line_net[gdf_line_net.geometry.touches(geom_ext)]
-                    .geometry.geom_equals(geom)
-                    .all()
-                ):
-                    logger.warning(
-                        "Welding is about to remove a street network line "
-                        "segment that is connected to nothing but a building "
-                        "connection line. This would leave the building "
-                        "unconnected, so the segment is not removed. "
-                        "This indicates a bug in the welding logic or an "
-                        "issue in the input data, e.g. an initial street "
-                        "network where not all lines are connected. If the "
-                        "remaining process fails, this may be the cause."
-                    )
-                    unused = False  # Keep line, despite not being useful
-
-            if unused:
-                # If truly unused, we can discard it to simplify the network
-                debug_plot(neighbours, color="white")
-                gdf_deleted = pd.concat(
-                    [gdf_deleted, gdf_b], ignore_index=True
-                )
-            else:
-                # Keep it, if it touches a generator or a house
-                debug_plot(neighbours, color="black")
-                gdf_line_net_new = pd.concat(
-                    [gdf_line_net_new, gdf_b], ignore_index=True
-                )
-            continue  # Continue with the next line segment
-
-        if len(neighbours) > 2:
-            # This segment has more than two neighbours. This means it is
-            # part of an intersection, which we do not simplify futher.
-            # However, we can check if either endpoint of the current segment
-            # only has one neighbour. Then that one can still be merged.
-            p1 = geom.boundary.geoms[0]
-            p2 = geom.boundary.geoms[-1]
-            p1_neighbours = neighbours.geometry.intersects(p1).to_list()
-            p2_neighbours = neighbours.geometry.intersects(p2).to_list()
-            if p1_neighbours.count(True) == 1:  # Only one neighbour allowed
-                neighbours = neighbours[p1_neighbours]  # Neighbour to merge
-            elif p2_neighbours.count(True) == 1:  # Only one neighbour allowed
-                neighbours = neighbours[p2_neighbours]  # Neighbour to merge
-            else:  # Keep this segment. Multiple lines meet at an intersection
-                gdf_line_net_new = pd.concat(
-                    [gdf_line_net_new, gdf_b], ignore_index=True
-                )
-                debug_plot(neighbours, color="green")
-                continue  # Continue with the next line segment
-
-        if len(neighbours) == 2:
-            # There are excactly two separate neighbours that can be merged
-            pass  # Run the rest of the loop
-
-        # Before merging, we need to further clean up the list of neighbours
-        neighbours_list = []
-        for neighbour in neighbours.geometry:
-            if any(gdf_deleted.geometry.geom_equals(neighbour)):
-                continue  # Do not use neighbour that has already been deleted
-            if any(gdf_line_net_new.geometry.contains(neighbour)):
-                continue  # Prevent creating dublicates
-            if any(gdf_line_ext.geometry.intersects(neighbour)):
-                mask = gdf_line_ext.geometry.intersects(neighbour)
-                houses = gdf_line_ext[mask]
-                # Neighbour intersects with external, but geom does not
-                if all(houses.geometry.disjoint(geom)):
-                    neighbours_list.append(neighbour)
-                else:  # No not merge neighbour intersecting with external
-                    continue
-            elif any(neighbours.geometry.touches(neighbour)):
-                neighbours_list = []  # The two neighbours touch
-                break  # This is a intersection that cannot be simplified
-            else:  # Choose neighbour for merging
-                neighbours_list.append(neighbour)
-        neighbours = gpd.GeoDataFrame(geometry=neighbours_list, crs=crs)
-
-        if len(neighbours) == 0:
-            # If no neighbours are left now, continue with next line segment
-            gdf_line_net_new = pd.concat(
-                [gdf_line_net_new, gdf_b], ignore_index=True
-            )
-            continue
-
-        # Create list of all elements that should be merged
-        lines = [geom] + list(neighbours.geometry)
-        # Weld/merge/dissolve line segments, but only those that share the
-        # same values in the attributes defined by ``retain_unique_values``.
-        # This allows to keep the capacities of existing pipe segments.
-        mask = gdf_line_net.geometry.isin(lines)
-        if retain_unique_values is None:
-            gdf_merged = gdf_line_net.loc[mask].dissolve(
-                by=retain_unique_values, dropna=False)
-        else:  # prevent creation of new index levels
-            gdf_merged = gdf_line_net.loc[mask].dissolve(
-                by=retain_unique_values, as_index=False, dropna=False)
-
-        # Merge MultiLineStrings into LineStrings
-        gdf_merged.geometry = gdf_merged.line_merge()
-        debug_plot(neighbours)  # Plot the segments before the merge
-        debug_plot(gdf_merged, color="orange")  # ...and after the merge
-        gdf_line_net_new = pd.concat(
-            [gdf_line_net_new, gdf_merged], ignore_index=True
-        )
-        gdf_merged_all = pd.concat(
-            [gdf_merged_all, gdf_merged], ignore_index=True
-        )
-
-    return gdf_line_net_new
+    return LineString(ordered)
 
 
-def drop_parallel_lines(gdf):
-    """Keep only the shortest of all lines connecting the same two points.
+def simplify(
+    lines_all,
+    keep_unique_values=[
+        "type",
+        "id_full",
+        "capacity",
+        "existing",
+        "hp_type",
+    ],
+):
+    """Simplify line network by dropping detours and removing useless forks.
 
-    This prevents an error in eomof.solph that will occur if multiple lines
-    connect the same two points in a network.
+    Parameters
+    ----------
+    lines_all : GeoDataFrame
+        GeoDataFrame of lines to be simplified
 
-    These can be two actually distinct paths between two points, or two
-    identical lines on top of each other. When downloading streets with osmnx,
-    this can introduce such duplicates where the two have the attributes
-    'reversed=True' and 'reversed=False'
+    keep_unique_values : list, optional
+        List of attributes of which unique values must be retained when
+        simplifiying geometries. This means adjacent pipe segments are never
+        merged if any values of the given attributes differ.
 
-    This function modifies the GeoDataFrame in place and resets the index.
+        Notes on the default selection:
+
+            - ['type', 'id_full']: These are always created for new and
+              existing pipes. Different types, i.e. distribution lines
+              and building connection lines should never be merged, and
+              ``id_full`` notes the name of the connected producer or consumer.
+            - ['capacity', 'existing', 'hp_type']: These are the properties
+              the user has to set when working with existing pipes, thus
+              they need to remain intact.
+
+        Selected attributes not present in the input data are silently ignored.
+
+    Returns
+    -------
+    gdf_simple : GeoDataFrame
+        Simplified line network.
+
     """
-    # Stores each LineString's endpoints and length in temporary columns
-    gdf["5d7u6j_endpoints"] = gdf.geometry.apply(
-        lambda line: tuple(sorted([line.coords[0], line.coords[-1]]))
-    )
-    gdf["5d7u6j_length"] = gdf.geometry.length
+    keep_unique_values = [
+        c for c in keep_unique_values if c in lines_all.columns
+    ]
 
-    # Group by endpoints and keep only the shortest LineString for each group
-    gdf = (
-        gdf.sort_values("5d7u6j_length")
-        .groupby("5d7u6j_endpoints")
-        .first()
-        .set_crs(gdf.crs)  # The groupby operation removes crs info
-        .reset_index(drop=True)  # Drop the temporary columns
-        .drop(columns=["5d7u6j_length"])  # Drop the temporary columns
+    edge_data_cols = ["length"]
+    edge_data_cols.extend(keep_unique_values)
+    cols = ["from_node", "to_node"] + edge_data_cols
+
+    ebunch = [
+        (a, b, dict(zip(edge_data_cols, values)))
+        for a, b, *values in (
+            lines_all[cols].itertuples(index=False, name=None)
+        )
+    ]
+
+    graph = nx.Graph()
+    graph.add_edges_from(ebunch)
+
+    node_types = {
+        node: {"type": node.split("-")[0][:-1]} for node in list(graph.nodes())
+    }
+    nx.set_node_attributes(graph, node_types)
+
+    simplify_graph(graph=graph, keep_unique_values=keep_unique_values)
+
+    lines_simplified = nx.to_pandas_edgelist(
+        graph,
+        source="from_node",
+        target="to_node",
     )
-    return gdf
+
+    line_geometry = {}
+    for i, line in lines_simplified.iterrows():
+        if isinstance(line["path"], list):
+            path_edges = [
+                (n0, n1) for n0, n1 in zip(line["path"], line["path"][1:])
+            ]
+        else:
+            path_edges = [(line["from_node"], line["to_node"])]
+        lines_simplified.at[i, "path"] = path_edges
+        line_geometry[i] = _line_string(path_edges, lines_all)
+
+    lines_simplified["geometry"] = line_geometry
+
+    # Line orientation needs to be redefined to match the new geometries
+    lines_simplified["from_node"] = lines_simplified["path"].apply(
+        lambda x: x[0][0]
+    )
+    lines_simplified["to_node"] = lines_simplified["path"].apply(
+        lambda x: x[-1][-1]
+    )
+
+    # Drop temporary columns
+    lines_simplified = lines_simplified.drop(columns=["path"], errors="ignore")
+
+    gdf_simple = gpd.GeoDataFrame(lines_simplified, crs=lines_all.crs)
+    gdf_simple.index.set_names(lines_all.index.names, inplace=True)
+
+    logger.debug(
+        "Simplified number of lines from {} to {}".format(
+            len(lines_all), len(gdf_simple)
+        )
+    )
+
+    return gdf_simple
+
+
+def simplify_graph(
+    graph: nx.Graph,
+    keep_unique_values: list = [],
+) -> bool:
+    """Simplifies graph as much as possibe based on only local information.
+
+    Parameters
+    ----------
+    graph : nx.Graph
+        graph to be simplified.
+
+    Returns
+    -------
+    bool
+        True if the graph had to be simplified, false if it was already simple.
+    """
+    graph_was_updated = False
+    graph_needs_iteration = True
+    while graph_needs_iteration:
+        graph_needs_iteration = False
+        detours_dropped = _drop_detours(
+            graph, keep_unique_values=keep_unique_values
+        )
+        forks_removed = _remove_useless_forks(
+            graph, keep_unique_values=keep_unique_values
+        )
+
+        # if something changed, we need a new iteration
+        graph_needs_iteration = detours_dropped or forks_removed
+
+        # graph was updated if new iteration is needed or it was updated before
+        graph_was_updated = graph_needs_iteration or graph_was_updated
+
+    return graph_was_updated
+
+
+def annotate_distance(
+    graph: nx.Graph,
+) -> None:
+    """Inefficient algorithm that does the job."""
+    for source in list(graph.nodes()):
+        source_type = graph.nodes[source]["type"]
+        for target in list(graph.nodes()):
+            target_type = graph.nodes[target]["type"]
+            if source_type != target_type:
+                source_distance = graph.nodes[source].get("distance", math.inf)
+                target_distance = graph.nodes[target].get("distance", math.inf)
+                path_length = nx.shortest_path_length(
+                    graph,
+                    source=source,
+                    target=target,
+                    weight="length",
+                )
+                graph.nodes[source]["distance"] = min(
+                    path_length, source_distance
+                )
+                graph.nodes[target]["distance"] = min(
+                    path_length, target_distance
+                )
+
+
+def longest_distance(
+    graph: nx.Graph,
+) -> float:
+    _longest_distance = 0.0
+    for source in list(graph.nodes()):
+        if graph.nodes[source]["type"] != "fork":
+            for target in list(graph.nodes()):
+                if graph.nodes[target]["type"] != "fork":
+                    _longest_distance = max(
+                        _longest_distance,
+                        nx.shortest_path_length(
+                            graph,
+                            source=source,
+                            target=target,
+                            weight="length",
+                        ),
+                    )
+    return _longest_distance
+
+
+def _all_values_equal(series, ignore_nan):
+    if ignore_nan:
+        series = series.dropna()
+    if series.empty:
+        return True
+    first_val = series.iloc[0]
+    if pd.isna(first_val):
+        return series.isna().all()
+    return (series == first_val).all()
+
+
+def _attribute_values_equal(
+    attributes,
+    *edge_data,
+    ignore_nan=False,
+) -> bool:
+    for attribute in attributes:
+        edge_values = pd.Series([edge.get(attribute) for edge in edge_data])
+        if not _all_values_equal(
+            edge_values,
+            ignore_nan=ignore_nan,
+        ):
+            return False
+
+    return True
+
+
+def _drop_detours(
+    graph: nx.Graph,
+    keep_unique_values: list,
+) -> bool:
+    """Drops single edges that are longer than a path using multiple edges"""
+    graph_was_updated = False
+    for source, target in list(graph.edges()):
+        edge_length = graph[source][target]["length"]
+        if edge_length > nx.shortest_path_length(
+            graph,
+            source=source,
+            target=target,
+            weight="length",
+        ):
+            path = nx.shortest_path(
+                graph,
+                source=source,
+                target=target,
+                weight="length",
+            )
+
+            path_data = [
+                graph.get_edge_data(n0, n1)
+                for n0, n1 in zip(path[0:], path[1:])
+            ]
+            if _attribute_values_equal(
+                ["existing"],
+                graph.get_edge_data(source, target),
+                *path_data,
+                {"existing": 0},
+                ignore_nan=True,
+            ) and _attribute_values_equal(
+                keep_unique_values,
+                graph.get_edge_data(source, target),
+                *path_data,
+            ):
+                graph.remove_edge(source, target)
+                graph_was_updated = True
+
+    return graph_was_updated
+
+
+def _remove_useless_forks(
+    graph: nx.Graph,
+    keep_unique_values: list,
+) -> bool:
+    """Removes forks that only connect two lines as well as dead ends.
+
+    You need to iterate to also remove forks
+    that connected dead ends to meaningful lines.
+    """
+    graph_was_updated = False
+    for node in list(graph.nodes()):
+        if graph.nodes[node]["type"] == "fork":
+            if graph.degree(node) == 1:
+                graph.remove_node(node)
+                graph_was_updated = True
+            elif graph.degree(node) == 2:
+                neighbors = tuple(graph.neighbors(node))
+                edge0 = graph[neighbors[0]][node]
+                edge1 = graph[node][neighbors[1]]
+
+                # Merge if all attributes to be kept are the same
+                if _attribute_values_equal(
+                    keep_unique_values,
+                    edge0,
+                    edge1,
+                    ignore_nan=False,
+                ):
+                    edge_length = edge0["length"] + edge1["length"]
+                    path_left = edge0.get("path", [])
+                    if path_left:
+                        if node == path_left[0]:
+                            path_left = path_left[::-1]
+                        path_left = path_left[:-1]
+                    else:
+                        path_left = [neighbors[0]]
+
+                    path_right = edge1.get("path", [])
+                    if path_right:
+                        if node == path_right[-1]:
+                            path_right = path_right[::-1]
+                        path_right = path_right[1:]
+                    else:
+                        path_right = [neighbors[1]]
+
+                    path = path_left + [node] + path_right
+
+                    edge_attrs = {
+                        attr: edge0.get(attr) for attr in keep_unique_values
+                    }
+
+                    existing_edge_data = graph.get_edge_data(*neighbors)
+                    if existing_edge_data is None:
+                        # direct edge does not exist, yet
+                        graph.add_edge(
+                            neighbors[0],
+                            neighbors[1],
+                            length=edge_length,
+                            path=path,
+                            **edge_attrs,
+                        )
+                    else:
+                        if (
+                            existing_edge_data.get("existing") == 1
+                            or edge_attrs.get("existing") == 1
+                        ):  # do not merge if there are existing pipes
+                            continue
+                        if edge_length < existing_edge_data["length"]:
+                            # direct edge already exists but is longer, modify
+                            edge_attrs["length"] = edge_length
+                            edge_attrs["path"] = path
+                            nx.set_edge_attributes(
+                                graph, {neighbors: edge_attrs}
+                            )
+
+                    graph.remove_node(node)
+                    graph_was_updated = True
+    return graph_was_updated
 
 
 def check_crs(gdf, crs=4647, force_2d=True):

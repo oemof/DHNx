@@ -317,7 +317,7 @@ consumers/.
 All data for initialising *oemof-solph* components at the consumers are provided by the .csv files
 of the consumers folder. For a principal understanding, check out the excel reader example of
 *oemof-solph*, which works the same way:
-`oemof-solph excel reader example <https://github.com/oemof/oemof-examples/tree/master/oemof_examples/oemof.solph/v0.4.x/excel_reader>`_.
+`oemof-solph excel reader example <https://oemof-solph.readthedocs.io/en/stable/examples/excel_reader.html>`_.
 
 The minimum requirement for doing an DHS optimisation is to provide an demand at the consumers.
 Therefore, you need the following two .csv files: *bus.csv* specifies the
@@ -396,7 +396,7 @@ Label systematic
 
 In order to access the oemof-solph optimisation results, a label systematic containing a tuple
 with 4 items is used. Please check the basic example of oemof-solph for using tuple as label
-(`oemof-solph example tuple as label <https://github.com/oemof/oemof-examples/blob/master/oemof_examples/oemof.solph/v0.4.x/basic_example/basic_example_tuple_as_label.py>`_).
+(`oemof-solph example tuple as label <https://oemof-solph.readthedocs.io/en/stable/examples/nametuple.html>`_).
 
 The following table illustrates the systematic:
 

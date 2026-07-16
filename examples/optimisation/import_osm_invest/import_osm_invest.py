@@ -123,6 +123,7 @@ tn_input = process_geometry(
     producers=gdf_poly_gen,
     consumers=gdf_poly_houses,
     method="boundary",  # select the method of how to connect the buildings
+    simplify=True,
 )
 
 # plot output after processing the geometry

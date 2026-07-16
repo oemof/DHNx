@@ -70,7 +70,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         Attribute, which will be the oemof.solph.Model for optimisation.
     oemof_flow_attr : set
         Possible flow attributes, which can be used additionally:
-        {'nominal_capacity', 'min', 'max', 'variable_costs', 'fix'}
+        {'nominal_capacity', 'minimum', 'maximum', 'variable_costs', 'fix'}
     results : dict
         Empty dictionary for the results.
 
@@ -102,8 +102,10 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
         # list of possible oemof flow attributes, e.g. for producers source
         self.oemof_flow_attr = {
             "nominal_capacity",
-            "min",
-            "max",
+            "min",  # deprecated since oemof.solph 0.6.2
+            "minimum",
+            "max",  # deprecated since oemof.solph 0.6.2
+            "maximum",
             "variable_costs",
             "fix",
         }
@@ -207,20 +209,21 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                         )
                     )
 
-        pipe_to_cons_ids = list(
-            self.thermal_network.components["pipes"]["to_node"].values
-        )
-        pipe_to_cons_ids = [
-            x.split("-", 1)[1]
-            for x in pipe_to_cons_ids
-            if x.split("-", 1)[0] == "consumers"
-        ]
-
+        # check if each consumer has a pipe connected to it
         for id in list(self.thermal_network.components["consumers"].index):
-            if id not in pipe_to_cons_ids:
+            id_full = "consumers-" + id
+            if id_full not in self.thermal_network.components["pipes"][
+                "to_node"
+            ].values and (
+                id_full
+                not in self.thermal_network.components["pipes"][
+                    "from_node"
+                ].values
+            ):
                 raise ValueError(
-                    "The consumer id {} has no connection to the "
-                    "grid!".format(id)
+                    "The consumer id {} has no connection to the grid!".format(
+                        id
+                    )
                 )
 
         # Check 3

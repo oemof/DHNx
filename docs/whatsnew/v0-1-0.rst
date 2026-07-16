@@ -5,7 +5,16 @@
 API changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* No changes
+* Adapt to oemof.solph 0.6.2
+
+  * Flow parameters ``min`` and ``max`` have been renamed to ``minimum`` and
+    ``maximum`` in oemof.solph
+  * ``min`` and ``max`` are still usable in dhnx, but will trigger an oemof
+    deprecation warning. Use ``minimum`` and ``maximum`` instead
+
+* Removed outdated simulation module as it was unmaintained.
+  We reccomend using PandaPipes (typically) or TESPy
+  (e.g. if phase changes need to be considered) instead.
 
 
 New features
@@ -37,16 +46,18 @@ Known issues
 Testing
 ^^^^^^^^^^^^^^^^^^^^
 
-* No changes
+* Activated automatic CI pipeline
 
 
 Other changes
 ^^^^^^^^^^^^^^^^^^^^
 
-* Update build system to pyproject.toml
+* Updated build system to pyproject.toml
+* Improved simplifying pre-processing
 
 
 Contributors
 ^^^^^^^^^^^^^^^^^^^^
 
 * Patrik Schönfeldt (DLR)
+* Joris Zimmermann (siz energieplus)

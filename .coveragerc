@@ -1,13 +1,13 @@
 [paths]
-source = dhnx
+source = src
 
 [run]
 branch = true
+relative_files = true
 source =
-    dhnx
-    tests
+    src
 parallel = true
-omit = *custom*
+omit = */experimental/*
        *test*
 
 [report]
