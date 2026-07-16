@@ -29,6 +29,7 @@ except ImportError:
     print("Need to install shapely to process geometry.")
 
 import logging
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -550,6 +551,7 @@ def process_geometry(
     n_conn=1,
     n_conn_prod=1,
     simplify=True,
+    **kwargs,
 ):
     """
     This function connects the consumers and producers to the line network,
@@ -595,10 +597,11 @@ def process_geometry(
         the nearest line segments in the street network. This allows the
         placement of the connection lines to be part of the optimization
         process. The default is 1.
-    welding : bool, optional
-        Weld continuous line segments together and cut loose ends. This
-        can improve the performance of the optimization, as it decreases
-        the total number of line elements. Default is True.
+    simplify : bool, optional
+        Merge continuous line segments together, cut loose ends and remove
+        unnecessary detours. This can improve the performance of the
+        optimization, as it decreases the total number of line elements
+        and branches. Default is True.
 
     Returns
     -------
@@ -612,6 +615,14 @@ def process_geometry(
             "Keeping the orginal index is currently not "
             "supported. Use 'reset_index=True'."
         )
+
+    if "welding" in kwargs:
+        warnings.warn(
+            "Argument 'welding' is deprecated and now overwrites 'simplify'. "
+            "Please use 'simplify' instead.",
+            FutureWarning,
+        )
+        simplify = kwargs["welding"]
 
     # Copies of the original polygons are needed for method 'boundary'
     consumers_poly = go.check_crs(consumers, crs=projected_crs).copy()
