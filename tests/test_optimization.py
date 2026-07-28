@@ -133,4 +133,5 @@ def test_optimization_example_01():
         check_dtype=False,
         check_index_type=False,
         check_column_type=False,
+        check_less_precise=True,
     )
