@@ -74,7 +74,7 @@ def test_optimization_example_01():
     gdf_cons = gpd.read_file(
         os.path.join(base_dir, "in/consumers_polygon.geojson")
     )
-    file_pipes = os.path.join(base_dir, "out/pipes_result.geojson")
+    file_pipes = os.path.join(base_dir, "out/pipes_result_01.geojson")
     os.makedirs(os.path.dirname(file_pipes), exist_ok=True)
 
     tn_input = dhnx.gistools.connect_points.process_geometry(
