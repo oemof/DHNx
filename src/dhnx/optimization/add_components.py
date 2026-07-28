@@ -457,11 +457,10 @@ def add_heatpipes(it, labels, bidirectional, length, b_in, b_out, nodes):
         # definition of tag3 of label -> type of pipe
         labels["l_3"] = t["label_3"]
 
-        epc_p = t["capex_pipes"] * length
-        epc_fix = t["fix_costs"] * length
-
         # Heatpipe with binary variable
         nc = bool(t["nonconvex"])
+        epc_p = t["capex_pipes"] * length
+        epc_fix = t["fix_costs"] * length if nc else 0
 
         # bidirectional heatpipelines yes or no
         flow_bi_args = {"minimum": -1} if bidirectional else {}
