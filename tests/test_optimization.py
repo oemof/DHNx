@@ -135,3 +135,94 @@ def test_optimization_example_01():
         check_column_type=False,  # dtype changes after reading file
         check_less_precise=True,  # Required due to floating point precision
     )
+
+
+def test_optimization_example_02():
+    """Test ``optimize_investment()`` function with a simple example.
+
+    Differences to test_optimization_example_01:
+
+    - All pipes are new pipes (existing=0)
+    - nonconvex=0 is chosen for pipe costs. This is purely to increase
+      code coverage and not a recommmended setting
+    """
+    base_dir = os.path.join(
+        os.path.dirname(__file__), "_files/process_geometry"
+    )
+    gdf_lines = gpd.read_file(
+        os.path.join(base_dir, "in/lines_input_existing.geojson")
+    )
+    gdf_prod = gpd.read_file(
+        os.path.join(base_dir, "in/producers_polygon.geojson")
+    )
+    gdf_cons = gpd.read_file(
+        os.path.join(base_dir, "in/consumers_polygon.geojson")
+    )
+    file_pipes = os.path.join(base_dir, "out/pipes_result_02.geojson")
+    os.makedirs(os.path.dirname(file_pipes), exist_ok=True)
+
+    # Remove columns related to existing pipes (make all pipes new)
+    gdf_lines = gdf_lines.drop(columns=["existing", "hp_type", "capacity"])
+
+    tn_input = dhnx.gistools.connect_points.process_geometry(
+        lines=gdf_lines,
+        producers=gdf_prod,
+        consumers=gdf_cons,
+        method="boundary",
+        reset_index=True,
+        simplify=True,
+    )
+
+    # initialize a ThermalNetwork
+    network = dhnx.network.ThermalNetwork()
+
+    # add the pipes, forks, consumer, and producers to the ThermalNetwork
+    for k, v in tn_input.items():
+        network.components[k] = v
+
+    # check if ThermalNetwork is consistent
+    network.is_consistent()
+
+    # load the specification of the oemof-solph components
+    invest_opt = get_default_dhnx_invest_options()
+
+    # Change to nonconvex=0 (purely to increase code coverage of test)
+    invest_opt["network"]["pipes"]["nonconvex"] = 0
+    invest_opt["network"]["pipes"].drop(columns=["fix_costs"], inplace=True)
+
+    settings = dict(
+        solve_kw={"tee": False},  # Hide solver output
+        return_existing=True,  # Include existing pipes in results
+    )
+
+    # Perform the investment optimisation
+    network.optimize_investment(invest_options=invest_opt, **settings)
+
+    results_edges = network.results.optimization["components"]["pipes"]
+    gdf_pipes = network.components["pipes"].copy()
+    cols_drop = [c for c in results_edges.columns if c in gdf_pipes]
+    gdf_pipes = gdf_pipes.drop(columns=cols_drop)  # Drop duplicate columns
+    gdf_pipes = gdf_pipes.join(results_edges, rsuffix="_results")
+    gdf_pipes = gdf_pipes[gdf_pipes["capacity"] > 0]  # Keep only DN>0
+
+    gdf_pipes = gdf_pipes.round(5)  # Round for comparison
+
+    # Update expected result (after intentional changes)
+    # gdf_pipes.to_file(file_pipes)
+
+    # Load expected result (and fix column order)
+    gdf_pipes_test = (
+        gpd.read_file(file_pipes)
+        .set_index("id")
+        .reindex(gdf_pipes.columns, axis="columns")
+        .replace({None: np.nan})
+    )
+
+    assert_geodataframe_equal(
+        gdf_pipes,
+        gdf_pipes_test,
+        check_dtype=False,  # dtype changes after reading file
+        check_index_type=False,  # dtype changes after reading file
+        check_column_type=False,  # dtype changes after reading file
+        check_less_precise=True,  # Required due to floating point precision
+    )
