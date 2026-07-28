@@ -130,8 +130,8 @@ def test_optimization_example_01():
     assert_geodataframe_equal(
         gdf_pipes,
         gdf_pipes_test,
-        check_dtype=False,
-        check_index_type=False,
-        check_column_type=False,
-        check_less_precise=True,
+        check_dtype=False,  # dtype changes after reading file
+        check_index_type=False,  # dtype changes after reading file
+        check_column_type=False,  # dtype changes after reading file
+        check_less_precise=True,  # Required due to floating point precision
     )
