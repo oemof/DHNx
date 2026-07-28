@@ -16,6 +16,7 @@ import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
+from geopandas.testing import assert_geodataframe_equal
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely.geometry import Point
@@ -366,6 +367,7 @@ def test_process_geometry():
     assert tn_input["pipes"].index.name == "id"
 
     tn_input["pipes"] = tn_input["pipes"][sorted(tn_input["pipes"].columns)]
+    tn_input["pipes"] = tn_input["pipes"].replace({None: np.nan})
     tn_input["pipes"] = tn_input["pipes"].round(5)
 
     # Update expected result (after intentional changes)
@@ -376,15 +378,13 @@ def test_process_geometry():
         gpd.read_file(file_pipes)
         .set_index("id")
         .reindex(tn_input["pipes"].columns, axis="columns")
+        .replace({None: np.nan})
     )
 
-    assert (gdf_pipes_test.columns == tn_input["pipes"].columns).all()
-
-    # Compare with tolerance, due to loss of floating point precision
-    for col in tn_input["pipes"].columns:
-        if col == tn_input["pipes"].geometry.name:
-            assert gdf_pipes_test.geom_equals_exact(
-                tn_input["pipes"], tolerance=1e-7
-            ).all()
-        else:
-            assert gdf_pipes_test[[col]].equals(tn_input["pipes"][[col]])
+    assert_geodataframe_equal(
+        tn_input["pipes"],
+        gdf_pipes_test,
+        check_index_type=False,  # dtype changes after reading file
+        check_column_type=False,  # dtype changes after reading file
+        check_less_precise=True,  # Required due to floating point precision
+    )
