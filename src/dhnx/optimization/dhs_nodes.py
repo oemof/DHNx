@@ -74,7 +74,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
         d_labels["l_1"] = "infrastructure"
         d_labels["l_2"] = "heat"
 
-        if q["existing"] in [1]:
+        if q["existing"] == 1:
 
             # terminate the first label
             l_1_in = "infrastructure"

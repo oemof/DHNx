@@ -772,7 +772,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
                     # select row from heatpipe type table
                     hp_p = df_hp[df_hp["label_3"] == hp_lab].squeeze()
 
-                    if "existing" in c and c["existing"] in [1]:
+                    if "existing" in c and c["existing"] == 1:
                         # For existing pipes, only losses need to be calculated
                         df.at[r, "losses"] = c["length"] * (
                             c["capacity"] * hp_p["l_factor"]
