@@ -8,6 +8,7 @@ available from its original location oemof/oemof/tools/helpers.py
 
 SPDX-License-Identifier: MIT
 """
+
 import io
 import os
 
@@ -143,8 +144,14 @@ def test_optimization_example_02():
     Differences to test_optimization_example_01:
 
     - All pipes are new pipes (existing=0)
+    - An artificial time series for consumer demand is used to
+      increase code coverage
     - nonconvex=0 is chosen for pipe costs. This is purely to increase
       code coverage and not a recommmended setting
+    - Argument 'welding' is used instead of 'simplify', just to trigger
+      FutureWarning
+    - Optimization settings 'bidirectional_pipes', and
+      'allow_nonoptimal' are changed to increase code coverage
     """
     base_dir = os.path.join(
         os.path.dirname(__file__), "_files/process_geometry"
@@ -164,6 +171,20 @@ def test_optimization_example_02():
     # Remove columns related to existing pipes (make all pipes new)
     gdf_lines = gdf_lines.drop(columns=["existing", "hp_type", "capacity"])
 
+    # Create artificial time series for consumers
+    df_timeseries = pd.concat(
+        [
+            gdf_cons["P_heat_max"],  # Time step 1
+            gdf_cons["P_heat_max"].mul(0.5),  # Time step 2
+            gdf_cons["P_heat_max"].mul(0.1),  # Time step 3
+        ],
+        axis="columns",
+    ).T
+    # Rename row index
+    df_timeseries.index = range(len(df_timeseries))
+    # Enforce string column names, because dhnx expects them
+    df_timeseries.columns = df_timeseries.columns.astype(str)
+
     tn_input = dhnx.gistools.connect_points.process_geometry(
         lines=gdf_lines,
         producers=gdf_prod,
@@ -180,6 +201,8 @@ def test_optimization_example_02():
     for k, v in tn_input.items():
         network.components[k] = v
 
+    network.sequences["consumers"]["heat_flow"] = df_timeseries
+
     # check if ThermalNetwork is consistent
     network.is_consistent()
 
@@ -192,7 +215,15 @@ def test_optimization_example_02():
 
     settings = dict(
         solve_kw={"tee": False},  # Hide solver output
-        return_existing=True,  # Include existing pipes in results
+        solver_cmdline_options={
+            "seconds": 30,  # maximum runtime for cbc solver
+        },
+        return_existing=False,
+        bidirectional_pipes=True,  # Just to increase code coverage
+        allow_nonoptimal=True,
+        heat_demand="series",  # Setting required for time series
+        num_ts=len(df_timeseries),  # Setting required for time series
+        frequence="h",  # Setting required for time series
     )
 
     # Perform the investment optimisation
