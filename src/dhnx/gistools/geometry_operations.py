@@ -147,7 +147,7 @@ def insert_node_ids(lines, nodes):
             [wkt.loads(x) for x in lines["b1_wkt"] if not match_multipoint(x)]
         )
         gdf_errors = gpd.GeoDataFrame(geometry=errors, crs=lines.crs)
-        ax = lines.plot()
+        ax = lines.plot(color='blue')
         gdf_errors.plot(ax=ax, color="red", label="Point(s) causing error")
         plt.legend()
         plt.show()

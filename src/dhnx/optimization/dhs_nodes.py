@@ -11,7 +11,6 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-
 import oemof.solph as solph
 
 import dhnx.optimization.add_components as ac
@@ -75,7 +74,7 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
         d_labels["l_1"] = "infrastructure"
         d_labels["l_2"] = "heat"
 
-        if q["existing"]:
+        if q["existing"] == 1:
 
             # terminate the first label
             l_1_in = "infrastructure"
@@ -127,7 +126,6 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 )
 
             elif (typ_from == "forks") and (typ_to == "forks"):
-
                 start = q["from_node"]
                 end = q["to_node"]
                 b_in = busd[(l_1_in, d_labels["l_2"], "bus", start)]
@@ -136,6 +134,18 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
                 nodes = ac.add_heatpipes_exist(
                     pipe_data, d_labels, gd, q, b_in, b_out, nodes
                 )
+
+                if not gd["bidirectional_pipes"]:
+                    # the heatpipes from fork to fork need to be created in
+                    # both directions, in case of bidirectional == False
+                    start = q["to_node"]
+                    end = q["from_node"]
+                    b_in = busd[(l_1_in, d_labels["l_2"], "bus", start)]
+                    b_out = busd[(l_1_out, d_labels["l_2"], "bus", end)]
+                    d_labels["l_4"] = start + "-" + end
+                    nodes = ac.add_heatpipes_exist(
+                        pipe_data, d_labels, gd, q, b_in, b_out, nodes
+                    )
 
             else:
                 raise ValueError("Something wrong!")
@@ -208,14 +218,11 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
             elif (q["from_node"].split("-")[0] == "forks") and (
                 q["to_node"].split("-")[0] == "forks"
             ):
-
-                b_in = busd[
-                    (d_labels["l_1"], d_labels["l_2"], "bus", q["from_node"])
-                ]
-                b_out = busd[
-                    (d_labels["l_1"], d_labels["l_2"], "bus", q["to_node"])
-                ]
-                d_labels["l_4"] = q["from_node"] + "-" + q["to_node"]
+                start = q["from_node"]
+                end = q["to_node"]
+                b_in = busd[(d_labels["l_1"], d_labels["l_2"], "bus", start)]
+                b_out = busd[(d_labels["l_1"], d_labels["l_2"], "bus", end)]
+                d_labels["l_4"] = start + "-" + end
 
                 nodes = ac.add_heatpipes(
                     pipe_data,
@@ -229,19 +236,16 @@ def add_nodes_dhs(opti_network, gd, nodes, busd):
 
                 if not gd["bidirectional_pipes"]:
                     # the heatpipes from fork to fork need to be created in
-                    # both directions in this case bidiretional = False
+                    # both directions, in case of bidirectional == False
+                    start = q["to_node"]
+                    end = q["from_node"]
                     b_in = busd[
-                        (d_labels["l_1"], d_labels["l_2"], "bus", q["to_node"])
+                        (d_labels["l_1"], d_labels["l_2"], "bus", start)
                     ]
                     b_out = busd[
-                        (
-                            d_labels["l_1"],
-                            d_labels["l_2"],
-                            "bus",
-                            q["from_node"],
-                        )
+                        (d_labels["l_1"], d_labels["l_2"], "bus", end)
                     ]
-                    d_labels["l_4"] = q["to_node"] + "-" + q["from_node"]
+                    d_labels["l_4"] = start + "-" + end
 
                     nodes = ac.add_heatpipes(
                         pipe_data,
