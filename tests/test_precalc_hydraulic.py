@@ -159,3 +159,13 @@ def test_delta_p5():  # turb, Re*k/di > 1300
 def test_delta_p6():  # turb, transition
     dp = delta_p(100, 5e-3, k=0.0003)
     assert round(dp, 5) == 11865210.59373
+
+
+def test_delta_p_pandapipes():
+    dp = delta_p(2, 0.2, k=0.01, pressure=2e5, calculation="pandapipes")
+    assert round(dp, 5) == 119.33562
+
+
+def test_delta_p_calculation_undefined():
+    with pytest.raises(ValueError, match="Invalid calculation type"):
+        delta_p(2, 0.2, k=0.01, pressure=2e5, calculation="undefined")
