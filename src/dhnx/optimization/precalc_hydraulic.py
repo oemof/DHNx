@@ -331,6 +331,82 @@ def delta_p(
     pressure=101325,
     R_crit=2320,
     fluid="IF97::Water",
+    calculation="internal",
+    **kwargs,
+):
+    r"""
+    Function to calculate the pressure loss in a pipeline
+
+    Parameters
+    ----------
+    v : numeric
+        :math:`v`: flow velocity [m/s]
+
+    d_i : numeric
+        :math:`d_i`: inner pipe diameter [m]
+
+    k : numeric
+        :math:`k`: roughness of inner pipeline surface [mm]
+
+    T_medium : numeric
+        :math:`T_{medium}`: fluid temperature [°C]
+
+    length : numeric
+        :math:`l`: length of the pipe [m]
+
+    pressure : numeric
+        :math:`p`: pressure in the pipe [Pa]
+
+    R_crit : numeric
+        :math:`Re_{crit}`: critical Reynolds number between laminar and
+        turbulent flow [-]. Only used for ``calculation="internal"``.
+
+    fluid : str
+        name of the fluid used
+
+    calculation: str
+        Type of calculation, default: "internal". If "pandapipes" is chosen,
+        the pandapipes module is used for the calculation of the pressure drop.
+
+    **kwargs: dict
+        Additional keyword arguments for the selected external calculation.
+        For pandapipes, e.g. 'friction_model' can be specified.
+
+    Returns
+    -------
+    Pressure drop [Pa] : numeric
+
+    """
+    if calculation == "internal":
+        d_p = delta_p_internal(
+            v, d_i, k, T_medium, length, pressure, R_crit, fluid
+        )
+
+    elif calculation == "pandapipes":
+        if fluid == "IF97::Water":
+            fluid = "water"
+        d_p = delta_p_pandapipes(
+            v, d_i, k, T_medium, length, pressure, fluid, **kwargs
+        )
+
+    else:
+        raise ValueError(
+            "Invalid calculation type '{calculation}'. Choose 'internal' "
+            "or 'pandapipes'."
+        )
+
+    return d_p
+
+
+def delta_p_internal(
+    v,
+    d_i,
+    k=0.1,
+    T_medium=90,
+    length=1,
+    pressure=101325,
+    R_crit=2320,
+    fluid="IF97::Water",
 ):
     r"""
     Function to calculate the pressure loss in a pipeline
@@ -410,6 +486,87 @@ def delta_p(
     return d_p
 
 
+def delta_p_pandapipes(
+    v,
+    d_i,
+    k,
+    T_medium,
+    length,
+    pressure,
+    fluid="water",
+    friction_model="colebrook",
+    **kwargs,
+):
+    """Use external module 'pandapipes' to calculate pressure drop in a pipe.
+
+    The most basic pandapipes 'network' with a single water pipe is
+    created and simulated.
+
+    Parameters
+    ----------
+    v : numeric
+        :math:`v`: flow velocity [m/s]
+
+    d_i : numeric
+        :math:`d_i`: inner pipe diameter [m]
+
+    k : numeric
+        :math:`k`: roughness of inner pipeline surface [mm]
+
+    T_medium : numeric
+        :math:`T_{medium}`: fluid temperature [°C]
+
+    length : numeric
+        :math:`l`: length of the pipe [m]
+
+    pressure : numeric
+        :math:`p`: pressure in the pipe [Pa]
+
+    fluid : str
+        name of the fluid used
+
+    friction_model : str
+        Friction model to be used in pandapipes. Default: "colebrook"
+
+    **kwargs: dict
+        Additional keyword arguments for the pandapipes calculation.
+
+    Returns
+    -------
+    Pressure drop [Pa] : numeric
+    """
+    import pandapipes as pp
+
+    p_bar = pressure / 1e5  # Pa to bar
+    tfluid_k = T_medium + 273.15
+    pp_net = pp.create_empty_network(fluid=fluid)
+    rho = pp_net.fluid.get_density(tfluid_k)
+    mdot = rho * v * (0.5 * d_i) ** 2 * math.pi  # kg/s
+
+    js = pp.create_junctions(
+        pp_net, nr_junctions=2, pn_bar=p_bar, tfluid_k=tfluid_k
+    )
+    pp.create_ext_grid(pp_net, junction=js[0], p_bar=p_bar, t_k=tfluid_k)
+    pp.create_sink(net=pp_net, junction=js[1], mdot_kg_per_s=mdot)
+    pp.create_pipe_from_parameters(
+        net=pp_net,
+        from_junction=js[0],
+        to_junction=js[1],
+        length_km=length / 1000,  # convert m to km
+        inner_diameter_mm=d_i * 1000,  # convert m to mm
+        k_mm=k,
+    )
+
+    pp.pipeflow(
+        pp_net, mode="hydraulics", friction_model=friction_model, **kwargs
+    )
+
+    dp_bar = (pp_net.res_pipe.p_from_bar - pp_net.res_pipe.p_to_bar).loc[0]
+    dp_pa = dp_bar * 1e5  # bar to Pa
+
+    return dp_pa
+
+
 def calc_v(vol_flow, d_i):
     r"""
     Calculates the velocity for a given volume flow and inner diameter
@@ -445,6 +602,8 @@ def v_max_secant(
     v_1=2,
     pressure=101325,
     fluid="IF97::Water",
+    calculation="internal",
+    **kwargs,
 ):
     r"""Calculates the maximum velocity via iterative approach
     using the secant method.
@@ -483,6 +642,14 @@ def v_max_secant(
     fluid: str
         type of fluid, default: 'IF97::Water'
 
+    calculation: str
+        Type of calculation, default: 'internal'. If 'pandapipes' is chosen,
+        the pandapipes module is used for the calculation of the pressure drop.
+
+    **kwargs: dict
+        Additional keyword arguments for the selected external calculation.
+        For pandapipes, e.g. 'friction_model' can be specified.
+
     Returns
     -------
     maximum flow velocity [m/s] : numeric
@@ -501,6 +668,8 @@ def v_max_secant(
             T_medium=T_average,
             pressure=pressure,
             fluid=fluid,
+            calculation=calculation,
+            **kwargs,
         )
 
         p_1 = delta_p(
@@ -510,6 +679,8 @@ def v_max_secant(
             T_medium=T_average,
             pressure=pressure,
             fluid=fluid,
+            calculation=calculation,
+            **kwargs,
         )
 
         v_new = v_1 - (p_1 - p_max) * (v_1 - v_0) / (p_1 - p_0)
@@ -521,6 +692,8 @@ def v_max_secant(
             T_medium=T_average,
             pressure=pressure,
             fluid=fluid,
+            calculation=calculation,
+            **kwargs,
         )
 
         if abs(p_new - p_max) < p_epsilon:
@@ -550,6 +723,8 @@ def v_max_bisection(
     v_1=10,
     pressure=101325,
     fluid="IF97::Water",
+    calculation="internal",
+    **kwargs,
 ):
     r"""Calculates the maximum velocity via bisection for a
     given pressure drop.
@@ -595,17 +770,39 @@ def v_max_bisection(
     fluid: str
         type of fluid, default: 'IF97::Water'
 
+    calculation: str
+        Type of calculation, default: 'internal'. If 'pandapipes' is chosen,
+        the pandapipes module is used for the calculation of the pressure drop.
+
+    **kwargs: dict
+        Additional keyword arguments for the selected external calculation.
+        For pandapipes, e.g. 'friction_model' can be specified.
+
     Returns
     -------
     maximum flow velocity [m/s] : numeric
 
     """
     p_0 = delta_p(
-        v_0, k=k, d_i=d_i, T_medium=T_average, pressure=pressure, fluid=fluid
+        v_0,
+        k=k,
+        d_i=d_i,
+        T_medium=T_average,
+        pressure=pressure,
+        fluid=fluid,
+        calculation=calculation,
+        **kwargs,
     )
 
     p_1 = delta_p(
-        v_1, k=k, d_i=d_i, T_medium=T_average, pressure=pressure, fluid=fluid
+        v_1,
+        k=k,
+        d_i=d_i,
+        T_medium=T_average,
+        pressure=pressure,
+        fluid=fluid,
+        calculation=calculation,
+        **kwargs,
     )
 
     if (p_0 - p_max) * (p_1 - p_max) >= 0:
@@ -627,6 +824,8 @@ def v_max_bisection(
             T_medium=T_average,
             pressure=pressure,
             fluid=fluid,
+            calculation=calculation,
+            **kwargs,
         )
 
         p_1 = delta_p(
@@ -636,6 +835,8 @@ def v_max_bisection(
             T_medium=T_average,
             pressure=pressure,
             fluid=fluid,
+            calculation=calculation,
+            **kwargs,
         )
 
         v_new = 0.5 * (v_1 + v_0)
@@ -647,6 +848,8 @@ def v_max_bisection(
             T_medium=T_average,
             pressure=pressure,
             fluid=fluid,
+            calculation=calculation,
+            **kwargs,
         )
 
         if abs(p_new - p_max) < p_epsilon:
