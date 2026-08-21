@@ -40,6 +40,16 @@ API changes
     found, there will be a warning.
 
 
+* Implemented pressure loss calculation via pandapipes
+
+  * When calling ``delta_p()``, ``v_max_secant()`` and ``v_max_bisection()``
+    from the ``precalc_hydraulic`` module, users can now choose pandapipes
+    as the calculation method for the pressure loss of a pipe. This is done
+    by setting ``calculation="pandapipes"``. Additional ``kwargs`` like
+    ``friction_model`` can be passed to the pandapipes calculation.
+    Requires installing ``pip install pandapipes`` separately. The default
+    setting is the existing ``calculation="internal"``.
+
 New features
 ^^^^^^^^^^^^^^^^^^^^
 

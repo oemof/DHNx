@@ -78,6 +78,7 @@ Changelog = "https://dhnx.readthedocs.io/en/latest/whats_new.html"
 ]
 "hydraulic" = [
     "CoolProp",
+    "pandapipes",
 ]
 
 [tool.black]
