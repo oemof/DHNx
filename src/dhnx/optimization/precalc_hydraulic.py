@@ -25,13 +25,14 @@ import math
 import numpy as np
 from scipy.optimize import fsolve
 
-try:
-    from CoolProp.CoolProp import PropsSI
+from dhnx.helpers import OptionalDependencyPlaceholder
 
+try:
+    from CoolProp import CoolProp
 except ImportError:
-    print(
-        "Need to install CoolProp to use the hydraulic "
-        "pre-calculation module."
+    CoolProp = OptionalDependencyPlaceholder(
+        module_name="CoolProp",
+        functionality="use the hydraulic pre-calculation module"
     )
 
 logger = logging.getLogger(__name__)  # Create a logger for this module
@@ -446,9 +447,9 @@ def delta_p_internal(
     k = k * 0.001
 
     # get density of water [kg/m^3]
-    d = PropsSI("D", "T", T_medium + 273.15, "P", pressure, fluid)
+    d = CoolProp.PropsSI("D", "T", T_medium + 273.15, "P", pressure, fluid)
     # dynamic viscosity eta [kg/(m*s)]
-    d_v = PropsSI("V", "T", T_medium + 273.15, "P", pressure, fluid)
+    d_v = CoolProp.PropsSI("V", "T", T_medium + 273.15, "P", pressure, fluid)
     k_v = calc_k_v(d_v, d)
 
     # Reynolds number
@@ -905,9 +906,9 @@ def calc_power(T_vl=80, T_rl=50, mf=3, p=101325):
     thermal power [W] : numeric
 
     """
-    cp_vl = PropsSI("C", "T", T_vl + 273.15, "P", p, "IF97::Water")
+    cp_vl = CoolProp.PropsSI("C", "T", T_vl + 273.15, "P", p, "IF97::Water")
 
-    cp_rl = PropsSI("C", "T", T_rl + 273.15, "P", p, "IF97::Water")
+    cp_rl = CoolProp.PropsSI("C", "T", T_rl + 273.15, "P", p, "IF97::Water")
 
     return mf * (cp_vl * (T_vl + 273.15) - cp_rl * (T_rl + 273.15))
 
@@ -941,7 +942,7 @@ def calc_mass_flow(v, di, T_av, p=101325):
     mass flow [kg/s] : numeric
 
     """
-    rho = PropsSI("D", "T", T_av + 273.15, "P", p, "IF97::Water")
+    rho = CoolProp.PropsSI("D", "T", T_av + 273.15, "P", p, "IF97::Water")
 
     return rho * v * (0.5 * di) ** 2 * math.pi
 
@@ -974,7 +975,7 @@ def calc_mass_flow_P(P, T_av, delta_T, p=101325):
     mass flow [kg/s]: numeric
 
     """
-    cp = PropsSI("C", "T", T_av + 273.15, "P", p, "IF97::Water")
+    cp = CoolProp.PropsSI("C", "T", T_av + 273.15, "P", p, "IF97::Water")
 
     return P / (cp * delta_T)
 
@@ -1007,7 +1008,7 @@ def calc_v_mf(mf, di, T_av, p=101325):
     flow velocity [m/s]: numeric
 
     """
-    rho = PropsSI("D", "T", T_av + 273.15, "P", p, "IF97::Water")  # [kg/m^3]
+    rho = CoolProp.PropsSI("D", "T", T_av + 273.15, "P", p, "IF97::Water")  # [kg/m^3]
 
     return mf / (rho * (0.5 * di) ** 2 * math.pi)
 

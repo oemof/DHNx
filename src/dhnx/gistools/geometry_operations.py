@@ -15,23 +15,19 @@ SPDX-License-Identifier: MIT
 
 import math
 
+from dhnx.helpers import OptionalDependencyPlaceholder
+
 try:
     import geopandas as gpd
 except ImportError:
-    print("Need to install geopandas to process geometry data.")
+    gpd = OptionalDependencyPlaceholder("geopandas", "process osm data")
 
 import networkx as nx
 
 try:
     import shapely
-    from shapely import wkt
-    from shapely.geometry import LineString
-    from shapely.geometry import Point
-    from shapely.geometry import mapping
-    from shapely.ops import nearest_points
-    from shapely.ops import unary_union
 except ImportError:
-    print("Need to install shapely to process geometry.")
+    shapely = OptionalDependencyPlaceholder("shapely", "process geometry")
 
 import logging
 
@@ -59,12 +55,13 @@ def create_forks(lines):
     geopandas.GeoDataFrame : GeoDataFrame with Points as geometry.
 
     """
+
     nodes = gpd.GeoDataFrame(geometry=[], crs=lines.crs)
 
     for _, j in lines.iterrows():
         geom = j["geometry"]
-        p_0 = Point(geom.boundary.geoms[0])
-        p_1 = Point(geom.boundary.geoms[-1])
+        p_0 = shapely.geometry.Point(geom.boundary.geoms[0])
+        p_1 = shapely.geometry.Point(geom.boundary.geoms[-1])
         nodes = pd.concat(
             [nodes, gpd.GeoDataFrame(geometry=[p_0, p_1], crs=lines.crs)],
             ignore_index=True,
@@ -78,7 +75,7 @@ def create_forks(lines):
 
     # create shapely geometry again
     nodes["geometry"] = nodes["geometry_wkt"].apply(
-        lambda geom: wkt.loads(geom)
+        lambda geom: shapely.wkt.loads(geom)
     )  # pylint: disable=unnecessary-lambda
 
     # set index for forks
@@ -108,16 +105,20 @@ def insert_node_ids(lines, nodes):
     geopandas.GeoDataFrame
     """
     nodes["geo_wkt"] = nodes.geometry.apply(
-        lambda x: wkt.dumps(x, output_dimension=2)
+        lambda x: shapely.wkt.dumps(x, output_dimension=2)
     )
     nodes.set_index("geo_wkt", drop=True, inplace=True)
 
     # add id to gdf_lines for starting and ending node point as wkt
     lines["b0_wkt"] = lines.geometry.apply(
-        lambda geom: wkt.dumps(geom.boundary.geoms[0], output_dimension=2)
+        lambda geom: shapely.wkt.dumps(
+            geom.boundary.geoms[0], output_dimension=2
+        )
     )
     lines["b1_wkt"] = lines.geometry.apply(
-        lambda geom: wkt.dumps(geom.boundary.geoms[-1], output_dimension=2)
+        lambda geom: shapely.wkt.dumps(
+            geom.boundary.geoms[-1], output_dimension=2
+        )
     )
 
     def match_multipoint(point_wkt):
@@ -127,9 +128,9 @@ def insert_node_ids(lines, nodes):
         result from multiple connection lines, and not only single Point
         objects.
         """
-        point_line = wkt.loads(point_wkt)
+        point_line = shapely.wkt.loads(point_wkt)
         for point_node in nodes.index:
-            if point_line.within(wkt.loads(point_node)):
+            if point_line.within(shapely.wkt.loads(point_node)):
                 return nodes.loc[point_node, "id_full"]
         logger.error("Point not found: %s", point_wkt)
         return False
@@ -141,10 +142,16 @@ def insert_node_ids(lines, nodes):
         lines["to_node"] = lines["b1_wkt"].apply(lambda x: match_multipoint(x))
     except KeyError as e:
         errors = [
-            wkt.loads(x) for x in lines["b0_wkt"] if x not in nodes["id_full"]
+            shapely.wkt.loads(x)
+            for x in lines["b0_wkt"]
+            if x not in nodes["id_full"]
         ]
         errors.extend(
-            [wkt.loads(x) for x in lines["b1_wkt"] if not match_multipoint(x)]
+            [
+                shapely.wkt.loads(x)
+                for x in lines["b1_wkt"]
+                if not match_multipoint(x)
+            ]
         )
         gdf_errors = gpd.GeoDataFrame(geometry=errors, crs=lines.crs)
         ax = lines.plot(color='blue')
@@ -198,10 +205,10 @@ def check_double_points(gdf, radius=0.001, id_column=None):
         point = c["geometry"]
         gdf_other = gdf.drop([r])
         # Prevent OSError, see https://github.com/oemof/DHNx/issues/107
-        other_points = unary_union(list(gdf_other["geometry"]))
+        other_points = shapely.ops.unary_union(list(gdf_other["geometry"]))
 
         # x1 = nearest_points(point, other_points)[0]
-        x2 = nearest_points(point, other_points)[1]
+        x2 = shapely.ops.nearest_points(point, other_points)[1]
 
         if point.distance(x2) <= radius:
             l_ids.append(r)
@@ -269,8 +276,8 @@ def split_multilinestr_to_linestr(gdf_input):
 
             multilinestrings = []
 
-            for line in mapping(geom)["coordinates"]:
-                multilinestrings.append(LineString(line))
+            for line in shapely.geometry.mapping(geom)["coordinates"]:
+                multilinestrings.append(shapely.geometry.LineString(line))
 
             for multiline in multilinestrings:
                 new_row = b.copy()
@@ -301,7 +308,7 @@ def split_multilinestr_to_linestr(gdf_input):
 
             for num in range(num_new_lines):
                 new_row = b.copy()
-                new_row["geometry"] = LineString(
+                new_row["geometry"] = shapely.geometry.LineString(
                     [geom.coords[num], geom.coords[num + 1]]
                 )
                 new_lines = pd.concat(
@@ -324,7 +331,7 @@ def split_multilinestr_to_linestr(gdf_input):
 def _line_string(
     path_edges: list,
     lines_all: gpd.GeoDataFrame,
-) -> LineString:
+) -> shapely.geometry.LineString:
     """
     Create a LineString from a list of 2-tuples of node names,
     combined from LineStrings found in lines_all.
@@ -368,7 +375,7 @@ def _line_string(
 
         last_segment = segment
 
-    return LineString(ordered)
+    return shapely.geometry.LineString(ordered)
 
 
 def simplify(

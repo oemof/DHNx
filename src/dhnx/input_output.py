@@ -19,24 +19,27 @@ import numpy as np
 import pandas as pd
 from addict import Dict
 
-try:
-    from shapely.geometry import LineString
-    from shapely.geometry import Point
+from dhnx.helpers import OptionalDependencyPlaceholder
 
+try:
+    from shapely import geometry
 except ImportError:
-    print("Need to install shapely to download from osm.")
+    geometry = OptionalDependencyPlaceholder("shapely", "process geometry")
 
 try:
     import geopandas as gpd
-
 except ImportError:
-    print("Need to install geopandas to download from osm.")
+    gpd = OptionalDependencyPlaceholder(
+        "geopandas", "process osm data"
+    )
 
 try:
     import osmnx as ox
-
 except ImportError:
-    print("Need to install osmnx to download from osm.")
+    ox = OptionalDependencyPlaceholder(
+        "osmnx", "download from osm"
+    )
+
 
 from dhnx.dhn_from_osm import connect_points_to_network
 
@@ -305,7 +308,7 @@ class OSMNetworkImporter(NetworkImporter):
             gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
             if node_geometry:
                 gdf_nodes["geometry"] = gdf_nodes.apply(
-                    lambda row: Point(row["x"], row["y"]), axis=1
+                    lambda row: geometry.Point(row["x"], row["y"]), axis=1
                 )
                 gdf_nodes.set_geometry("geometry", inplace=True)
             gdf_nodes.crs = G.graph["crs"]
@@ -330,10 +333,10 @@ class OSMNetworkImporter(NetworkImporter):
                 # create one now if fill_edge_geometry==True
                 if "geometry" not in data:
                     if fill_edge_geometry:
-                        point_u = Point((G.nodes[u]["x"], G.nodes[u]["y"]))
-                        point_v = Point((G.nodes[v]["x"], G.nodes[v]["y"]))
-                        edge_details["geometry"] = LineString(
-                            [point_u, point_v]
+                        geometry.Point_u = geometry.Point((G.nodes[u]["x"], G.nodes[u]["y"]))
+                        geometry.Point_v = geometry.Point((G.nodes[v]["x"], G.nodes[v]["y"]))
+                        edge_details["geometry"] = geometry.LineString(
+                            [point_u, geometry.Point_v]
                         )
                     else:
                         edge_details["geometry"] = np.nan

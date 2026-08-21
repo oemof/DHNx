@@ -20,3 +20,18 @@ def sum_ignore_none(*items):
         sum_ignoring_none = None
 
     return sum_ignoring_none
+
+
+class OptionalDependencyPlaceholder:
+    def __init__(
+        self,
+        module_name: str,
+        functionality: str,
+    ):
+        self._functionality = functionality
+        self._module_name = module_name
+
+    def __getattr__(self, name):
+        raise ModuleNotFoundError(
+            f"Need to install {self._module_name} to {self._functionality}."
+        )
