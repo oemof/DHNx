@@ -19,29 +19,12 @@ import numpy as np
 import pandas as pd
 from addict import Dict
 
-from dhnx.helpers import OptionalDependencyPlaceholder
-
-try:
-    from shapely import geometry
-except ImportError:
-    geometry = OptionalDependencyPlaceholder("shapely", "process geometry")
-
-try:
-    import geopandas as gpd
-except ImportError:
-    gpd = OptionalDependencyPlaceholder(
-        "geopandas", "process osm data"
-    )
-
-try:
-    import osmnx as ox
-except ImportError:
-    ox = OptionalDependencyPlaceholder(
-        "osmnx", "download from osm"
-    )
-
-
 from dhnx.dhn_from_osm import connect_points_to_network
+from dhnx.helpers import import_optional_dependency
+
+geometry = import_optional_dependency("shapely.geometry", "process geometry")
+gpd = import_optional_dependency("geopandas", "process osm data")
+ox = import_optional_dependency("osmnx", "download from osm")
 
 logger = logging.getLogger()
 
@@ -333,10 +316,14 @@ class OSMNetworkImporter(NetworkImporter):
                 # create one now if fill_edge_geometry==True
                 if "geometry" not in data:
                     if fill_edge_geometry:
-                        geometry.Point_u = geometry.Point((G.nodes[u]["x"], G.nodes[u]["y"]))
-                        geometry.Point_v = geometry.Point((G.nodes[v]["x"], G.nodes[v]["y"]))
+                        point_u = geometry.Point(
+                            (G.nodes[u]["x"], G.nodes[u]["y"])
+                        )
+                        point_v = geometry.Point(
+                            (G.nodes[v]["x"], G.nodes[v]["y"])
+                        )
                         edge_details["geometry"] = geometry.LineString(
-                            [point_u, geometry.Point_v]
+                            [point_u, point_v]
                         )
                     else:
                         edge_details["geometry"] = np.nan

@@ -25,15 +25,11 @@ import math
 import numpy as np
 from scipy.optimize import fsolve
 
-from dhnx.helpers import OptionalDependencyPlaceholder
+from dhnx.helpers import import_optional_dependency
 
-try:
-    from CoolProp import CoolProp
-except ImportError:
-    CoolProp = OptionalDependencyPlaceholder(
-        module_name="CoolProp",
-        functionality="use the hydraulic pre-calculation module"
-    )
+CoolProp = import_optional_dependency(
+    "CoolProp.CoolProp", "use the hydraulic pre-calculation module"
+)
 
 logger = logging.getLogger(__name__)  # Create a logger for this module
 
@@ -1008,7 +1004,9 @@ def calc_v_mf(mf, di, T_av, p=101325):
     flow velocity [m/s]: numeric
 
     """
-    rho = CoolProp.PropsSI("D", "T", T_av + 273.15, "P", p, "IF97::Water")  # [kg/m^3]
+    rho = CoolProp.PropsSI(
+        "D", "T", T_av + 273.15, "P", p, "IF97::Water"
+    )  # kg/m^3
 
     return mf / (rho * (0.5 * di) ** 2 * math.pi)
 

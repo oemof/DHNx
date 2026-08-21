@@ -13,19 +13,6 @@ This module is not fully tested yet, so use it with care.
 
 SPDX-License-Identifier: MIT
 """
-from dhnx.helpers import OptionalDependencyPlaceholder
-
-try:
-    import geopandas as gpd
-except ImportError:
-    gpd = OptionalDependencyPlaceholder("geopandas", "process osm data")
-
-try:
-    from shapely import geometry
-    from shapely import ops as shapely_ops
-except ImportError:
-    geometry = OptionalDependencyPlaceholder("shapely", "process geometry")
-    shapely_ops = OptionalDependencyPlaceholder("shapely", "process geometry")
 
 import logging
 import warnings
@@ -33,7 +20,13 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from dhnx.helpers import import_optional_dependency
+
 from . import geometry_operations as go
+
+gpd = import_optional_dependency("geopandas", "process osm data")
+geometry = import_optional_dependency("shapely.geometry", "process geometry")
+shapely_ops = import_optional_dependency("shapely.ops", "process geometry")
 
 logger = logging.getLogger(__name__)  # Create a logger for this module
 
@@ -236,7 +229,9 @@ def create_object_connections(
                 # line to find a more relevant alternative
                 neighbours = lines[
                     lines.touches(
-                        shapely_ops.unary_union(lines.geometry[nearest_line_idx])
+                        shapely_ops.unary_union(
+                            lines.geometry[nearest_line_idx]
+                        )
                     )
                 ]
                 lines_drop.extend(neighbours.index)

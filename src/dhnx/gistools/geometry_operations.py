@@ -13,26 +13,18 @@ This module is not fully tested yet, so use it with care.
 SPDX-License-Identifier: MIT
 """
 
-import math
-
-from dhnx.helpers import OptionalDependencyPlaceholder
-
-try:
-    import geopandas as gpd
-except ImportError:
-    gpd = OptionalDependencyPlaceholder("geopandas", "process osm data")
-
-import networkx as nx
-
-try:
-    import shapely
-except ImportError:
-    shapely = OptionalDependencyPlaceholder("shapely", "process geometry")
 
 import logging
+import math
 
 import matplotlib.pyplot as plt
+import networkx as nx
 import pandas as pd
+
+from dhnx.helpers import import_optional_dependency
+
+shapely = import_optional_dependency("shapely", "process geometry")
+gpd = import_optional_dependency("geopandas", "process osm data")
 
 logger = logging.getLogger(__name__)  # Create a logger for this module
 

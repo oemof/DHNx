@@ -11,19 +11,13 @@ available from its original location:
 SPDX-License-Identifier: MIT
 """
 
-from dhnx.helpers import OptionalDependencyPlaceholder
-
-try:
-    import geopandas as gpd
-except ImportError:
-    gpd = OptionalDependencyPlaceholder("geopandas", "process osm data")
-
 import pandas as pd
 
-try:
-    import shapely
-except ImportError:
-    shapely = OptionalDependencyPlaceholder("shapely", "process geometry")
+from dhnx.helpers import import_optional_dependency
+
+gpd = import_optional_dependency("geopandas", "process osm data")
+shapely = import_optional_dependency("shapely", "process geometry")
+
 
 def connect_points_to_network(points, nodes, edges):
     r"""
@@ -74,7 +68,9 @@ def connect_points_to_network(points, nodes, edges):
         n_nearest_points.append([id_nearest_point, nearest_point])
 
         n_edges.append(
-            [id_point, id_nearest_point, shapely.geometry.LineString([point, nearest_point])]
+            [id_point, id_nearest_point, shapely.geometry.LineString(
+                [point, nearest_point]
+            )]
         )
 
     n_points = gpd.GeoDataFrame(

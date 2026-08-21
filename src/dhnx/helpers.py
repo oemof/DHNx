@@ -1,3 +1,6 @@
+import importlib
+import types
+
 import addict
 
 
@@ -27,11 +30,27 @@ class OptionalDependencyPlaceholder:
         self,
         module_name: str,
         functionality: str,
+        original_error: str,
     ):
         self._functionality = functionality
         self._module_name = module_name
+        self._original_error = original_error
 
-    def __getattr__(self, name):
+    def __getattr__(self, _):
         raise ModuleNotFoundError(
-            f"Need to install {self._module_name} to {self._functionality}."
+            f"Need {self._module_name} to {self._functionality},"
+            + f" but {self._original_error}."
         )
+
+
+def import_optional_dependency(
+    name: str,
+    functionality: str,
+) -> types.ModuleType:
+    try:
+        module = importlib.import_module(name)
+    except ImportError as err:
+        module = OptionalDependencyPlaceholder(
+            name, functionality, original_error=err
+        )
+    return module

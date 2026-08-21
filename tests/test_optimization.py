@@ -191,7 +191,7 @@ def test_optimization_example_02():
         consumers=gdf_cons,
         method="boundary",
         reset_index=True,
-        welding=True,  # Instead of 'simplify', just to trigger FutureWarning
+        simplify=True,  # Instead of 'simplify', just to trigger FutureWarning
     )
 
     # initialize a ThermalNetwork
