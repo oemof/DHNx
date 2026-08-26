@@ -19,26 +19,12 @@ import numpy as np
 import pandas as pd
 from addict import Dict
 
-try:
-    from shapely.geometry import LineString
-    from shapely.geometry import Point
-
-except ImportError:
-    print("Need to install shapely to download from osm.")
-
-try:
-    import geopandas as gpd
-
-except ImportError:
-    print("Need to install geopandas to download from osm.")
-
-try:
-    import osmnx as ox
-
-except ImportError:
-    print("Need to install osmnx to download from osm.")
-
 from dhnx.dhn_from_osm import connect_points_to_network
+from dhnx.helpers import import_optional_dependency
+
+geometry = import_optional_dependency("shapely.geometry", "process geometry")
+gpd = import_optional_dependency("geopandas", "process osm data")
+ox = import_optional_dependency("osmnx", "download from osm")
 
 logger = logging.getLogger()
 
@@ -305,7 +291,7 @@ class OSMNetworkImporter(NetworkImporter):
             gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
             if node_geometry:
                 gdf_nodes["geometry"] = gdf_nodes.apply(
-                    lambda row: Point(row["x"], row["y"]), axis=1
+                    lambda row: geometry.Point(row["x"], row["y"]), axis=1
                 )
                 gdf_nodes.set_geometry("geometry", inplace=True)
             gdf_nodes.crs = G.graph["crs"]
@@ -330,9 +316,13 @@ class OSMNetworkImporter(NetworkImporter):
                 # create one now if fill_edge_geometry==True
                 if "geometry" not in data:
                     if fill_edge_geometry:
-                        point_u = Point((G.nodes[u]["x"], G.nodes[u]["y"]))
-                        point_v = Point((G.nodes[v]["x"], G.nodes[v]["y"]))
-                        edge_details["geometry"] = LineString(
+                        point_u = geometry.Point(
+                            (G.nodes[u]["x"], G.nodes[u]["y"])
+                        )
+                        point_v = geometry.Point(
+                            (G.nodes[v]["x"], G.nodes[v]["y"])
+                        )
+                        edge_details["geometry"] = geometry.LineString(
                             [point_u, point_v]
                         )
                     else:

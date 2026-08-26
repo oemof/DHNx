@@ -13,20 +13,6 @@ This module is not fully tested yet, so use it with care.
 
 SPDX-License-Identifier: MIT
 """
-try:
-    import geopandas as gpd
-
-except ImportError:
-    print("Need to install geopandas to process geometry data.")
-
-try:
-    from shapely.geometry import LineString
-    from shapely.geometry import MultiPoint
-    from shapely.geometry import Point
-    from shapely.ops import nearest_points
-    from shapely.ops import unary_union
-except ImportError:
-    print("Need to install shapely to process geometry.")
 
 import logging
 import warnings
@@ -34,7 +20,13 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from dhnx.helpers import import_optional_dependency
+
 from . import geometry_operations as go
+
+gpd = import_optional_dependency("geopandas", "process osm data")
+geometry = import_optional_dependency("shapely.geometry", "process geometry")
+shapely_ops = import_optional_dependency("shapely.ops", "process geometry")
 
 logger = logging.getLogger(__name__)  # Create a logger for this module
 
@@ -92,8 +84,8 @@ def calc_lot_foot(line, point):
     -------
     shapely.geometry.Point
     """
-    s_1 = Point(line.coords[0])
-    s_2 = Point(line.coords[-1])
+    s_1 = geometry.Point(line.coords[0])
+    s_2 = geometry.Point(line.coords[-1])
 
     g_1 = point_to_array(s_1)  # end point 1 of line
     g_2 = point_to_array(s_2)  # end point 2 of line
@@ -106,12 +98,12 @@ def calc_lot_foot(line, point):
     x_0 = g_1  # point on line
 
     y = x_1 - (np.dot((x_1 - x_0), n) / np.dot(n, n)) * n
-    lot_foot_point = Point(y[0], y[1])
+    lot_foot_point = geometry.Point(y[0], y[1])
 
     # # alternative generation via intersection
     # # (=> intersections point is not exaclty on lines as well)
     # y = x_1 - 2*(np.dot((x_1 - x_0), n)/np.dot(n, n)) * n
-    # lot_line = LineString([(y[0], y[1]), (x_1[0], x_1[1])])
+    # lot_line = geometry.LineString([(y[0], y[1]), (x_1[0], x_1[1])])
     # lot_foot_point = lot_line.intersection(line)
 
     return lot_foot_point
@@ -179,8 +171,10 @@ def create_object_connections(
 
     def create_object_connection(point_geom, lines, tol_distance=tol_distance):
         # Find the nearest line and its nearest point
-        lines_merged = unary_union(lines.geometry)
-        nearest_line_point = nearest_points(point_geom, lines_merged)[1]
+        lines_merged = shapely_ops.unary_union(lines.geometry)
+        nearest_line_point = shapely_ops.nearest_points(
+            point_geom, lines_merged
+        )[1]
         nearest_line_idx = lines[
             nearest_line_point.distance(lines.geometry) < 1e-8
         ].index
@@ -196,7 +190,7 @@ def create_object_connections(
             # Check if the distance of nearest_point_on_line is close
             # to an existing point on the line
             points_on_line = nearest_line.boundary
-            closest_existing_point = nearest_points(
+            closest_existing_point = shapely_ops.nearest_points(
                 nearest_line_point, points_on_line
             )[1]
             dist_on_line = nearest_line_point.distance(closest_existing_point)
@@ -212,7 +206,7 @@ def create_object_connections(
                 connection_point = nearest_line_point
 
         # Create connection line (Direction: From street to building)
-        conn_line = LineString([connection_point, point_geom])
+        conn_line = geometry.LineString([connection_point, point_geom])
         return conn_line, nearest_line_idx
 
     conn_lines_list = []
@@ -235,12 +229,14 @@ def create_object_connections(
                 # line to find a more relevant alternative
                 neighbours = lines[
                     lines.touches(
-                        unary_union(lines.geometry[nearest_line_idx])
+                        shapely_ops.unary_union(
+                            lines.geometry[nearest_line_idx]
+                        )
                     )
                 ]
                 lines_drop.extend(neighbours.index)
                 neighbours2 = lines[
-                    lines.touches(unary_union(neighbours.geometry))
+                    lines.touches(shapely_ops.unary_union(neighbours.geometry))
                 ]
                 lines_drop.extend(neighbours2.index)
 
@@ -284,8 +280,8 @@ def create_object_connections(
                         gpd.GeoDataFrame(lines, crs=lines.crs),
                         gpd.GeoDataFrame(
                             geometry=[
-                                LineString([line_start, conn_point]),
-                                LineString([conn_point, line_end]),
+                                geometry.LineString([line_start, conn_point]),
+                                geometry.LineString([conn_point, line_end]),
                             ],
                             crs=lines.crs,
                             data=pd.concat([attributes, attributes]),
@@ -436,7 +432,7 @@ def run_point_method_boundary(consumers_poly, consumers, lines_consumers):
     # Only keep the new consumer lines if they have a useful minimum length.
     # There was an edgecase where a street 'almost' touched a building,
     # and the cut consumer line had a length of 1e-9 m
-    lines_consumers_n[lines_consumers_n.length < 1e-3] = LineString()
+    lines_consumers_n[lines_consumers_n.length < 1e-3] = geometry.LineString()
 
     # Now the "consumers" (point objects for each building) need to be
     # updated to touch the end of the consumer_lines
@@ -497,7 +493,7 @@ def run_point_method_boundary(consumers_poly, consumers, lines_consumers):
     consumers_n = (
         pd.DataFrame(consumers_n)  # convert gdf to df
         .groupby("id_full", sort=False, as_index=False)
-        .agg(lambda x: MultiPoint(x.values))  # returns df
+        .agg(lambda x: geometry.MultiPoint(x.values))  # returns df
         .set_geometry(
             consumers_n.geometry.name, crs=consumers_n.crs
         )  # convert to gdf
@@ -563,7 +559,7 @@ def process_geometry(
     Parameters
     ----------
     lines : geopandas.GeoDataFrame
-        Potential routes for the DHS. Expected geometry Linestrings or
+        Potential routes for the DHS. Expected geometry LineStrings or
         MultilineStrings. The graph of this line network should be connected.
     consumers : geopandas.GeoDataFrame
         Location of demand/consumers. Expected geometry: Polygons or Points.

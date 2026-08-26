@@ -53,7 +53,7 @@ API changes
 New features
 ^^^^^^^^^^^^^^^^^^^^
 
-* No changes
+* Improved handling of optional dependencies.
 
 New components/constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
