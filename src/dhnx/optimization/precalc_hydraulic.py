@@ -30,6 +30,9 @@ from dhnx.helpers import import_optional_dependency
 CoolProp = import_optional_dependency(
     "CoolProp.CoolProp", "use the hydraulic pre-calculation module"
 )
+pp = import_optional_dependency(
+    "pandapipes", "use pandapipes pressure loss calculations"
+)
 
 logger = logging.getLogger(__name__)  # Create a logger for this module
 
@@ -532,7 +535,6 @@ def delta_p_pandapipes(
     -------
     Pressure drop [Pa] : numeric
     """
-    import pandapipes as pp
 
     p_bar = pressure / 1e5  # Pa to bar
     tfluid_k = T_medium + 273.15
