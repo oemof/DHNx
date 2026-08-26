@@ -26,6 +26,7 @@ def sum_ignore_none(*items):
 
 
 class OptionalDependencyPlaceholder:
+    """Class to delay ImportErrors for optional dependencies"""
     def __init__(
         self,
         module_name: str,
@@ -37,7 +38,7 @@ class OptionalDependencyPlaceholder:
         self._original_error = original_error
 
     def __getattr__(self, _):
-        raise ModuleNotFoundError(
+        raise ImportError(
             f"Need {self._module_name} to {self._functionality},"
             + f" but {self._original_error}."
         )
@@ -47,6 +48,11 @@ def import_optional_dependency(
     name: str,
     functionality: str,
 ) -> types.ModuleType:
+    """Import wrapper for optional dependencies.
+
+    If possible, it will just import the module.
+    Otherwise, it returns a placeholder so that the ImportError is not risen
+    on import but only if the optional dependency is acutally used."""
     try:
         module = importlib.import_module(name)
     except ImportError as err:
