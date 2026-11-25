@@ -10,6 +10,7 @@ available from its original location:
 
 SPDX-License-Identifier: MIT
 """
+
 # pylint: skip-file
 import warnings
 from collections import namedtuple
@@ -245,11 +246,35 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             capacity for fix heat loss.
             """
             o = list(n.outputs.keys())[0]
+            # Workaround for oemof-solph >= 0.6.7: _FakeSequence parameters
+            # and indexed access in constraint rules can cause expressions
+            # to evaluate to _FakeSequence instead of scalars. Extract .value
+            # when available.
+            t_idx = int(t) if not isinstance(t, int) else t
 
-            expr = 0
-            expr += -block.heat_loss[n, t]
-            expr += n.heat_loss_factor[t] * m.flows[n, o].nominal_capacity
-            expr += n.heat_loss_factor_fix[t]
+            nominal_cap_param = m.flows[n, o].nominal_capacity
+            # Extract scalar value from _FakeSequence parameter if necessary
+            nominal_cap = (
+                nominal_cap_param.value
+                if hasattr(nominal_cap_param, "value")
+                else nominal_cap_param
+            )
+
+            # Extract heat loss factor values, handling both _FakeSequence
+            # with .value and regular access
+            if hasattr(n.heat_loss_factor, "value"):
+                loss_factor = n.heat_loss_factor.value
+            else:
+                loss_factor = n.heat_loss_factor[t_idx]
+
+            if hasattr(n.heat_loss_factor_fix, "value"):
+                loss_factor_fix = n.heat_loss_factor_fix.value
+            else:
+                loss_factor_fix = n.heat_loss_factor_fix[t_idx]
+
+            expr = block.heat_loss[n, t]
+            expr -= loss_factor * nominal_cap
+            expr -= loss_factor_fix
             return expr == 0
 
         self.heat_loss_equation_fix = Constraint(
@@ -261,13 +286,36 @@ class HeatPipelineBlock(ScalarBlock):  # pylint: disable=too-many-ancestors
             capacity. Here, the losses can be "switched off".
             """
             o = list(n.outputs.keys())[0]
+            # Workaround for oemof-solph >= 0.6.7: _FakeSequence parameters
+            # and indexed access in constraint rules can cause expressions
+            # to evaluate to _FakeSequence instead of scalars. Extract .value
+            # when available.
+            t_idx = int(t) if not isinstance(t, int) else t
 
-            expr = 0
-            expr += -block.heat_loss[n, t]
-            expr += (
-                n.heat_loss_factor[t] * m.flows[n, o].nominal_capacity
-                + n.heat_loss_factor_fix[t]
-            ) * m.NonConvexFlowBlock.status[n, o, t]
+            status_var = m.NonConvexFlowBlock.status[n, o, t]
+            nominal_cap_param = m.flows[n, o].nominal_capacity
+            # Extract scalar value from _FakeSequence parameter if necessary
+            nominal_cap = (
+                nominal_cap_param.value
+                if hasattr(nominal_cap_param, "value")
+                else nominal_cap_param
+            )
+
+            # Extract heat loss factor values, handling both _FakeSequence
+            # with .value and regular access
+            if hasattr(n.heat_loss_factor, "value"):
+                loss_factor = n.heat_loss_factor.value
+            else:
+                loss_factor = n.heat_loss_factor[t_idx]
+
+            if hasattr(n.heat_loss_factor_fix, "value"):
+                loss_factor_fix = n.heat_loss_factor_fix.value
+            else:
+                loss_factor_fix = n.heat_loss_factor_fix[t_idx]
+
+            expr = block.heat_loss[n, t]
+            expr -= loss_factor * nominal_cap * status_var
+            expr -= loss_factor_fix * status_var
             return expr == 0
 
         self.heat_loss_equation_on_off = Constraint(
@@ -387,11 +435,28 @@ class HeatPipelineInvestBlock(
             """Rule definition for constraint to connect the installed capacity
             and the heat loss
             """
+            # Workaround for oemof-solph >= 0.6.7: _FakeSequence parameters
+            # in constraint rules can cause expressions to evaluate to
+            #  _FakeSequence. Extract .value only from _FakeSequence,
+            # not from Pyomo variables.
+            loss_factor = (
+                n.heat_loss_factor.value
+                if hasattr(n.heat_loss_factor, "value")
+                else n.heat_loss_factor[t]
+            )
+            loss_factor_fix = (
+                n.heat_loss_factor_fix.value
+                if hasattr(n.heat_loss_factor_fix, "value")
+                else n.heat_loss_factor_fix[t]
+            )
+
             expr = 0
             expr += -block.heat_loss[n, t]
             try:  # oemof.solph<=0.5.0
+                # Don't extract .value from Pyomo variables - they might
+                # return None
                 expr += (
-                    n.heat_loss_factor[t]
+                    loss_factor
                     * m.InvestmentFlowBlock.invest[
                         n,
                         list(n.outputs.keys())[0],
@@ -400,12 +465,12 @@ class HeatPipelineInvestBlock(
             except KeyError:  # oemof.solph>=0.5.1
                 period = 0  # Periods are not (yet) supported in DHNx
                 expr += (
-                    n.heat_loss_factor[t]
+                    loss_factor
                     * m.InvestmentFlowBlock.invest[
                         n, list(n.outputs.keys())[0], period
                     ]
                 )
-            expr += n.heat_loss_factor_fix[t]
+            expr += loss_factor_fix
             return expr == 0
 
         self.heat_loss_equation_convex = Constraint(
@@ -418,17 +483,34 @@ class HeatPipelineInvestBlock(
             """Rule definition for constraint to connect the installed capacity
             and the heat loss
             """
+            # Workaround for oemof-solph >= 0.6.7: _FakeSequence parameters
+            # in constraint rules can cause expressions to evaluate to
+            # _FakeSequence. Extract .value only from _FakeSequence,
+            # not from Pyomo variables.
+            loss_factor = (
+                n.heat_loss_factor.value
+                if hasattr(n.heat_loss_factor, "value")
+                else n.heat_loss_factor[t]
+            )
+            loss_factor_fix = (
+                n.heat_loss_factor_fix.value
+                if hasattr(n.heat_loss_factor_fix, "value")
+                else n.heat_loss_factor_fix[t]
+            )
+
             expr = 0
             expr += -block.heat_loss[n, t]
             try:  # oemof.solph<=0.5.0
+                # Don't extract .value from Pyomo variables - they might
+                # return None
                 expr += (
-                    n.heat_loss_factor[t]
+                    loss_factor
                     * m.InvestmentFlowBlock.invest[
                         n, list(n.outputs.keys())[0]
                     ]
                 )
                 expr += (
-                    n.heat_loss_factor_fix[t]
+                    loss_factor_fix
                     * m.InvestmentFlowBlock.invest_status[
                         n, list(n.outputs.keys())[0]
                     ]
@@ -436,13 +518,13 @@ class HeatPipelineInvestBlock(
             except KeyError:  # oemof.solph>=0.5.1
                 period = 0  # Periods are not (yet) supported in DHNx
                 expr += (
-                    n.heat_loss_factor[t]
+                    loss_factor
                     * m.InvestmentFlowBlock.invest[
                         n, list(n.outputs.keys())[0], period
                     ]
                 )
                 expr += (
-                    n.heat_loss_factor_fix[t]
+                    loss_factor_fix
                     * m.InvestmentFlowBlock.invest_status[
                         n, list(n.outputs.keys())[0], period
                     ]
