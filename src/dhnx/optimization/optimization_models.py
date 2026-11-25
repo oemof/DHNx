@@ -487,7 +487,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             s_kw = self.settings["solve_kw"]
 
         logger.info("Solve the optimization problem")
-        self.om.solve(
+        results = self.om.solve(
             solver=self.settings["solver"],
             allow_nonoptimal=self.settings.get("allow_nonoptimal", False),
             solve_kwargs=s_kw,
@@ -504,7 +504,7 @@ class OemofInvestOptimizationModel(InvestOptimizationModel):
             )
 
         self.es.results["main"] = solph.processing.results(self.om)
-        self.es.results["meta"] = solph.processing.meta_results(self.om)
+        self.es.results["meta"] = results
 
     def get_results_edges(self):
         """Postprocessing of the investment results of the pipes."""
